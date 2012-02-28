@@ -1,0 +1,45 @@
+Picoquant:
+-man page?
+-fluorescence correlation spectroscopy: autocorrelation of summed signal
+-build automated tests to check the output for each file type
+
+> Testing:
+>> Picoharp
+-v20
+--phd: linux64
+--pt2: linux64
+--pt3: linux64
+
+>> Hydraharp
+-v10
+--hhd: linux64
+--ht2: linux64
+--ht3: linux64
+
+>> TimeHarp
+-v20 (software version 3.02, but format version 2.0? Data straight from the v302 sample data)
+--thd: linux64
+--thc: no
+--t3r: written, but not tested
+
+-v50
+--thd: linux64
+--thc: no
+--t3r: matches the file demo, but the channel numbers seem really weird.
+
+-v60:
+--thd: linux64
+--thc: no
+--t3r: no
+
+Correlate:
+-for an integer overflow of the correlation, correlations should be set to null upon a free() call, but it does not appear to be. A failure sets the return value to null, but this behavior should be investigated more.
+-implement binary output
+-implement print_every and similar (or just get rid of it)
+-use max-pulse-distance and max-time-distance to get a fine-tuned version of the correlation.
+
+> Testing
+>> t2: linux64
+>> t3: linux64
+
+Histogram:

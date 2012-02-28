@@ -1,0 +1,45 @@
+Thomas Bischof
+tbischof@mit.edu
+
+There are three distinct executables covered by this project. What follows is a brief outline of their purposes, and the methods used to achieve those goals.
+
+------- General principles ----------------
+These executables all:
+- operate on file streams (FILE type)
+- take stdin and stdout by default, but can work with named files
+- assume Picoquant-type data
+
+------------- Picoquant -------------------
+This is a filter for processing data from Picoquant timing hardware, such as the TimeHarp, PicoHarp, and HydraHarp. Each of these has modes for histogramming correlation data or recording the arrival times of individual counts, in modes that generally fall into these formats:
+1. Interactive mode. A vector of counts, with information which allows the recreation of the bins those counts correspond to.
+2. T2 mode. The absolute arrival time of a count is recorded, along with overflows of the internal clock.
+3. T3 mode. A sync source is used, and all count arrivals are tagged with the sync number and the time relative to that sync.
+
+All modes have some binary header, and this can be output as ascii by use of the flag --header-only. This frees the standard output to be entirely comprised of data.
+
+The interactive mode needs little standard analysis, and the filter exists to turn the binary data into a csv format with: 
+curve number, left edge of bin, counts for the bin
+
+The t2 and t3 modes are highly related, and we often want to perform analysis to determine various correlations of the data. For this filter, we therefore output a stream of values associated with the records:
+t2:
+channel number, time since start of collection
+
+t3:
+channel number, sync number, time since sync
+
+In the future, these outputs could conceivably be merged to an ini-like format, such as:
+[header]
+blargh = 
+
+[data]
+...
+
+This is a bit excessive for most purposes, but if there is a meaningful reason to not have to read the file twice, this merging should be performed (one read to print header, another to print data).
+
+As a general outline, processing of a file goes like:
+1. Read in main picoquant header and determine the board type.
+2. Read the main header for the board, and determine the measurement type.
+3. Read the measurement header.
+4. Either output the header information or the data, depending on the type of run.
+
+--------------- Correlate -----------------
