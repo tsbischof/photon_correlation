@@ -1,5 +1,4 @@
 Picoquant:
--man page?
 -fluorescence correlation spectroscopy: autocorrelation of summed signal
 -build automated tests to check the output for each file type
 
@@ -43,3 +42,9 @@ Correlate:
 >> t3: linux64
 
 Histogram:
+
+Lifetime:
+-turn t3 into histogram by turning all pulse numbers into 0, or just removing them entirely
+
+Intensity:
+-given a bin width, count the number of entries in a bin, then iterate until the end of the file.
