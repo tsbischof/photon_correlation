@@ -82,10 +82,7 @@ void pq_print_t2(FILE *out_stream, long long int count,
 		fprintf(out_stream, "%u,%lld\n", record.channel, record.time);
 	}
 
-	if ( (options->print_every > 0) &&
-		((count % options->print_every) == 0) ) {
-		fprintf(stderr, "Record %20lld\n", count);
-	} 
+	print_status(count, options);
 }
 
 void pq_print_t3(FILE *out_stream, long long int count,
@@ -106,9 +103,20 @@ void pq_print_t3(FILE *out_stream, long long int count,
 				record.channel, record.pulse_number, record.time);
 	}
 
-	if ( (options->print_every > 0) &&
-		((count % options->print_every) == 0) ) {
-		fprintf(stderr, "Record %20lld\n", count);
+	print_status(count, options);
+}
+
+void print_status(long long int count, pq_options_t *options) {
+	time_t rawtime;
+	struct tm *timeinfo;
+	char fmttime[80];
+
+	if ( (options->print_every > 0) && 
+			( (count % options->print_every) == 0 ) ) {
+		time(&rawtime);
+		timeinfo = localtime(&rawtime);
+		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
+		fprintf(stderr, "%s: Record %20lld\n", fmttime, count);
 	}
 }
 

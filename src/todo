@@ -1,6 +1,11 @@
 Picoquant:
 -fluorescence correlation spectroscopy: autocorrelation of summed signal
 -build automated tests to check the output for each file type
+- --resolution flag just outputs resolution (integer picoseconds, float picoseconds, and so on).
+-make a wrapper to deal with reading results from a filename and getting out the resolution, headers, etc.
+-flag --to-t2 gives t2 output from t3 file (error if not one of those types.
+-32-bit seems to work, write test scripts and run those elsewhere to make sure.
+-test on Windows
 
 > Testing:
 >> Picoharp
@@ -32,19 +37,16 @@ Picoquant:
 --t3r: no
 
 Correlate:
--for an integer overflow of the correlation, correlations should be set to null upon a free() call, but it does not appear to be. A failure sets the return value to null, but this behavior should be investigated more.
--implement binary output
--implement print_every and similar (or just get rid of it)
--use max-pulse-distance and max-time-distance to get a fine-tuned version of the correlation.
 
 > Testing
 >> t2: linux64
 >> t3: linux64
 
 Histogram:
+-print-every to output to a log file every so often (this would be useful for long runs)
 
 Lifetime:
--turn t3 into histogram by turning all pulse numbers into 0, or just removing them entirely
+-turn t3 into histogram by turning all pulse numbers into 0, or just removing them entirely (t2-like at that point, just histogram in time and we are good)
 
 Intensity:
 -given a bin width, count the number of entries in a bin, then iterate until the end of the file.

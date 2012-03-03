@@ -52,6 +52,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 		pq_options_t *options);
 void pq_print_interactive(FILE *out_stream, int curve, double time, 
 		int counts, pq_options_t *options);
+void print_status(long long int count, pq_options_t *options);
 	
 void pq_usage(void);
 

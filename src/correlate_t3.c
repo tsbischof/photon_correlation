@@ -136,7 +136,7 @@ int next_t3(FILE *in_stream, t3_queue_t *queue, options_t *options) {
 					&(queue->queue[ending_index]).pulse_number,
 					&(queue->queue[ending_index]).time);
 
-			if ( ! result && ! feof(in_stream) ) {
+			if ( result != 3 && ! feof(in_stream) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
 			 * on our hands.
@@ -248,11 +248,7 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 						combinations->indices[combination_index][0]];
 			left = get_queue_item_t3(queue, offset);
 
-			if ( options->binary_out ) {
-				fwrite(&(left.channel), 1, sizeof(left.channel), out_stream);
-			} else {
-				fprintf(out_stream, "%d", left.channel);
-			}
+			fprintf(out_stream, "%d", left.channel);
 
 			for ( i = 1; i < options->order; i++ ) {
 				offset = offsets->offsets[

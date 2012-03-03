@@ -8,10 +8,7 @@ typedef struct {
 	char *out_filename;
 	char *mode_string;
 	int mode;
-	long long int number;
 	int print_every;
-	int binary_in;
-	int binary_out;
 	long long int queue_size;
 	long long int max_time_distance;
 	long long int max_pulse_distance;

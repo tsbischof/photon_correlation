@@ -110,9 +110,20 @@ combinations_t *make_combinations(int channels, int order) {
 			/* Now that we have the (channel, index) pairs, sort by the
 			 * channel.
 			 */
-			debug("Sorting the entries.\n");
-			qsort(&channels_array[0], 
-					order, sizeof(channel_t), channel_compare);
+			debug("Checking whether the entries are sorted.\n");
+			combinations->sorted[combination_index] = 1;
+
+			for ( i = 0; i < order-1; i++ ) {
+				if ( channels_array[i].channel > channels_array[i+1].channel) {
+					combinations->sorted[combination_index] = 0;
+				}
+			}
+
+			if ( ! combinations->sorted[combination_index] ) {
+				debug("Sorting the entries.\n");
+				qsort(&channels_array[0], 
+						order, sizeof(channel_t), channel_compare);
+			}
 
 #if PRINT_TUPLES
 			printf("(");
@@ -171,6 +182,8 @@ combinations_t *allocate_combinations(int channels, int order) {
 		} else {
 			combinations->indices = (int **)malloc(sizeof(int *)
 												*combinations->n_combinations);
+			combinations->sorted = (int *)malloc(sizeof(int)
+												*combinations->n_combinations);
 	
 			if ( combinations->indices == NULL ) {
 				result = -1;
@@ -205,6 +218,8 @@ void free_combinations(combinations_t **combinations) {
 			}
 			free((*combinations)->indices);
 		}
+
+		free((*combinations)->sorted);
 
 		free(*combinations);
 	}

@@ -10,6 +10,7 @@ typedef struct {
 	int channels;
 	int order;
 	int n_combinations;
+	int *sorted;
 	int **indices;
 } combinations_t;
 

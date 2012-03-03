@@ -11,6 +11,8 @@
 #include "correlate_t2.h"
 #include "correlate_t3.h"
 #include "error.h"
+#include "files.h"
+#include "modes.h"
 
 #define QUEUE_SIZE 100000
 
@@ -20,15 +22,12 @@
 void usage(void) {
 	fprintf(stdout, 
 "Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b] [-n number]\n"
-"                 [-p print_every] [-q queue_size] [-d max_distance] \n"
-"                 -g order -c channels -t type\n"
+"                 [-p print_every] [-q queue_size] [-d max_time_distance] \n"
+"                 [-e max_pulse_distance] -g order -c channels -m mode\n"
+"\n"
 "           -v, --verbose: Print debug-level information.\n"
 "           -i, --file-in: Input file. By default, this is STDIN.\n"
 "          -o, --file-out: Output file. By default, this is STDOUT.\n"
-"         -a, --binary-in: Input file is a binary stream. Default is ascii.\n"
-"        -b, --binary-out: Output file is a binary stream. Default is ascii.\n"
-"            -n, --number: Number of entries to process. Default is to\n"
-"                          process until EOF is reached.\n"
 "       -p, --print-every: Print the result for multiples of this number of\n"
 "                          entries. Default is to print nothing.\n"
 "              -m, --mode: Stream type. This is either t2 or t3, and the\n"
@@ -46,7 +45,7 @@ void usage(void) {
 "                          perform. By default this is 2, the standard\n"
 "                          cross-correlation of two channels.\n"
 "          -c, --channels: Number of channels in the incoming stream. By\n"
-"                          defaults, this is 2 (Picoharp).\n"
+"                          default, this is 2 (Picoharp).\n"
 "\n"
 "       This program assumes the input stream is time-ordered.\n",
 			QUEUE_SIZE);
@@ -64,9 +63,6 @@ int main(int argc, char *argv[]) {
 		{"verbose", no_argument, 0, 'v'},
 		{"file-in", required_argument, 0, 'i'},
 		{"file-out", required_argument, 0, 'o'},
-		{"binary-in", no_argument, 0, 'a'},
-		{"binary-out", no_argument, 0, 'b'},
-		{"number", required_argument, 0, 'n'},
 		{"print-every", required_argument, 0, 'p'},
 		{"mode", required_argument, 0, 'm'},
 		{"queue-size", required_argument, 0, 'q'},
@@ -81,17 +77,14 @@ int main(int argc, char *argv[]) {
 	options.out_filename = NULL;
 	options.mode_string = NULL;
 	options.mode = -1;
-	options.number = LONG_MAX;
 	options.print_every = 0;
-	options.binary_in = 0;
-	options.binary_out = 0;
 	options.queue_size = QUEUE_SIZE;
 	options.max_time_distance = 0;
 	options.max_pulse_distance = 0;
 	options.order = 2;
 	options.channels = 2;
 
-	while ( (c = getopt_long(argc, argv, "vi:o:abn:p:m:q:d:g:c:", long_options,
+	while ( (c = getopt_long(argc, argv, "vi:o:p:m:q:d:g:c:", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
 			case 'v':
@@ -102,15 +95,6 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'o':
 				options.out_filename = strdup(optarg);
-				break;
-			case 'a':
-				options.binary_in = 1;
-				break;
-			case 'b':
-				options.binary_out = 1;
-				break;
-			case 'n':
-				options.number = strtoll(optarg, NULL, 10);
 				break;
 			case 'p':
 				options.print_every = strtol(optarg, NULL, 10);
@@ -143,59 +127,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Parse the options and make sure they are reasonable. */
-	if ( options.in_filename == NULL ) {
-		in_stream = stdin;
-	} else {
-		if ( options.binary_in ) {
-			error("Binary mode not yet supported.\n");
-			result = -1;
-/*			debug("Opening %s for binary read.\n", options.in_filename);
-			in_stream = fopen(options.in_filename, "rb"); */
-		} else {
-			debug("Opening %s for ascii read.\n", options.in_filename);
-			in_stream = fopen(options.in_filename, "r");
-		}
+	result += stream_open(&in_stream, stdin, options.in_filename, "r");
+	result += stream_open(&out_stream, stdout, options.out_filename, "w");
 
-		if ( in_stream == NULL ) {
-			error("Could not open %s for reading.\n", options.in_filename);
-			result = -1;
-		}
-	}
-
-	if ( options.out_filename == NULL ) {
-		out_stream = stdout;
-	} else {
-		if ( options.binary_out ) {
-			error("Binary mode not yet supported.\n");
-			result = -1;
-/*			debug("Opening %s for binary read.\n");
-			out_stream = fopen(options.out_filename, "wb"); */
-		} else {
-			debug("Opening %s for ascii read.\n");
-			out_stream = fopen(options.out_filename, "w");
-		}
-
-		if ( out_stream == NULL ) {
-			error("Could not open %s for writing.\n", options.out_filename);
-			result = -1;
-		}
-	}
-
-	if ( options.mode_string == NULL ) {
-		error("No file type specified.\n");
-		result = -1;
-	} else {
-		if ( ! strcmp(options.mode_string, "t2") ) {
-			debug("Found mode t2.\n");
-			options.mode = MODE_T2;
-		} else if ( ! strcmp(options.mode_string, "t3") ) {
-			debug("Found mode t3.\n");
-			options.mode = MODE_T3;
-		} else {
-			error("Mode %s not recognized.\n", options.mode_string);
-			result = -1;
-		}
-	}
+	result += mode_parse(&(options.mode), options.mode_string);
 
 	if ( options.mode == MODE_T2 ) {
 		if ( options.max_time_distance == 0 ) {
@@ -203,7 +138,7 @@ int main(int argc, char *argv[]) {
 		} else if ( options.max_time_distance < 0 ) { 
 			error("Time distance cannot be less than zero (%d specified).\n", 
 					options.max_time_distance);
-			result = -1;
+			result += -1;
 		}
 	} else if ( options.mode == MODE_T3 ) {
 		if ( options.max_pulse_distance == 0 ) {
@@ -211,20 +146,27 @@ int main(int argc, char *argv[]) {
 		} else if ( options.max_pulse_distance < 0 ) {
 			error("Pulse distance cannot be less than zero (%d specified).\n",
 					options.max_pulse_distance);
-			result = -1;
+			result += -1;
 		}
 	}
-	
+
 	if ( options.channels < 1 ) {
 		error("Must have at least one channel (%d specified).\n", 
 				options.channels);
-		result = -1;
+		result += -1;
 	}
 
 	if ( options.order > 4 ) {
 		warn("A correlation of order %d will require extensive "
 				"time to compute.\n", options.order);
 	}
+
+/*	printf("%s, %s, %s\n", options.in_filename, options.out_filename,
+			options.mode_string);
+	printf("%d, %d\n", options.mode, options.print_every);
+	printf("%lld, %lld, %lld\n", options.queue_size, options.max_time_distance,
+			options.max_pulse_distance);
+	printf("%d, %d\n", options.order, options.channels); */
 
 	/* Begin the calculation. */
 	if ( result ) {
@@ -237,29 +179,16 @@ int main(int argc, char *argv[]) {
 		} else if ( options.mode == MODE_T3 ) {
 			debug("Mode t3.\n");
 			result = correlate_t3(in_stream, out_stream, &options);
-		} else {
-			warn("Mode index %d (%s) not recognized.\n", options.mode,
-					options.mode_string);
-		}
+		} 
 	}
-		
 
 	/* Free memory. */
-	if ( options.in_filename != NULL ) {
-		free(options.in_filename);
-	}
-	if ( in_stream != NULL && in_stream != stdin ) {
-		fclose(in_stream);
-	}
-	if ( options.out_filename != NULL && out_stream != stdout ) {
-		free(options.out_filename);
-	}
-	if ( out_stream != NULL && out_stream != stdout ) {
-		fclose(out_stream);
-	}
-	if ( options.mode_string != NULL ) {
-		free(options.mode_string);
-	}
+	debug("Cleaning up.\n");
+	free(options.in_filename);
+	free(options.out_filename);
+	stream_close(in_stream, stdin);
+	stream_close(out_stream, stdout);
+	free(options.mode_string);
 	
 	return(result);
 }

@@ -67,9 +67,6 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	combinations = make_combinations(options->channels, options->order);
 	combination = allocate_combination(options->channels, options->order);
 
-/*	print_combinations(combinations);
-	result = -1; */
-
 	if ( queue == NULL || offsets == NULL || correlation_block == NULL ||
 			combinations == NULL || combination == NULL ) {
 		error("Could not allocate memory for correlation..\n");
@@ -132,16 +129,11 @@ int next_t2(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 			 */
 			queue->right_index += 1;
 			ending_index = queue->right_index % queue->length;
-			if ( options->binary_in ) {
-				result = fread(&(queue->queue[ending_index]), 
-					sizeof(t2_t), 1, in_stream);
-			} else {
-				result = fscanf(in_stream, "%d,%llu\n", 
-						&(queue->queue[ending_index]).channel,
-						&(queue->queue[ending_index]).time);
-			}
+			result = fscanf(in_stream, "%d,%llu\n", 
+					&(queue->queue[ending_index]).channel,
+					&(queue->queue[ending_index]).time);
 
-			if ( ! result ) {
+			if ( result != 2 && ! feof(in_stream) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
 			 * on our hands.
