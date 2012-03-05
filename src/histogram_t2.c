@@ -178,5 +178,5 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	free_combinations(&combinations);
 	free_t2_correlated(&record);
 	
-	return(0);
+	return(result);
 }
