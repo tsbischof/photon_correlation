@@ -1,9 +1,13 @@
+CP = cp -p
+MKDIR = mkdir -p
+TEST = test
 CC = cc
 LD = cc
 CFLAGS = -Wall -std=c99 
 LDFLAGS = ${CFLAGS}
 RM = rm -f
 LIB =
+INSTALL_DIR = ~tsbischof/bin/
 
 PICOQUANT_OBJ = picoquant.o error.o types.o \
 		picoharp.o picoharp/ph_v20.o \
@@ -18,6 +22,13 @@ HISTOGRAM_OBJ = histogram.o error.o histogram_t2.o \
 TARGETS = picoquant correlate histogram
 
 all: ${TARGETS}
+
+install: ${TARGETS}
+	${TEST} -d ${INSTALL_DIR} || ${MKDIR} ${INSTALL_DIR}
+	${CP} ${TARGETS} ${INSTALL_DIR}
+
+uninstall: 
+	${RM} ${addprefix ${INSTALL_DIR}, ${TARGETS}}
 
 picoquant: ${PICOQUANT_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${LIB}
