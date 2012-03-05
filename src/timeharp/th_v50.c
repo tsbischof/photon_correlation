@@ -449,7 +449,7 @@ int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 					overflows++;
 					base_time += TH_TTTR_OVERFLOW;
 				} else {
-					warn("Special record not recognized.\n");
+					warn("Special record not recognized: %d\n");
 				}
 			}
 		}
