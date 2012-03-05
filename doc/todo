@@ -1,0 +1,9 @@
+Talk about:
+-picoquant structure
+-design choices (streaming, etc.)
+-correlation (including order of algorithm)
+-combinations 
+-histograms
+-how to do:
+-- lifetimes
+-- g2 (and g(n))
