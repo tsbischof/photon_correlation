@@ -26,6 +26,7 @@ typedef struct {
 	int *offsets;
 } offsets_t;
 
+int pow_int(int channels, int order);
 int n_combinations(int channels, int order);
 int channel_compare(const void *a, const void *b);
 

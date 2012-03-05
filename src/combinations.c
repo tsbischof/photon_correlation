@@ -16,25 +16,28 @@
  * Helper functions.
  *
  */
-int n_combinations(int channels, int order) {
-	/* The number of combinations will be channels^order, since we have
- 	 * order many digits to populate with a channel (up to channels-1)
- 	 */
+int pow_int(int base, int power) {
 	int result = 1;
 	int previous = result;
 	int i;
 
-	for ( i = 0; i < order; i++ ) {
-		result *= channels;
+	for ( i = 0; i < power; i++ ) {
+		result *= base;
 		if ( previous > result ) {
 			/* Integer overflow. */
-			error("Integer overflow when calculating the number of "
-					"combinations.\n");
+			error("Integer overflow when calculating %d^%d.\n", base, power);
 			return(0);
 		}
 	}
 
 	return(result);
+}
+
+int n_combinations(int channels, int order) {
+	/* The number of combinations will be channels^order, since we have
+ 	 * order many digits to populate with a channel (up to channels-1)
+ 	 */
+	return(pow_int(channels, order));
 }
 
 int channel_compare(const void *a, const void *b) {
@@ -235,6 +238,7 @@ combination_t *allocate_combination(int channels, int order) {
 	int result = 0;
 	combination_t *combination;
 	combination = (combination_t *)malloc(sizeof(combination_t));
+	int i;
 
 	if ( combination == NULL ) {
 		result = -1;
@@ -244,6 +248,10 @@ combination_t *allocate_combination(int channels, int order) {
 		combination->digits = (int *)malloc(sizeof(int)*combination->order);
 		if ( combination->digits == NULL ) {
 			result = -1;
+		} else {
+			for ( i = 0; i < order; i++ ) {
+				combination->digits[i] = 0;
+			}
 		}
 	}
 

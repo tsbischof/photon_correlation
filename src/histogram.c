@@ -50,17 +50,12 @@ int str_to_limits(char *str, limits_t *limits) {
 		return(-1);
 	}
 
-	result = sscanf(str, "%lld,%d,%lld", &(limits->lower), &(limits->bins),
+	result = sscanf(str, "%lld,%u,%lld", &(limits->lower), &(limits->bins),
 				&(limits->upper));
 
 	if ( limits->lower >= limits->upper ) {
 		error("Lower limit must be less than upper limit "
 				"(%lld, %lld specified)\n", limits->lower, limits->upper);
-		return(-1);
-	}
-
-	if ( limits->bins <= 0 ) {
-		error("Must have at least one bin (%d specified).\n", limits->bins);
 		return(-1);
 	}
 
@@ -88,6 +83,93 @@ int scale_parse(char *str, int *scale) {
 	}
 	
 	return(*scale == SCALE_UNKNOWN);
+}
+
+/* g1 histogram routines. This is useful mostly for t3 mdoe, but put it here
+ * in case it is useful elsewhere.
+ */
+
+g1_histograms_t *allocate_g1_histograms(limits_t *limits, int channels) {
+	int result = 0;
+	int i;
+	int j;
+	g1_histograms_t *histograms = NULL;
+
+	histograms = (g1_histograms_t *)malloc(sizeof(g1_histograms_t));
+	if ( histograms == NULL ) {
+		result = -1;
+	} else {
+		histograms->n_histograms = channels;
+		histograms->limits.lower = limits->lower;
+		histograms->limits.bins = limits->bins;
+		histograms->limits.upper = limits->upper; 
+		histograms->bin_edges = (long long int *)malloc(sizeof(long long int)*
+				limits->bins);
+		histograms->histograms = (g1_histogram_t *)malloc(
+				sizeof(g1_histogram_t)*histograms->n_histograms);
+
+		if ( histograms->histograms == NULL 
+				|| histograms->bin_edges == NULL ) {
+			result = -1;
+		} else {
+			for ( i = 0; i < histograms->n_histograms; i++ ) {
+				histograms->histograms[i].counts = (unsigned int *)malloc(
+						sizeof(unsigned int)*histograms->limits.bins);
+				if ( histograms->histograms[i].counts == NULL ) {
+					result = -1;
+					i = histograms->n_histograms;
+				} else {
+					printf("%d,%d\n", i, j);
+					for ( j = 0; j < histograms->limits.bins; j++ ) {
+						histograms->histograms[i].counts[j] = 0;
+					}
+				}
+			}
+		}
+	}
+
+	if ( result ) {
+		error("Could not allocate histograms.\n");
+		free_g1_histograms(&histograms);
+	}
+
+	return(histograms);
+}
+
+void free_g1_histograms(g1_histograms_t **histograms) {
+	int i;
+	if ( *histograms != NULL ) {
+		free((*histograms)->bin_edges);
+
+		if ( (*histograms)->histograms != NULL ) {
+			for ( i = 0; i < (*histograms)->n_histograms; i++ ) {
+				free((*histograms)->histograms[i].counts);
+			}
+		}
+
+		free((*histograms)->histograms);
+	}	
+}
+
+void print_g1_histograms(FILE *out_stream, g1_histograms_t *histograms) {
+	int histogram_index;
+	int bin_index;
+
+	for ( histogram_index = 0; histogram_index < histograms->n_histograms; 
+			histogram_index++ ) {
+		for ( bin_index = 0; bin_index < histograms->limits.bins; 
+				bin_index++ ) {
+			fprintf(out_stream, "%d,%lld,%u\n", 
+					histogram_index, 
+					histograms->bin_edges[bin_index], 
+					histograms->histograms[histogram_index].counts[bin_index]);
+		}
+	}
+}
+
+int increment_g1_histograms(g1_histograms_t *histograms,
+		unsigned int channel, long long int value) {
+	return(0);
 }
 
 int main(int argc, char *argv[]) {
@@ -182,16 +264,33 @@ int main(int argc, char *argv[]) {
 	if ( options.order > 4 ) {
 		warn("A correlation of order %d will require extensive "
 				"time to compute.\n", options.order);
+	} else if ( options.order < 1 ) {
+		error("Order of histogram must be at least 1 (%d specified).\n",
+				options.order);
+		result += -1;
 	}
 
-	result += scale_parse(options.time_scale_string, &(options.time_scale));
-	result += str_to_limits(options.time_string, &(options.time_limits));
+	if ( options.mode == MODE_T2 ) {
+		result += scale_parse(options.time_scale_string, &(options.time_scale));
+		result += str_to_limits(options.time_string, &(options.time_limits));
+	} else if ( options.mode == MODE_T3 ) {
+		/* For a first-order t3 correlation, we just care about the time limits,
+		 * because the pulse number is thrown out.
+		 */
+		result += scale_parse(options.time_scale_string, 
+					&(options.time_scale));
+		result += str_to_limits(options.time_string, 
+					&(options.time_limits));
 
-	if ( options.mode == MODE_T3 ) {
-		result += scale_parse(options.pulse_scale_string, 
+		if ( options.order != 1 ) {
+			result += scale_parse(options.pulse_scale_string, 
 					&(options.pulse_scale));
-		result += str_to_limits(options.pulse_string, 
+			result += str_to_limits(options.pulse_string, 
 					&(options.pulse_limits));
+		}
+	} else {
+		error("Mode not recognized: %s.\n", options.mode_string);
+		result += -1;
 	}
 
 	/* Begin the calculation. */

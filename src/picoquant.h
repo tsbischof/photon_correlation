@@ -15,6 +15,7 @@
 #define PQ_EOF		-4
 #define PQ_MODE_ERROR	-5
 #define PQ_FILE_ERROR	-6
+#define PQ_VERSION_ERROR -7
 
 #pragma pack(4)
 typedef struct {

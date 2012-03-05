@@ -384,7 +384,7 @@ int th_v20_tttr_stream(FILE *in_stream, FILE *out_stream,
 int th_v20_tttr_record_stream(FILE *in_stream, FILE *out_stream, 
 		th_v20_header_t *th_header, th_v20_tttr_header_t *tttr_header,
 		pq_options_t *options) {
-	int result;
+	int result = 0;
 	int overflows = 0;
 	long long int record_count = 0;
 	th_v20_tttr_record_t record;

@@ -16,7 +16,7 @@ typedef struct {
 t3_queue_t *allocate_t3_queue(options_t *options);
 void free_t3_queue(t3_queue_t **queue);
 t3_t get_queue_item_t3(t3_queue_t *queue, int index);
-int next_t3(FILE *in_stream, t3_queue_t *queue, options_t *options);
+int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options);
 
 int valid_distance_t3(t3_t *left, t3_t *right, options_t *options);
 

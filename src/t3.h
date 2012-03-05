@@ -9,4 +9,7 @@ typedef struct {
 	int time;
 } t3_t;
 
+int next_t3(FILE *in_stream, t3_t *record);
+void print_t3(FILE *out_stream, t3_t *record);
+
 #endif

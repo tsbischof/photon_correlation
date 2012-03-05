@@ -1,3 +1,10 @@
+Pressing:
+-write t3 g1 calculation (for lifetimes)
+-write interface to picoquant for Python, Matlab
+-write basic tests for picoquant, others
+-test on linux32, win32, win64
+-check for byte misalignment for timeharp data
+
 Picoquant:
 -fluorescence correlation spectroscopy: autocorrelation of summed signal
 -build automated tests to check the output for each file type

@@ -24,6 +24,7 @@ int th_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 	} else {
 		error("Timeharp version not supported: %s.\n",
 				pq_header->FormatVersion);
+		result = PQ_VERSION_ERROR;
 	}
 
 	return(result);

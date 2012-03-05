@@ -380,7 +380,7 @@ int th_v50_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, th_v50_header_t *th_header, 
 		pq_options_t *options) { 
 	th_v50_tttr_header_t tttr_header;
-	int result;
+	int result = 0;
 
 	result = th_v50_tttr_header_read(in_stream, th_header, 
 			&tttr_header, options);
@@ -405,7 +405,7 @@ int th_v50_tttr_stream(FILE *in_stream, FILE *out_stream,
 int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream, 
 		th_v50_header_t *th_header, th_v50_tttr_header_t *tttr_header,
 		pq_options_t *options) {
-	int result;
+	int result = 0;
 	int overflows = 0;
 	long long int record_count = 0;
 	th_v50_tttr_record_t record;
