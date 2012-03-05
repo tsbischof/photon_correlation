@@ -87,7 +87,6 @@ void free_t2_histograms(t2_histograms_t **histograms) {
 
 void print_t2_histograms(FILE *out_stream, t2_histograms_t *histograms) {
 	int i;
-	int j;
 
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
 		/* Looping over the histograms. */
@@ -146,7 +145,7 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_correlated_t *record;
 	t2_histograms_t *histograms;
 	combinations_t *combinations;
-	int result;
+	int result = 0;
 	int i;
 
 	if ( options->order == 1 ) {
