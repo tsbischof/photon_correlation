@@ -89,12 +89,19 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 					offsets, correlation_block, options); 
 	}
 
+	debug("Finished correlation, freeing memory.\n");
 	/* Cleanup */
+	debug("Freeing t2 queue.\n");
 	free_t2_queue(&queue);
+	debug("Freeing combinations.\n");
 	free_combinations(&combinations);
+	debug("Freeing offsets.\n");
 	free_offsets(&offsets);
+	debug("Freeing correlation block.\n");
 	free(correlation_block);
+	debug("Freeing combination.\n");
 	free_combination(&combination);
+	debug("Done cleaning up.\n");
 	
 	return(result);
 }

@@ -126,7 +126,7 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 	/* The histogram channels seem to count backwards, with an upper limit
 	 * of n_histogram_channels.
 	 */
-	record.time = n_histogram_channels - histogram_channel;
+	record.time = /*n_histogram_channels - */ histogram_channel;
 
 	if ( options->binary_out ) {
 		fwrite(&record, sizeof(t3_t), 1, out_stream);

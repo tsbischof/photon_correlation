@@ -347,7 +347,7 @@ void print_combinations(combinations_t *combinations) {
 offsets_t *allocate_offsets(int channels, int order) {
 	int result = 0;
 	offsets_t *offsets;
-	offsets = (offsets_t *)malloc(sizeof(offsets));
+	offsets = (offsets_t *)malloc(sizeof(offsets_t));
 	if ( offsets == NULL ) {
 		result = -1;
 	} else {
@@ -371,7 +371,7 @@ void free_offsets(offsets_t **offsets) {
 		if ( (*offsets)->offsets != NULL ) {
 			free((*offsets)->offsets);
 		}
-		free((*offsets));
+		free(*offsets);
 	}
 }
 

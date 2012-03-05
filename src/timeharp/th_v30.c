@@ -26,7 +26,6 @@ int th_v30_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 			error("Continuous mode for version 3.0 not yet supported.\n");
 			result = PQ_MODE_ERROR;
 		} else if ( th_header.MeasurementMode == TH_MODE_TTTR ) {
-			warn("TTTR mode for version 3.0 not yet tested.\n");
 			result = th_v30_tttr_stream(in_stream, out_stream,
 					pq_header, &th_header, options);
 		result = PQ_MODE_ERROR;
@@ -378,6 +377,8 @@ int th_v30_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_print(out_stream, pq_header);
 		th_v30_header_print(out_stream, th_header);
 		th_v30_tttr_header_print(out_stream, &tttr_header);
+	} else if ( options->print_resolution ) {
+		fprintf(out_stream, "%e\n", th_header->Brd[0].Resolution);
 	} else {
 		result = th_v30_tttr_record_stream(in_stream, out_stream,
 				th_header, &tttr_header, options);
@@ -418,7 +419,8 @@ int th_v30_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 					overflows++;
 					base_time += TH_TTTR_OVERFLOW;
 				} else {
-					warn("Special record not recognized.\n");
+					warn("Special record not recognized: %u.\n", 
+							record.Channel);
 				}
 			}
 		}

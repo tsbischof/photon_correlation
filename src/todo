@@ -17,26 +17,31 @@ Picoquant:
 > Testing:
 >> Picoharp
 -v20
---phd: linux64
---pt2: linux64
---pt3: linux64
+--phd: linux32, linux64
+--pt2: linux32, linux64
+--pt3: linux32, linux64
 
 >> Hydraharp
 -v10
---hhd: linux64
---ht2: linux64
---ht3: linux64
+--hhd: linux32, linux64
+--ht2: linux32, linux64
+--ht3: linux32, linux64
 
 >> TimeHarp
 -v20 (software version 3.02, but format version 2.0? Data straight from the v302 sample data)
---thd: linux64
+--thd: linux32, linux64
 --thc: no
---t3r: written, but not tested
+--t3r: linux32, linux64
+
+-v30
+--thd: linux32, linux64
+--thc: no
+--t3r: linux32, linux64. Seems to have a lot of special records, but things match up with the filedemo version of the reader.
 
 -v50
---thd: linux64
+--thd: linux32, linux64
 --thc: no
---t3r: matches the file demo, but the channel numbers seem really weird.
+--t3r: linux32, linux64
 
 -v60:
 --thd: linux64

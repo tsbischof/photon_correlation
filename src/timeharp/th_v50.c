@@ -20,7 +20,6 @@ int th_v50_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		error("Could not read Timeharp header.\n");
 	} else {
 		if ( th_header.MeasurementMode == TH_MODE_INTERACTIVE ) {
-			warn("Interactive mode for version 5.0 not yet tested.\n");
 			result = th_v50_interactive_stream(in_stream, out_stream,
 					pq_header, &th_header, options);
 		} else if ( th_header.MeasurementMode == TH_MODE_CONTINUOUS ) {

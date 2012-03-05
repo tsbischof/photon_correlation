@@ -20,11 +20,10 @@ int th_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		error("Could not read Timeharp header.\n");
 	} else {
 		if ( th_header.MeasurementMode == TH_MODE_INTERACTIVE ) {
-			warn("Interactive mode for version 5.0 not yet tested.\n");
 			result = th_v20_interactive_stream(in_stream, out_stream,
 					pq_header, &th_header, options);
 		} else if ( th_header.MeasurementMode == TH_MODE_CONTINUOUS ) {
-			error("Continuous mode for version 5.0 not yet supported.\n");
+			error("Continuous mode for version 2.0 not yet supported.\n");
 			result = PQ_MODE_ERROR;
 		} else if ( th_header.MeasurementMode == TH_MODE_TTTR ) {
 			result = th_v20_tttr_stream(in_stream, out_stream,
@@ -378,6 +377,8 @@ int th_v20_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_print(out_stream, pq_header);
 		th_v20_header_print(out_stream, th_header);
 		th_v20_tttr_header_print(out_stream, &tttr_header);
+	} else if ( options->print_resolution ) {
+		fprintf(out_stream, "%e\n", th_header->Brd[0].Resolution);
 	} else {
 		result = th_v20_tttr_record_stream(in_stream, out_stream,
 				th_header, &tttr_header, options);

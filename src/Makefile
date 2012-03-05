@@ -13,7 +13,8 @@ PICOQUANT_OBJ = picoquant.o error.o types.o \
 		t2.o t3.o \
 		picoharp.o picoharp/ph_v20.o \
 		hydraharp.o hydraharp/hh_v10.o \
-		timeharp.o timeharp/th_v20.o timeharp/th_v50.o timeharp/th_v60.o
+		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
+				timeharp/th_v50.o timeharp/th_v60.o 
 CORRELATE_OBJ = correlate.o error.o combinations.o files.o modes.o \
 		correlate_t2.o \
 		correlate_t3.o t3.o
