@@ -19,8 +19,6 @@ int th_v60_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 	if ( result ) {
 		error("Could not read Timeharp header.\n");
 	} else {
-		pq_header_print(out_stream, pq_header);
-		th_v60_header_print(out_stream, &th_header);
 		if ( th_header.MeasurementMode == TH_MODE_INTERACTIVE ) {
 			result = th_v60_interactive_stream(in_stream, out_stream, 
 					pq_header, &th_header, options);
@@ -151,6 +149,7 @@ int th_v60_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_options_t *options) {
 	int result;
 	th_v60_interactive_t *interactive;
+	int i;
 
 	/* Read interactive header. */
 	result = th_v60_interactive_read(in_stream, th_header, 
@@ -164,6 +163,10 @@ int th_v60_interactive_stream(FILE *in_stream, FILE *out_stream,
 		th_v60_header_print(out_stream, th_header);
 		th_v60_interactive_header_print(out_stream, th_header,
 			&interactive);
+	} else if ( options->print_resolution) { 
+		for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
+			fprintf(out_stream, "%d,%e\n", i, interactive[i].Resolution);
+		}
 	} else { 
 	/* Read and print interactive data. */
 		th_v60_interactive_data_print(out_stream, th_header,

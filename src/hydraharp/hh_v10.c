@@ -208,6 +208,7 @@ int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_options_t *options) {
 	int result;
 	hh_v10_interactive_t interactive;
+	int i;
 
 	/* Read interactive header. */
 	result = hh_v10_interactive_header_read(in_stream, hh_header,
@@ -221,6 +222,11 @@ int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
 		hh_v10_header_print(out_stream, hh_header);
 		hh_v10_interactive_header_print(out_stream, hh_header,
 				&interactive);
+	} else if ( options->print_resolution ) {
+		for ( i = 0; i < hh_header->NumberOfCurves; i++ ) {
+			fprintf(out_stream, "%d,%e\n", i, 
+					interactive.Curve[i].Resolution*1e-3);
+		}
 	} else {
 	/* Read and print interactive data. */
 		result = hh_v10_interactive_data_read(in_stream, hh_header, 
@@ -386,7 +392,8 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
  *
  */
 int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream,
-		pq_header_t *pq_header, hh_v10_header_t *hh_header, pq_options_t *options) {
+		pq_header_t *pq_header, hh_v10_header_t *hh_header, 
+		pq_options_t *options) {
 	hh_v10_tttr_header_t tttr_header;
 	int result;
 
@@ -404,6 +411,11 @@ int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream,
 		hh_v10_header_print(out_stream, hh_header);
 		hh_v10_tttr_header_print(out_stream, &tttr_header);
 		result = PQ_SUCCESS;
+	} else if ( options->print_resolution ) {
+		/* HydraHarp has half the resolution it reports, according to the 
+ 		 * documentation.
+ 		 */
+		fprintf(out_stream, "%e\n", hh_header->Resolution*2e-3);
 	} else {
 		if ( hh_header->MeasurementMode == HH_MODE_T2 ) {
 			debug("Found mode ht2.\n");

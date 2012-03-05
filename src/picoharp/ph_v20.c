@@ -216,6 +216,7 @@ int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_options_t *options) {
 	int result;
 	ph_v20_interactive_t interactive;
+	int i;
 
 	/* Read interactive header. */
 	result = ph_v20_interactive_header_read(in_stream, ph_header,
@@ -228,6 +229,10 @@ int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_print(out_stream, pq_header);
 		ph_v20_header_print(out_stream, ph_header);
 		ph_v20_interactive_header_print(out_stream, ph_header, &interactive);
+	} else if ( options->print_resolution ) {
+		for ( i = 0; i < ph_header->NumberOfCurves; i++ ) {
+			fprintf(out_stream, "%d,%e\n", i, interactive.Curve[i].Resolution);
+		}
 	} else {
 	/* Read and print interactive data. */
 		result = ph_v20_interactive_data_read(in_stream, ph_header, 
@@ -414,7 +419,9 @@ int ph_v20_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_print(out_stream, pq_header);
 		ph_v20_header_print(out_stream, ph_header);
 		ph_v20_tttr_header_print(out_stream, &tttr_header);
-		return(PQ_SUCCESS);
+		result = PQ_SUCCESS;
+	} else if ( options->print_resolution ) {
+		fprintf(out_stream, "%e\n", PH_BASE_RESOLUTION*1e9);
 	} else {
 		if ( ph_header->MeasurementMode == PH_MODE_T2 ) {
 			result = ph_v20_t2_record_stream(in_stream, out_stream, 

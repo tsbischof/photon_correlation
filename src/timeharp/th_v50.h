@@ -102,8 +102,7 @@ typedef struct {
 
 typedef struct {
 	int32 TTTRGlobClock;
-	int32 ExtDevices;
-	int32 Reserved[5];
+	int32 Reserved[6];
 	int32 SyncRate;
 	int32 AverageCFDRate;
 	int32 StopAfter;

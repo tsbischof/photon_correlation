@@ -151,6 +151,7 @@ int th_v50_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_options_t *options) {
 	int result;
 	th_v50_interactive_t *interactive;
+	int i;
 
 	/* Read interactive header. */
 	result = th_v50_interactive_read(in_stream, th_header, 
@@ -164,6 +165,10 @@ int th_v50_interactive_stream(FILE *in_stream, FILE *out_stream,
 		th_v50_header_print(out_stream, th_header);
 		th_v50_interactive_header_print(out_stream, th_header,
 			&interactive);
+	} else if ( options->print_resolution ) {
+		for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
+			fprintf(out_stream, "%d,%e\n", i, interactive[i].Resolution);
+		}
 	} else { 
 	/* Read and print interactive data. */
 		th_v50_interactive_data_print(out_stream, th_header,
@@ -346,13 +351,14 @@ int th_v50_tttr_header_read(FILE *in_stream, th_v50_header_t *th_header,
 		th_v50_tttr_header_t *tttr_header, pq_options_t *options) {
 	int result;
 
+	fseek(in_stream, 0, SEEK_CUR);
 	result = fread(tttr_header, 
 		sizeof(th_v50_tttr_header_t)-sizeof(int32 *), 1, in_stream);
 	if ( result != 1 ) {
 		error("Could not read tttr header.\n");
 		return(PQ_READ_ERROR);
 	}
-	
+
 	tttr_header->SpecHeader = (int32 *)malloc(sizeof(int32)*
 			tttr_header->SpecHeaderLength);
 	if ( tttr_header->SpecHeader == NULL ) {
@@ -392,6 +398,8 @@ int th_v50_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_print(out_stream, pq_header);
 		th_v50_header_print(out_stream, th_header);
 		th_v50_tttr_header_print(out_stream, &tttr_header);
+	} else if ( options->print_resolution ) {
+		fprintf(out_stream, "%e\n", th_header->Brd[0].Resolution);
 	} else {
 		result = th_v50_tttr_record_stream(in_stream, out_stream,
 				th_header, &tttr_header, options);
@@ -412,6 +420,12 @@ int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 	long long int base_time = 0;
 
 	while ( !feof(in_stream) && record_count < options->number ) {
+		/* In the TimeHarp business, the TimeTag is the internal clock number,
+		 * and the Channel is the histogram bin. Consequently, the form is 
+		 * most like a t3 mode, except that the correlation has already been
+		 * performed (we know when, relative to the start of the run, the pulse
+		 * pair was detected).
+		 */
 		result = fread(&record, sizeof(record), 1, in_stream);
 
 		if ( result != 1 && !feof(in_stream) ) {
@@ -421,12 +435,13 @@ int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 			debug("%u, %u, %u, %u, %u\n",
 					record.TimeTag, record.Channel, record.Route, record.Valid,
 					record.Reserved);
+
 			if ( record.Valid ) {
 				/* Normal record. Print the channel and time. */
 				record_count++;
-				pq_print_t2(out_stream, record_count,
-						record.Channel, base_time, record.TimeTag,
-						th_header->Brd[0].Resolution, options);
+				pq_print_tttr(out_stream, record_count, 
+						record.Channel, th_header->NumberOfChannels,
+						base_time, record.TimeTag, options);
 			} else {
 				/* Special record. */
 				if ( 0x800 & record.Channel ) {
@@ -451,10 +466,8 @@ void th_v50_tttr_header_print(FILE *out_stream,
 
 	fprintf(out_stream, "TTTRGlobCLock = %"PRId32"\n", 
 			tttr_header->TTTRGlobClock);
-	fprintf(out_stream, "ExtDevices = %"PRId32"\n", 
-			tttr_header->ExtDevices);
 
-	for ( i = 0; i < 5; i++ ) {
+	for ( i = 0; i < 6; i++ ) {
 		fprintf(out_stream, "Reserved[%d] = %"PRId32"\n",
 				i, tttr_header->Reserved[i]);
 	}

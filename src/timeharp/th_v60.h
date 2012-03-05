@@ -59,7 +59,6 @@ typedef struct {
 	uint32 *Counts;
 } th_v60_interactive_t;
 
-#pragma pack(2)
 typedef struct {
 	char CreatorName[18];
 	char CreatorVersion[12];

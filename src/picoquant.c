@@ -19,7 +19,7 @@
 void pq_usage(void) {
 	fprintf(stdout, 
 "Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]\n"
-"                 [-p print_every] [-n number] [-b]\n"
+"                 [-p print_every] [-n number] [-b] [-z]\n"
 "\n"
 "        -i, --file-in: Input file. By default, this is stdin.\n"
 "       -o, --file-out: Output file. By default, this is stdout.\n"
@@ -35,6 +35,8 @@ void pq_usage(void) {
 "                       the documentation for each mode for the details of\n"
 "                       each stream type. Generally, this will be identical\n"
 "                       to the ascii mode in typing.\n"
+"-z, --resolution-only: Print the time resolution of the measurement as a \n"
+"                       float in nanoseconds, then exit.\n"
 "\n"
 "The file type and version will be detected automatically from the file header."
 "\n");
@@ -106,6 +108,37 @@ void pq_print_t3(FILE *out_stream, long long int count,
 	print_status(count, options);
 }
 
+void pq_print_tttr(FILE *out_stream, long long int count,
+		unsigned int histogram_channel, int n_histogram_channels,
+		long long int base_time, unsigned int record_time,
+		pq_options_t *options) {
+	/* This attempts to make the tttr record look t3-like. It is actually a
+ 	 * record of a 0->1 stop-start event, found in the histogram channel
+ 	 * at the time specified by the internal clock, but ultimately we can treat
+ 	 * the clock tick as a sync pulse and go from there.
+ 	 */
+	t3_t record;
+
+	/* Channel is really 1, but we only have one data channel */
+	record.channel = 0;
+	record.pulse_number = base_time + (long long int)record_time;
+
+	/* The histogram channels seem to count backwards, with an upper limit
+	 * of n_histogram_channels.
+	 */
+	record.time = n_histogram_channels - histogram_channel;
+
+	if ( options->binary_out ) {
+		fwrite(&record, sizeof(t3_t), 1, out_stream);
+	} else {
+		fprintf(out_stream, "%u,%lld,%u\n", 
+				record.channel, record.pulse_number,
+				record.time);
+	}
+
+	print_status(count, options);
+}
+
 void print_status(long long int count, pq_options_t *options) {
 	time_t rawtime;
 	struct tm *timeinfo;
@@ -160,6 +193,7 @@ int main(int argc, char *argv[]) {
 		{"print-every", required_argument, 0, 'p'},
 		{"verbose", no_argument, 0, 'v'},
 		{"binary-out", no_argument, 0, 'b'},
+		{"resolution-only", no_argument, 0, 'z'},
 		{0, 0, 0, 0}}; 
 
 	/* Set some default values. */
@@ -171,9 +205,10 @@ int main(int argc, char *argv[]) {
 	options.print_every = 0;
 	options.print_header = 0;
 	options.binary_out = 0;
+	options.print_resolution = 0;
 
 	/* Parse the command-line options. */
-	while ( (c = getopt_long(argc, argv, "hi:o:rn:p:vb", long_options,
+	while ( (c = getopt_long(argc, argv, "hi:o:rn:p:vbz", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
 			case 'h':
@@ -200,6 +235,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'b':
 				options.binary_out = 1;
+				break;
+			case 'z':
+				options.print_resolution = 1;
 				break;
 			case '?':
 				pq_usage();

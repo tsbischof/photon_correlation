@@ -27,6 +27,7 @@ typedef struct {
 	int print_header;
 	int print_every;
 	int binary_out;
+	int print_resolution;
 } pq_options_t;
 
 typedef struct {
@@ -50,6 +51,10 @@ void pq_print_t3(FILE *out_stream, long long int count,
 		unsigned int channel,
 		long long int base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime, double record_resolution,
+		pq_options_t *options);
+void pq_print_tttr(FILE *out_stream, long long int count,
+		unsigned int histogram_channel, int n_histogram_channels,
+		long long int base_time, unsigned int record_time,
 		pq_options_t *options);
 void pq_print_interactive(FILE *out_stream, int curve, double time, 
 		int counts, pq_options_t *options);

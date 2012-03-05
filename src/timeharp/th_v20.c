@@ -151,6 +151,7 @@ int th_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_options_t *options) {
 	int result;
 	th_v20_interactive_t *interactive;
+	int i;
 
 	/* Read interactive header. */
 	result = th_v20_interactive_read(in_stream, th_header, 
@@ -164,6 +165,10 @@ int th_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		th_v20_header_print(out_stream, th_header);
 		th_v20_interactive_header_print(out_stream, th_header,
 			&interactive);
+	} else if ( options->print_resolution ) {
+		for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
+			fprintf(out_stream, "%d,%e\n", i, interactive[i].Resolution);
+		}
 	} else { 
 	/* Read and print interactive data. */
 		th_v20_interactive_data_print(out_stream, th_header,
@@ -403,9 +408,9 @@ int th_v20_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 			if ( record.Valid ) {
 				/* Normal record. Print the channel and time. */
 				record_count++;
-				pq_print_t2(out_stream, record_count,
-						record.Channel, base_time, record.TimeTag,
-						th_header->Brd[0].Resolution, options);
+				pq_print_tttr(out_stream, record_count,
+						record.Channel, th_header->NumberOfChannels,
+						base_time, record.TimeTag, options);
 			} else {
 				/* Special record. */
 				if ( 0x800 & record.Channel ) {
