@@ -242,14 +242,22 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 				fprintf(out_stream, "\b)\n"); 
 			}
 
-			offset = offsets->offsets[
-						combinations->indices[combination_index][0]];
+			if ( options->channels_ordered ) {
+				offset = offsets->offsets[
+							combinations->indices[combination_index][0]];
+			} else {
+				offset = offsets->offsets[0];
+			}
 			left = get_queue_item_t2(queue, offset);
 			fprintf(out_stream, "%d", left.channel);
 			for ( i = 1; i < options->order; i++ ) {
-				offset = offsets->offsets[
-								combinations->indices[
-									combination_index][i]];
+				if ( options->channels_ordered ) {
+					offset = offsets->offsets[
+									combinations->indices[
+										combination_index][i]];
+				} else {
+					offset = offsets->offsets[i];
+				}
 				right = get_queue_item_t2(queue, offset);
 
 				debug("(%d, %lld) <-> (%d, %lld)\n", 

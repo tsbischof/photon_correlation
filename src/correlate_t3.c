@@ -241,18 +241,28 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 				fprintf(out_stream, "\b)\n");
 			}
 
-			offset = offsets->offsets[
-						combinations->indices[combination_index][0]];
+
+			if ( options->channels_ordered ) {
+				offset = offsets->offsets[
+							combinations->indices[combination_index][0]];
+			} else {
+				offset = offsets->offsets[0];
+			}
+
 			left = get_queue_item_t3(queue, offset);
 
 			fprintf(out_stream, "%d", left.channel);
 
 			for ( i = 1; i < options->order; i++ ) {
-				offset = offsets->offsets[
-								combinations->indices[
-									combination_index][i]];
-				right = get_queue_item_t3(queue, offset);
+				if ( options->channels_ordered ) {
+					offset = offsets->offsets[
+									combinations->indices[
+										combination_index][i]];
+				} else {
+					offset = offsets->offsets[i];
+				}
 
+				right =	get_queue_item_t3(queue, offset);
 				debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
 						left.channel, left.pulse_number, left.time,
 						right.channel, right.pulse_number, right.time);

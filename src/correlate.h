@@ -14,6 +14,7 @@ typedef struct {
 	long long int max_pulse_distance;
 	int order;
 	int channels;
+	int channels_ordered;
 } options_t;
 
 void usage(void);

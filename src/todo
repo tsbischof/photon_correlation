@@ -45,7 +45,6 @@ Picoquant:
 --t3r: no
 
 Correlate:
-
 > Testing
 >> t2: linux64
 >> t3: linux64
@@ -53,7 +52,9 @@ Correlate:
 Histogram:
 -three modes: t2-gn, t3-g1, t3-gn
 -print-every to output to a log file every so often (this would be useful for long runs)
--make the bins into doubles: integral histogramming is prone to stupid errors.
+> t2: done, need more thorough testing
+> t3_g1: done, do more thorough testing
+> t3_gn: not yet started.
 
 Intensity:
 -given a bin width, count the number of entries in a bin, then iterate until the end of the file.
