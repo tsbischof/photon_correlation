@@ -16,6 +16,7 @@ void debug(char *message, ...) {
 		vfprintf(stderr, message, args);
 	}
 	va_end(args);
+	fflush(stderr);
 }
 
 void error(char *message, ...) {
@@ -27,6 +28,7 @@ void error(char *message, ...) {
 	fprintf(stderr, "ERROR: ");
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fflush(stderr);
 }
 
 void warn(char *message, ...) {
@@ -36,4 +38,5 @@ void warn(char *message, ...) {
 	fprintf(stderr, "WARNING: ");
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fflush(stderr);
 }

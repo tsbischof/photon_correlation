@@ -1,6 +1,8 @@
 #ifndef COMBINATIONS_H_
 #define COMBINATIONS_H_
 
+#include <stdio.h>
+
 typedef struct {
 	int channel;
 	int index;
@@ -39,7 +41,7 @@ combination_t *allocate_combination(int channels, int order);
 void free_combination(combination_t **combination);
 int next_combination(combination_t *combination);
 int get_combination_index(combination_t *combination);
-
+void print_combination(FILE *out_stream, combination_t *combination);
 
 offsets_t *allocate_offsets(int channels, int order);
 void free_offsets(offsets_t **offsets);

@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <string.h>
 
 #include "files.h"
 #include "modes.h"
 #include "strings.h"
 #include "error.h"
 #include "histogram.h"
+#include "histogram_gn.h"
 #include "histogram_t2.h"
 #include "histogram_t3.h"
 
@@ -32,144 +32,14 @@ void usage(void) {
 "                        default, this is 2 (Picoharp or TimeHarp).\n"
 "           -g, --order: The order of the correlation performed. By default,\n"
 "                        this is 2 (the standard cross-correlation.\n"
-"      -D, --time-scale: Sets whether the time scale is \"linear\" or \n"
-"                        \"log\". The default is a linear scale.\n"
-"     -E, --pulse-scale: Sets whether the pulse scale is \"linear\" or \n"
-"                        \"log\". The default is a linear scale.\n"
+"      -D, --time-scale: Sets whether the time scale is \"linear\", \n"
+"                        \"log\". or \"log-zero\" (includes zero-time peak in\n"
+"                        the first bin. The default is a linear scale.\n"
+"     -E, --pulse-scale: Sets whether the pulse scale is \"linear\", \n"
+"                        \"log\", or \"log-zero\". The default is a linear\n"
+"                        scale.\n"
 "\n"
 "            This program assumes that the channels are presented in order.\n");
-}
-
-int str_to_limits(char *str, limits_t *limits) {
-	int result;
-
-	debug("Parsing limits: %s.\n", str);
-
-	if ( str == NULL ) {
-		error("Fatal error, no limits specified.\n");
-		return(-1);
-	}
-
-	result = sscanf(str, "%lld,%u,%lld", &(limits->lower), &(limits->bins),
-				&(limits->upper));
-
-	if ( limits->lower >= limits->upper ) {
-		error("Lower limit must be less than upper limit "
-				"(%lld, %lld specified)\n", limits->lower, limits->upper);
-		return(-1);
-	}
-
-	if( result != 3 ) {
-		error("Limits could not be parsed: %s.\n"
-				"The correct format is lower,bins,upper (no spaces).\n");
-		return(-1);
-	}
-
-	return(0);
-}
-
-int scale_parse(char *str, int *scale) {
-	if ( str == NULL ) {
-		*scale = SCALE_LINEAR;
-	} else {
-		if ( !strcmp(str, "log") ) {
-			*scale = SCALE_LOG;
-		} else if ( !strcmp(str, "linear") ) {
-			*scale = SCALE_LINEAR;
-		} else {
-			*scale = SCALE_UNKNOWN;
-			error("Scale specified but not recognized: %s\n", str);
-		}
-	}
-	
-	return(*scale == SCALE_UNKNOWN);
-}
-
-/* g1 histogram routines. This is useful mostly for t3 mdoe, but put it here
- * in case it is useful elsewhere.
- */
-
-g1_histograms_t *allocate_g1_histograms(limits_t *limits, int channels) {
-	int result = 0;
-	int i;
-	int j;
-	g1_histograms_t *histograms = NULL;
-
-	histograms = (g1_histograms_t *)malloc(sizeof(g1_histograms_t));
-	if ( histograms == NULL ) {
-		result = -1;
-	} else {
-		histograms->n_histograms = channels;
-		histograms->limits.lower = limits->lower;
-		histograms->limits.bins = limits->bins;
-		histograms->limits.upper = limits->upper; 
-		histograms->bin_edges = (long long int *)malloc(sizeof(long long int)*
-				limits->bins);
-		histograms->histograms = (g1_histogram_t *)malloc(
-				sizeof(g1_histogram_t)*histograms->n_histograms);
-
-		if ( histograms->histograms == NULL 
-				|| histograms->bin_edges == NULL ) {
-			result = -1;
-		} else {
-			for ( i = 0; i < histograms->n_histograms; i++ ) {
-				histograms->histograms[i].counts = (unsigned int *)malloc(
-						sizeof(unsigned int)*histograms->limits.bins);
-				if ( histograms->histograms[i].counts == NULL ) {
-					result = -1;
-					i = histograms->n_histograms;
-				} else {
-					printf("%d,%d\n", i, j);
-					for ( j = 0; j < histograms->limits.bins; j++ ) {
-						histograms->histograms[i].counts[j] = 0;
-					}
-				}
-			}
-		}
-	}
-
-	if ( result ) {
-		error("Could not allocate histograms.\n");
-		free_g1_histograms(&histograms);
-	}
-
-	return(histograms);
-}
-
-void free_g1_histograms(g1_histograms_t **histograms) {
-	int i;
-	if ( *histograms != NULL ) {
-		free((*histograms)->bin_edges);
-
-		if ( (*histograms)->histograms != NULL ) {
-			for ( i = 0; i < (*histograms)->n_histograms; i++ ) {
-				free((*histograms)->histograms[i].counts);
-			}
-		}
-
-		free((*histograms)->histograms);
-	}	
-}
-
-void print_g1_histograms(FILE *out_stream, g1_histograms_t *histograms) {
-	int histogram_index;
-	int bin_index;
-
-	for ( histogram_index = 0; histogram_index < histograms->n_histograms; 
-			histogram_index++ ) {
-		for ( bin_index = 0; bin_index < histograms->limits.bins; 
-				bin_index++ ) {
-			fprintf(out_stream, "%d,%lld,%u\n", 
-					histogram_index, 
-					histograms->bin_edges[bin_index], 
-					histograms->histograms[histogram_index].counts[bin_index]);
-		}
-	}
-}
-
-int increment_g1_histograms(g1_histograms_t *histograms,
-		unsigned int channel, long long int value) {
-	return(0);
 }
 
 int main(int argc, char *argv[]) {
@@ -189,8 +59,8 @@ int main(int argc, char *argv[]) {
 		{"pulse", required_argument, 0, 'e'},
 		{"channels", required_argument, 0, 'c'},
 		{"order", required_argument, 0, 'g'},
-		{"time-scale", required_argument, 0, 'd'},
-		{"pulse-scale", required_argument, 0, 'e'},
+		{"time-scale", required_argument, 0, 'D'},
+		{"pulse-scale", required_argument, 0, 'E'},
 		{0, 0, 0, 0}};
 
 	options.in_filename = NULL;

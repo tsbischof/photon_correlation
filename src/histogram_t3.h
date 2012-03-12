@@ -6,5 +6,8 @@
 
 int histogram_t3(FILE *in_stream, FILE *out_stream, options_t *options);
 
+int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options);
+
+int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options);
 
 #endif

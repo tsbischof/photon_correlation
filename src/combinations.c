@@ -118,6 +118,8 @@ combinations_t *make_combinations(int channels, int order) {
 
 			for ( i = 0; i < order-1; i++ ) {
 				if ( channels_array[i].channel > channels_array[i+1].channel) {
+/*					printf("%d > %d\n", channels_array[i].channel,
+							channels_array[i+1].channel); */
 					combinations->sorted[combination_index] = 0;
 				}
 			}
@@ -297,13 +299,22 @@ int get_combination_index(combination_t *combination) {
 	int base_value = 1;
 
 	for ( i = combination->order-1; i >= 0; i-- ) {
-		debug("combination index %d: %d * %d\n", i, base_value,
-				combination->digits[i]);
+		/*debug("combination index %d: %d * %d\n", i, base_value,
+				combination->digits[i]); */
 		result += base_value*combination->digits[i];
 		base_value *= combination->channels;
 	}
 
 	return(result);
+}
+
+void print_combination(FILE *out_stream, combination_t *combination) {
+	int i;
+
+	for ( i = 0; i < combination->order; i++ ) {
+		fprintf(out_stream, "%d,", combination->digits[i]);
+	}
+	fprintf(out_stream, "\b\n");
 }
 
 void print_combinations(combinations_t *combinations) {

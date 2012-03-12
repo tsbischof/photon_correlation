@@ -24,7 +24,7 @@ def plot_curves(curves, names):
 
         plt.clf()
         plt.semilogy(wavelengths, counts, label=name)
-        plt.xlabel("Time/nm")
+        plt.xlabel("Time/ns")
         plt.ylabel("Counts")
         plt.title(name)
         plt.show()    
