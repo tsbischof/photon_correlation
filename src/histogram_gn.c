@@ -105,12 +105,15 @@ int edges_get_index(edges_t *edges, long long int value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
-	int lower_index = 0;
-	int upper_index = edges->n_bins;
+	int lower_index;
+	int upper_index;;
 	int middle_index;
 
 	/* Check that the value lies within the lower and upper limits of the bins.
  	 */
+	lower_index = 0;
+	upper_index = edges->n_bins;
+	debug("Starting binary search with (%d, %d)\n", lower_index, upper_index);
 	if ( value < edges->bin_edges[0] ) {
 		return(-1);
 	} else if ( value > edges->bin_edges[edges->n_bins] ) {
@@ -118,6 +121,7 @@ int edges_get_index(edges_t *edges, long long int value) {
 	}
 
 	while ( upper_index - lower_index > 1) {
+		debug("At (%d, %d)\n", lower_index, upper_index);
 		middle_index = (upper_index + lower_index)/2;
 		if ( value >= edges->bin_edges[middle_index] ) {
 			lower_index = middle_index;
@@ -213,6 +217,7 @@ void print_edges(FILE *out_stream, edges_t *edges) {
 gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 	gn_histogram_t *histogram;
 	int result = 0;
+	int i;
 
 	histogram = (gn_histogram_t *)malloc(sizeof(gn_histogram_t));
 	if ( histogram == NULL ) {
@@ -222,11 +227,15 @@ gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 		histogram->n_dimensions = n_dimensions;
 		histogram->index_bases = (int *)malloc(sizeof(int)*
 				n_dimensions);
-		histogram->dimensions = *dimensions;
+		histogram->dimensions = (edges_t **)malloc(sizeof(edges_t *)*
+				n_dimensions);
 		
-		if ( histogram->index_bases == NULL ) {
+		if ( histogram->index_bases == NULL || histogram->dimensions == NULL ) {
 			result = -1;
 		} else {
+			for ( i = 0; i < n_dimensions; i++ ) {
+				histogram->dimensions[i] = dimensions[i];
+			}
 			result = gn_histogram_make_index_bases(histogram);
 			if( ! result ) {
 				result = gn_histogram_make_n_bins(histogram);
@@ -251,6 +260,7 @@ void free_gn_histogram(gn_histogram_t **histogram) {
 	if ( *histogram != NULL ) {
 		free((*histogram)->index_bases);
 		free((*histogram)->counts);
+		free((*histogram)->dimensions);
 		free(*histogram);
 	}
 }
@@ -294,9 +304,9 @@ int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
 		/* We need these to perform the calculation. */
 		result = -1;
 	} else {
-		for ( i = 0; i < histogram->n_dimensions; i++ ) {
+		for ( i = histogram->n_dimensions-1; i >= 0; i-- ) {
 			histogram->index_bases[i] = base;
-			base *= histogram->dimensions[i].n_bins;
+			base *= histogram->dimensions[i]->n_bins;
 			if ( i > 0 && (histogram->index_bases[i] 
 							< histogram->index_bases[i-1]) ) {
 				/* Integer overflow, so we need to return an error. */
@@ -324,7 +334,7 @@ int gn_histogram_make_n_bins(gn_histogram_t *histogram) {
 		histogram->n_bins = 1;
 
 		for ( i = 0; i < histogram->n_dimensions; i++ ) {
-			histogram->n_bins *= histogram->dimensions[i].n_bins;
+			histogram->n_bins *= histogram->dimensions[i]->n_bins;
 			if ( histogram->n_bins < previous ) {
 				/* Integer overflow. */
 				error("Integer overflow while computing the number of bins "
@@ -349,8 +359,10 @@ int gn_histogram_get_index(gn_histogram_t *histogram,
 	debug("Dimensions: %d\n", histogram->n_dimensions);
 	for ( i = 0; i < histogram->n_dimensions; i++ ) {
 		debug("Value: %lld\n", values[i]);
-		index += edges_get_index(&(histogram->dimensions[i]), values[i])*
+		debug("Index base: %i\n", histogram->index_bases[i]);
+		index += edges_get_index(histogram->dimensions[i], values[i])*
 				histogram->index_bases[i];
+		debug("Done\n");
 	}
 
 	if ( index < 0 ) {
@@ -371,6 +383,8 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 	int i;
 
 	for ( i = 0; i < histogram->n_dimensions; i++ ) {
+		debug("(Base, index): (%d, %d)\n", histogram->index_bases[i],
+				indices[i]);
 		index += histogram->index_bases[i]*indices[i];
 	}
 
@@ -391,7 +405,6 @@ int gn_histogram_increment(gn_histogram_t *histogram,
 	int index;
 
 	index = gn_histogram_get_index(histogram, values);
-	printf("here\n");
 
 	if ( index >= 0 ) {
 		debug("Incrementing index %d.\n", index);
@@ -439,15 +452,15 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
 			debug("New indices.\n");
 			fprintf(out_stream, "%s", histogram->histogram_label);
 			for ( i = 0; i < histogram->n_dimensions; i++ ) {
-				if ( histogram->dimensions[i].print_label ) {
+				if ( histogram->dimensions[i]->print_label ) {
 					debug("Printing the label.\n");
 					fprintf(out_stream, ",%s", 
-							histogram->dimensions[i].dimension_label);
+							histogram->dimensions[i]->dimension_label);
 				}
 				debug("Printing the edge for dimension %d and bin %d.\n",
 						i, indices[i]);
 				fprintf(out_stream, ",%lf",
-						histogram->dimensions[i].bin_edges[indices[i]]);			
+						histogram->dimensions[i]->bin_edges[indices[i]]);			
 			}
 
 			debug("Getting the index in the histogram.\n");
@@ -474,7 +487,7 @@ int gn_histogram_next_index(gn_histogram_t *histogram, int *indices) {
 	int i;
 
 	for ( i = (histogram->n_dimensions-1); i >= 0; i-- ) {
-		indices[i] = (indices[i] + 1) % histogram->dimensions[i].n_bins;
+		indices[i] = (indices[i] + 1) % histogram->dimensions[i]->n_bins;
 		if ( indices[i] != 0 ) {
 			i = 0;
 		} else if ( i == 0 ) {

@@ -149,6 +149,8 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 					error("Could not create edges for channel %d.\n", i);
 					result = -1;
 				} else {
+					debug("Number of bins: %d.\n", 
+							histograms->edges[i]->n_bins);
 					sprintf(histograms->edges[i]->dimension_label, "%u", 
 							i);
 					histograms->edges[i]->print_label = 1;

@@ -26,7 +26,7 @@ typedef struct {
 	char histogram_label[20];
 	int n_bins;
 	int *index_bases;
-	edges_t *dimensions;
+	edges_t **dimensions;
 	unsigned int *counts;
 } gn_histogram_t;
 
