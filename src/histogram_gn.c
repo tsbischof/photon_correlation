@@ -391,6 +391,7 @@ int gn_histogram_increment(gn_histogram_t *histogram,
 	int index;
 
 	index = gn_histogram_get_index(histogram, values);
+	printf("here\n");
 
 	if ( index >= 0 ) {
 		debug("Incrementing index %d.\n", index);
