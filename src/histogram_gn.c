@@ -30,6 +30,11 @@ int str_to_limits(char *str, limits_t *limits) {
 		return(-1);
 	}
 
+	if ( limits->bins <= 0 ) {
+		error("Must have at least one bin.\n");
+		return(-1);
+	}
+
 	if( result != 3 ) {
 		error("Limits could not be parsed: %s.\n"
 				"The correct format is lower,bins,upper (no spaces).\n");
@@ -75,7 +80,7 @@ edges_t *allocate_edges(int n_bins) {
 	} else {
 		edges->n_bins = n_bins;
 		edges->bin_edges = (double *)malloc(sizeof(double)*
-				(edges->n_bins+1));
+				(edges->n_bins+1)); 
 		edges->print_label = 0;
 
 		if ( edges->bin_edges == NULL ) {
@@ -83,7 +88,7 @@ edges_t *allocate_edges(int n_bins) {
 		} else {
 			for ( i = 0; i <= edges->n_bins; i++ ) {
 				edges->bin_edges[i] = 0;
-			}
+			} 
 		}
 	}
 		
@@ -477,6 +482,7 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
 			}
 		}
 	}
+	free(indices);
 }
 
 int gn_histogram_next_index(gn_histogram_t *histogram, int *indices) {

@@ -18,7 +18,7 @@ typedef struct {
 	int order;
 	combinations_t *combinations;
 	combination_t *combination;
-	long long int *times;
+	long long int *current_values;
 	gn_histogram_t **histograms;
 } t2_histograms_t;
 

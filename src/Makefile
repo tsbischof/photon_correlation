@@ -3,28 +3,35 @@ MKDIR = mkdir -p
 TEST = test
 CC = cc
 LD = cc
-CFLAGS = -Wall -std=c99
+CFLAGS = -Wall -std=c99 -g -O0 #-m32
 LDFLAGS = ${CFLAGS}
 RM = rm -f
 INSTALL_DIR = ~tsbischof/bin/
 
-PICOQUANT_OBJ = picoquant.o error.o types.o \
+PICOQUANT_OBJ = picoquant.o error.o types.o strings.o \
 		t2.o t3.o \
 		picoharp.o picoharp/ph_v20.o \
 		hydraharp.o hydraharp/hh_v10.o \
 		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
 				timeharp/th_v50.o timeharp/th_v60.o 
 PICOQUANT_LIB = 
-CORRELATE_OBJ = correlate.o error.o combinations.o files.o modes.o \
+
+CORRELATE_OBJ = correlate.o error.o combinations.o files.o modes.o strings.o \
 		correlate_t2.o \
 		correlate_t3.o t3.o
 CORRELATE_LIB = 
-HISTOGRAM_OBJ = histogram.o error.o files.o modes.o combinations.o \
+
+HISTOGRAM_OBJ = histogram.o error.o files.o modes.o combinations.o strings.o \
 		histogram_gn.o \
 		histogram_t2.o \
 		histogram_t3.o t3.o 
 HISTOGRAM_LIB = -lm
-TARGETS = picoquant correlate histogram
+
+INTENSITY_OBJ = intensity.o error.o types.o modes.o strings.o files.o \
+		t2.o t3.o
+INTENSITY_LIB = 
+
+TARGETS = picoquant correlate histogram intensity
 
 all: ${TARGETS}
 
@@ -44,8 +51,12 @@ correlate: ${CORRELATE_OBJ}
 histogram: ${HISTOGRAM_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${HISTOGRAM_LIB}
 
+intensity: ${INTENSITY_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${INTENSITY_LIB}
+
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 
 
 clean:
-	${RM} ${TARGETS} ${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ}
+	${RM} ${TARGETS} ${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
+			${INTENSITY_OBJ}

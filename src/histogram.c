@@ -131,10 +131,7 @@ int main(int argc, char *argv[]) {
 		result += -1;
 	}
 
-	if ( options.order > 4 ) {
-		warn("A correlation of order %d will require extensive "
-				"time to compute.\n", options.order);
-	} else if ( options.order < 1 ) {
+	if ( options.order < 1 ) {
 		error("Order of histogram must be at least 1 (%d specified).\n",
 				options.order);
 		result += -1;

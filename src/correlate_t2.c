@@ -79,7 +79,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && next_t2(in_stream, queue, options) ) {
+	while ( ! done && next_t2_queue(in_stream, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
@@ -107,7 +107,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 }
 
 
-int next_t2(FILE *in_stream, t2_queue_t *queue, options_t *options) {
+int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 	int result;
 	long long int starting_index;
 	long long int ending_index;
@@ -149,7 +149,7 @@ int next_t2(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 				return(0);
 			} else if ( (queue->right_index - queue->left_index) 
 					>= queue->length ) {
-				warn("Overflow of queue entries, increase queue size for"
+				warn("Overflow of queue entries, increase queue size for "
 					"accurate results.\n");
 			}
 

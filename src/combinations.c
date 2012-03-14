@@ -79,13 +79,9 @@ combinations_t *make_combinations(int channels, int order) {
 
 	if ( combinations == NULL || combination == NULL 
 			|| channels_array == NULL ) {
+		error("Could not allocate memory to generate the channel "
+				"combinations.n");
 		result = -1;
-	}
-
-	/* Start generating the combinations. */
-	if ( result ) {
-		error("Could not allocate memory for the combinations.\n");
-		free_combinations(&combinations);
 	} else {
 		debug("Creating the channel combination lookup table.\n");
 		/* Everything worked out fine, do the calculation. */
@@ -164,13 +160,13 @@ combinations_t *make_combinations(int channels, int order) {
 	}
 
 	free(channels_array);
-	free(combination);
+	free_combination(&combination);
 
 	return(combinations);
 }
 
 combinations_t *allocate_combinations(int channels, int order) {
-	combinations_t *combinations;
+	combinations_t *combinations = NULL;
 	int result = 0;
 	int i;
 
@@ -207,7 +203,6 @@ combinations_t *allocate_combinations(int channels, int order) {
 
 	if ( result ) {
 		free_combinations(&combinations);
-		combinations = NULL;
 	}
 
 	return(combinations);
@@ -238,7 +233,7 @@ void free_combinations(combinations_t **combinations) {
  */
 combination_t *allocate_combination(int channels, int order) {
 	int result = 0;
-	combination_t *combination;
+	combination_t *combination = NULL;
 	combination = (combination_t *)malloc(sizeof(combination_t));
 	int i;
 
@@ -266,9 +261,7 @@ combination_t *allocate_combination(int channels, int order) {
 
 void free_combination(combination_t **combination) {
 	if ( *combination != NULL ) {
-		if ( (*combination)->digits != NULL ) {
-			free((*combination)->digits);
-		}
+		free((*combination)->digits);
 		free(*combination);
 	}
 }

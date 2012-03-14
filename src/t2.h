@@ -8,4 +8,8 @@ typedef struct {
 	long long int time;
 } t2_t;
 
+int next_t2(FILE *in_stream, t2_t *record);
+void print_t2(FILE *out_stream, t2_t *record);
+
+
 #endif
