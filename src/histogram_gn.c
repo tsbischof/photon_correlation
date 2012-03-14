@@ -248,6 +248,10 @@ gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 						histogram->n_bins);
 				if ( histogram->counts == NULL ) {	
 					result = -1;
+				} else {
+					for ( i = 0; i < n_dimensions; i++ ) {
+						histogram->counts[i] = 0;
+					}
 				}
 			}
 		}
