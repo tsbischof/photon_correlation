@@ -64,7 +64,6 @@ combinations_t *make_combinations(int channels, int order) {
 	 * build a lookup table of the indices to call in order.
 	 */
 	int i;
-	int result = 0;
 	int combination_index = 0;
 	int done = 0;
 	channel_t *channels_array;
@@ -81,7 +80,6 @@ combinations_t *make_combinations(int channels, int order) {
 			|| channels_array == NULL ) {
 		error("Could not allocate memory to generate the channel "
 				"combinations.n");
-		result = -1;
 	} else {
 		debug("Creating the channel combination lookup table.\n");
 		/* Everything worked out fine, do the calculation. */
