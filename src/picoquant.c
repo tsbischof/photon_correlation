@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Perform sanity checks on the options. */
-	result += stream_open(&in_stream, stdin, options.in_filename, "r");
+	result += stream_open(&in_stream, stdin, options.in_filename, "rb");
 	result += stream_open(&out_stream, stdout, options.out_filename, "w");
 
 	/* Do the actual work, if we have no errors. */
