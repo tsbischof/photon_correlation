@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <time.h>
+#include <errno.h>
 
 #include "strings.h"
 #include "picoquant.h"
@@ -248,7 +249,7 @@ int main(int argc, char *argv[]) {
 				return(-1);
 		}
 	}
-
+	
 	/* Perform sanity checks on the options. */
 	result += stream_open(&in_stream, stdin, options.in_filename, "rb");
 	result += stream_open(&out_stream, stdout, options.out_filename, "w");

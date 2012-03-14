@@ -1,11 +1,21 @@
 CP = cp -p
 MKDIR = mkdir -p
+RM = rm -f
 TEST = test
 CC = cc
 LD = cc
-CFLAGS = -Wall -std=c99 -g -O0 #-m32
+
+CFLAGS = -Wall 
+CFLAGS += -std=c99
+# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
+# errors if not adjusted, so fix it here as needed. This should not (in 
+# principle) affect 64-bit systems adversely, though if we ever get to 
+# 128-bit filesystems we will need to switch this to 128. 
+CFLAGS += -D_FILE_OFFSET_BITS=64
+
 LDFLAGS = ${CFLAGS}
-RM = rm -f
+
+
 INSTALL_DIR = ~tsbischof/bin/
 
 PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
