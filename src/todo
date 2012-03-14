@@ -1,15 +1,14 @@
 Pressing:
--write t3 g1 calculation (for lifetimes)
 -write interface to picoquant for Python, Matlab
 -write basic tests for picoquant, others
 -test on linux32, win32, win64
 -write up notes on Timeharp: the records for t3r are _not_ t2 or t3, but the raw data used to build the histogram. As such, they cannot simply be tied to a pulse, but we can wort of treat them as though they are. This will proabably throw off correlations (except t2 type, if we are lucky).
 
 Picoquant:
--fluorescence correlation spectroscopy: autocorrelation of summed signal
 -build automated tests to check the output for each file type
 -flag --to-t2 gives t2 output from t3 file (error if not one of those types)
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
+-opening of files seems to fail on linux32. Why?
 
 > Testing:
 >> Picoharp
