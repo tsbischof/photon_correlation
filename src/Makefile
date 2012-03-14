@@ -8,7 +8,7 @@ LDFLAGS = ${CFLAGS}
 RM = rm -f
 INSTALL_DIR = ~tsbischof/bin/
 
-PICOQUANT_OBJ = picoquant.o error.o types.o strings.o \
+PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
 		t2.o t3.o \
 		picoharp.o picoharp/ph_v20.o \
 		hydraharp.o hydraharp/hh_v10.o \

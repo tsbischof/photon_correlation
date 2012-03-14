@@ -13,6 +13,7 @@
 #include "hydraharp.h"
 #include "timeharp.h"
 #include "error.h"
+#include "files.h"
 #include "t2.h"
 #include "t3.h"
 
@@ -249,31 +250,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Perform sanity checks on the options. */
-	if ( options.in_filename == NULL ) {
-		in_stream = stdin;
-	} else {
-		debug( "Opening %s for reading.\n",
-				options.in_filename);
-		in_stream = fopen(options.in_filename, "rb");
-		if ( in_stream == NULL ) {
-			error("Error while opening %s for reading.\n",
-				options.in_filename);
-			result = PQ_FILE_ERROR;
-		}
-	}
-
-	if ( options.out_filename == NULL ) { 
-		out_stream = stdout;
-	} else {
-		debug("Opening %s for writing.\n",
-				options.out_filename);
-		out_stream = fopen(options.out_filename, "w");
-		if ( out_stream == NULL ) {
-			error("Error while opening %s for writing.\n",
-				options.out_filename);
-			result = PQ_FILE_ERROR;
-		}
-	}
+	result += stream_open(&in_stream, stdin, options.in_filename, "r");
+	result += stream_open(&out_stream, stdout, options.out_filename, "w");
 
 	/* Do the actual work, if we have no errors. */
 	if ( result == PQ_SUCCESS ) {
@@ -291,25 +269,11 @@ int main(int argc, char *argv[]) {
 	}
 		
 	/* Cleanup! */
-	if ( options.in_filename != NULL ) {
-		free(options.in_filename);
-	} 
-
-	if ( options.out_filename != NULL ) {
-		free(options.out_filename);
-	}
-
-	if ( options.file_type_string != NULL ) {
-		free(options.file_type_string);
-	}
-
-	if ( in_stream != NULL && in_stream != stdin ) {
-		fclose(in_stream);
-	} 
-
-	if ( (out_stream != NULL) && (out_stream != stdout) ) {
-		fclose(out_stream);
-	}
+	stream_close(in_stream, stdin);
+	stream_close(out_stream, stdout);
+	free(options.in_filename);
+	free(options.out_filename);
+	free(options.file_type_string);
 
 	return(result);
 }       

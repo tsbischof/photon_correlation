@@ -12,7 +12,7 @@ int stream_open(FILE **stream, FILE *default_stream,
 		*stream = fopen(filename, mode);
 
 		if ( *stream == NULL ) {
-			error("Could not open %s for reading.\n", filename);
+			error("Could not open %s with mode %s.\n", filename, mode);
 			return(-1);
 		}
 	}
