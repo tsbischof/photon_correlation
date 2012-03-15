@@ -12,8 +12,7 @@ int histogram_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		histogram_t3_g1(in_stream, out_stream, options);
 	} else {
 		debug("Doing high-order t3 correlation.\n");
-		return(-1);
-		/*histogram_t3_gn(in_stream, out_stream, options);*/
+		histogram_t3_gn(in_stream, out_stream, options);
 	}
 
 	return(0);
@@ -103,7 +102,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	return(0);
 }
 
-/* t3_gn is sufficiently complicate that we actually should break up the 
+/* t3_gn is sufficiently complicated that we actually should break up the 
  * functionality into subroutines.
  */
 t3_correlated_t *allocate_t3_correlated(options_t *options) {
@@ -140,10 +139,10 @@ int next_t3_correlated(FILE *in_stream, t3_correlated_t *record,
 		error("Could not read reference channel from stream.\n");
 	} else {
 		for ( i = 0; i < options->order - 1; i++ ) {
-			result = ( fscanf(in_stream, ",%u,%lld,%u", 
+			result = ( fscanf(in_stream, ",%u,%lld,%d", 
 					&(*record).records[i].channel,
 					&(*record).records[i].pulse_number,
-					&(*record).records[i].time) != 2);
+					&(*record).records[i].time) != 3);
 			if ( result && !feof(in_stream)) {
 				error("Could not read correlated record (index %d).\n", i);
 				i = options->order;
@@ -167,14 +166,14 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 	if ( record == NULL || histograms == NULL ) {
 		error("Could not allocate memory for the histogram run.\n");
 		result = -1;
-	} else {
+	} else { 
 		/* Loop through the data. 
 		 */
 		while ( !next_t3_correlated(in_stream, record, options) ) {
 			if ( verbose ) {
 				fprintf(out_stream, "Found record: %u", record->ref_channel);
 				for ( i = 0; i < options->order-1; i++ ) {
-					fprintf(out_stream, ",%u,%lld,%u", 
+					fprintf(out_stream, ",%u,%lld,%d", 
 							record->records[i].channel,
 							record->records[i].pulse_number,
 							record->records[i].time);
@@ -189,12 +188,12 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
 		print_t3_histograms(out_stream, histograms);
-	}
+	} 
 
 	/* Clean up memory. */
 	debug("Cleaning up from t3 histogramming.\n");
 	free_t3_correlated(&record);
-	free_t3_histograms(&histograms);
+	free_t3_histograms(&histograms); 
 	
 	return(result);
 }
@@ -208,6 +207,10 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 	
 	/* This is the same as t2 mode, except that we have double the number of
 	 * dimensions (each record carries pulse number and time).
+	 *
+	 * Effectively, this means we have double the dimensions (edges),
+	 * and double the order, so just double those values when allocating
+	 * and fill in the meaningful bits in each dimension definition.
 	 */
 
 	histograms = (t3_histograms_t *)malloc(sizeof(t3_histograms_t));
@@ -220,14 +223,22 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 				options->order);
 		histograms->channels = options->channels;
 		histograms->order = options->order;
+		
+		/* Two edge sets per channel: pulse and time. */
 		histograms->edges = (edges_t **)malloc(sizeof(edges_t *)*
 				2*histograms->channels);
+
+		/* The combinations refer to combinations of channels, so we only
+		 * need to allocate for as many as we have channels.
+		 */
 		histograms->combinations = make_combinations(histograms->channels,
 				histograms->order);
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
+
 		histograms->current_values = (long long int *)malloc(
-				sizeof(long long int)*(histograms->order-1));
+				sizeof(long long int)*2*(histograms->order-1));
+
 		histograms->histograms = (gn_histogram_t **)malloc(
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
 
@@ -242,19 +253,36 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 			/* Populate edges. */
 			for ( i = 0; !result && i < histograms->channels; i++ ) {
 				debug("Creating edges for channel %d.\n", i);
-				histograms->edges[i] = allocate_edges(
+				histograms->edges[2*i] = allocate_edges(
+						options->pulse_limits.bins);
+				histograms->edges[2*i+1] = allocate_edges(
 						options->time_limits.bins);
-				if ( histograms->edges[i] == NULL ||
-						edges_from_limits(histograms->edges[i], 
+				if ( histograms->edges[2*i] == NULL 
+						|| edges_from_limits(histograms->edges[2*i], 
+							&(options->pulse_limits), options->pulse_scale) ) {
+					error("Could not create edges for the pulse component "
+							"of channel %d.\n", i);
+					result = -1;
+				} else if ( histograms->edges[2*i+1] == NULL 
+						|| edges_from_limits(histograms->edges[2*i+1],
 							&(options->time_limits), options->time_scale) ) {
-					error("Could not create edges for channel %d.\n", i);
+					error("Could not create edges for the time component "
+							"of channel %d.\n", i);
 					result = -1;
 				} else {
-					debug("Number of bins: %d.\n", 
-							histograms->edges[i]->n_bins);
-					sprintf(histograms->edges[i]->dimension_label, "%u", 
+					debug("Number of pulse bins: %d.\n", 
+							histograms->edges[2*i]->n_bins);
+					sprintf(histograms->edges[2*i]->dimension_label, "%u", 
 							i);
-					histograms->edges[i]->print_label = 1;
+					histograms->edges[2*i]->print_label = 1;
+
+					/* We want the output to look like a t3 run, 
+					 * so only print the channel number with the pulse and 
+					 * not the time.
+					 */
+					debug("Number of time bins: %d.\n", 
+							histograms->edges[2*i+1]->n_bins);
+					histograms->edges[2*i+1]->print_label = 0;
 				} 
 			} 
 			/* Allocate and populate histograms. */
@@ -262,13 +290,17 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 			for ( i = 0; !result && i < histograms->n_histograms; i++ ) {
 				/* Populate the edges for this histogram. */
 				for ( j = 1; j < histograms->order; j++ ) {
-					edges[j-1] = histograms->edges[
-							histograms->combination->digits[j]];
+					printf("(%d, %d)/%d\n", 2*(j-1), 2*(j-1)+1, 
+							2*(histograms->order-1));
+					edges[2*(j-1)] = histograms->edges[
+							2*histograms->combination->digits[j]];
+					edges[2*(j-1)+1] = histograms->edges[
+							2*histograms->combination->digits[j]+1];
 				}  
 				
 				debug("Creating histogram %d.\n", i);
 				histograms->histograms[i] = allocate_gn_histogram(
-						histograms->order-1, edges);
+						2*(histograms->order-1), edges);
 				sprintf(histograms->histograms[i]->histogram_label,
 						"%u", histograms->combination->digits[0]);
 				next_combination(histograms->combination);  
@@ -298,7 +330,7 @@ void free_t3_histograms(t3_histograms_t **histograms) {
 		free_combinations(&(*histograms)->combinations);
 
 		for ( i = 0; (*histograms)->edges != NULL 
-				&& i < (*histograms)->channels; i++ ) {
+				&& i < 2*(*histograms)->channels; i++ ) {
 			free_edges(&((*histograms)->edges[i]));
 		}
 		free((*histograms)->edges);
@@ -323,12 +355,14 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 	debug("Getting the channels from the record.\n");
 	histograms->combination->digits[0] = record->ref_channel;
 	for ( i = 1; i < histograms->order; i++ ) {
+//		printf("Channel %d: %u\n", i, record->records[i-1].channel);
 		histograms->combination->digits[i] = record->records[i-1].channel;
 	}
 
 
 	for ( i = 0; i < histograms->order-1; i++ ) {
-		histograms->current_values[i] = record->records[i].time;
+		histograms->current_values[2*i] = record->records[i].pulse_number;
+		histograms->current_values[2*i+1] = record->records[i].time;
 	}
 
 	histogram_index = get_combination_index(histograms->combination);
@@ -348,6 +382,7 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
+		printf("Printing histogram %d.\n", i);
 		print_gn_histogram(out_stream, histograms->histograms[i]);
 	}
 }

@@ -240,6 +240,7 @@ gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 		} else {
 			for ( i = 0; i < n_dimensions; i++ ) {
 				histogram->dimensions[i] = dimensions[i];
+				histogram->index_bases[i] = 0;
 			}
 			result = gn_histogram_make_index_bases(histogram);
 			if( ! result ) {
