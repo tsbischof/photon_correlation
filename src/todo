@@ -6,6 +6,7 @@ General:
 -look into errno and related for dealing with errors.
 -profile performance, and look to see if there are any obvious bottlenecks
 -build a quick gui for picking windows to pass?
+-do a better job of detecting mode mismatch 
 
 Picoquant:
 -flag --to-t2 gives t2 output from t3 file (error if not one of those types)

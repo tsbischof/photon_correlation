@@ -290,8 +290,8 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 			for ( i = 0; !result && i < histograms->n_histograms; i++ ) {
 				/* Populate the edges for this histogram. */
 				for ( j = 1; j < histograms->order; j++ ) {
-					printf("(%d, %d)/%d\n", 2*(j-1), 2*(j-1)+1, 
-							2*(histograms->order-1));
+/*					printf("(%d, %d)/%d\n", 2*(j-1), 2*(j-1)+1, 
+							2*(histograms->order-1)); */
 					edges[2*(j-1)] = histograms->edges[
 							2*histograms->combination->digits[j]];
 					edges[2*(j-1)+1] = histograms->edges[
@@ -355,7 +355,6 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 	debug("Getting the channels from the record.\n");
 	histograms->combination->digits[0] = record->ref_channel;
 	for ( i = 1; i < histograms->order; i++ ) {
-//		printf("Channel %d: %u\n", i, record->records[i-1].channel);
 		histograms->combination->digits[i] = record->records[i-1].channel;
 	}
 
