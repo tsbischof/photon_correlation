@@ -121,15 +121,18 @@ class Picoquant:
         "file."
         return(int(math.floor(float_time*self.resolution()*1e9)))
 
-    def time_limits(self):
+    def time_limits(self, symmetric=False):
         if self.options.time_limits:
             limits = Limits(self.options.time_limits)
             limits.set_lower(self.integer_time(float(limits.lower())))
             limits.set_upper(self.integer_time(float(limits.upper())))
-
-            return(limits)
         else:
-            return(Limits("0,1000,{0}".format(self.integer_time(0.01))))
+            limits = Limits("0,1000,{0}".format(self.integer_time(0.01)))
+
+        if symmetric:
+            limits.set_lower(-int(limits.upper()))
+       
+        return(limits)
 
     def pulse_limits(self):
         if self.options.pulse_limits:
@@ -265,7 +268,8 @@ class Picoquant:
                                      "--channels", str(self.channels()),
                                      "--mode", self.mode(),
                                      "--file-out", histogram_dst,
-                                     "--time", str(self.time_limits()),
+                                     "--time", str(
+                                              self.time_limits(symmetric=True)),
                                      "--pulse", str(self.pulse_limits())]
 
                     logging.debug("Correlation command: {0} "
