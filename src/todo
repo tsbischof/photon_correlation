@@ -52,6 +52,7 @@ Picoquant:
 --t3r: no
 
 Correlate:
+-t2 mode seems to put out large numbers on linux32.
 > Testing
 >> t2: linux64
 >> t3: linux64

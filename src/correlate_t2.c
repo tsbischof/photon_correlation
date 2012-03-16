@@ -160,7 +160,7 @@ int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 
 int valid_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 	return( options->max_time_distance == 0 || 
-			abs(right->time - left->time) <= options->max_time_distance);
+			llabs(right->time - left->time) <= options->max_time_distance);
 }
 
 int correlate_t2_block(FILE *out_stream, t2_queue_t *queue, 
@@ -187,20 +187,8 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 	offsets->limit = queue->right_index - queue->left_index;
 
 	debug("Moving on to the correlation.\n");
-	if ( verbose ) {
-		print_offsets(offsets);
-	}
 
 	while ( ! next_offsets(offsets) ) {
-		if ( verbose ) {
-			debug("######################################\n");
-			printf("offsets:\t(");
-			for ( i = 0; i < options->order; i++ ) {
-				printf("%2d,", offsets->offsets[i]);
-			}
-			printf("\b)\n");
-		}
-
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
@@ -208,7 +196,10 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 		right = get_queue_item_t2(queue, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t2(&left, &right, options) ) {
-			debug("Close enough for correlation.\n");
+			debug("Close enough for correlation (between %lld and %lld to "
+					"get %lld/%lld).\n",
+					left.time, right.time, right.time-left.time,
+					options->max_time_distance);
 			/* We have a tuple of offsets from left_index, which means we now 
  			 * want to perform the correlation. First, obtain the index for 
  			 * where we will find this combination in the array of combinations.
@@ -228,19 +219,6 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 
 			/* Now that we have the indices to use, print out the result.
  			 */
-			if ( verbose ) {
-				fprintf(out_stream, "channels:\t(");
-				for ( i = 0; i < options->order; i++ ) {
-					fprintf(out_stream, "%2d,", 
-							combination->digits[i]);
-				}
-				fprintf(out_stream, "\b)\nindices:\t(");
-				for ( i = 0; i < options->order; i++ ) {
-					fprintf(out_stream, "%2d,", 
-							combinations->indices[combination_index][i]);
-				}
-				fprintf(out_stream, "\b)\n"); 
-			}
 
 			if ( options->channels_ordered ) {
 				offset = offsets->offsets[

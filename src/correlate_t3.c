@@ -153,10 +153,10 @@ int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options) {
 
 int valid_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 	return( (options->max_time_distance == 0 
-				|| abs(right->time - left->time) 
+				|| llabs(right->time - left->time) 
 						<= options->max_time_distance) 
 			&& (options->max_pulse_distance == 0 
-				|| abs(right->pulse_number - left->pulse_number) 
+				|| llabs(right->pulse_number - left->pulse_number) 
 						<= options->max_pulse_distance) );
 }
 
@@ -185,22 +185,8 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 	offsets->limit = queue->right_index - queue->left_index;
 
 	debug("Moving on to the correlation.\n");
-	if ( verbose ) {
-		print_offsets(offsets);
-	}
-
-	debug("blargh\n");
 
 	while ( ! next_offsets(offsets) ) {
-		if ( verbose ) {
-			debug("######################################\n");
-			printf("offsets:\t(");
-			for ( i = 0; i < options->order; i++ ) {
-				printf("%2d,", offsets->offsets[i]);
-			}
-			printf("\b)\n");
-		}
-
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
@@ -227,21 +213,6 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 			debug("Combination index: %d\n", combination_index);
 
 			/* Now that we have the indices to use, print out the result.  */
-			if ( verbose ) {
-				fprintf(out_stream, "channels:\t(");
-				for ( i = 0; i < options->order; i++ ) {
-					fprintf(out_stream, "%2d,", 
-							combination->digits[i]);
-				}
-				fprintf(out_stream, "\b)\nindices:\t(");
-				for ( i = 0; i < options->order; i++ ) {
-					fprintf(out_stream, "%2d,", 
-							combinations->indices[combination_index][i]);
-				}
-				fprintf(out_stream, "\b)\n");
-			}
-
-
 			if ( options->channels_ordered ) {
 				offset = offsets->offsets[
 							combinations->indices[combination_index][0]];
