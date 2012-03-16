@@ -35,20 +35,25 @@ tttr_modes = ["t2", "t3"]
 
 class Limits:
     def __init__(self, limits_str):
-        self.limits_str = limits_str
         self.limits = limits_str.split(",")
 
     def __str__(self):
-        return(self.limits_str)
+        return(",".join(map(str, self.limits)))
     
     def lower(self):
         return(self.limits[0])
+
+    def set_lower(self, value):
+        self.limits[0] = value
 
     def bins(self):
         return(self.limits[1])
 
     def upper(self):
         return(self.limits[2])
+
+    def set_upper(self, value):
+        self.limits[2] = value
 
 class Picoquant:
     def __init__(self, filename, options):
@@ -106,7 +111,9 @@ class Picoquant:
             return(self.options.channels)
         else:
             logging.debug("Guessing the number of channels from the file type.")
-            return(guess_channels(self.file_type))
+            guess = guess_channels(self.file_type)
+            logging.debug("Got {0} channels.".format(guess))
+            return(guess)
 
     def integer_time(self, float_time):
         "Return the time specified as a float number of milliseconds as "
@@ -116,7 +123,11 @@ class Picoquant:
 
     def time_limits(self):
         if self.options.time_limits:
-            return(Limits(self.options.time_limits))
+            limits = Limits(self.options.time_limits)
+            limits.set_lower(self.integer_time(float(limits.lower())))
+            limits.set_upper(self.integer_time(float(limits.upper())))
+
+            return(limits)
         else:
             return(Limits("0,100,{0}".format(self.integer_time(0.01))))
 
@@ -172,7 +183,7 @@ class Picoquant:
         subprocess.Popen(intensity_cmd, stdin=data.stdout).wait()
     
     def run_correlation(self):
-        logging.info("Processing correlation.")
+        logging.info("Running correlation.")
         # Distinct states: t2/t3, t3_g1
         if self.options.order:
             order = self.options.order
@@ -189,6 +200,7 @@ class Picoquant:
             time_distance = str(self.time_distance())
             correlate_cmd = [correlate,
                              "--order", str(order),
+                             "--channels", str(self.channels()),
                              "--mode", self.mode(),
                              "--max-time-distance",
                              str(self.time_distance())]
@@ -206,6 +218,7 @@ class Picoquant:
                 histogram_dst = "{0}.g1".format(self.filename)
                 histogram_cmd = [histogram,
                                  "--order", str(order),
+                                 "--channels", str(self.channels()),
                                  "--mode", self.mode(),
                                  "--file-out", histogram_dst,
                                  "--time", self.time_limits()]
@@ -242,12 +255,12 @@ class Picoquant:
             data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)
             corr = subprocess.Popen(correlate_cmd,
                                     stdin=data.stdout, stdout=subprocess.PIPE)
-            hist = subprocess.Popen(histogram_cmd, stdin=corr.stdout)
+            subprocess.Popen(histogram_cmd, stdin=corr.stdout).wait()
         else:
             logging.debug("Correlation command: {0} | {1}".format(
                 self.data_cmd, histogram_cmd))
             data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)
-            hist = subprocess.Popen(histogram_cmd, stdin=data.stdout)
+            subprocess.Popen(histogram_cmd, stdin=data.stdout).wait()
 
     def run_interactive(self):
         logging.info("Processing histograms.")

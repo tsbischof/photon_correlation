@@ -6,6 +6,8 @@ import sys
 import subprocess
 import matplotlib.pyplot as plt
 
+import process_picoquant
+
 def get_curves(data):
     curves = dict()
     for channel_0, channel_1, bin_edge, counts in csv.reader(data):
@@ -22,7 +24,7 @@ def plot_curves(curves):
         try:           
             print(key)
             channel_0, channel_1 = key.split("_")
-            times = map(lambda x: x[0]*4e-03, curve)
+            times = map(lambda x: x[0], curve)
             counts = map(lambda x: x[1], curve)
             name = r"$g_{%s%s}$($\tau$)" % (channel_0, channel_1)
 
