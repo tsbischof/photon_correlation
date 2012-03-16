@@ -1,6 +1,8 @@
 #ifndef HYDRAHARP_H_
 #define HYDRAHARP_H_
 
+#define HH_SYNC_CHANNEL 4
+
 #define HH_BASE_RESOLUTION 1e-9
 #define HH_T2_OVERFLOW 33552000
 #define HH_T3_OVERFLOW 1024

@@ -13,7 +13,8 @@ CFLAGS += -std=c99
 # 128-bit filesystems we will need to switch this to 128. 
 CFLAGS += -D_FILE_OFFSET_BITS=64
 # For use while debugging.
-CFLAGS += -g -O0
+#CFLAGS += -g -O0
+CFLAGS += -O3
 
 LDFLAGS = ${CFLAGS}
 
