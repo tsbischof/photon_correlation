@@ -229,6 +229,7 @@ class Picoquant:
                 pulse_distance = str(self.pulse_distance())
                 correlate_cmd = [correlate,
                                  "--order", str(order),
+                                 "--channels", str(self.channels()),
                                  "--mode", self.mode(),
                                  "--max-time-distance",
                                  str(self.time_distance()),
