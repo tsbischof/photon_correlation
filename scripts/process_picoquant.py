@@ -129,7 +129,7 @@ class Picoquant:
 
             return(limits)
         else:
-            return(Limits("0,100,{0}".format(self.integer_time(0.01))))
+            return(Limits("0,1000,{0}".format(self.integer_time(0.01))))
 
     def pulse_limits(self):
         if self.options.pulse_limits:
@@ -186,9 +186,15 @@ class Picoquant:
         logging.info("Running correlation.")
         # Distinct states: t2/t3, t3_g1
         if self.options.order:
-            order = self.options.order
+            if self.mode() == "t3":
+                order = [self.options.order]
+            else:
+                order = self.options.order
         else:
-            order = 2
+            if self.mode() == "t3":
+                order = [1, 2]
+            else:
+                order = 2
 
         correlate_cmd = []
         histogram_cmd = []
@@ -212,43 +218,7 @@ class Picoquant:
                              "--mode", self.mode(),
                              "--file-out", histogram_dst,
                              "--time", str(self.time_limits())]
-        elif self.mode() == "t3":
-            if order == 1:
-                logging.debug("Histogramming values from a t3 run.")
-                histogram_dst = "{0}.g1".format(self.filename)
-                histogram_cmd = [histogram,
-                                 "--order", str(order),
-                                 "--channels", str(self.channels()),
-                                 "--mode", self.mode(),
-                                 "--file-out", histogram_dst,
-                                 "--time", self.time_limits()]
-            else:
-                logging.debug("Handling t3 correlation of order "
-                              "{0}.".format(order))
-                time_distance = str(self.time_distance())
-                pulse_distance = str(self.pulse_distance())
-                correlate_cmd = [correlate,
-                                 "--order", str(order),
-                                 "--channels", str(self.channels()),
-                                 "--mode", self.mode(),
-                                 "--max-time-distance",
-                                 str(self.time_distance()),
-                                 "--max-pulse-distance",
-                                 str(self.pulse_distance())]
-                    
-                histogram_dst = "{0}.g{1}".format(self.filename, order)
-                histogram_cmd = [histogram,
-                                 "--order", str(order),
-                                 "--channels", str(self.channels()),
-                                 "--mode", self.mode(),
-                                 "--file-out", histogram_dst,
-                                 "--time", str(self.time_limits()),
-                                 "--pulse", str(self.pulse_limits())]
-        else:
-            raise(TypeError("Mode could not be handled for "
-                            "correlation: {0}".format(self.mode())))
 
-        if correlate_cmd:
             logging.debug("Correlation command: {0} | {1} | {2}".format(
                 " ".join(self.data_cmd),
                 " ".join(correlate_cmd),
@@ -257,12 +227,62 @@ class Picoquant:
             corr = subprocess.Popen(correlate_cmd,
                                     stdin=data.stdout, stdout=subprocess.PIPE)
             subprocess.Popen(histogram_cmd, stdin=corr.stdout).wait()
-        else:
-            logging.debug("Correlation command: {0} | {1}".format(
-                self.data_cmd, histogram_cmd))
-            data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)
-            subprocess.Popen(histogram_cmd, stdin=data.stdout).wait()
+        elif self.mode() == "t3":
+            for my_order in order:
+                if my_order == 1:
+                    logging.debug("Histogramming values from a t3 run.")
+                    histogram_dst = "{0}.g1".format(self.filename)
+                    histogram_cmd = [histogram,
+                                     "--order", str(my_order),
+                                     "--channels", str(self.channels()),
+                                     "--mode", self.mode(),
+                                     "--file-out", histogram_dst,
+                                     "--time", str(self.time_limits())]
 
+                    logging.debug("Correlation command: {0} | {1}".format(
+                        " ".join(self.data_cmd),
+                        " ".join(histogram_cmd)))
+                    data = subprocess.Popen(self.data_cmd,
+                                            stdout=subprocess.PIPE)
+                    subprocess.Popen(histogram_cmd, stdin=data.stdout).wait()
+                else:
+                    logging.debug("Handling t3 correlation of order "
+                                  "{0}.".format(my_order))
+                    time_distance = str(self.time_distance())
+                    pulse_distance = str(self.pulse_distance())
+                    correlate_cmd = [correlate,
+                                     "--order", str(my_order),
+                                     "--channels", str(self.channels()),
+                                     "--mode", self.mode(),
+                                     "--max-time-distance",
+                                     str(self.time_distance()),
+                                     "--max-pulse-distance",
+                                     str(self.pulse_distance())]
+                        
+                    histogram_dst = "{0}.g{1}".format(self.filename, my_order)
+                    histogram_cmd = [histogram,
+                                     "--order", str(my_order),
+                                     "--channels", str(self.channels()),
+                                     "--mode", self.mode(),
+                                     "--file-out", histogram_dst,
+                                     "--time", str(self.time_limits()),
+                                     "--pulse", str(self.pulse_limits())]
+
+                    logging.debug("Correlation command: {0} "
+                                  "| {1} | {2}".format(
+                                 " ".join(self.data_cmd),
+                                 " ".join(correlate_cmd),
+                                 " ".join(histogram_cmd)))
+                    data = subprocess.Popen(self.data_cmd,
+                                            stdout=subprocess.PIPE)
+                    corr = subprocess.Popen(correlate_cmd,
+                                            stdin=data.stdout,
+                                            stdout=subprocess.PIPE)
+                    subprocess.Popen(histogram_cmd, stdin=corr.stdout).wait()
+        else:
+            raise(TypeError("Mode could not be handled for "
+                            "correlation: {0}".format(self.mode())))
+        
     def run_interactive(self):
         logging.info("Processing histograms.")
         histogram_dst = "{0}.hist".format(self.filename)
