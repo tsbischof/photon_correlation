@@ -381,7 +381,6 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
-		printf("Printing histogram %d.\n", i);
 		print_gn_histogram(out_stream, histograms->histograms[i]);
 	}
 }

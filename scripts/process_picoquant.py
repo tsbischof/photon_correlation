@@ -33,6 +33,23 @@ picoquant_channels = {
 
 tttr_modes = ["t2", "t3"]
 
+class Limits:
+    def __init__(self, limits_str):
+        self.limits_str = limits_str
+        self.limits = limits_str.split(",")
+
+    def __str__(self):
+        return(self.limits_str)
+    
+    def lower(self):
+        return(self.limits[0])
+
+    def bins(self):
+        return(self.limits[1])
+
+    def upper(self):
+        return(self.limits[2])
+
 class Picoquant:
     def __init__(self, filename, options):
         self.filename = filename
@@ -81,6 +98,9 @@ class Picoquant:
     def is_tttr(self):
         return(self.mode() in tttr_modes)
 
+    def is_interactive(self):
+        return(self.mode() == "interactive")
+
     def channels(self):
         if self.options.channels:
             return(self.options.channels)
@@ -94,6 +114,24 @@ class Picoquant:
         "file."
         return(int(math.floor(float_time*self.resolution()*1e9)))
 
+    def time_limits(self):
+        if self.options.time_limits:
+            return(Limits(self.options.time_limits))
+        else:
+            return(Limits("0,100,{0}".format(self.integer_time(0.01))))
+
+    def pulse_limits(self):
+        if self.options.pulse_limits:
+            return(Limits(self.options.pulse_limits))
+        else:
+            return(Limits("0,11,10"))
+
+    def time_distance(self):
+        return(self.time_limits().upper())
+    
+    def pulse_distance(self):
+        return(int(self.pulse_limits().upper()))
+
     def run_intensity(self):
         logging.info("Running an intensity trace.")
 
@@ -102,16 +140,24 @@ class Picoquant:
             intensity_dst))
 
         if self.mode() == "t2":
-            intensity_bin_width = self.integer_time(
-                    self.options.intensity_bin_width)
+            if self.options.intensity_bin_width:
+                intensity_bin_width = self.integer_time(
+                        self.options.intensity_bin_width)
+            else:
+                intensity_bin_width = self.integer_time(50)
+                
             logging.debug("Intensity bin width: {0} ({1}ms)".format(
                 intensity_bin_width, self.options.intensity_bin_width))
         elif self.mode() == "t3":
-            intensity_bin_width = self.options.intensity_bin_width
+            if self.options.intensity_bin_width:
+                intensity_bin_width = self.options.intensity_bin_width
+            else:
+                intensity_bin_width = 50000
+                
             logging.debug("Intensity bin width: {0} pulses.".format(
                 intensity_bin_width))
         else:
-            raise(TypeError("Itensity trace for mode {0} could not "
+            raise(TypeError("Intensity trace for mode {0} could not "
                             "be handled.".format(self.mode())))
 
         intensity_cmd = [intensity,
@@ -119,16 +165,96 @@ class Picoquant:
                         "--channels", str(self.channels()),
                         "--file-out", intensity_dst,
                         "--mode", self.mode()]
+
+        logging.debug("Intensity command: {0}".format(" ".join(intensity_cmd)))
         
         data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)        
         subprocess.Popen(intensity_cmd, stdin=data.stdout).wait()
     
     def run_correlation(self):
-        pass
+        logging.info("Processing correlation.")
+        # Distinct states: t2/t3, t3_g1
+        if self.options.order:
+            order = self.options.order
+        else:
+            order = 2
+
+        correlate_cmd = []
+        histogram_cmd = []
+        
+        if not self.is_tttr():
+            raise(TypeError("{0} is not a tttr mode.".format(self.mode())))
+        if self.mode() == "t2":
+            logging.debug("Handling t2 correlation of order {0}.".format(order))
+            time_distance = str(self.time_distance())
+            correlate_cmd = [correlate,
+                             "--order", str(order),
+                             "--mode", self.mode(),
+                             "--max-time-distance",
+                             str(self.time_distance())]
+                
+            histogram_dst = "{0}.g{1}".format(self.filename, order)
+            histogram_cmd = [histogram,
+                             "--order", str(order),
+                             "--channels", str(self.channels()),
+                             "--mode", self.mode(),
+                             "--file-out", histogram_dst,
+                             "--time", str(self.time_limits())]
+        elif self.mode() == "t3":
+            if order == 1:
+                logging.debug("Histogramming values from a t3 run.")
+                histogram_dst = "{0}.g1".format(self.filename)
+                histogram_cmd = [histogram,
+                                 "--order", str(order),
+                                 "--mode", self.mode(),
+                                 "--file-out", histogram_dst,
+                                 "--time", self.time_limits()]
+            else:
+                logging.debug("Handling t3 correlation of order "
+                              "{0}.".format(order))
+                time_distance = str(self.time_distance())
+                pulse_distance = str(self.pulse_distance())
+                correlate_cmd = [correlate,
+                                 "--order", str(order),
+                                 "--mode", self.mode(),
+                                 "--max-time-distance",
+                                 str(self.time_distance()),
+                                 "--max-pulse-distance",
+                                 str(self.pulse_distance())]
+                    
+                histogram_dst = "{0}.g{1}".format(self.filename, order)
+                histogram_cmd = [histogram,
+                                 "--order", str(order),
+                                 "--channels", str(self.channels()),
+                                 "--mode", self.mode(),
+                                 "--file-out", histogram_dst,
+                                 "--time", str(self.time_limits()),
+                                 "--pulse", str(self.pulse_limits())]
+        else:
+            raise(TypeError("Mode could not be handled for "
+                            "correlation: {0}".format(self.mode())))
+
+        if correlate_cmd:
+            logging.debug("Correlation command: {0} | {1} | {2}".format(
+                " ".join(self.data_cmd),
+                " ".join(correlate_cmd),
+                " ".join(histogram_cmd)))
+            data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)
+            corr = subprocess.Popen(correlate_cmd,
+                                    stdin=data.stdout, stdout=subprocess.PIPE)
+            hist = subprocess.Popen(histogram_cmd, stdin=corr.stdout)
+        else:
+            logging.debug("Correlation command: {0} | {1}".format(
+                self.data_cmd, histogram_cmd))
+            data = subprocess.Popen(self.data_cmd, stdout=subprocess.PIPE)
+            hist = subprocess.Popen(histogram_cmd, stdin=data.stdout)
 
     def run_interactive(self):
-        pass
-        
+        logging.info("Processing histograms.")
+        histogram_dst = "{0}.hist".format(self.filename)
+        histogram_cmd = self.data_cmd + ["--file-out", histogram_dst]
+        logging.debug("Histogram command: {0}".format(histogram_cmd))
+        subprocess.Popen(histogram_cmd).wait()
 
 def guess_mode(filename):
     extension = filename[-3:]
@@ -187,6 +313,14 @@ if __name__ == "__main__":
     parser.add_option("-q", "--quiet", dest="quiet",
                       help="Suppress all non-vital messages.",
                       action="store_true", default=False)
+    parser.add_option("-d", "--time", dest="time_limits",
+                      help="Specify the time limits for a histogram run, "
+                          "as lower,bins,upper.",
+                      action="store")
+    parser.add_option("-e", "--pulse", dest="pulse_limits",
+                      help="Specify the pulse limits for a histogram run.",
+                      action="store")
+    
 
     (options, args) = parser.parse_args()
 
