@@ -7,6 +7,7 @@ General:
 -profile performance, and look to see if there are any obvious bottlenecks
 -build a quick gui for picking windows to pass?
 -do a better job of detecting mode mismatch 
+-remove the clunkier debug messages.
 
 Scripts:
 -interpreter for t2, t3 modes into Python
@@ -52,7 +53,6 @@ Picoquant:
 --t3r: no
 
 Correlate:
--t2 mode seems to put out large numbers on linux32.
 > Testing
 >> t2: linux64
 >> t3: linux64
