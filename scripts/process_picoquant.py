@@ -284,7 +284,7 @@ class Picoquant:
                             "correlation: {0}".format(self.mode())))
         
     def run_interactive(self):
-        logging.info("Processing histograms.")
+        logging.info("Running histograms.")
         histogram_dst = "{0}.hist".format(self.filename)
         histogram_cmd = self.data_cmd + ["--file-out", histogram_dst]
         logging.debug("Histogram command: {0}".format(histogram_cmd))
