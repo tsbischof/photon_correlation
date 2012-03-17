@@ -119,7 +119,7 @@ class Picoquant:
         "Return the time specified as a float number of milliseconds as "
         "the integer number relevant for the particular resolution of the "
         "file."
-        return(int(math.floor(float_time*self.resolution()*1e9)))
+        return(int(math.floor(float_time*self.resolution()*1e6)))
 
     def time_limits(self, symmetric=False):
         if self.options.time_limits:
