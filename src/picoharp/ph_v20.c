@@ -366,6 +366,9 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 	long long int record_count = 0;
 	ph_v20_t3_record_t record;
 	long long int base_nsync = 0;
+	long long sync_period = (long long int)(1/(
+		(double)PH_BASE_RESOLUTION*(double)tttr_header->InpRate0));
+	debug("Sync period: %lld\n", sync_period);
 
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);
@@ -384,12 +387,21 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 				}
 			} else {
 				record_count++;
-				pq_print_t3(out_stream, record_count,
+				if ( options->to_t2 ) {
+					pq_print_t2(out_stream, record_count,
 						record.channel,
-						base_nsync, record.nsync,
+						(base_nsync+record.nsync)*sync_period,
 						record.dtime,
-						ph_header->Brd[0].Resolution, 
+						PH_BASE_RESOLUTION,
 						options);
+				} else {
+					pq_print_t3(out_stream, record_count,
+							record.channel,
+							base_nsync, record.nsync,
+							record.dtime,
+							PH_BASE_RESOLUTION, 
+							options);
+				}
 			}
 		}
 	}

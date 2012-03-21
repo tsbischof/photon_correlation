@@ -28,6 +28,7 @@ typedef struct {
 	int print_every;
 	int binary_out;
 	int print_resolution;
+	int to_t2;
 } pq_options_t;
 
 typedef struct {

@@ -19,6 +19,8 @@ Picoquant:
 -opening of files seems to fail on linux32. Why?
 
 > Testing:
+-make sure that --to-t2 is working correctly.
+
 >> Picoharp
 -v20
 --phd: linux32, linux64

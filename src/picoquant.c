@@ -21,7 +21,7 @@
 void pq_usage(void) {
 	fprintf(stdout, 
 "Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]\n"
-"                 [-p print_every] [-n number] [-b] [-z]\n"
+"                 [-p print_every] [-n number] [-b] [-z] [-t]\n"
 "\n"
 "        -i, --file-in: Input file. By default, this is stdin.\n"
 "       -o, --file-out: Output file. By default, this is stdout.\n"
@@ -39,6 +39,8 @@ void pq_usage(void) {
 "                       to the ascii mode in typing.\n"
 "-z, --resolution-only: Print the time resolution of the measurement as a \n"
 "                       float in nanoseconds, then exit.\n"
+"          -t, --to-t2: Convert a t3 file to a t2 file. This assumes the sync\n"
+"                       channel is regular and consistent over the whole run.\n"
 "\n"
 "The file type and version will be detected automatically from the file header."
 "\n");
@@ -106,7 +108,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 		fprintf(out_stream, "%u,%lld,%u\n",
 				record.channel, record.pulse_number, record.time);
 	}
-
+	
 	print_status(count, options);
 }
 
@@ -196,6 +198,7 @@ int main(int argc, char *argv[]) {
 		{"verbose", no_argument, 0, 'v'},
 		{"binary-out", no_argument, 0, 'b'},
 		{"resolution-only", no_argument, 0, 'z'},
+		{"to-t2", no_argument, 0, 't'},
 		{0, 0, 0, 0}}; 
 
 	/* Set some default values. */
@@ -208,9 +211,10 @@ int main(int argc, char *argv[]) {
 	options.print_header = 0;
 	options.binary_out = 0;
 	options.print_resolution = 0;
+	options.to_t2 = 0;
 
 	/* Parse the command-line options. */
-	while ( (c = getopt_long(argc, argv, "hi:o:rn:p:vbz", long_options,
+	while ( (c = getopt_long(argc, argv, "hi:o:rn:p:vbzt", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
 			case 'h':
@@ -240,6 +244,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'z':
 				options.print_resolution = 1;
+				break;
+			case 't':
+				options.to_t2 = 1;
 				break;
 			case '?':
 				pq_usage();

@@ -357,6 +357,11 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 	hh_v10_t3_record_t record;
 	long long int base_nsync = 0;
 
+	long long int sync_period = (long long int)(1/(
+		1e-12*hh_header->BaseResolution*(double)tttr_header->SyncRate));
+	unsigned int resolution_int = (unsigned int)hh_header->Resolution;
+	debug("Sync period: %lld\n", sync_period);
+
 	while ( !feof(in_stream) && record_count < options->number ) {
 		/* First, read a value from the stream. */
 		result = fread(&record, sizeof(record), 1, in_stream);
@@ -377,12 +382,21 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 			} else {
 				record_count++;
 				/* 1e-3 turns picoseconds to nanoseconds */
-				pq_print_t3(out_stream, record_count,
-					record.channel,
-					base_nsync, record.nsync,
-					record.dtime, 
-					hh_header->Resolution*1e-3,
-					options);
+				if ( options->to_t2 ) {
+					pq_print_t2(out_stream, record_count,
+						record.channel,
+						(base_nsync+record.nsync)*sync_period, 
+						record.dtime*resolution_int,
+						hh_header->Resolution*1e-3,
+						options);
+				} else {
+					pq_print_t3(out_stream, record_count,
+						record.channel,
+						base_nsync, record.nsync,
+						record.dtime, 
+						hh_header->Resolution*1e-3,
+						options);
+				}
 			}
 		}
 	}
