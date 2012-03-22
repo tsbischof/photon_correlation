@@ -312,11 +312,12 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 					overflows++;
 					base_time += HH_T2_OVERFLOW;
 				} else if ( record.channel == 0 ) {
+					/* Sync record. */
 					record_count++;
 					pq_print_t2(out_stream, record_count,
 							HH_SYNC_CHANNEL,
 							base_time/2, record.time/2,
-							hh_header->BaseResolution, options);
+							options);
 				} else {
 					warn("External markers not yet implemented.\n");
 				}
@@ -331,7 +332,7 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 				pq_print_t2(out_stream, record_count,
 						record.channel,
 						base_time/2, record.time/2,
-						hh_header->BaseResolution, options);
+						options);
 			}
 		}
 	}
@@ -359,7 +360,7 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 
 	long long int sync_period = (long long int)(1/(
 		1e-12*hh_header->BaseResolution*(double)tttr_header->SyncRate));
-	unsigned int resolution_int = (unsigned int)hh_header->Resolution;
+	unsigned int resolution_int = (unsigned int)(hh_header->Resolution);
 	debug("Sync period: %lld\n", sync_period);
 
 	while ( !feof(in_stream) && record_count < options->number ) {
@@ -387,14 +388,12 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 						record.channel,
 						(base_nsync+record.nsync)*sync_period, 
 						record.dtime*resolution_int,
-						hh_header->Resolution*1e-3,
 						options);
 				} else {
 					pq_print_t3(out_stream, record_count,
 						record.channel,
 						base_nsync, record.nsync,
-						record.dtime, 
-						hh_header->Resolution*1e-3,
+						record.dtime*resolution_int, 
 						options);
 				}
 			}
@@ -433,7 +432,8 @@ int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream,
 		/* HydraHarp has half the resolution it reports, according to the 
  		 * documentation.
  		 */
-		fprintf(out_stream, "%e\n", hh_header->Resolution*2e-3);
+//		fprintf(out_stream, "%e\n", hh_header->Resolution*2e-3);
+		fprintf(out_stream, "%e\n", HH_BASE_RESOLUTION);
 	} else {
 		if ( hh_header->MeasurementMode == HH_MODE_T2 ) {
 			debug("Found mode ht2.\n");

@@ -47,11 +47,11 @@ void pq_header_print(FILE *out_stream, pq_header_t *pq_header);
 void pq_print_t2(FILE *out_stream, long long int count,
 		unsigned int channel, 
 		long long int base_time, unsigned int record_time,
-		double record_resolution, pq_options_t *options);
+		pq_options_t *options);
 void pq_print_t3(FILE *out_stream, long long int count,
 		unsigned int channel,
 		long long int base_nsync, unsigned int record_nsync,
-		unsigned int record_dtime, double record_resolution,
+		unsigned int record_dtime,
 		pq_options_t *options);
 void pq_print_tttr(FILE *out_stream, long long int count,
 		unsigned int histogram_channel, int n_histogram_channels,

@@ -14,6 +14,7 @@ Scripts:
 -plotting for t3 mode correlation
 
 Picoquant:
+-make sure that t3, t2 mode all output their times in picoseconds.
 -flag --to-t2 gives t2 output from t3 file (error if not one of those types)
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
 -opening of files seems to fail on linux32. Why?
@@ -62,6 +63,7 @@ Correlate:
 Histogram:
 -print-every to output to a log file every so often (this would be useful for long runs)
 -test to see that the sum over all counts is equal to the number of entries histogrammed
+-t3 mode seems to be having problems with > 50000 time bins
 > t2: done, need more thorough testing
 > t3_g1: done, need more thorough testing
 > t3_gn: done, need more thorough testing

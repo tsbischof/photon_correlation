@@ -21,11 +21,11 @@ def plot_curves(curves, names):
     for key, curve in sorted(curves.items()):
         try:
             name = names[key]
-            wavelengths = list(map(lambda x: x[0], curve))
+            times = list(map(lambda x: x[0], curve))
             counts = list(map(lambda x: x[1], curve))
 
             plt.clf()
-            plt.semilogy(wavelengths, counts, label=name)
+            plt.semilogy(times, counts, label=name)
             plt.xlabel("Time/ns")
             plt.ylabel("Counts")
             plt.title(name)

@@ -119,7 +119,8 @@ class Picoquant:
         "Return the time specified as a float number of milliseconds as "
         "the integer number relevant for the particular resolution of the "
         "file."
-        return(int(math.floor(float_time*self.resolution()*1e6)))
+        # ms to ns, then ns to the integer tick 
+        return(int(math.floor(float_time*1e6/self.resolution())))
 
     def time_limits(self, symmetric=False):
         if self.options.time_limits:
@@ -268,8 +269,7 @@ class Picoquant:
                                      "--channels", str(self.channels()),
                                      "--mode", self.mode(),
                                      "--file-out", histogram_dst,
-                                     "--time", str(
-                                              self.time_limits(symmetric=True)),
+                                     "--time", str(self.time_limits()),
                                      "--pulse", str(self.pulse_limits())]
 
                     logging.debug("Correlation command: {0} "

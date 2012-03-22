@@ -344,7 +344,7 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 				pq_print_t2(out_stream, record_count,
 					record.channel,
 					base_time, record.time,
-					PH_BASE_RESOLUTION, options);
+					options);
 			}
 		}
 	}
@@ -392,14 +392,12 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 						record.channel,
 						(base_nsync+record.nsync)*sync_period,
 						record.dtime,
-						PH_BASE_RESOLUTION,
 						options);
 				} else {
 					pq_print_t3(out_stream, record_count,
 							record.channel,
 							base_nsync, record.nsync,
 							record.dtime,
-							PH_BASE_RESOLUTION, 
 							options);
 				}
 			}

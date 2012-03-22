@@ -29,7 +29,7 @@ def plot_curves(curves):
             name = r"$g_{%s%s}$($\tau$)" % (channel_0, channel_1)
 
             plt.clf()
-            plt.semilogy(times, counts)
+            plt.plot(times, counts)
             plt.xlim((min(times), max(times)))
             plt.xlabel("Time/ns")
             plt.ylabel("Counts")
