@@ -358,8 +358,8 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 	hh_v10_t3_record_t record;
 	long long int base_nsync = 0;
 
-	long long int sync_period = (long long int)(1/(
-		1e-12*hh_header->BaseResolution*(double)tttr_header->SyncRate));
+	long long int sync_period = (long long int)(1e12/
+			(double)tttr_header->SyncRate);
 	unsigned int resolution_int = (unsigned int)(hh_header->Resolution);
 	debug("Sync period: %lld\n", sync_period);
 

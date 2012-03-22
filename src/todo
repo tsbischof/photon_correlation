@@ -15,13 +15,11 @@ Scripts:
 
 Picoquant:
 -make sure that t3, t2 mode all output their times in picoseconds.
--flag --to-t2 gives t2 output from t3 file (error if not one of those types)
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
 -opening of files seems to fail on linux32. Why?
+-make sure that --to-t2 is working
 
 > Testing:
--make sure that --to-t2 is working correctly.
-
 >> Picoharp
 -v20
 --phd: linux32, linux64

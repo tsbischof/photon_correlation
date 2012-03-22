@@ -76,15 +76,6 @@ class Picoquant:
         else:
             logging.debug("Found mode {0}".format(self.mode()))
 
-    def resolution(self):
-        resolution = subprocess.Popen(self.data_cmd + ["--resolution"],
-                                      stdout=subprocess.PIPE).stdout.read()
-        try:
-            return(float(resolution))
-        except:
-            raise(ValueError("Resolution could not be converted"
-                             "to float: {0}".format(resolution)))
-
     def mode(self):
         if self.options.mode:
             mode = self.options.mode
@@ -119,8 +110,8 @@ class Picoquant:
         "Return the time specified as a float number of milliseconds as "
         "the integer number relevant for the particular resolution of the "
         "file."
-        # ms to ns, then ns to the integer tick 
-        return(int(math.floor(float_time*1e6/self.resolution())))
+        # ms to ps 
+        return(int(math.floor(float_time*1e9))
 
     def time_limits(self, symmetric=False):
         if self.options.time_limits:

@@ -6,6 +6,8 @@
 #include "../picoquant.h"
 #include "../types.h"
 
+#define PH_V20_BASE_RESOLUTION 4e-12
+
 #pragma pack(2)
 typedef struct {
 	int32 MapTo;

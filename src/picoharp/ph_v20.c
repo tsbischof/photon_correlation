@@ -314,6 +314,8 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 	 */
 	long long int base_time = 0; 
 
+	unsigned int resolution_int = (unsigned int)(PH_V20_BASE_RESOLUTION*1e12);
+
 	debug("Record limit:             %10d.\n", options->number);
 	debug("Listed number of records: %10d.\n", tttr_header->NumRecords);
 
@@ -343,7 +345,8 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 				record_count++;
 				pq_print_t2(out_stream, record_count,
 					record.channel,
-					base_time, record.time,
+					base_time*resolution_int, 
+					record.time*resolution_int,
 					options);
 			}
 		}
@@ -366,9 +369,10 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 	long long int record_count = 0;
 	ph_v20_t3_record_t record;
 	long long int base_nsync = 0;
-	long long sync_period = (long long int)(1/(
-		(double)PH_BASE_RESOLUTION*(double)tttr_header->InpRate0));
+	long long sync_period = (long long int)(1e12/(double)tttr_header->InpRate0);
 	debug("Sync period: %lld\n", sync_period);
+	unsigned int resolution_int = (unsigned int)(
+			ph_header->Brd[0].Resolution*1e3);
 
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);
@@ -389,15 +393,16 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 				record_count++;
 				if ( options->to_t2 ) {
 					pq_print_t2(out_stream, record_count,
-						record.channel,
-						(base_nsync+record.nsync)*sync_period,
-						record.dtime,
-						options);
+							record.channel,
+							(base_nsync+record.nsync)*sync_period,
+							record.dtime*resolution_int,
+							options);
 				} else {
 					pq_print_t3(out_stream, record_count,
 							record.channel,
-							base_nsync, record.nsync,
-							record.dtime,
+							base_nsync, 
+							record.nsync,
+							record.dtime*resolution_int,
 							options);
 				}
 			}
