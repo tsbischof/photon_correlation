@@ -33,6 +33,15 @@ picoquant_channels = {
 
 tttr_modes = ["t2", "t3"]
 
+class Histogram:
+    pass
+
+class Correlate:
+    pass
+
+class Picoquant:
+    pass
+
 class Limits:
     def __init__(self, limits_str):
         self.limits = limits_str.split(",")
@@ -65,7 +74,9 @@ class Picoquant:
         logging.info("Processing {0}.".format(filename))
         logging.debug("Creating picoquant object from {0}".format(filename))
 
-        self.data_cmd = [picoquant, "--file-in", filename]
+        self.data_cmd = [picoquant,
+                         "--file-in", filename,
+                         "--print-every", str(self.print_every())]
         if self.options.number > 0:
             logging.debug("Processing {0} entries.".format(self.options.number))
             self.data_cmd.extend(["--number", str(self.options.number)])
@@ -110,8 +121,8 @@ class Picoquant:
         "Return the time specified as a float number of milliseconds as "
         "the integer number relevant for the particular resolution of the "
         "file."
-        # ms to ps 
-        return(int(math.floor(float_time*1e9))
+        # ms to ps
+        return(int(math.floor(float_time*1e9)))
 
     def time_limits(self, symmetric=False):
         if self.options.time_limits:
@@ -131,6 +142,12 @@ class Picoquant:
             return(Limits(self.options.pulse_limits))
         else:
             return(Limits("0,11,10"))
+
+    def print_every(self):
+        return(self.options.print_every)
+
+    def time_scale(self):
+        return(self.options.time_scale)
 
     def time_distance(self):
         return(self.time_limits().upper())
@@ -212,7 +229,8 @@ class Picoquant:
                              "--channels", str(self.channels()),
                              "--mode", self.mode(),
                              "--file-out", histogram_dst,
-                             "--time", str(self.time_limits())]
+                             "--time", str(self.time_limits()),
+                             "--time-scale", self.time_scale()]
 
             logging.debug("Correlation command: {0} | {1} | {2}".format(
                 " ".join(self.data_cmd),
@@ -232,7 +250,8 @@ class Picoquant:
                                      "--channels", str(self.channels()),
                                      "--mode", self.mode(),
                                      "--file-out", histogram_dst,
-                                     "--time", str(self.time_limits())]
+                                     "--time", str(self.time_limits()),
+                                     "--time-scale", self.time_scale()]
 
                     logging.debug("Correlation command: {0} | {1}".format(
                         " ".join(self.data_cmd),
@@ -260,7 +279,11 @@ class Picoquant:
                                      "--channels", str(self.channels()),
                                      "--mode", self.mode(),
                                      "--file-out", histogram_dst,
-                                     "--time", str(self.time_limits()),
+                                     # Symmetric time limits because the
+                                     # arrival times relative to the pulse
+                                     # can be any value.
+                                     "--time", str(
+                                         self.time_limits(symmetric=True)),
                                      "--pulse", str(self.pulse_limits())]
 
                     logging.debug("Correlation command: {0} "
@@ -349,6 +372,14 @@ if __name__ == "__main__":
     parser.add_option("-e", "--pulse", dest="pulse_limits",
                       help="Specify the pulse limits for a histogram run.",
                       action="store")
+    parser.add_option("-D", "--time-scale", dest="time_scale",
+                      help="Scale for the time axis of a histogram run. Can "
+                      "be linear, log, or log-zero (includes zero-time bin)",
+                      default="linear", action="store")
+    parser.add_option("-p", "--print-every", dest="print_every",
+                      help="Print the record number whenever it is divisible "
+                      "by this number. By default, nothing is printed.",
+                      default=0, action="store", type=int)
     
 
     (options, args) = parser.parse_args()
@@ -361,7 +392,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
     
     logging.debug("Found options: {0}".format(options))
-    logging.debug("Found files to process: {0}".format(options))
+    logging.debug("Found files to process: {0}".format(args))
     
     for filename in args:
         process(filename, options)

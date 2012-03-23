@@ -469,9 +469,11 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
 				}
 				debug("Printing the edge for dimension %d and bin %d.\n",
 						i, indices[i]);
-				fprintf(out_stream, ",%lf",
-						histogram->dimensions[i]->bin_edges[indices[i]]);			
+				fprintf(out_stream, ",%.2lf,%.2lf",
+						histogram->dimensions[i]->bin_edges[indices[i]],
+						histogram->dimensions[i]->bin_edges[indices[i]+1]);
 			}
+
 
 			debug("Getting the index in the histogram.\n");
 			bin_index = gn_histogram_get_index_from_indices(histogram, indices);
