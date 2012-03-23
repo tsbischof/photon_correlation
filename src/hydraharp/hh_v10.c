@@ -314,6 +314,9 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 				} else if ( record.channel == 0 ) {
 					/* Sync record. */
 					record_count++;
+					/* Label the sync channel as 1 greater than the maximum
+					 * signal channel index.
+					 */
 					pq_print_t2(out_stream, record_count,
 							hh_header->InputChannelsPresent,
 							base_time/2, record.time/2,
