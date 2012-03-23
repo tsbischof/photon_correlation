@@ -315,7 +315,7 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 					/* Sync record. */
 					record_count++;
 					pq_print_t2(out_stream, record_count,
-							HH_SYNC_CHANNEL,
+							hh_header->InputChannelsPresent,
 							base_time/2, record.time/2,
 							options);
 				} else {
