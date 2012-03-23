@@ -60,7 +60,6 @@ Correlate:
 
 Histogram:
 -print-every to output to a log file every so often (this would be useful for long runs)
--test to see that the sum over all counts is equal to the number of entries histogrammed
 -t3 mode seems to be having problems with > 50000 time bins
 > t2: done, need more thorough testing
 > t3_g1: done, need more thorough testing
