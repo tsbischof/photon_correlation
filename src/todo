@@ -1,22 +1,18 @@
 General:
 -write interface for Python, Matlab
 -write automated test for all programs
--test more thoroughly on linux32, win32, win64
 -write up notes on Timeharp: the records for t3r are _not_ t2 or t3, but the raw data used to build the histogram. As such, they cannot simply be tied to a pulse, but we can wort of treat them as though they are. This will proabably throw off correlations (except t2 type, if we are lucky).
 -look into errno and related for dealing with errors.
 -profile performance, and look to see if there are any obvious bottlenecks
--build a quick gui for picking windows to pass?
 -do a better job of detecting mode mismatch 
 -remove the clunkier debug messages.
 
 Scripts:
--interpreter for t2, t3 modes into Python
 -plotting for t3 mode correlation
 
 Picoquant:
 -make sure that t3, t2 mode all output their times in picoseconds.
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
--opening of files seems to fail on linux32. Why?
 -make sure that --to-t2 is working
 
 > Testing:
@@ -59,7 +55,6 @@ Correlate:
 >> t3: linux64
 
 Histogram:
--print-every to output to a log file every so often (this would be useful for long runs)
 -check that the binary search judges the bin edges as the left or right bin edge
 -t3 mode seems to be having problems with > 50000 time bins
 > t2: done, need more thorough testing
@@ -67,7 +62,6 @@ Histogram:
 > t3_gn: done, need more thorough testing
 
 Intensity:
--given a bin width, count the number of entries in a bin, then iterate until the end of the file.
 > Testing
 >> t2: linux64, linux32
 >> t3: linux64, linux32
