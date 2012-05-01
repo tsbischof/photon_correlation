@@ -419,8 +419,7 @@ int th_v30_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 					overflows++;
 					base_time += TH_TTTR_OVERFLOW;
 				} else {
-					warn("Special record not recognized: %u.\n", 
-							record.Channel);
+					external_marker(out_stream, record.Channel, options);
 				}
 			}
 		}

@@ -335,7 +335,7 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 				/* Special record */
 				if ( (record.time & 01111) == 01111 ) {
 					/* External marker. */
-					warn("External markers not yet implemented.\n");
+					external_marker(out_stream, record.time, options);
 				} else {
 					/* Overflow */
 					overflows++;
@@ -387,7 +387,7 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 					overflows++;
 					base_nsync += PH_T3_OVERFLOW;
 				} else {
-					warn("External markers not yet implemented.\n");
+					external_marker(out_stream, record.dtime, options);
 				}
 			} else {
 				record_count++;

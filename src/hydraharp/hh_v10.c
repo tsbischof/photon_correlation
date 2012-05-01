@@ -322,7 +322,7 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 							base_time/2, record.time/2,
 							options);
 				} else {
-					warn("External markers not yet implemented.\n");
+					external_marker(out_stream, record.channel, options);
 				}
 			} else {
 				record_count++;
@@ -381,7 +381,7 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 					base_nsync += HH_T3_OVERFLOW;
 				} else {
 					/* External marker.  */
-					warn("External markers not yet implemented.\n");
+					external_marker(out_stream, record.channel, options);
 				}
 			} else {
 				record_count++;

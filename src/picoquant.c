@@ -167,6 +167,11 @@ void pq_print_interactive(FILE *out_stream, int curve, double time,
 	}
 }
 
+void external_marker(FILE *out_stream, unsigned int marker, 
+		pq_options_t *options) {
+	fprintf(stderr, "External marker: %u\n", marker);
+}
+
 int main(int argc, char *argv[]) {
 	/* This software is designed to read in Picoquant data files and
 	 * translate them to ascii or other useful formats. It is a filter in
