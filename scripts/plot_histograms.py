@@ -10,7 +10,7 @@ picoquant = "/home/tsbischof/src/picoquant/src/picoquant"
 
 def get_curves(data):
     curves = dict()
-    for curve, time, counts in csv.reader(data):
+    for curve, time, right_edge, counts in csv.reader(data):
         if curve not in curves.keys():
             curves[curve] = list()
 

@@ -19,7 +19,7 @@ CFLAGS += -O3
 LDFLAGS = ${CFLAGS}
 
 
-INSTALL_DIR = ~tsbischof/bin/
+INSTALL_DIR = ${HOME}/bin/
 
 PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
 		t2.o t3.o \

@@ -166,7 +166,9 @@ int th_v30_interactive_stream(FILE *in_stream, FILE *out_stream,
 			&interactive);
 	} else if ( options->print_resolution ) {
 		for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
-			fprintf(out_stream, "%d,%e\n", i, interactive[i].Resolution);
+			fprintf(out_stream, "%d,", i);
+			print_resolution(out_stream, 
+					(interactive[i].Resolution*1e3), options);
 		}
 	} else { 
 	/* Read and print interactive data. */
@@ -378,7 +380,8 @@ int th_v30_tttr_stream(FILE *in_stream, FILE *out_stream,
 		th_v30_header_print(out_stream, th_header);
 		th_v30_tttr_header_print(out_stream, &tttr_header);
 	} else if ( options->print_resolution ) {
-		fprintf(out_stream, "%e\n", th_header->Brd[0].Resolution);
+		print_resolution(out_stream, 
+				(th_header->Brd[0].Resolution*1e3), options);
 	} else {
 		result = th_v30_tttr_record_stream(in_stream, out_stream,
 				th_header, &tttr_header, options);

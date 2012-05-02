@@ -231,7 +231,9 @@ int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		ph_v20_interactive_header_print(out_stream, ph_header, &interactive);
 	} else if ( options->print_resolution ) {
 		for ( i = 0; i < ph_header->NumberOfCurves; i++ ) {
-			fprintf(out_stream, "%d,%e\n", i, interactive.Curve[i].Resolution);
+			fprintf(out_stream, "%d,", i);
+			print_resolution(out_stream, 
+					(interactive.Curve[i].Resolution*1e3), options);
 		}
 	} else {
 	/* Read and print interactive data. */
@@ -436,7 +438,8 @@ int ph_v20_tttr_stream(FILE *in_stream, FILE *out_stream,
 		ph_v20_tttr_header_print(out_stream, &tttr_header);
 		result = PQ_SUCCESS;
 	} else if ( options->print_resolution ) {
-		fprintf(out_stream, "%e\n", PH_BASE_RESOLUTION*1e9);
+		print_resolution(out_stream, 
+				(ph_header->Brd[0].Resolution*1e3), options);
 	} else {
 		if ( ph_header->MeasurementMode == PH_MODE_T2 ) {
 			result = ph_v20_t2_record_stream(in_stream, out_stream, 

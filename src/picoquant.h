@@ -26,8 +26,8 @@ typedef struct {
 	int number;
 	int print_header;
 	int print_every;
-	int binary_out;
 	int print_resolution;
+	int binary_out;
 	int to_t2;
 } pq_options_t;
 
@@ -61,6 +61,8 @@ void pq_print_interactive(FILE *out_stream, int curve, double time,
 		int counts, pq_options_t *options);
 void print_status(long long int count, pq_options_t *options);
 void external_marker(FILE *out_stream, unsigned int marker, 
+		pq_options_t *options);
+void print_resolution(FILE *out_stream, double resolution,
 		pq_options_t *options);
 	
 void pq_usage(void);

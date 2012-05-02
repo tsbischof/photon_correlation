@@ -10,12 +10,12 @@ import process_picoquant
 
 def get_curves(data):
     curves = dict()
-    for channel_0, channel_1, bin_edge, counts in csv.reader(data):
+    for channel_0, channel_1, left_edge, right_edge, counts in csv.reader(data):
         key = "{0}_{1}".format(channel_0, channel_1)
         if not key in curves.keys():
             curves[key] = list()
 
-        curves[key].append((float(bin_edge), int(counts)))
+        curves[key].append((float(left_edge), int(counts)))
 
     return(curves)
 

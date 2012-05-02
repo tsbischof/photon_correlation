@@ -33,14 +33,15 @@ void pq_usage(void) {
 "        -v, --verbose: Print debug-level information.\n"
 "    -r, --header-only: Print header information, but no entries. Useful for\n"
 "                       debugging and checking file integrity.\n"
-"     -b, --binary-out: Output a binary stream instead of ascii. Refer to \n"
+"     -b, --binary-out: Output a binary stream instead of ascii. Refer to\n"
 "                       the documentation for each mode for the details of\n"
 "                       each stream type. Generally, this will be identical\n"
 "                       to the ascii mode in typing.\n"
-"-z, --resolution-only: Print the time resolution of the measurement as a \n"
-"                       float in nanoseconds, then exit.\n"
+"-z, --resolution-only: Print the time resolution of the measurement in \n"
+"                       picoseconds, then exit.\n"
 "          -t, --to-t2: Convert a t3 file to a t2 file. This assumes the sync\n"
 "                       channel is regular and consistent over the whole run.\n"
+"           -h, --help: Print this message.\n"
 "\n"
 "The file type and version will be detected automatically from the file header."
 "\n");
@@ -172,6 +173,14 @@ void external_marker(FILE *out_stream, unsigned int marker,
 	fprintf(stderr, "External marker: %u\n", marker);
 }
 
+void print_resolution(FILE *out_stream, double resolution, 
+		pq_options_t *options) {
+	/* Given float representing the resolution in picoseconds, print the 
+	 * appropriate value.
+	 */
+	fprintf(out_stream, "%e\n", resolution);
+}
+
 int main(int argc, char *argv[]) {
 	/* This software is designed to read in Picoquant data files and
 	 * translate them to ascii or other useful formats. It is a filter in
@@ -201,9 +210,10 @@ int main(int argc, char *argv[]) {
 		{"number", required_argument, 0, 'n'},
 		{"print-every", required_argument, 0, 'p'},
 		{"verbose", no_argument, 0, 'v'},
-		{"binary-out", no_argument, 0, 'b'},
 		{"resolution-only", no_argument, 0, 'z'},
 		{"to-t2", no_argument, 0, 't'},
+		{"binary-out", no_argument, 0, 'b'},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}}; 
 
 	/* Set some default values. */
@@ -219,12 +229,15 @@ int main(int argc, char *argv[]) {
 	options.to_t2 = 0;
 
 	/* Parse the command-line options. */
-	while ( (c = getopt_long(argc, argv, "hi:o:rn:p:vbzt", long_options,
+	while ( (c = getopt_long(argc, argv, "hbi:o:rn:p:vzt", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
 			case 'h':
 				pq_usage();
 				return(0);
+				break;
+			case 'b':
+				options.binary_out = 1;
 				break;
 			case 'i':
 				options.in_filename = strdup(optarg);
@@ -243,9 +256,6 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'v':
 				verbose = 1;
-				break;
-			case 'b':
-				options.binary_out = 1;
 				break;
 			case 'z':
 				options.print_resolution = 1;

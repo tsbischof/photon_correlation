@@ -165,7 +165,9 @@ int th_v60_interactive_stream(FILE *in_stream, FILE *out_stream,
 			&interactive);
 	} else if ( options->print_resolution) { 
 		for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
-			fprintf(out_stream, "%d,%e\n", i, interactive[i].Resolution);
+			fprintf(out_stream, "%d,", i);
+			print_resolution(out_stream, 
+					interactive[i].Resolution*1e3, options);
 		}
 	} else { 
 	/* Read and print interactive data. */

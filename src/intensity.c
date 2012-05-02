@@ -30,6 +30,7 @@ void usage(void) {
 "                          style of the output will be different for each.\n"
 "          -c, --channels: Number of channels in the stream. By default, this\n"
 "                          is 2.\n"
+"              -h, --help: Print this message.\n"
 "\n"
 "       This program assumes the input stream is time-ordered.\n");
 }
@@ -180,6 +181,7 @@ int main(int argc, char *argv[]) {
 		{"mode", required_argument, 0, 'm'},
 		{"channels", required_argument, 0, 'c'},
 		{"bin-width", required_argument, 0, 'w'},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
 	/* Some default values. */
@@ -190,9 +192,12 @@ int main(int argc, char *argv[]) {
 	options.channels = 2;
 	options.bin_width = 1;
 
-	while ( (c = getopt_long(argc, argv, "vi:o:m:c:w:", long_options,
+	while ( (c = getopt_long(argc, argv, "hvi:o:m:c:w:", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
+			case 'h':
+				usage();
+				return(0);
 			case 'v':
 				verbose = 1;
 				break;

@@ -48,6 +48,7 @@ void usage(void) {
 "                          default, this is 2 (Picoharp).\n"
 "  -r, --channels-ordered: Organize the output such that the channels are\n"
 "                          in order. By default, this is not performed.\n"
+"              -h, --help: Print this message.\n"
 "\n"
 "       This program assumes the input stream is time-ordered.\n",
 			QUEUE_SIZE);
@@ -73,6 +74,7 @@ int main(int argc, char *argv[]) {
 		{"order", required_argument, 0, 'g'},
 		{"channels", required_argument, 0, 'c'},
 		{"channels-ordered", no_argument, 0, 'r'},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
 	/* Some default values. */
@@ -88,9 +90,12 @@ int main(int argc, char *argv[]) {
 	options.channels = 2;
 	options.channels_ordered = 0;
 
-	while ( (c = getopt_long(argc, argv, "vi:o:p:m:q:d:g:c:r", long_options,
+	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:c:r", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
+			case 'h':
+				usage();
+				return(0);
 			case 'v':
 				verbose = 1;
 				break;

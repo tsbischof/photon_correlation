@@ -38,6 +38,7 @@ void usage(void) {
 "     -E, --pulse-scale: Sets whether the pulse scale is \"linear\", \n"
 "                        \"log\", or \"log-zero\". The default is a linear\n"
 "                        scale.\n"
+"            -h, --help: Print this message.\n"
 "\n"
 "            This program assumes that the channels are presented in order.\n");
 }
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
 		{"order", required_argument, 0, 'g'},
 		{"time-scale", required_argument, 0, 'D'},
 		{"pulse-scale", required_argument, 0, 'E'},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
 	options.in_filename = NULL;
@@ -76,9 +78,12 @@ int main(int argc, char *argv[]) {
 	options.pulse_scale_string = NULL;
 	options.pulse_scale = SCALE_LINEAR;
 
-	while ( (c = getopt_long(argc, argv, "vi:o:m:d:e:c:g:D:E:", long_options,
+	while ( (c = getopt_long(argc, argv, "hvi:o:m:d:e:c:g:D:E:", long_options,
 				&option_index)) != -1 ) {
 		switch (c) {
+			case 'h':
+				usage();
+				return(0);
 			case 'v':
 				verbose = 1;
 				break;

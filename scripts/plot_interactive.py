@@ -5,7 +5,7 @@ import csv
 import sys
 import matplotlib.pyplot as plt
 
-picoquant = "/home/tsbischof/src/picoquant/src/picoquant"
+picoquant = "picoquant"
 
 def get_curves(data):
     curves = dict()

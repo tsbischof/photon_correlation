@@ -130,7 +130,7 @@ class Picoquant:
             limits.set_lower(self.integer_time(float(limits.lower())))
             limits.set_upper(self.integer_time(float(limits.upper())))
         else:
-            limits = Limits("0,1000,{0}".format(self.integer_time(0.01)))
+            limits = Limits("0,1000,{0}".format(self.integer_time(0.004)))
 
         if symmetric:
             limits.set_lower(-int(limits.upper()))

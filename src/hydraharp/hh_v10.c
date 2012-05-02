@@ -224,8 +224,9 @@ int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
 				&interactive);
 	} else if ( options->print_resolution ) {
 		for ( i = 0; i < hh_header->NumberOfCurves; i++ ) {
-			fprintf(out_stream, "%d,%e\n", i, 
-					interactive.Curve[i].Resolution*1e-3);
+			fprintf(out_stream, "%d,", i);
+			print_resolution(out_stream, 
+					interactive.Curve[i].Resolution, options);
 		}
 	} else {
 	/* Read and print interactive data. */
@@ -436,7 +437,8 @@ int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream,
  		 * documentation.
  		 */
 //		fprintf(out_stream, "%e\n", hh_header->Resolution*2e-3);
-		fprintf(out_stream, "%e\n", HH_BASE_RESOLUTION);
+		print_resolution(out_stream, (hh_header->Resolution*2), options);
+//		fprintf(out_stream, "%d\n", (int)(HH_BASE_RESOLUTION*2e3));
 	} else {
 		if ( hh_header->MeasurementMode == HH_MODE_T2 ) {
 			debug("Found mode ht2.\n");
