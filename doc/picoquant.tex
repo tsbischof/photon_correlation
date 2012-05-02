@@ -234,6 +234,11 @@ In practice, this mapping is limited in precision in a few important ways. First
 
 A more important concern is that of missed pulses. The T3 data reports the detected pulse number, and if a sync pulse is missed no record will exist. However, translation of any subsequent record to an absolute time will be incorrect by the period $1/f$, confusing matters where such spacing is important. Again, a well-designed system should not have problems beating this limit, but it is the greatest single source of error during the translation.
 
+Collectively, these errors can be expressed as:
+\begin{equation}
+\left(c_{j}, p_{j}+\delta p_{j}, t_{j} + \delta t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}+\delta p_{j}}{f+\delta f} + \left(t_{j}+\delta t_{j}\right)\right)
+\end{equation}
+
 \subsubsection{Timeharp}
 The Timeharp is the least sophisticated of the three boards discussed here, and is fundamentally a histogramming board. It features two input channels, and its three modes are:
 \begin{itemize}
