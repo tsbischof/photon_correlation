@@ -1,7 +1,321 @@
+\documentclass{article}
+
+\usepackage[squaren]{SIunits}
+
+
+\newcommand{\cps}{cps}
+\newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
+\newcommand{\angles}[1]{\ensuremath{\left\langle #1 \right\rangle}}
+\newcommand{\stdin}{\texttt{stdin}}
+\newcommand{\stdout}{\texttt{stdout}}
+\newcommand{\stderr}{\texttt{stderr}}
+\newcommand{\picoquant}{\texttt{picoquant}}
+
+
+
+\title{Picoquant: Tools for reading and analyzing Picoquant data files}
+\author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+ 
+\section{Introduction}
+\subsection{The layout of this document}
+This document is laid out in roughly three parts:
+\begin{enumerate}
+\item Overview of terminology and methods
+\item Documentation for each program
+\item Applications of the software to real problems
+\end{enumerate}
+In the chapters devoted to the various programs, the documentation is divided further:
+\begin{enumerate}
+\item Command-line syntax
+\item Theoretical overview of the purpose of the program
+\item Details of the implementation
+\end{enumerate}
+
+\subsection{A (very) brief overview of the science and technology}
+In single-molecule spectroscopy, single-photon detectors are often used to perform time-resolved experiments. Detectors such as silicon-based avalanche photodiodes (APDs) can be used to detect the arrival time a photon with better than 1\nano\second{} resolution, and can detect up to $10^{7}$ photons per second before saturation, abbreviated as 10\mega\cps{} hereafter (counts per second). Hardware capable of resolving these arrival times is of great use for revealing time-dependent structure to the photon stream, such as intensity fluctuations and bunching, so various hardware designs have been developed to permit such measurements.
+
+One line of instruments is the timing hardware produced by Picoquant GmBH, such as the Timeharp, Picoharp, and Hydraharp. These modules are capable of detecting pulse arrivals on multiple input channels with a resolution of as little as 1\pico\second, and operate in a few distinct modes:
+\begin{enumerate}
+\item Interactive (histogram): one input channel is designated as a sync source, representing a clock-starting signal. On the other channels, pulse arrival times are recorded relative to this clock source, and the times binned into a histogram. 
+\item Time-tagged time-resolved (TTTR): 
+	\begin{enumerate}
+	\item T2: all channels are treated equally, and all pulse arrival times relative to the start of the experiment are recorded. 
+	\item T3: this is similar to histogram mode, but instead of binning the arrival times, the sync event number and relative arrival time are both recorded.
+	\end{enumerate}
+\end{enumerate}
+
+In all cases, the times are discrete and represent some number of cycles of a clock, so all times must be treated as integers representing some number of picoseconds. This has important effects on the definition of time bins for histograms, and where appropriate some time will be devoted to discussing these factors. 
+
+Considering these distinct modes, it is important to spend some time discussing their uses, and how their data should be handled.
+
+\subsection{Data collection modes}
+\subsubsection{Interactive (histogram)}
+A common experiment for studying fluorophores is to measure the time-dependence of their response to an excitation. For example, a pulsed laser with pulse width significantly shorter than the relaxation times of interest can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to rebuild the decay curve it is necessary to average the result over many pulses of the laser, binning the relative arrival times to build a histogram of arrival times representing the time-averaged response of the system under study. If this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
+
+Consequently, interactive data consists of $N$ arrival time bins with boundaries $(t_{j}, t_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
+\begin{equation}
+\braces{((t_{j}, t_{j+1}), n_{j})}
+\end{equation}
+The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $t\in[t_{j}, t_{j+1})$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance; typical detectors have two orders of magnitude more timing jitter than the timing hardware, so the exact definition of the histogram bin has a negligible effect.
+
+\subsubsection{T2}
+In T2 mode, all input channels are connected to photon detectors. At the start of the experiment, an internal clock is reset and started, providing a master timing reference. As a pulse arrives, the machine emits data encoding the channel and time of arrival, so the data follow the form:
+\begin{equation}
+\braces{(c_{j}, t_{j})}
+\end{equation}
+for a channel $c_{j}$ and arrival time $t_{j}$ of the $j$th photon. Typically, these data are used to examine time-dependent behavior, such as intensity fluctuations, particularly when the excitation source is continuous-wave. These data are also useful for calculation of correlation functions such as:
+\begin{equation}
+g^{(n)}(t_{1}, \ldots t_{n-1}) = \frac
+	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+t_{j})}}}
+	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+t_{j})}}}
+\end{equation}
+The details of this calculation will laid out later, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
+
+\subsubsection{T3}
+T3 mode is closest in character to the interactive mode, except that, instead of binning the photon arrival times on the hardware, the arrivals are recorded directly for later examination, as in T2 mode. This gives a data set of the form:
+\begin{equation}
+\braces{(c_{j}, p_{j}, t_{j})}
+\end{equation}
+for channel $c_{j}$, sync pulse number $p_{j}$, and relative arrival time $t_{j}$. Indeed, by defining bins and histogramming the $t_{j}$, the result from the interactive mode can be reproduced exactly. However, this mode also allows for studying time dependence and correlation in the data, as with T2 mode. In principle, any data collected in T3 mode can be transformed into T2 mode data if the sync source is regular, as the pulse number will represent some amount of time in the experiment, but there are subtle hardware and numerical issues (discussed later) which limit the practicality of this transformation.
+
+Uses of this mode include the study of the time-dependent fluoresence lifetime of single molecules, which can switch between distinct states under various conditions. Correlation methods can also reveal important behavior, but again this will be discussed later.
+
+\subsection{General design principles}
+Analysis of these timing data can be roughly described as follows:
+\begin{enumerate}
+\item Produce a stream of photon events
+\item Condition the stream by correlation, removal of extraneous information, homogenization of the detection channels, etc.
+\item Collect the result to form some histogram of events.
+\end{enumerate}
+As such, these three phases are handled by distinct programs, which act as filters of a data stream by reading in values and outputting the appropriate new values. These streams are ultimately streams of binary data, but for any program the stream may be defined by some standard data stream (\stdin, \stdout) or by some file containing that data. 
+
+For time-tagged modes, times are represented as integer multiples of 1\pico\second, although only the initial data streamer is actually aware of units; the conditioning and collection routines operate on time as an integer, without regard for its units.
+
+All programs are designed to operate on a data stream until that stream terminates, so any division of a data stream should be handled by a separate program and the result fed into a distinct instance of the handler. 
+
+The software is written in the C programming language, using the C99 standard. Where necessary, the definitions of data types have been defined to be of fixed width, but otherwise the definitions are those minimal for handling reasonable values. For example, in T2 mode time is defined as a signed 64-bit integer, representing $\approx 10^{19}\pico\second$, or $10^{7}\second$, or $106$ days. Pulses are counted as signed 64-bit integers, limiting their total to several thousand years of 10\mega\hertz{} pulsed laser excitation. With luck, your experiments will not exceed these values. 
+
+All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. They have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. No non-standard libraries are used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software.
+
 \section{Picoquant}
+\subsection{Purpose}
+This program decodes binary data from the Picoquant hardware. Currently, \picoquant{} supports most modes and versions of the Timeharp (v2.0, v3.0, v5.0, v6.0), Picoharp (v2.0), and Hydraharp (v1.0). The board and mode are detected automatically, and if the mode is not supported an error message will explain the details.
 
-\subsection{General philosophy and measurement modes}
+\subsection{Command-line syntax}
 
-\subsection{Important hardware and mode details}
+\begin{verbatim}
+Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]
+                 [-p print_every] [-n number] [-b] [-z] [-t]
 
-\subsection{Implementation in software}
+        -i, --file-in: Input file. By default, this is stdin.
+       -o, --file-out: Output file. By default, this is stdout.
+         -n, --number: Number of entries to process (most 
+                       pertinent for tttr modes). By default, 
+                       processes all records.
+    -p, --print-every: Print a status message after processing 
+                       a specified number of entries. By default,
+                       no status message is printed.
+        -v, --verbose: Print debug-level information.
+    -r, --header-only: Print header information, but no entries. 
+                       Useful for debugging and checking file 
+                       integrity.
+     -b, --binary-out: Output a binary stream instead of ascii. 
+                       Refer to the documentation for each mode 
+                       for the details of each stream type. 
+                       Generally, this will be identical to the
+                       ascii mode in typing.
+-z, --resolution-only: Print the time resolution of the 
+                       measurement in picoseconds, then exit.
+          -t, --to-t2: Convert a t3 file to a t2 file. This assumes
+                       the sync channel is regular and consistent
+                       over the whole run.
+           -h, --help: Print this message.
+
+        The file type and version will be 
+        detected automatically from the file header.
+\end{verbatim}
+
+\subsubsection{Input}
+The input is either binary stream of data from the timing hardware, or the name of a file containing that data. The details of each format are too varied and verbose to be summarized here, but are laid out in detail in section~\ref{sec:formats}.
+
+\subsubsection{Output}
+\label{sec:picoquant_output}
+The output will either be written to \stdout{} or the file specified. By default, the stream will be represented as ascii text, but use of the \texttt{--binary-out} flag will skip the formatted print in favor of a raw binary stream. 
+
+All records are processed in the order they are found in the data stream. This is typically time-ordered.
+
+\paragraph{Interactive}
+Each record is of the form:
+\begin{verbatim}
+struct {
+    unsigned int channel;
+    double left_edge;
+    unsigned int counts;
+};
+\end{verbatim}
+printed as:
+\begin{verbatim}
+channel number, left edge of time bin, counts \n
+\end{verbatim}
+
+\paragraph{T2}
+Each record is of the form:
+\begin{verbatim}
+struct {
+	unsigned int channel;
+	long long int time;
+};
+\end{verbatim}
+printed as:
+\begin{verbatim}
+channel number, time \n
+\end{verbatim}
+
+\paragraph{T3}
+Each record is of the form:
+\begin{verbatim}
+struct {
+	unsigned int channel;
+	long long int pulse_number;
+	int time;
+};
+\end{verbatim}
+printed as:
+\begin{verbatim}
+channel number, pulse number, time \n
+\end{verbatim}
+	
+
+\subsection{Mode- and hardware-specific information}
+\label{sec:formats}
+
+While there are many differences between the formats of the files generated by the different boards and modes, they all follow a common structure:
+\begin{itemize}
+\item a general header identifying the board type and software version
+\item a board-specific header, identifying hardware and software configuration
+\item a mode-specific header
+\item data
+\end{itemize}
+
+As such, the process of streaming data can be broken down into the following steps:
+\begin{enumerate}
+\item Identify the board type (\texttt{picoquant.c})
+\item Identify the software version used to generate the file (\texttt{hydraharp.c}, \texttt{picoharp.c}, \texttt{timeharp.c}).
+\item Determine the collection mode used (\texttt{hydraharp/hh\_*.c}, $\ldots$).
+\item  \begin{enumerate}
+  \item If the run is specified as resolution-only or header-only, print the appropriate values.
+  \item Otherwise, read through the remaining header information and print the data.
+  \end{enumerate}
+\end{enumerate}
+
+In this implementation, while the code used to produce the data and headers is very similar between software versions for a given board, there are some small differences which make a general program difficult to write. As such, each version is hard-coded, and any changes to the overall structure of the program must be rolled out to all versions. Fortunately, many common tasks such as printing of data are centralized in \texttt{picoquant.c}, so changes to the output format only require modification of a single function.
+
+In principle, the code can be collected into a nicer data-streaming object which masks the translation process and yields only the resulting data stream. This is probably the most convenient way to deal directly with developing custom tools for data processing, but for most purposes passing the data through pipes should be sufficient. If such an interface is desired, the low-level translation functions (found in \texttt{*/*\_v*.c}) should be sufficient when wrapped with higher-level logical routines like those used to determine the board identity and version. The function structure is uniform across all versions and boards, which should simplify the wrapping process.
+
+The remainder of this section is devoted to a discussion of the details important to each board and measurement type. Most of this information can be found in the manuals included with the hardware, but there is a significant amount of information which is documented in more scattered locations, such as the sample data code. This summary includes the details vital to understanding how the raw data are actually translated into the general data streams, and how various design decisions affect the quality and precision of the result.
+
+\subsubsection{A word about external markers}
+Many of the timing boards have a feature which allows the insertion of an external timing pulse into the signal, for use in TTTR modes to designate a raster scan or other time-dependent behavior. These records are not handled directly by \picoquant, but instead a message is passed to \stderr{} indicating that such a record exists. If different behavior is desired (perhaps assignment of the marker to a non-existent channel), modify the function \texttt{external\_marker} in \texttt{picoquant.c}. This will cause problems with the other programs, which assume every record originates from the true signal stream, so such an alteration must be accompanied by code which appropriately splices the signal stream, for example by halting collection into a histogram and initiation of a new one.
+
+\subsubsection{Translation of T3 to T2 data}
+In principle, if the sync source of a T3-mode experiment arrives with perfectly uniform spacing, the pulse number can be said to represent some amount of time, and a T2-like record recovered. To do this, pass the flag \texttt{--to-t2} for an input of T3 data, but consider the implications of how this translation is performed. 
+
+For a frequency $f$ of the arrival of a sync source, pulse number $p_{j}$ and time delay $t_{j}$ on channel $c_{j}$ map as:
+\begin{equation}
+\left(c_{j}, p_{j}, t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}}{f} + t_{j}\right)
+\end{equation}
+In practice, this mapping is limited in precision in a few important ways. First, the period $1/f$ is not necessarily an integer multiple of 1\pico\second, and any precision will be lost beyond the decimal. This is not usually a problem because typical sync sources operate at 10\mega\hertz{} at most, for a precision of timing to one part in ten thousand, and a purity of the pulse train to this precision is not typical. Additionally, the timing jitter of most lasers will be well above this threshold, so this is not too great a concern.
+
+A more important concern is that of missed pulses. The T3 data reports the detected pulse number, and if a sync pulse is missed no record will exist. However, translation of any subsequent record to an absolute time will be incorrect by the period $1/f$, confusing matters where such spacing is important. Again, a well-designed system should not have problems beating this limit, but it is the greatest single source of error during the translation.
+
+\subsubsection{Timeharp}
+The Timeharp is the least sophisticated of the three boards discussed here, and is fundamentally a histogramming board. It features two input channels, and its three modes are:
+\begin{itemize}
+\item interactive (thd): Collection of a histogram, using channel 0 as the sync and channel 1 as the signal.
+\item continuous interactive (thc): Identical to normal interactive mode, except that the histogram is reported at the end of a user-specified time interval, repeating until halted. This feature is used for experiments requiring time resolution of a time-dependent feature, such as a fluctuating fluorescence lifetime. This feature is not supported by the existing software, due to lack of data or interest in using this mode (it is not present in the other timing boards).
+\item time-tagged time-resolved (t3r): TTTR mode, equivalent to T3 mode, with channel 0 as the sync and channel 1 as the signal. Instead of reporting the delay time directly, this mode reports the index of the histogram bin an event would fall into. The time delay represented by the delay can be recovered from the header information, but for homogeneity of the treatment of T3-like data this step is not performed automatically.
+\end{itemize}
+
+\subsubsection{Picoharp}
+The Picoharp features two input channels. Its three modes are:
+\begin{itemize}
+\item interactive (phd): Standard interactive mode, using channel 0 as the sync and channel 1 as the signal.
+\item t2 (pt2): A T2 mode, with both channels treated equally and all pulse arrivals recorded. 
+\item t3 (pt3): A T3 mdoe, with channel 0 as the sync and channel 1 as the signal.
+\end{itemize}
+In both the T2 and T3 mode, internal clocks of limited precision ($<$32 bits) are used to record the passage of time or pulses. As such, many records are devoted to recording the occurrence of an integer overflow. These records are treated by \picoquant{} automatically, producing data streams of the form specified in section~\ref{sec:picoquant_output}.
+
+\subsubsection{Hydraharp}
+The Hydraharp features a dedicated sync channel and four input channels. Its three modes are:
+\begin{itemize}
+\item interactive (hhd): Standard interactive mode, with four separate histograms assigned to  the four input channels.
+\item t2 (ht2): A T2 mode, with all channels treated equally, including the sync channel. If the sync channel is active, these events will be recorded, and for convenience \picoquant{} will output each event as arriving on channel 4. This channel index can be altered by modifying value of the global variable \texttt{HH\_SYNC\_CHANNEL} (\texttt{hydraharp.h}) at compilation time. 
+\item t3 (ht3): A standard t3 mode.
+\end{itemize}
+Future versions of the Hydraharp are being developed with extra input channels. If your model features extra channels, it should be sufficient to modify the value of \texttt{HH\_SYNC\_CHANNEL}, as the number of channels and modules is handled dynamically by \picoquant.
+
+\section{Intensity}
+\subsection{Purpose}
+\subsection{Command-line syntax}
+\begin{verbatim}
+Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
+                 -w bin_width -m mode
+
+           -v, --verbose: Print debug-level information.
+           -i, --file-in: Input file. By default, this is
+                          STDIN.
+          -o, --file-out: Output file. By default, this is
+                          STDOUT.
+         -w, --bin-width: Width of the bin, in time or pulses
+                          depending on the mode.
+              -m, --mode: Stream type. This is either t2 or t3,
+                          and the style of the output will be
+                          different for each.
+          -c, --channels: Number of channels in the stream. By
+                          default, this is 2.
+              -h, --help: Print this message.
+
+       This program assumes the input stream is time-ordered.
+\end{verbatim}
+
+\subsubsection{Input}
+\subsubsection{Output}
+
+\subsection{Implementation details}
+
+\section{Correlate}
+
+\subsection{Purpose}
+\subsection{Command-line syntax}
+\begin{verbatim}
+\end{verbatim}
+
+\subsubsection{Input}
+\subsubsection{Output}
+
+\subsection{Implementation details}
+
+\section{Histogram}
+
+\subsection{Purpose}
+\subsection{Command-line syntax}
+\begin{verbatim}
+\end{verbatim}
+
+\subsubsection{Input}
+\subsubsection{Output}
+
+\subsection{Implementation details}
+
+\section{Applications}
+\subsection{Bunching and antibunching}
+\subsection{Time-dependent photoluminescence lifetime}
+\subsection{Fluorescence blinking}
+
+\end{document}
