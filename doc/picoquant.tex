@@ -223,6 +223,8 @@ The remainder of this section is devoted to a discussion of the details importan
 \subsubsection{A word about external markers}
 Many of the timing boards have a feature which allows the insertion of an external timing pulse into the signal, for use in TTTR modes to designate a raster scan or other time-dependent behavior. These records are not handled directly by \picoquant, but instead a message is passed to \stderr{} indicating that such a record exists. If different behavior is desired (perhaps assignment of the marker to a non-existent channel), modify the function \texttt{external\_marker} in \texttt{picoquant.c}. This will cause problems with the other programs, which assume every record originates from the true signal stream, so such an alteration must be accompanied by code which appropriately splices the signal stream, for example by halting collection into a histogram and initiation of a new one.
 
+\subsubsection{T3 timing carries units of histogram bins, not time}
+
 \subsubsection{Translation of T3 to T2 data}
 In principle, if the sync source of a T3-mode experiment arrives with perfectly uniform spacing, the pulse number can be said to represent some amount of time, and a T2-like record recovered. To do this, pass the flag \texttt{--to-t2} for an input of T3 data, but consider the implications of how this translation is performed. 
 
@@ -265,6 +267,13 @@ The Hydraharp features a dedicated sync channel and four input channels. Its thr
 \end{itemize}
 Future versions of the Hydraharp are being developed with extra input channels. If your model features extra channels, it should be sufficient to modify the value of \texttt{HH\_SYNC\_CHANNEL}, as the number of channels and modules is handled dynamically by \picoquant.
 
+\subsection{Examples of usage}
+Reading header information
+Getting the resolution of a measurement
+Reading histogram data
+Reading t2/t3 data
+Translating t3 data to t2 data.
+
 \section{Intensity}
 \subsection{Purpose}
 \subsection{Command-line syntax}
@@ -293,6 +302,7 @@ Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
 \subsubsection{Output}
 
 \subsection{Implementation details}
+\subsection{Examples of usage}
 
 \section{Correlate}
 
@@ -305,6 +315,7 @@ Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
 \subsubsection{Output}
 
 \subsection{Implementation details}
+\subsection{Examples of usage}
 
 \section{Histogram}
 
@@ -317,10 +328,11 @@ Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
 \subsubsection{Output}
 
 \subsection{Implementation details}
+\subsection{Examples of usage}
 
 \section{Applications}
-\subsection{Bunching and antibunching}
 \subsection{Time-dependent photoluminescence lifetime}
+\subsection{Bunching and antibunching}
 \subsection{Fluorescence blinking}
 
 \end{document}
