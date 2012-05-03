@@ -56,7 +56,7 @@ Considering these distinct modes, it is important to spend some time discussing 
 
 \subsection{Data collection modes}
 \subsubsection{Interactive (histogram)}
-A common experiment for studying fluorophores is to measure the time-dependence of their response to an excitation. For example, a pulsed laser with pulse width significantly shorter than the relaxation times of interest can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to rebuild the decay curve it is necessary to average the result over many pulses of the laser, binning the relative arrival times to build a histogram of arrival times representing the time-averaged response of the system under study. If this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
+A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser with pulse width significantly shorter than the relaxation times of interest can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to rebuild the decay curve it is necessary to average the result over many pulses of the laser, binning the relative arrival times to build a histogram of arrival times representing the time-averaged response of the system under study. If this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
 
 Consequently, interactive data consists of $N$ arrival time bins with boundaries $(t_{j}, t_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
 \begin{equation}
@@ -132,9 +132,9 @@ Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]
                        ascii mode in typing.
 -z, --resolution-only: Print the time resolution of the 
                        measurement in picoseconds, then exit.
-          -t, --to-t2: Convert a t3 file to a t2 file. This assumes
-                       the sync channel is regular and consistent
-                       over the whole run.
+          -t, --to-t2: Convert a t3 file to a t2 file. This
+                       assumes the sync channel is regular and
+                       consistent over the whole run.
            -h, --help: Print this message.
 
         The file type and version will be 
@@ -191,6 +191,96 @@ printed as:
 channel number, pulse number, time \n
 \end{verbatim}
 	
+\subsection{Examples of usage}
+\subsubsection{Reading header information}
+\begin{verbatim}
+> picoquant --file-in data.phd --header-only
+Ident = PicoHarp 300
+FormatVersion = 2.0
+CreatorName = PicoHarp Software
+CreatorVersion = 2.3.0.0
+FileTime = 14/05/11 17:55:48
+Comment = Untitled
+NumberOfCurves = 8
+   ....
+\end{verbatim}
+
+Reading these values is often a good way to check the integrity of a file, and to make sure that the correct settings are used in later processing. The keywords used here are consistent with those used in the documentation for the file type as provided by Picoquant, so common values like measurement resolution may not be identical across versions and boards. 
+
+\subsection{Obtaining the resolution of a measurement}
+Resolution values must be multiples of 1\pico\second{} for most of the devices, but for the Timeharp they are integer divisions of 1\nano\second, leading to non-integer multiples of 1\pico\second. As such, all resolution values are presented as floats, even those which could be written as integers.
+\begin{verbatim}
+> picoquant --file-in data.phd --resolution-only
+0,1.280000e+02
+1,1.280000e+02
+2,1.280000e+02
+3,1.280000e+02
+4,1.280000e+02
+5,5.120000e+02
+6,1.280000e+02
+\end{verbatim}
+Interactive mode allows for a large number of curves, so the resolution report gives the resolution for each curve, by index.
+\begin{verbatim}
+> picoquant --file-in data.pt2 --resolution-only
+1.280000e+02
+\end{verbatim}
+
+\subsection{Reading interactive data}
+\begin{verbatim}
+> picoquant --file-in data.phd
+0,0.000,0
+0,0.128,0
+0,0.256,0
+0,0.384,0
+0,0.512,0
+0,0.640,0
+0,0.768,0
+0,0.896,0
+0,1.024,0
+0,1.152,0
+...
+\end{verbatim}
+
+\subsection{Reading t2/t3 data}
+\begin{verbatim}
+> picoquant --file-in data.pt2
+0,7128264
+0,20957636
+0,33684532
+0,36576452
+0,42146280
+0,42251400
+0,65787700
+0,75149552
+0,86537580
+0,109288316
+> picoquant --file-in data.pt3
+1,103,47360
+1,109,47616
+1,115,85760
+1,115,248832
+1,213,55552
+1,245,244992
+1,254,49920
+1,267,69888
+1,268,122368
+1,274,58624
+\end{verbatim}
+
+\subsection{Translating t3 data to t2 data}
+\begin{verbatim}
+> picoquant --file-in data.pt3 --to-t2
+1,41248184
+1,43648488
+1,46086680
+1,46249752
+1,85257256
+1,98246952
+1,101651952
+1,106872024
+1,107324512
+1,109660816
+\end{verbatim}
 
 \subsection{Mode- and hardware-specific information}
 \label{sec:formats}
@@ -267,15 +357,12 @@ The Hydraharp features a dedicated sync channel and four input channels. Its thr
 \end{itemize}
 Future versions of the Hydraharp are being developed with extra input channels. If your model features extra channels, it should be sufficient to modify the value of \texttt{HH\_SYNC\_CHANNEL}, as the number of channels and modules is handled dynamically by \picoquant.
 
-\subsection{Examples of usage}
-Reading header information
-Getting the resolution of a measurement
-Reading histogram data
-Reading t2/t3 data
-Translating t3 data to t2 data.
-
 \section{Intensity}
 \subsection{Purpose}
+For T2 and T3 data, it is often useful to group records into fixed time bins and count the number of records in each bin. This program does just that, reporting the intensity at each channel for all data in a time-ordered stream.
+
+To avoid edge issues, data are reported only until the last completed bin.
+
 \subsection{Command-line syntax}
 \begin{verbatim}
 Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
@@ -299,10 +386,60 @@ Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
 \end{verbatim}
 
 \subsubsection{Input}
+T2 and T3 modes accept data of the form produced by \texttt{picoquant}, as specified in section~\ref{sec:picoquant_output}.
+
 \subsubsection{Output}
+The output for both T2 and T3 modes is of the form:
+\begin{verbatim}
+time bin, channel 0 intensity, channel 1 intensity, ... \n
+\end{verbatim}
+For T2 mode, the time bin is defined as a number of picoseconds. For T3 mode, the time bin is a number of pulses.
+
+\subsection{Examples of usage}
+\begin{verbatim}
+> intensity --file-in data.pt2.txt --bin-width 10000000000 \
+  --mode t2 --channels 2
+0,555,0
+10000000000,524,0
+20000000000,564,0
+30000000000,536,0
+40000000000,495,0
+50000000000,530,0
+60000000000,514,0
+70000000000,548,0
+80000000000,558,0
+90000000000,565,0
+100000000000,550,0
+\end{verbatim}
 
 \subsection{Implementation details}
-\subsection{Examples of usage}
+Each channel can be treated independently, so we can focus on how to handle a single stream of records. 
+
+Given a stream of events with associated arrival times $t_{k}$ and time-ordered time bins with boundaries defined as $[b_{j}, b_{j+1})$, the intensity $I(j)$ of the stream in a given time bin is defined as:
+\begin{equation}
+I(j) = \left| \braces{t_{k} | t_{k} \in \left[b_{j}, b_{j+1}\right)} \right|
+\end{equation}
+
+For a disordered stream of length $N$ and $M$ time bins, it is most efficient to place each entry into a bin in the order they arrive, which means that the true intensity of the signal cannot be known until all elements are processed. Because the bin assignment is continuous and unambiguous, a binary search algorithm can be used to determine the correct bin, in O($\log{(\textnormal{M})}$) for an element. If the spacings are linear, this problem is O(1). Thus, the whole stream can be processed in O(N) time, or O(N$\log{(\textnormal{M})}$) time for the non-linear case. In principle, the disordered stream could be ordered at a cost of O($\textnormal{N}\log{(\textnormal{N})}$), but this extra factor makes the process too expensive for most purposes.
+
+If instead the stream is time-ordered, as is the case for data from \picoquant, it is more efficient to choose a time bin and count the associated elements. In this case, an entry is drawn from the stream, and if it falls in the bin the count for that bin is incremented. If the entry does not fall in the stream, the stream has passed that bin and the count for that bin is reported. In this latter case, the element from the stream is retained until its bin is found. This process is overall of order O(N), because there is only a constant cost associated with moving between the bins, even if they are not regularly spaced.
+
+The algorithm can be written as:
+\begin{verbatim}
+bin = next(bins)
+bin.intensity = 0
+time = next(data_stream)
+
+while time != None and bins != None:
+    if time in bin.bounds:
+        bin.intensity += 1
+        time = next(data_stream)
+    else:
+        print(bin, bin.intensity)
+        time = next(time)
+\end{verbatim}
+
+In practice, linear bin spacing is implemented, so the bin stream is actually just an integer whose value is incremented to the upper limit of the current bin upon \texttt{next(bins)}. This does mean that the intensity at the final bin will not be printed, preventing the edge effect of undersampling. If this behavior is desired, modify \texttt{intensity.c} to print the final intensity after the \texttt{while} loop.
 
 \section{Correlate}
 
