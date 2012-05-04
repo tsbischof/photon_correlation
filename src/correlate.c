@@ -41,7 +41,7 @@ void usage(void) {
 "-e, --max-pulse-distance: Defines the maximum difference in pulse number \n"
 "                          that two entries can have and still be considered\n"
 "                          for correlation (t3 only).\n"
-"             -g, --order: Order (g(n)(t1...tn)) of the correlation to\n"
+"             -g, --order: Order (g(n)(t1...tn-1)) of the correlation to\n"
 "                          perform. By default this is 2, the standard\n"
 "                          cross-correlation of two channels.\n"
 "          -c, --channels: Number of channels in the incoming stream. By\n"

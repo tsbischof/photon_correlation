@@ -1,7 +1,7 @@
 \documentclass{article}
 
 \usepackage[squaren]{SIunits}
-
+\usepackage{amsmath}
 
 \newcommand{\cps}{cps}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
@@ -10,7 +10,10 @@
 \newcommand{\stdout}{\texttt{stdout}}
 \newcommand{\stderr}{\texttt{stderr}}
 \newcommand{\picoquant}{\texttt{picoquant}}
-
+\newcommand{\intensity}{\texttt{intensity}}
+\newcommand{\correlate}{\texttt{correlate}}
+\newcommand{\histogram}{\texttt{histogram}}
+\newcommand{\gn}[1]{\ensuremath{g^{(#1)}}}
 
 
 \title{Picoquant: Tools for reading and analyzing Picoquant data files}
@@ -71,11 +74,11 @@ In T2 mode, all input channels are connected to photon detectors. At the start o
 \end{equation}
 for a channel $c_{j}$ and arrival time $t_{j}$ of the $j$th photon. Typically, these data are used to examine time-dependent behavior, such as intensity fluctuations, particularly when the excitation source is continuous-wave. These data are also useful for calculation of correlation functions such as:
 \begin{equation}
-g^{(n)}(t_{1}, \ldots t_{n-1}) = \frac
-	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+t_{j})}}}
-	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+t_{j})}}}
+\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
+	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
 \end{equation}
-The details of this calculation will laid out later, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
+The details of this calculation will laid out later in section~\ref{sec:correlate}, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
 
 \subsubsection{T3}
 T3 mode is closest in character to the interactive mode, except that, instead of binning the photon arrival times on the hardware, the arrivals are recorded directly for later examination, as in T2 mode. This gives a data set of the form:
@@ -99,7 +102,9 @@ For time-tagged modes, times are represented as integer multiples of 1\pico\seco
 
 All programs are designed to operate on a data stream until that stream terminates, so any division of a data stream should be handled by a separate program and the result fed into a distinct instance of the handler. 
 
-The software is written in the C programming language, using the C99 standard. Where necessary, the definitions of data types have been defined to be of fixed width, but otherwise the definitions are those minimal for handling reasonable values. For example, in T2 mode time is defined as a signed 64-bit integer, representing $\approx 10^{19}\pico\second$, or $10^{7}\second$, or $106$ days. Pulses are counted as signed 64-bit integers, limiting their total to several thousand years of 10\mega\hertz{} pulsed laser excitation. With luck, your experiments will not exceed these values. 
+The main processing software (\picoquant, \intensity, \correlate, \histogram) is written in the C programming language, using the C99 standard. Where necessary, the definitions of data types have been defined to be of fixed width, but otherwise the definitions are those minimal for handling reasonable values. For example, in T2 mode time is defined as a signed 64-bit integer, representing $\approx 10^{19}\pico\second$, or $10^{7}\second$, or $106$ days. Pulses are counted as signed 64-bit integers, limiting their total to several thousand years of 10\mega\hertz{} pulsed laser excitation. With luck, your experiments will not exceed these values. 
+
+In addition to the C code, several analysis scripts written in Python have been provided in \text{scripts/}. These include routines to read in the outputs of most of the processing software, generate correlation functions, plot lifetime data, and so on. 
 
 All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. They have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. No non-standard libraries are used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software.
 
@@ -359,9 +364,7 @@ Future versions of the Hydraharp are being developed with extra input channels. 
 
 \section{Intensity}
 \subsection{Purpose}
-For T2 and T3 data, it is often useful to group records into fixed time bins and count the number of records in each bin. This program does just that, reporting the intensity at each channel for all data in a time-ordered stream.
-
-To avoid edge issues, data are reported only until the last completed bin.
+For T2 and T3 data, it is often useful to group records into fixed time bins and count the number of records in each bin. This program does just that, reporting the intensity at each channel for all data in a time-ordered stream. 
 
 \subsection{Command-line syntax}
 \begin{verbatim}
@@ -380,39 +383,65 @@ Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
                           different for each.
           -c, --channels: Number of channels in the stream. By
                           default, this is 2.
+         -a, --count-all: Rather than counting records in 
+                          distinct time bins, count all records 
+                          in the stream.
               -h, --help: Print this message.
 
        This program assumes the input stream is time-ordered.
+       
+       If counting all events or printing the last one, the time
+       written will be the time of the last event seen.
 \end{verbatim}
 
 \subsubsection{Input}
-T2 and T3 modes accept data of the form produced by \texttt{picoquant}, as specified in section~\ref{sec:picoquant_output}.
+T2 and T3 modes accept data of the form produced by \picoquant, as specified in section~\ref{sec:picoquant_output}.
 
 \subsubsection{Output}
 The output for both T2 and T3 modes is of the form:
 \begin{verbatim}
-time bin, channel 0 intensity, channel 1 intensity, ... \n
+lower time limit, upper time limit, 
+  channel 0 intensity, channel 1 intensity, ... \n
 \end{verbatim}
 For T2 mode, the time bin is defined as a number of picoseconds. For T3 mode, the time bin is a number of pulses.
 
+Passing the flag \texttt{--count-all} will ignore the time bins, and instead count all events on each channel as belonging to one large channel. 
+
 \subsection{Examples of usage}
+Count into 10\milli\second{} bins.
 \begin{verbatim}
-> intensity --file-in data.pt2.txt --bin-width 10000000000 \
-  --mode t2 --channels 2
-0,555,0
-10000000000,524,0
-20000000000,564,0
-30000000000,536,0
-40000000000,495,0
-50000000000,530,0
-60000000000,514,0
-70000000000,548,0
-80000000000,558,0
-90000000000,565,0
-100000000000,550,0
+> picoquant --file-in data.pt2 --number 100000 |  \
+  intensity --bin-width 10000000000 --mode t2 --channels 2 
+0,10000000000,555,0
+10000000000,20000000000,524,0
+20000000000,30000000000,564,0
+30000000000,40000000000,536,0
+40000000000,50000000000,495,0
+50000000000,60000000000,530,0
+60000000000,70000000000,514,0
+70000000000,80000000000,548,0
+80000000000,90000000000,558,0
+90000000000,100000000000,565,0
+100000000000,110000000000,550,0
+110000000000,120000000000,490,0
+120000000000,130000000000,559,0
+130000000000,140000000000,504,0
+140000000000,150000000000,547,0
+150000000000,160000000000,537,0
+160000000000,170000000000,535,0
+170000000000,180000000000,545,0
+180000000000,186537236212,344,0
+\end{verbatim}
+Count all events:
+\begin{verbatim}
+> picoquant --file-in data.pt2 --number 100000 |  \
+  intensity --bin-width 10000000000 --mode t2 --channels 2 \
+  --count-all
+0,186537236212,10000,0
 \end{verbatim}
 
 \subsection{Implementation details}
+\label{sec:intensity_implementation}
 Each channel can be treated independently, so we can focus on how to handle a single stream of records. 
 
 Given a stream of events with associated arrival times $t_{k}$ and time-ordered time bins with boundaries defined as $[b_{j}, b_{j+1})$, the intensity $I(j)$ of the stream in a given time bin is defined as:
@@ -420,39 +449,242 @@ Given a stream of events with associated arrival times $t_{k}$ and time-ordered 
 I(j) = \left| \braces{t_{k} | t_{k} \in \left[b_{j}, b_{j+1}\right)} \right|
 \end{equation}
 
-For a disordered stream of length $N$ and $M$ time bins, it is most efficient to place each entry into a bin in the order they arrive, which means that the true intensity of the signal cannot be known until all elements are processed. Because the bin assignment is continuous and unambiguous, a binary search algorithm can be used to determine the correct bin, in O($\log{(\textnormal{M})}$) for an element. If the spacings are linear, this problem is O(1). Thus, the whole stream can be processed in O(N) time, or O(N$\log{(\textnormal{M})}$) time for the non-linear case. In principle, the disordered stream could be ordered at a cost of O($\textnormal{N}\log{(\textnormal{N})}$), but this extra factor makes the process too expensive for most purposes.
+For a disordered stream of length $N$ and $M$ time bins, it is most efficient to place each entry into a bin in the order they arrive, which means that the true intensity of the signal cannot be known until all elements are processed. Because the bin assignment is continuous and unambiguous, a binary search algorithm can be used to determine the correct bin, in O($\log{(\textnormal{M})}$) for an element. If the spacings are linear, this problem is O(1). Thus, the whole stream can be processed in O(N) time, or O($\textnormal{N}\log{(\textnormal{M})}$) time for the non-linear case. In principle, the disordered stream could be ordered at a cost of O($\textnormal{N}\log{(\textnormal{N})}$), but this extra factor makes the process too expensive for most purposes.
 
 If instead the stream is time-ordered, as is the case for data from \picoquant, it is more efficient to choose a time bin and count the associated elements. In this case, an entry is drawn from the stream, and if it falls in the bin the count for that bin is incremented. If the entry does not fall in the stream, the stream has passed that bin and the count for that bin is reported. In this latter case, the element from the stream is retained until its bin is found. This process is overall of order O(N), because there is only a constant cost associated with moving between the bins, even if they are not regularly spaced.
 
-The algorithm can be written as:
+The algorithm can be expressed more concisely as:
 \begin{verbatim}
 bin = next(bins)
-bin.intensity = 0
+intensity = 0
 time = next(data_stream)
 
-while time != None and bins != None:
-    if time in bin.bounds:
-        bin.intensity += 1
+while time != None and bin != None:
+    if time in bin:
+        intensity += 1
         time = next(data_stream)
     else:
-        print(bin, bin.intensity)
-        time = next(time)
+        yield(bin, intensity)        
+        intensity = 0
+        bin = next(bins)
+
+yield(bin, intensity)
 \end{verbatim}
 
-In practice, linear bin spacing is implemented, so the bin stream is actually just an integer whose value is incremented to the upper limit of the current bin upon \texttt{next(bins)}. This does mean that the intensity at the final bin will not be printed, preventing the edge effect of undersampling. If this behavior is desired, modify \texttt{intensity.c} to print the final intensity after the \texttt{while} loop.
+As is evident from this algorithm, the process can be run continuously for a stream, yielding results without the need to process the entire stream.
 
 \section{Correlate}
+\label{sec:correlate}
+\subsection{A brief mathematical background}
+\label{sec:correlate_math}
+For several types of experiments, some form of a signal correlation is necessary. These follow the form:
+\begin{equation}
+\label{eq:correlation}
+\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
+	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+\end{equation}
+where $I_{j}(t)$ are the intensities of some number of signals and the angled brackets indicate an average over time. For some purposes, the autocorrelation of a signal is of interest, where all $I_{j}(t)$ are identical, but in other cases some mixture of signals is of interest, and not necessarily in numerical order. For example, fluoroescence correlation spectroscopy requires the calculation of a second-order autocorrelation of fluorescence intensity, or:
+\begin{equation}
+\label{eq:g2}
+\gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
+                 {\angles{(I(t)}\angles{(I(t+\tau)}}
+             = \frac{\angles{I(t)I(t+\tau)}}
+                 {\angles{(I(t)}^{2}}
+\end{equation}
+where $I(t)$ includes signal across all detection channels. In most cases, calculation of \gn{2} is sufficient, but in this definition we have implicitly limited our discussion to T2-like signals, with one independent variable per signal. In the case of T3-mode signals, we really have two independent variables: pulse number and arrival time. In principle, we could write something like
+\begin{equation}
+\gn{n}(\rho_{1}, \tau_{1}, \ldots \rho_{n-1}, \tau_{n-1}) = \frac
+	{\angles{I_{0}(p, t)\prod_{j=1}^{n-1}{I_{j}(p+\rho_{j},t)I_{j}(p,t+\tau_{j})}}}
+	{\angles{I_{0}(p, t)}^{2}\prod_{j=1}^{n-1}{\angles{I_{j}(p+\rho_{j},t)}
+	                                       \angles{I_{j}(p,t+\tau_{j})}}}
+\end{equation}
+where the average is now over all pulse and real time. However, because both pulse and real time are integer spaces, we can just map the times onto two homogeneous dimensions, and perform the correlation \gn{2n} instead. This gives a \gn{n} for every choice of pulses, useful for comparisons of long- and short-time correlations, as in multi-excition spectroscopy.
 
 \subsection{Purpose}
+This program calculates the full correlation of a signal, including all autocorrelations and cross-correlations of individual channels, for arbitrary numbers of channels and order. The raw correlation counts are returned as the output, \textit{not the histogrammed correlation}. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
+
+The speed of the calculation scales favorably with the order of correlation, although of course higher orders of correlation require greater numbers of events to build meaningful results. See section~\ref{sec:correlation_implementation} for details of the algorithm.
+
 \subsection{Command-line syntax}
 \begin{verbatim}
+Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b] 
+                 [-n number] [-p print_every] [-q queue_size]
+                 [-d max_time_distance] [-e max_pulse_distance]
+                 [-r] -g order -c channels -m mode
+
+           -v, --verbose: Print debug-level information.
+           -i, --file-in: Input file. By default, this is 
+                          STDIN.
+          -o, --file-out: Output file. By default, this is 
+                          STDOUT.
+       -p, --print-every: Print the result for multiples of 
+                          this number of entries. Default is to
+                          print nothing.
+              -m, --mode: Stream type. This is either t2 or t3,
+                          and the style of the output will be
+                          different for each.
+        -q, --queue-size: Defines the maximum length of the 
+                          circular queue held in memory for
+                          processing. By default, this is 100000
+ -d, --max-time-distance: Defines the maximum difference in time
+                          that two entries can have and still be
+                          considered for correlation (t2 and t3).
+-e, --max-pulse-distance: Defines the maximum difference in pulse
+                          number that two entries can have and 
+                          still be considered for correlation 
+                          (t3 only).
+             -g, --order: Order (g(n)(t1...tn-1)) of the 
+             			  correlation to perform. By default this
+             			  is 2, the standard cross-correlation of
+             			  two channels.
+          -c, --channels: Number of channels in the incoming
+                          stream. By default, this is 2 
+                          (Picoharp).
+  -r, --channels-ordered: Organize the output such that the 
+                          channels are in order. By default, 
+                          this is not performed.
+              -h, --help: Print this message.
+
+       This program assumes the input stream is time-ordered.
 \end{verbatim}
 
 \subsubsection{Input}
+T2 and T3 modes accept data of the form produced by \picoquant, as specified in section~\ref{sec:picoquant_output}.
+
 \subsubsection{Output}
+The exact output will depend on the mode and order of correlation, but it always adheres the following form:
+\begin{verbatim}
+channel 0, channel 1, time 1, ..., channel 2, ... \n
+\end{verbatim}
+where the times are either times or pulses, and follow the order (pulse, time). Also, the channels here are not necessarily ordered, because the exact order of the signals in the correlation can be of great importance. For example, for a \gn{2} of T2 data:
+\begin{verbatim}
+channel 0, channel 1, time 1-time 0 \n
+\end{verbatim}
+for \gn{3} of T2 data:
+\begin{verbatim}
+channel 0, channel 1, time 1-time 0, 
+  channel 2, time 2-time 0 \n
+\end{verbatim}
+for \gn{3} of T3 data:
+\begin{verbatim}
+channel 0, channel 1, pulse 1-pulse 0, time 1-time 0,
+   channel 2, pulse 2-pulse 0, time 2-time 0 \n
+\end{verbatim}
+
+By default, the ordering of the channels is that found in the stream. However, for some applications it is useful to order the channels and record both positive- and negative-time correlations on the same histogram. To account for this, pass the flag \texttt{--channels-ordered} to order the channels and apply the appropriate sign to the time differences.
+
+By default, the program will correlate all entries in a stream. This can easily cause memory problems, so it is recommended that a maximum time distance is specified for T2 data, or a maximum pulse distance for T3 data. A maximum time distance may also be specified for T3 data, but in principle this is unnecessary. Note that all channels are treated equally by these limits. 
+
+Currently, \correlate{} uses a fixed-length circular buffer to store entries, so if errors report that the buffer is too small try changing the length with \texttt{--queue-size}.
+
+\subsection{Examples of usage}
+Finding the correlation events for a \gn{2} of T2 data:
+\begin{verbatim}
+> picoquant --file-in data.ht2 --number 10000 | \
+  correlate --channels 4 --mode t2 \
+  --max-time-distance 1000
+3,2,932
+3,0,558
+3,1,508
+\end{verbatim}
+the same, with channels ordered:
+\begin{verbatim}
+> picoquant --file-in data.ht2 --number 10000 | \
+  correlate --channels 4 --mode t2 \
+  --max-time-distance 1000 --channels-ordered
+2,3,-932
+0,3,-558
+1,3,-508
+\end{verbatim}
+\gn{2} of T3 data:
+\begin{verbatim}
+> picoquant --file-in data.ht3 --number 100 | \
+  correlate --channels 4 --mode t3 \
+  --max-pulse-distance 1000
+3,3,447,14436
+1,1,115,-15636
+3,2,369,-28240
+1,1,986,66088
+0,3,240,21380
+\end{verbatim}
+\gn{3} of T3 data:
+\begin{verbatim}
+> picoquant --file-in data.ht3 --number 1000 | \
+  correlate --channels 4 --mode t3 --order 2 \
+  --max-pulse-distance 1000
+3,3,10,-44540,0,913,8648
+3,0,155,9044,2,353,-792
+2,3,128,47316,3,144,42004
+2,2,44,-32120,3,300,1380
+2,2,44,-32120,2,359,-4924
+2,3,300,1380,2,359,-4924
+2,3,256,33500,2,315,27196
+1,3,460,72356,2,847,20448
+3,2,387,-51908,3,603,-43404
+2,1,78,-33380,2,323,-60748
+1,3,54,-39056,2,239,-60648
+3,2,139,39596,3,364,11248
+2,2,27,-82228,3,999,-10108
+\end{verbatim}
 
 \subsection{Implementation details}
-\subsection{Examples of usage}
+\label{sec:correlation_implementation}
+\subsubsection{Definition of the correlation as the order of a set}
+As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
+
+In equation~\ref{eq:correlation}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
+\begin{equation}
+\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}
+\end{equation}
+To simplify matters, we will start with the autocorrelation of a signal channel:
+\begin{equation}
+\angles{I(t)I(t+\tau)}
+\end{equation}
+In this situation, the signal can be thought of as being composed of some sum of delta functions with peak centers at the times photons arrived. Thus the contribution of any given pair of photons to the correlation at time $\tau$ is nonzero only if the difference of their arrival times is $\tau$. Thus, for a given value of $\tau$ and photon arrival times \braces{t}:
+\begin{equation}
+\gn{2}(\tau) \propto \left| \braces{(t_{j}, t_{k}) | t_{j},t_{k}\in\braces{t}; t_{j}-t_{k}=\tau} \right|
+\end{equation}
+This result can be extended to higher orders by enforcing the restriction that a tuple of time differences must be satisfied:
+\begin{equation}
+\begin{split}
+\gn{n}(\tau_{1}, &\ldots \tau_{n-1}) \propto \\
+   &\left| \braces{
+       (t_{0}, \ldots t_{n-1})
+       \left|\begin{split}
+       t_{0},\ldots t_{n-1}\in\braces{t}; \\
+       (t_{1}, \ldots t_{n-1}) - (t_{0}, \ldots t_{0}) = (\tau_{1}, \ldots \tau_{n-1})
+       \end{split}\right.
+%       \begin{gather*}
+%        \\
+%       
+%       \end{gather*}
+   } \right|
+\end{split}
+\end{equation}
+
+\subsubsection{Mapping T3 data onto T2-like data}
+Now that we have a general expression for calculation of \gn{n}, it is worthwhile to make an aside describing how to map T3 data onto T2-like data for correlation. Consider the basic form of a tuple of $n$ T3 records:
+\begin{equation}
+\left((c_{0}, p_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}, t_{n-1})\right)
+\end{equation}
+which can be mapped isomorphically onto:
+\begin{equation}
+\left((c_{0}, p_{0}), (c_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}), (c_{n-1}, t_{n-1})\right)
+\end{equation}
+which looks like a tuple for T2 records:
+\begin{equation}
+\left((c_{0}, t_{0}), \ldots (c_{n-1}, t_{n-1})\right)
+\end{equation}
+Ultimately, a T3 tuple of length $n$ can be mapped onto a corresponding tuple of length $2n$, such that any correlation \gn{n} of T3 data can be treated exactly as a corresponding correlation \gn{2n} of T2 data.
+
+\subsubsection{Correlation of the time-ordered stream}
+As with \intensity, \correlate{} expects a time-ordered stream (see section~\ref{sec:intensity_implementation}). 
+
+% For a correlation of order $n$, every unique combination of $n$ elements of the stream can contribute to \gn{n}, so the full correlation of stream of lengh $N$  costs O(N$^{n}$) to compute. This is reduced for a fixed window width to approximately O(Nw$^{n-1}$) for a window of width w, for reasons that will become clear shortly.
+
+
+
 
 \section{Histogram}
 
@@ -464,8 +696,9 @@ In practice, linear bin spacing is implemented, so the bin stream is actually ju
 \subsubsection{Input}
 \subsubsection{Output}
 
-\subsection{Implementation details}
 \subsection{Examples of usage}
+\subsection{Implementation details}
+
 
 \section{Applications}
 \subsection{Time-dependent photoluminescence lifetime}

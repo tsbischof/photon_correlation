@@ -10,6 +10,8 @@ typedef struct {
 	int mode;
 	long long bin_width;
 	int channels;
+	int print_last;
+	int count_all;
 } options_t;
 
 typedef struct {
@@ -25,6 +27,7 @@ counts_t *allocate_counts(int channels);
 void init_counts(counts_t *counts);
 void free_counts(counts_t **counts);
 int increment_counts(counts_t *counts, int channel);
-void print_counts(FILE *out_stream, long long int time, counts_t *counts);
+void print_counts(FILE *out_stream, long long int lower_time, 
+		long long int upper_time, counts_t *counts);
 
 #endif

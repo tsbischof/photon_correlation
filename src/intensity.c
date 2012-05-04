@@ -18,7 +18,7 @@
 
 void usage(void) {
 	fprintf(stdout, 
-"Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]\n"
+"Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels] [-a] [-l]\n"
 "                 -w bin_width -m mode\n"
 "\n"
 "           -v, --verbose: Print debug-level information.\n"
@@ -30,9 +30,14 @@ void usage(void) {
 "                          style of the output will be different for each.\n"
 "          -c, --channels: Number of channels in the stream. By default, this\n"
 "                          is 2.\n"
+"         -a, --count-all: Rather than counting records in distinct time\n"
+"                          bins, count all records in the stream.\n"
 "              -h, --help: Print this message.\n"
 "\n"
-"       This program assumes the input stream is time-ordered.\n");
+"       This program assumes the input stream is time-ordered.\n"
+"\n"
+"       If counting all events or printing the last one, the time\n"
+"       written will be the time of the last event seen.\n");
 }
 
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
@@ -54,9 +59,11 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	done = next_t2(in_stream, &record);
 
 	while ( ! result && ! done ) {
-		if ( record.time > bin_upper_limit ) {
+		if ( (! options->count_all) && record.time > bin_upper_limit ) {
 			print_counts(out_stream, 
-					bin_upper_limit-options->bin_width, counts);
+					bin_upper_limit-options->bin_width, 
+					bin_upper_limit,
+					counts);
 			bin_upper_limit += options->bin_width;
 			init_counts(counts);
 		} else {
@@ -64,6 +71,11 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			done = next_t2(in_stream, &record);
 		}
 	}
+
+	print_counts(out_stream, 
+			bin_upper_limit - options->bin_width, 
+			record.time, 
+			counts);
 
 	free_counts(&counts);
 	return(0);
@@ -88,9 +100,11 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	done = next_t3(in_stream, &record);
 
 	while ( ! result && ! done ) {
-		if ( record.pulse_number > bin_upper_limit ) {
+		if ( (! options->count_all) && record.pulse_number > bin_upper_limit ) {
 			print_counts(out_stream, 
-					bin_upper_limit-options->bin_width, counts);
+					bin_upper_limit-options->bin_width, 
+					bin_upper_limit,
+					counts);
 			bin_upper_limit += options->bin_width;
 			init_counts(counts);
 		} else {
@@ -98,6 +112,11 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 			done = next_t3(in_stream, &record);
 		}
 	}
+
+	print_counts(out_stream, 
+			bin_upper_limit - options->bin_width,
+			record.pulse_number, 
+			counts);
 
 	free_counts(&counts);
 	return(0);
@@ -152,10 +171,11 @@ int increment_counts(counts_t *counts, int channel) {
 	}
 }
 
-void print_counts(FILE *out_stream, long long int time, counts_t *counts) {
+void print_counts(FILE *out_stream, long long int lower_time,
+		long long int upper_time,  counts_t *counts) {
 	int i;
 
-	fprintf(out_stream, "%lld,", time);
+	fprintf(out_stream, "%lld,%lld,", lower_time, upper_time);
 	for ( i = 0; i < counts->channels; i++ ) {
 		fprintf(out_stream, "%lld", counts->counts[i]);
 		if ( i != counts->channels - 1 ) {
@@ -181,6 +201,7 @@ int main(int argc, char *argv[]) {
 		{"mode", required_argument, 0, 'm'},
 		{"channels", required_argument, 0, 'c'},
 		{"bin-width", required_argument, 0, 'w'},
+		{"count-all", no_argument, 0, 'a'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
@@ -190,7 +211,9 @@ int main(int argc, char *argv[]) {
 	options.mode_string = NULL;
 	options.mode = -1;
 	options.channels = 2;
-	options.bin_width = 1;
+	options.bin_width = 0;
+	options.print_last = 0;
+	options.count_all = 0;
 
 	while ( (c = getopt_long(argc, argv, "hvi:o:m:c:w:", long_options,
 				&option_index)) != -1 ) {
@@ -200,6 +223,9 @@ int main(int argc, char *argv[]) {
 				return(0);
 			case 'v':
 				verbose = 1;
+				break;
+			case 'a':
+				options.count_all = 1;
 				break;
 			case 'i':
 				options.in_filename = strdup(optarg);
@@ -235,6 +261,12 @@ int main(int argc, char *argv[]) {
 		error("Must have at least one channel (%d specified).\n", 
 				options.channels);
 		result += -1;
+	}
+
+	if ( options.bin_width == 0 && (! options.count_all) ) {
+		error("Bin width must be at least 1 (%lld specified).\n",
+				options.bin_width);
+		result += 1;
 	}
 
 	if ( result ) {
