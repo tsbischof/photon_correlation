@@ -1,7 +1,8 @@
 \documentclass{article}
 
 \usepackage[squaren]{SIunits}
-\usepackage{amsmath}
+\usepackage{amsmath,amsfonts}
+\usepackage{appendix}
 
 \newcommand{\cps}{cps}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
@@ -14,7 +15,12 @@
 \newcommand{\correlate}{\texttt{correlate}}
 \newcommand{\histogram}{\texttt{histogram}}
 \newcommand{\gn}[1]{\ensuremath{g^{(#1)}}}
-
+\newcommand{\integers}{\ensuremath{\mathbb{Z}}}
+\newcommand{\wholes}{\ensuremath{\mathbb{N}}}
+\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+\renewcommand{\vec}{\mathbf}
+\newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\eV}{\textnormal{eV}}
 
 \title{Picoquant: Tools for reading and analyzing Picoquant data files}
 \author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
@@ -40,8 +46,8 @@ In the chapters devoted to the various programs, the documentation is divided fu
 \item Details of the implementation
 \end{enumerate}
 
-\subsection{A (very) brief overview of the science and technology}
-In single-molecule spectroscopy, single-photon detectors are often used to perform time-resolved experiments. Detectors such as silicon-based avalanche photodiodes (APDs) can be used to detect the arrival time a photon with better than 1\nano\second{} resolution, and can detect up to $10^{7}$ photons per second before saturation, abbreviated as 10\mega\cps{} hereafter (counts per second). Hardware capable of resolving these arrival times is of great use for revealing time-dependent structure to the photon stream, such as intensity fluctuations and bunching, so various hardware designs have been developed to permit such measurements.
+\subsection{A (very) brief overview of photon-arrival timing}
+In single-molecule spectroscopy, single-photon detectors are often used to perform time-resolved experiments. Detectors such as silicon-based avalanche photodiodes (APDs) can be used to detect the arrival time a photon with about 500\pico\second{} resolution, and can detect up to $10^{7}$ photons per second before saturation, abbreviated as 10\mega\cps{} hereafter (counts per second). Hardware capable of resolving these arrival times is of great use for revealing time-dependent structure to the photon stream, such as intensity fluctuations and bunching, so various hardware designs have been developed to permit such measurements.
 
 One line of instruments is the timing hardware produced by Picoquant GmBH, such as the Timeharp, Picoharp, and Hydraharp. These modules are capable of detecting pulse arrivals on multiple input channels with a resolution of as little as 1\pico\second, and operate in a few distinct modes:
 \begin{enumerate}
@@ -59,9 +65,9 @@ Considering these distinct modes, it is important to spend some time discussing 
 
 \subsection{Data collection modes}
 \subsubsection{Interactive (histogram)}
-A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser with pulse width significantly shorter than the relaxation times of interest can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to rebuild the decay curve it is necessary to average the result over many pulses of the laser, binning the relative arrival times to build a histogram of arrival times representing the time-averaged response of the system under study. If this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
+A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to reconstruct the decay curve it is necessary to average the result over many pulses of the laser, binning the arrival times of the emitted photons relative to that of the laser. If measuring this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
 
-Consequently, interactive data consists of $N$ arrival time bins with boundaries $(t_{j}, t_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
+Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $(t_{j}, t_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
 \begin{equation}
 \braces{((t_{j}, t_{j+1}), n_{j})}
 \end{equation}
@@ -72,22 +78,51 @@ In T2 mode, all input channels are connected to photon detectors. At the start o
 \begin{equation}
 \braces{(c_{j}, t_{j})}
 \end{equation}
-for a channel $c_{j}$ and arrival time $t_{j}$ of the $j$th photon. Typically, these data are used to examine time-dependent behavior, such as intensity fluctuations, particularly when the excitation source is continuous-wave. These data are also useful for calculation of correlation functions such as:
-\begin{equation}
-\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
-	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
-	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
-\end{equation}
-The details of this calculation will laid out later in section~\ref{sec:correlate}, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
+for a channel $c_{j}$ and arrival time $t_{j}$ of the $j$th photon. 
+%Typically, these data are used to examine time-dependent behavior, such as intensity fluctuations, particularly when the excitation source is continuous-wave. These data are also useful for calculation of correlation functions such as:
+%\begin{equation}
+%\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
+%	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+%	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+%\end{equation}
+%The details of this calculation will laid out later in section~\ref{sec:correlate}, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
 
 \subsubsection{T3}
 T3 mode is closest in character to the interactive mode, except that, instead of binning the photon arrival times on the hardware, the arrivals are recorded directly for later examination, as in T2 mode. This gives a data set of the form:
 \begin{equation}
 \braces{(c_{j}, p_{j}, t_{j})}
 \end{equation}
-for channel $c_{j}$, sync pulse number $p_{j}$, and relative arrival time $t_{j}$. Indeed, by defining bins and histogramming the $t_{j}$, the result from the interactive mode can be reproduced exactly. However, this mode also allows for studying time dependence and correlation in the data, as with T2 mode. In principle, any data collected in T3 mode can be transformed into T2 mode data if the sync source is regular, as the pulse number will represent some amount of time in the experiment, but there are subtle hardware and numerical issues (discussed later) which limit the practicality of this transformation.
+for channel $c_{j}$, sync pulse number $p_{j}$, and relative arrival time $t_{j}$. Indeed, by defining temporal bins and histogramming the $t_{j}$, the result from the interactive mode can be reproduced exactly.
 
-Uses of this mode include the study of the time-dependent fluoresence lifetime of single molecules, which can switch between distinct states under various conditions. Correlation methods can also reveal important behavior, but again this will be discussed later.
+\paragraph{Mapping T3 onto T2 data}
+For signals produced by regular excitation it is possible to convert T3 data to T2 data. For example, consider a sample excited by a laser with repetition rate $f$. The pulse number therefore defines a time $1/f$, and $t_{j}$ acts as a correction to this time:
+\begin{equation}
+\left(c_{j}, p_{j}, t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}}{f} + t_{j}\right)
+\end{equation}
+Of course, this conversion is not necessarily perfect. For example, sync pulses may be missed or overcounted, introducing a cumulative error $\delta p_{j}$, the frequency of the sync pulse might deviate with some jitter $\delta f$, or the timing of the arrival might have some jitter $\delta t_{j}$, such that the true expression is:
+\begin{equation}
+\left(c_{j}, p_{j}+\delta p_{j}, t_{j} + \delta p_{j} \right)
+      \rightarrow \left(c_{j}, \frac{p_{j}+\delta p_{j}}{f+\delta f} + t_{j}+\delta t_{j}\right)
+\end{equation}
+For a well-designed system these errors should not be very large, but if an application requires precision approaching that of the timing hardware they can be quite important. 
+
+% However, this mode also allows for studying time dependence and correlation in the data, as with T2 mode. In principle, any data collected in T3 mode can be transformed into T2 mode data if the sync source is regular, as the pulse number will represent some amount of time in the experiment, but there are subtle hardware and numerical issues (discussed later) which limit the practicality of this transformation.
+%
+%Uses of this mode include the study of the time-dependent fluoresence lifetime of single molecules, which can switch between distinct states under various conditions. Correlation methods can also reveal important behavior, but again this will be discussed later.
+
+\subsection{Correlation techniques}
+A number of techniques involving the correlation of one or more signals exist, and their use in fluorescence microscopy requires that we be able to calculate correlation functions of the following form:
+\begin{equation}
+\gn{n}(\tau_{1}, \ldots \tau_{n-1}) \approx \frac
+	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+\end{equation}
+The details of calculating this function will be laid out in section~\ref{sec:math_background}. For now, note that the problem can be divided into three distinct parts:
+\begin{enumerate}
+\item Calculation of \angles{I_{j}(t)}
+\item Finding correlation events
+\item Histogramming correlation events
+\end{enumerate}
 
 \subsection{General design principles}
 Analysis of these timing data can be roughly described as follows:
@@ -96,7 +131,7 @@ Analysis of these timing data can be roughly described as follows:
 \item Condition the stream by correlation, removal of extraneous information, homogenization of the detection channels, etc.
 \item Collect the result to form some histogram of events.
 \end{enumerate}
-As such, these three phases are handled by distinct programs, which act as filters of a data stream by reading in values and outputting the appropriate new values. These streams are ultimately streams of binary data, but for any program the stream may be defined by some standard data stream (\stdin, \stdout) or by some file containing that data. 
+As such, these three phases are handled by distinct programs, which act as filters of a data stream by reading in values and outputting the appropriate new values. These streams are ultimately streams of binary data, but for any program the stream may be defined by the standard data streams (\stdin, \stdout) or by some file containing the data. 
 
 For time-tagged modes, times are represented as integer multiples of 1\pico\second, although only the initial data streamer is actually aware of units; the conditioning and collection routines operate on time as an integer, without regard for its units.
 
@@ -106,7 +141,230 @@ The main processing software (\picoquant, \intensity, \correlate, \histogram) is
 
 In addition to the C code, several analysis scripts written in Python have been provided in \text{scripts/}. These include routines to read in the outputs of most of the processing software, generate correlation functions, plot lifetime data, and so on. 
 
-All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. They have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. No non-standard libraries are used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software.
+All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. They have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. Non-standard libraries are not used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software, although it will require some modification for different compiler configurations.
+
+\section{The mathematics of calculating \gn{n}}
+\label{sec:math_background}
+This section will detail the mathematics of calculating correlation functions \gn{n}. If you are familiar with the results, you can safely skip this section, but do note that the correlation of photon events is in subtle ways distinct from a standard signal correlation.
+
+If you are not familiar with notation such as
+\begin{align}
+Z_{n} &= \abs{\braces{a|a\in\integers;~ a\in\integers/n}} \\
+F&:\wholes\times\integers\rightarrow\reals \\
+&\sum_{z\in\integers_{n}}{z^{2}}
+\end{align}
+you should read appendix~\ref{sec:notation} before reading the remainder of this section.
+
+\subsection{Definition of the correlation function}
+A signal $I(t)$ is a non-negative, real-valued function of whole time:
+\begin{equation}
+I:\wholes\rightarrow\reals^{*}
+\end{equation}
+In practice such a function may represent a physical quantity such as voltage, and we will develop our understanding of photon correlations by developing first an understanding of how to correlate this sort of function. 
+
+The simplest non-trivial correlation of a function is the autocorrelation, which measures the average probability that the value of the function for a time $t+\tau$ will be greater than, less than, or equal to its value at $t$. This can be calculated as:
+\begin{equation}
+\label{eq:autocorrelation}
+\gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
+                    {\angles{I(t)}\angles{I(t+\tau)}}
+\end{equation}
+Here, $\gn{2}>1$ indicates supercorrelation, that the function is more likely than not to increase in value after a time delay $\tau$. If $\gn{2}<1$, the function is more likely than not to decrease in value after a time delay $\tau$. And in the middle, if $\gn{2}=1$, the function has equal probability to increase, decrease, or remain constant. The meaning of the exact magnitude of $\gn{2}(\tau)$ can be discussed in the context of a particular function, but these general principles should always apply.
+
+In many cases, an autocorrelation is an oversimplification of a signal, and it is useful to be able to compare the cross-correlations of two or more channels instead. For example, if our function $I$ is endowed with a second dimension indicating the identity of a detection channel from the set $C$ of detection channels, it takes the form
+\begin{equation}
+I:C\times\wholes\rightarrow\reals^{*}
+\end{equation}
+where $\times$ is the Cartesian product of elements from $C$ and $\integers^{*}$. For example, if $C=\braces{0, 1}$, elements of $C\times\wholes$ take the form of 2-tuples such as (0, 10), (1, 17), (0, 0), and so on. Under this notation, $I$ is now a function of two variables and follows the form $I(c, t)$. For clarity of future notation, we will include the channel variable as a subscript:
+\begin{equation}
+I(c,t)\equiv I_{c}(t)
+\end{equation}
+Given this, we can separate the signal $I$ into a sum of signals over all channels:
+\begin{equation}
+I(t) \equiv \sum_{c\in C}{I_{c}(t)}
+\end{equation}
+Under the definition of an autocorrelation as in equation~\ref{eq:autocorrelation}, we can substitute this new value and expand the result to obtain:
+\begin{equation}
+\gn{2}(\tau)=\sum_{(c_{0},c_{1})\in C^{2}}{\frac{\angles{I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}
+                                                {\angles{I_{c_{0}(t)}}\angles{I_{c_{1}}(t+\tau)}}}
+\end{equation}
+where $(c_{0},c_{1})\in C^{2}$ indicates 2-tuple elements of the set $C\times C$. We see that, if $C$ contains a single element (we have only one detection channel), the function returns to the form shown in equation~\ref{eq:autocorrelation}. But if we have a set $C$ with more than one element, there are more than one term in the summation, which each take the form
+\begin{equation}
+\gn{2}_{(c_{0},c_{1})}(\tau)=\frac{\angles{I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}
+                                                {\angles{I_{c_{0}(t)}}\angles{I_{c_{1}}(t+\tau)}}
+\end{equation}
+We will focus most of our attention on this part of the function, because the summation over all channel combinations ($\vec{c}\equiv (c_{0}, c_{1},\ldots)\in C^{n}$), is implied when specifying \gn{2}. 
+
+Now that we have generalized this definition to an arbitrary number of channels, we can also generalize the correlation to an arbitrary order $n$:
+\begin{equation}
+\label{eq:gn}
+\gn{n}(\tau_{1},\ldots\tau_{n-1}) = \sum_{\vec{c}\in C^{n}}{
+     \frac{\angles{I_{c_{0}}(t)\prod_{j=1}^{n-1}{I_{c_{j}}(t+\tau_{j})}}}
+          {\angles{I_{c_{0}}(t)}\prod_{j=1}^{n-1}{\angles{I_{c_{j}}(t+\tau_{j})}}}}
+\end{equation}
+
+\subsubsection{Examples of correlations of functions}
+To become more familiar with the behavior of these correlation functions, we should evaluate them for a few familiar functions. For example, for $I(t)=1+\sin{(t)}$:
+\begin{align}
+\gn{2}(\tau) &= \frac{\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\left(1+\sin{(t+\tau)}\right)\,dt}}
+                     {\left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\,dt}\right)
+                      \left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t+\tau)}\right)\,dt}\right)} \\
+             &= 1 + \frac{1}{2}\cos{(\tau)}
+\end{align}
+For, this result says that, given that our function at some value at time $t$, after a small time delay $\tau\approx 0$ the value is likely to have increased ($\gn{2}=1.5$). If you were expecting $\gn{2}(0)$ to be 1, note that the correlation function is not strictly an increase or decrease of the value of the function, but instead more akin to a weighted average of that character. Thus, while the function has intervals of equal size over which it increases ($t\pmod{2\pi} \in (0,\frac{\pi}{2})\cup(\frac{3\pi}{2})$) or decreases ($t\pmod{2\pi} \in (\frac{\pi}{2},\frac{3\pi}{2})$), the time it spends with value greater than average ($t\pmod{2\pi}\in(0,\pi)$) weighs more heavily. 
+
+Additionally, at $\tau=2\pi$, the value of the function is exactly what it was at $\tau=0$, so $\gn{2}(2\pi)=1$.
+
+Moving on, consider a signal composed of two Gaussian functions:
+\begin{align}
+I_{0}(t) &= \frac{1}{\sigma_{0}\sqrt{2\pi}}\exp{\left(-(t-\mu_{0})^{2}/(2\sigma_{0}^{2})\right)} \\
+I_{1}(t) &= \frac{1}{\sigma_{1}\sqrt{2\pi}}\exp{\left(-(t-\mu_{1})^{2}/(2\sigma_{1}^{2})\right)} \\
+I(t) &= I_{0}(t)+I_{1}(t)
+\end{align}
+We can calculate the full autocorrelation as the sum of the cross-correlations:
+\begin{align}
+\gn{2}(\tau) &= \gn{2}_{(0,0)}(\tau)+\gn{2}_{(0,1)}(\tau)+\gn{2}_{(1,0)}(\tau)+\gn{2}_{(1,1)}(\tau) \\
+             &= 
+\end{align}
+
+% A correlation of such a signal quantifies the randomness of its behavior over time: a signal with strong time correlation has well-defined behavior at a time $I(t+\tau)$ given a value at $I(t)$, and weaker correlation indicates that the value is less well-defined, approaching complete randomness. The correlation of a signal with itself (its autocorrelation) can be defined as:
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
+%                    {\angles{I(t)}\angles{I(t+\tau)}}
+%\end{equation}
+%where the angled brackets indicate an average over $t$. For this function, a value $\gn{2}(\tau)=1$ indicates non-correlation: at a time delay $\tau$, the value $I(t+\tau)$ is on average the same as $I(t)$. For $\gn{2}(\tau)>1$, $I(t+\tau)$ is greater than $I(t)$, and for $\gn{2}(\tau)<1$, $I(t+\tau)$ is less than $I(t)$. In terms of photon correlation methods, $\gn{2}(\tau)>1$ is called super-bunching (a photon arrival is likely to be followed by another), while $\gn{2}(\tau)<1$ is called anti-bunching (a photon arrival is likely to be followed by a lack of photons).
+%
+%For example, consider the autocorrelation of a sinusoid:
+%\begin{align}
+%\gn{2}(\tau) &= \frac{\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\left(1+\sin{(t+\tau)}\right)\,dt}}
+%                     {\left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\,dt}\right)
+%                      \left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t+\tau)}\right)\,dt}\right)} \\
+%             &= 1 + \frac{1}{2}\cos{(\tau)}
+%\end{align}
+%it is evident that there is some structure to the autocorrelation, such that there is some probability of the signal being stronger or weaker at relative time delays $\tau$. 
+%
+%As an example which is more relevant to photon-correlation, consider a pulse train represented by
+%\begin{equation}
+%\label{eq:delta_train}
+%I(t) = \sum_{n\in\integers}{\delta(t-n)}
+%\end{equation}
+%where $\delta$ here represents the mathematical delta function
+%\begin{equation}
+%\delta(t) = \left\lbrace \begin{split}
+%                          1;~t=0 \\
+%                          0;~t\not=0
+%                         \end{split}
+%            \right.
+%\end{equation}
+%This signal represents is a regularly-spaced pulse train where a single pulse arrives every unit of time, and as such its autocorrelation is:
+%\begin{equation}
+%\gn{2}(\tau) = \sum_{n\in\integers}{\delta(\tau-n)}
+%\end{equation}
+%
+%
+%\subsection{Extending the correlation arbitrary numbers of signals}
+%While the autocorrelation of a signal is often a meaningful quantity to calculate, cross-correlations are more general and have many more applications. For example, the cross-correlation of a laser pulse train and the response of a light-emitting sample can be used to measure the lifetime of the emissive state, and is the implicit measurement of the interactive mode. 
+%
+%Generalization of the correlation is fairly simple: the numerator holds an average over a product of some number of signals with time delays relative to a reference channel, normalized by the average intensity at each channel. For two channels, this can be expressed as:
+%\begin{equation}
+%\label{eq:g2}
+%\gn{2}(\tau) = \frac{\angles{I_{0}(t)I_{1}(t+\tau)}}
+%                    {\angles{I_{0}(t)}\angles{I_{1}(t+\tau)}}
+%\end{equation}
+%Generalization to higher dimensions is relatively straightforward:
+%\begin{equation}
+%\label{eq:gn}
+%\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
+%	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+%	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+%\end{equation}
+%where the $\prod$ notation indicates a product of elements, akin to the $\sum$ notation for summation.
+
+%\subsubsection{Mapping T3 correlations onto T2-like correlations}
+%One benefit of generalizing the correlation to higher dimensions is that it provides a simple way to treat correlations of T3 data as higher-dimensional T2 data. For example, if we apply the map
+%\begin{equation}
+%\left(c_{j}, p_{j}, t_{j}\right) \rightarrow \left(\left(c_{j}, p_{j}\right), \left(c_{j}, t_{j}\right)\right)
+%\end{equation}
+%it is evident that we can treat the single T3 entry as containing two dimensions of time to analyze independently. Therefore, any calculation of a correlation of T3 data can be expressed as
+%\begin{equation}
+%\gn{n}(\rho_{1}, \tau_{1}, \ldots \rho_{n-1}, \tau_{n-1}) = \frac
+%	{\angles{I_{0}(p, t)\prod_{j=1}^{n-1}{I_{j}(p+\rho_{j},t)I_{j}(p,t+\tau_{j})}}}
+%	{\angles{I_{0}(p, t)}^{2}\prod_{j=1}^{n-1}{\angles{I_{j}(p+\rho_{j},t)}
+%	                                       \angles{I_{j}(p,t+\tau_{j})}}}
+%\end{equation}
+%For the rest of this paper, T3 data will be treated as higher-dimensional T2 data.
+%
+%\subsection{The true meaning of $I(t)$}
+%For many measurements, the signals $I_{j}(t)$ are real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I_{j}(t)$ really is
+%\begin{equation}
+%I_{j}(t) = \left.\angles{\iota_{j}(t')}\right|_{t'\in[t,t+\Delta t)} = \frac{1}{\Delta t}\int_{t}^{t+\Delta t}{\iota_{j}(t'),dt'}
+%\end{equation}
+%for a the true function $\iota(t)$. As such, the $I(t)$ over time can be represented meaningfully as a vector representing the value of the function for evenly-spaced values of $t$, and the correlations can be determined as inner products of displacements of that vector. More concretely, consider a signal $\vec{I}\in\reals^{N}$ representing $N$ samples of $I(t)$ at $t=0, \Delta t, \ldots$, with elements indexed as $\vec{I}(0), \vec{I}(1),\ldots$. To calculate $\gn{2}(\tau)$ for $\tau\in\integers^{*}$:
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\sum_{j=0}^{N-\tau}{\vec{I}(j)\vec{I}(j+\tau)}}
+%                    {\sum_{j=0}^{N-\tau}{\vec{I}(j)}\sum_{j=0}^{N-\tau}{\vec{I}(j+\tau)}}
+%\end{equation}
+%Note that, for $\tau\rightarrow N$, the number of elements in the sum approaches 0. This represents the undersampled region of the correlation, and as such it is necessary to define the correlation window as significantly smaller than the sampled window in order to obtain a meaningful estimate of \gn{n}.
+%
+%This definition of a signal is useful for many measurements of some gross quantity which can be said to sample a non-trivial range of values in \reals{} or \integers. However, photon-counting produces a signal which is fundamentally binary (in $\integers_{2}$), indicating that either a photon has arrived, or none has. In principle it is possible to bin these photon arrivals to count the number of arrivals in some time interval and recover the vector-like signal discussed above, but such steps introduce a range of subtle artifacts related to the precise origin of time and definition of bin resolution. These problems are largely avoidable if we instead develop a definition of \gn{n} which involves counting these events directly.
+%
+%Do note, however, that the ``true'' photon arrival time discussed from here on is itself a binary form of this vectorial definition, because real instruments will have some finite timing resolution. In this sense, the idea of a discrete arrival time is just a simplification of the true signal, where each sampling represents the state of a photon arriving or not arriving during that interval. Many more samples will find no photon than one, so those are simply not reported. Additionally, this means that the reported photon arrival time carries some time units defined by the resolution of the measurement, so we can declare any arrival time $t$ to be a multiple of these time steps, or $t\in\wholes$, where \wholes{} is the set of all whole numbers (the positive integers and zero).  
+%
+%\subsection{Calculating \gn{n} by counting photons}
+%As in equation~\ref{eq:delta_train}, it is possible to define the signal representing arrivals of photons as a sum over a set of $\delta$-functions. Consider the set $T\subset\wholes$ of photon arrival times. The signal can be defined as
+%\begin{equation}
+%I(t) = \sum_{t'\in T}{\delta(t-t')}
+%\end{equation}
+%This notation is cumbersome, so from here we will refer to a photon arrival time as $t'$ alone, but the $\delta$ notation could be substituted as desired. This change makes the summation notation difficult to parse, so we instead switch to a set notation:
+%\begin{equation}
+%I(t) = \abs{\braces{\left. t'\right|t'\in T;~t-t'=0}}
+%\end{equation}
+%In long form, this definition counts the number of photon arrival times $t'$ which are equal to the requested time $t$. This is computationally inefficient but conceptually simple, so we will define all important quantities in this fashion before discussing how to compute the result efficiently.
+%
+%Extending this notation to \gn{2} for a single signal:
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\abs{\braces{(t_{j}, t_{k})\left|
+%                          \begin{split} 
+%                            t_{j}, t_{k}\in T; \\
+%                            t_{j}-t_{k}=\tau
+%                          \end{split}\right.
+%                    }}}
+%                    {\abs{\braces{T}}^{2}/\left(max(T)-min(T)\right)^{2}}
+%\end{equation}
+%where $min$ and $max$ are the functions which return the minimum and maximum values of a set, respectively. Even this definition is not quite sufficient: the measurement carries its own unit of time $\epsilon$, which means that any time $t$ specified is really a range $[t,t+\epsilon)$, so with appropriate normalization the result becomes:
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\abs{\braces{(t_{j}, t_{k})\left|
+%                          \begin{split} 
+%                            t_{j}, t_{k}\in T \\
+%                            t_{j}-t_{k}=\tau
+%                          \end{split}\right.
+%                    }}}
+%                    {\epsilon^{2}\abs{\braces{T}}^{2}/\left(max(T)-t\right)^{2}}
+%\end{equation}
+%This result is identical to the normalization of histogrammed values, which will be discussed later.
+%
+%Extending this result to a number of signals, we obtain
+%\begin{equation}
+%\label{eq:gn_set}
+%\gn{n}(\tau_{1}, \ldots) = \frac{\abs{\braces{(t_{0}, t_{1}, \ldots)\left|
+%                                      \begin{split}
+%                                      t_{0}\in T_{0}; t_{1}\in T_{1};\ldots \\
+%                                      t_{1}-t_{0} = \tau_{1}; \ldots
+%                                      \end{split}\right.}}}
+%                                {\prod_{j=0}^{n-1}{\epsilon_{j}\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
+%\end{equation}
+%Typically, the signals being correlated will come from the same device, such that all $\epsilon_{j}$ are equal, leading to the final formula:
+%\begin{equation}
+%\label{eq:gn_set}
+%\gn{n}(\tau_{1}, \ldots) = \frac{\abs{\braces{(t_{0}, t_{1}, \ldots)\left|
+%                                      \begin{split}
+%                                      t_{0}\in T_{0}; t_{1}\in T_{1};\ldots \\
+%                                      t_{1}-t_{0} = \tau_{1}; \ldots
+%                                      \end{split}\right.}}}
+%                                {\prod_{j=0}^{n-1}{\epsilon\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
+%\end{equation}
+%
+%\subsection{Subdividing the problem of calculating \gn{n}}
+%The expression in equation~\ref{eq:gn_set} is somewhat intimidating, but we can divide its 
 
 \section{Picoquant}
 \subsection{Purpose}
@@ -173,8 +431,8 @@ channel number, left edge of time bin, counts \n
 Each record is of the form:
 \begin{verbatim}
 struct {
-	unsigned int channel;
-	long long int time;
+    unsigned int channel;
+    long long int time;
 };
 \end{verbatim}
 printed as:
@@ -633,7 +891,7 @@ the same, with channels ordered:
 \subsubsection{Definition of the correlation as the order of a set}
 As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
 
-In equation~\ref{eq:correlation}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
+In equation~\ref{eq:g2}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
 \begin{equation}
 \angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}
 \end{equation}
@@ -704,5 +962,10 @@ As with \intensity, \correlate{} expects a time-ordered stream (see section~\ref
 \subsection{Time-dependent photoluminescence lifetime}
 \subsection{Bunching and antibunching}
 \subsection{Fluorescence blinking}
+
+\begin{appendix}
+\section{Mathematical notation}
+\label{sec:notation}
+\end{appendix}
 
 \end{document}
