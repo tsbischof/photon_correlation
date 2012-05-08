@@ -3,6 +3,7 @@
 \usepackage[squaren]{SIunits}
 \usepackage{amsmath,amsfonts}
 \usepackage{appendix}
+\usepackage{enumerate}
 
 \newcommand{\cps}{cps}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
@@ -28,7 +29,8 @@
 \newcommand{\photon}{\ensuremath{\gamma}}
 \newcommand{\photons}{\ensuremath{\Gamma}}
 \newcommand{\Pulse}{\ensuremath{\mathcal{P}}}
-\newcommand{\integrationtime}{\ensuremath{\Lambda}}
+\newcommand{\integrationtime}{\ensuremath{\Xi}}
+\newcommand{\timewindow}{\ensuremath{\xi}}
 \newcommand{\resolution}{\ensuremath{\epsilon}}
 
 \title{Picoquant: Tools for reading and analyzing Picoquant data files}
@@ -77,11 +79,11 @@ Considering these distinct modes, it is important to spend some time discussing 
 \subsubsection{Interactive (histogram)}
 A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to reconstruct the decay curve it is necessary to average the result over many pulses of the laser, binning the arrival times of the emitted photons relative to that of the laser. If measuring this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
 
-Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $(t_{j}, t_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
+Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $(b_{j}, b_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
 \begin{equation}
-\braces{((t_{j}, t_{j+1}), n_{j})}
+\braces{((b_{j}, b_{j+1}), n_{j})}
 \end{equation}
-The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $t\in[t_{j}, t_{j+1})$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance; typical detectors have two orders of magnitude more timing jitter than the timing hardware, so the exact definition of the histogram bin has a negligible effect.
+The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $t\in[b_{j}, b_{j+1})$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance; typical detectors have two orders of magnitude more timing jitter than the timing hardware, so the exact definition of the histogram bin has a negligible effect.
 
 \subsubsection{T2}
 In T2 mode, all input channels are connected to photon detectors. At the start of the experiment, an internal clock is reset and started, providing a master timing reference. As a pulse arrives, the machine emits data encoding the channel and time of arrival, so the data follow the form:
@@ -105,6 +107,7 @@ T3 mode is closest in character to the interactive mode, except that, instead of
 for channel $c$, sync pulse number $p$, and relative arrival time $t$. Indeed, by defining temporal bins and histogramming the $t$, the result from the interactive mode can be reproduced exactly.
 
 \paragraph{Mapping T3 onto T2 data}
+\label{sec:t3_to_t2}
 For signals produced by regular excitation it is possible to convert T3 data to T2 data. For example, consider a sample excited by a laser with repetition rate $f$. The pulse number therefore defines a time $1/f$, and $t$ acts as a correction to this time:
 \begin{equation}
 \left(c, p, t\right) \rightarrow \left(c, \frac{p}{f} + t\right)
@@ -166,6 +169,7 @@ F&:\wholes\times\integers\rightarrow\reals \\
 you should read appendix~\ref{sec:notation} before reading the remainder of this section.
 
 \subsection{Definition of the correlation function}
+\label{sec:correlation_function}
 A signal $I(t)$ is a non-negative, real-valued function of whole time\footnote{In principle, we could all the function to return negative numbers without mathematical problems, but this affects our interpretation of the result and is more natural for the problems laid out in this paper.}:
 \begin{equation}
 I:\wholes\rightarrow\reals^{*}
@@ -442,7 +446,7 @@ Because these factors can be calculated or defined independently, we will turn o
 \item $\lambda$: \intensity
 \item $\abs{\photons_{c}}$: \intensity
 \item $\resolution_{c}(\tau)$: \picoquant, \histogram
-\item $(\photon_{0},\ldots)$: \correlate
+\item $(\photon_{0},\ldots)$: \correlate, \histogram
 \end{itemize}
 The remainder of this paper is devoted to specifying how each term may be calculated efficiently and accurately.
 
@@ -599,7 +603,14 @@ The remainder of this paper is devoted to specifying how each term may be calcul
 
 \section{Picoquant}
 \subsection{Purpose}
-This program decodes binary data from the Picoquant hardware and outputs the data in human-readable format. Currently, \picoquant{} supports most modes and versions of the Timeharp (v2.0, v3.0, v5.0, v6.0), Picoharp (v2.0), and Hydraharp (v1.0). The board and mode are detected automatically, and if the mode is not supported an error message will explain the details.
+This program decodes binary data from the Picoquant hardware and outputs the data in human-readable format. Currently, \picoquant{} supports most modes and versions of the Timeharp, Picoharp, and Hydraharp. The board and mode are detected automatically, and if the mode is not supported an error message will explain the details.
+
+Modes and software versions supported:
+\begin{itemize}
+\item Timeharp: v20 (thd), v30 (thd, t3r), v50 (thd), v60 (thd, t3r)
+\item Picoharp: v20 (phd, pt2, pt3)
+\item Hydraharp: v10 (hhd, ht2, ht3)
+\end{itemize}
 
 \subsection{Command-line syntax}
 
@@ -808,22 +819,25 @@ The remainder of this section is devoted to a discussion of the details importan
 Many of the timing boards have a feature which allows the insertion of an external timing pulse into the signal, for use in TTTR modes to designate a raster scan or other time-dependent behavior. These records are not handled directly by \picoquant, but instead a message is passed to \stderr{} indicating that such a record exists. If different behavior is desired (perhaps assignment of the marker to a non-existent channel), modify the function \texttt{external\_marker} in \texttt{picoquant.c}. This will cause problems with the other programs, which assume every record originates from the true signal stream, so such an alteration must be accompanied by code which appropriately splices the signal stream, for example by halting collection into a histogram and initiation of a new one.
 
 \subsubsection{T3 timing carries units of histogram bins, not time}
+In T3 modes--including T3R for the Timeharp--the pulse dimension carries units of pulse number, but the time is not strictly a time with fixed units. Instead, the specified resolution of the interactive mode is the unit of time, such that the precision of the measurement is affected directly by the choice of resolution. As a result, the T3 record more directly reflects the index of the bin the record would have fallen into in interactive mode. In \picoquant{} this value is converted to units of \pico\second{} implicitly, but do be aware of this distinction.
 
 \subsubsection{Translation of T3 to T2 data}
-In principle, if the sync source of a T3-mode experiment arrives with perfectly uniform spacing, the pulse number can be said to represent some amount of time, and a T2-like record recovered. To do this, pass the flag \texttt{--to-t2} for an input of T3 data, but consider the implications of how this translation is performed. 
+In principle, if the sync source of a T3-mode experiment arrives with perfectly uniform spacing, the pulse number can be said to represent some constant amount of time, and a T2-like record recovered. To do this, pass the flag \texttt{--to-t2} for an input of T3 data, but consider the implications of how this translation is performed (see section~\ref{sec:t3_to_t2}). 
 
-For a frequency $f$ of the arrival of a sync source, pulse number $p_{j}$ and time delay $t_{j}$ on channel $c_{j}$ map as:
-\begin{equation}
-\left(c_{j}, p_{j}, t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}}{f} + t_{j}\right)
-\end{equation}
-In practice, this mapping is limited in precision in a few important ways. First, the period $1/f$ is not necessarily an integer multiple of 1\pico\second, and any precision will be lost beyond the decimal. This is not usually a problem because typical sync sources operate at 10\mega\hertz{} at most, for a precision of timing to one part in ten thousand, and a purity of the pulse train to this precision is not typical. Additionally, the timing jitter of most lasers will be well above this threshold, so this is not too great a concern.
+In \picoquant, the average rate of sync pulses is used to determine the time unit a pulse carries.
 
-A more important concern is that of missed pulses. The T3 data reports the detected pulse number, and if a sync pulse is missed no record will exist. However, translation of any subsequent record to an absolute time will be incorrect by the period $1/f$, confusing matters where such spacing is important. Again, a well-designed system should not have problems beating this limit, but it is the greatest single source of error during the translation.
-
-Collectively, these errors can be expressed as:
-\begin{equation}
-\left(c_{j}, p_{j}+\delta p_{j}, t_{j} + \delta t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}+\delta p_{j}}{f+\delta f} + \left(t_{j}+\delta t_{j}\right)\right)
-\end{equation}
+%For a frequency $f$ of the arrival of a sync source, pulse number $p$ and time delay $t$ on channel $c$ map as:
+%\begin{equation}
+%\left(c, p_{j}, t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}}{f} + t_{j}\right)
+%\end{equation}
+%In practice, this mapping is limited in precision in a few important ways. First, the period $1/f$ is not necessarily an integer multiple of 1\pico\second, and any precision will be lost beyond the decimal. This is not usually a problem because typical sync sources operate at 10\mega\hertz{} at most, for a precision of timing to one part in ten thousand, and a purity of the pulse train to this precision is not typical. Additionally, the timing jitter of most lasers will be well above this threshold, so this is not too great a concern.
+%
+%A more important concern is that of missed pulses. The T3 data reports the detected pulse number, and if a sync pulse is missed no record will exist. However, translation of any subsequent record to an absolute time will be incorrect by the period $1/f$, confusing matters where such spacing is important. Again, a well-designed system should not have problems beating this limit, but it is the greatest single source of error during the translation.
+%
+%Collectively, these errors can be expressed as:
+%\begin{equation}
+%\left(c_{j}, p_{j}+\delta p_{j}, t_{j} + \delta t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}+\delta p_{j}}{f+\delta f} + \left(t_{j}+\delta t_{j}\right)\right)
+%\end{equation}
 
 \subsubsection{Timeharp}
 The Timeharp is the least sophisticated of the three boards discussed here, and is fundamentally a histogramming board. It features two input channels, and its three modes are:
@@ -964,34 +978,35 @@ As is evident from this algorithm, the process can be run continuously for a str
 
 \section{Correlate}
 \label{sec:correlate}
-\subsection{A brief mathematical background}
-\label{sec:correlate_math}
-For several types of experiments, some form of a signal correlation is necessary. These follow the form:
-\begin{equation}
-\label{eq:correlation}
-\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
-	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
-	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
-\end{equation}
-where $I_{j}(t)$ are the intensities of some number of signals and the angled brackets indicate an average over time. For some purposes, the autocorrelation of a signal is of interest, where all $I_{j}(t)$ are identical, but in other cases some mixture of signals is of interest, and not necessarily in numerical order. For example, fluoroescence correlation spectroscopy requires the calculation of a second-order autocorrelation of fluorescence intensity, or:
-\begin{equation}
-\label{eq:g2}
-\gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
-                 {\angles{(I(t)}\angles{(I(t+\tau)}}
-             = \frac{\angles{I(t)I(t+\tau)}}
-                 {\angles{(I(t)}^{2}}
-\end{equation}
-where $I(t)$ includes signal across all detection channels. In most cases, calculation of \gn{2} is sufficient, but in this definition we have implicitly limited our discussion to T2-like signals, with one independent variable per signal. In the case of T3-mode signals, we really have two independent variables: pulse number and arrival time. In principle, we could write something like
-\begin{equation}
-\gn{n}(\rho_{1}, \tau_{1}, \ldots \rho_{n-1}, \tau_{n-1}) = \frac
-	{\angles{I_{0}(p, t)\prod_{j=1}^{n-1}{I_{j}(p+\rho_{j},t)I_{j}(p,t+\tau_{j})}}}
-	{\angles{I_{0}(p, t)}^{2}\prod_{j=1}^{n-1}{\angles{I_{j}(p+\rho_{j},t)}
-	                                       \angles{I_{j}(p,t+\tau_{j})}}}
-\end{equation}
-where the average is now over all pulse and real time. However, because both pulse and real time are integer spaces, we can just map the times onto two homogeneous dimensions, and perform the correlation \gn{2n} instead. This gives a \gn{n} for every choice of pulses, useful for comparisons of long- and short-time correlations, as in multi-excition spectroscopy.
+The details of the mathematics required for understanding this program can be found in section~\ref{sec:math_background}. If you have not read that section, the discussion of the implementation here will be difficult to follow, but a brief explanation of the background will be given at each step.
+%\subsection{A brief mathematical background}
+%\label{sec:correlate_math}
+%For several types of experiments, some form of a signal correlation is necessary. These follow the form:
+%\begin{equation}
+%\label{eq:correlation}
+%\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
+%	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
+%	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+%\end{equation}
+%where $I_{j}(t)$ are the intensities of some number of signals and the angled brackets indicate an average over time. For some purposes, the autocorrelation of a signal is of interest, where all $I_{j}(t)$ are identical, but in other cases some mixture of signals is of interest, and not necessarily in numerical order. For example, fluoroescence correlation spectroscopy requires the calculation of a second-order autocorrelation of fluorescence intensity, or:
+%\begin{equation}
+%\label{eq:g2}
+%\gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
+%                 {\angles{(I(t)}\angles{(I(t+\tau)}}
+%             = \frac{\angles{I(t)I(t+\tau)}}
+%                 {\angles{(I(t)}^{2}}
+%\end{equation}
+%where $I(t)$ includes signal across all detection channels. In most cases, calculation of \gn{2} is sufficient, but in this definition we have implicitly limited our discussion to T2-like signals, with one independent variable per signal. In the case of T3-mode signals, we really have two independent variables: pulse number and arrival time. In principle, we could write something like
+%\begin{equation}
+%\gn{n}(\rho_{1}, \tau_{1}, \ldots \rho_{n-1}, \tau_{n-1}) = \frac
+%	{\angles{I_{0}(p, t)\prod_{j=1}^{n-1}{I_{j}(p+\rho_{j},t)I_{j}(p,t+\tau_{j})}}}
+%	{\angles{I_{0}(p, t)}^{2}\prod_{j=1}^{n-1}{\angles{I_{j}(p+\rho_{j},t)}
+%	                                       \angles{I_{j}(p,t+\tau_{j})}}}
+%\end{equation}
+%where the average is now over all pulse and real time. However, because both pulse and real time are integer spaces, we can just map the times onto two homogeneous dimensions, and perform the correlation \gn{2n} instead. This gives a \gn{n} for every choice of pulses, useful for comparisons of long- and short-time correlations, as in multi-excition spectroscopy.
 
 \subsection{Purpose}
-This program calculates the full correlation of a signal, including all autocorrelations and cross-correlations of individual channels, for arbitrary numbers of channels and order. The raw correlation counts are returned as the output, \textit{not the histogrammed correlation}. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
+This program calculates the full correlation of a signal, including all autocorrelations and cross-correlations of individual channels, for arbitrary numbers of channels and order. The raw correlation events are returned as the output, \textit{not the histogrammed correlation}. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
 
 The speed of the calculation scales favorably with the order of correlation, although of course higher orders of correlation require greater numbers of events to build meaningful results. See section~\ref{sec:correlation_implementation} for details of the algorithm.
 
@@ -1118,7 +1133,149 @@ the same, with channels ordered:
 \end{verbatim}
 
 \subsection{Implementation details}
-%\label{sec:correlation_implementation}
+\label{sec:correlation_implementation}
+The math and notation from section~\ref{sec:math_background} will feature heavily in this section, so you should become familiar with the results of that section before proceeding. 
+
+The problem \correlate{} must address is that of generating efficiently the events which occupy one of the sets in the sum in equation~\ref{eq:gn_set}. That is, we must find all events of the form
+\begin{equation}
+\braces{(\photon_{0},\ldots\photon_{n-1})
+        \left|
+        \begin{aligned}
+        \photon_{0}\in\photons_{c_{0}};\\
+        \ldots; \\
+        \Time(\photon_{1})-\Time(\photon_{0})=\tau_{0};\\
+        \ldots;
+        \end{aligned}
+        \right.}
+\end{equation}
+In long form, we must find all tuples of photons which satisfy specific rules for their relative time delays. To do this, we will start with the information we can know or enforce for the incoming stream of photons \photons:
+\begin{enumerate}
+\item The set \photons{} of all photons is time-ordered ($\Time(\photon_{j})\le\Time(\photon_{k})$ for $j<k$).
+\item The correlation will only be meaningful for a time window $\timewindow\subset\wholes$ much smaller than the integration time window ($[0, \integrationtime)$).
+\end{enumerate}
+This latter rule can be expressed as a modification of the conditions in the set:
+\begin{align}
+\photons_{\timewindow}\equiv\braces{\photon\left|\photon\in\photons;~\Time(\photon)\in\timewindow\right.}\\
+\braces{(\photon_{0},\ldots\photon_{n-1})
+        \left|
+        \begin{aligned}
+        \photon_{0}\in\photons_{c_{0}}\cap\photons_{\timewindow};\\
+        \ldots; \\
+        \Time(\photon_{1})-\Time(\photon_{0})=\tau_{0};\\
+        \ldots;
+        \end{aligned}
+        \right.}
+\end{align}
+The former rule simplifies the algorithm we will devise to perform this calculation.
+
+\subsubsection{The photons in a time window can be found efficiently}
+Without loss of generality, we define a window window of time $\timewindow$ such that, for some bounds $a,b\in\wholes$, $a<b$:
+\begin{equation}
+\timewindow = [a,b)
+\end{equation}
+If we allow $a\rightarrow0$ and $b\rightarrow\integrationtime$, we recover the full set of times for the experiment, but for practical matters we will focus on this window \timewindow.
+
+Given that \photons{} is time-ordered, we can always draw from it a photon \photon{} with minimal time, so from here we will treat \photons{} as a queue, a structure which holds an arbitrary number of elements in a well-defined order. This queue is time-ordered, although there is some ambiguity in how to order photons arriving on different channels at the same time. Ultimately, the ordering of such photons is not important, but we can define a second order parameter for the channel if needed.
+
+In principle we could enumerate all time windows \timewindow{} with some specified \abs{\timewindow} and find events in that window, but there are far more windows than photons (otherwise, we could have treated the signal as a vector, as in section~\ref{sec:sampling_intensity}). Therefore, it is much more efficient to choose each window as starting at some photon, and draw photons from the queue until the window limit is surpassed. Once we have drawn this sub-queue $\photons_{\timewindow}$ we can turn our attention to generation of photon tuples from that set.
+
+Up to the tuple generation, our algorithm is:
+\begin{enumerate}
+\item[0.] Set $\photons_{\timewindow}=\emptyset$, correlation order $n$.
+\item Draw the next element $\photon$ from $\photons$:
+  \begin{enumerate}
+  \item If $\photon$ exists, add it to the last position in $\photons_{\timewindow}$.
+  \item If no $\photon$ exists (the queue is empty):
+    \begin{enumerate}
+    \item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
+    \item Halt.
+    \end{enumerate}
+  \end{enumerate}
+\item Call $\photon_{-1}$ the last photon in $\photons_{\timewindow}$ and $\photon_{0}$ the first.
+\item If $\Time(\photon_{-1})-\Time(\photon_{0})\ge\abs{\timewindow}$, go to 1.
+\item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
+\item Remove the $\photon_{0}$ from $\photons_{\timewindow}$, then go to 1.
+\end{enumerate}
+From this algorithm it is evident that the cost of building the windows scales most directly with the number of photons (we never have to perform more than $\abs{\photons}$ iterations of this algorithm), giving O(\abs{\photons}) for this step. 
+
+To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant to this section, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
+
+\subsubsection{Generating correlation events (photon tuples) from $\photons_{\timewindow}$}
+Given the algorithm to find all subqueues $\photons_{\timewindow}$, we turn our attention to finding the tuples $(\photon_{0},\ldots\photon_{n-1})$ in a given $\photons_{\timewindow}$. Formally, we want to generate the elements of the set
+\begin{equation}
+\braces{(\photon_{0},\ldots\photon_{n-1})\left|\photon_{0},\ldots\in\photons_{\timewindow}\right.}
+\end{equation}
+This is actually a quite familiar problem, if we ignore the photon structure and instead focus on producing the appropriate indices from the queue. Call $N\equiv\abs{\photons_{\timewindow}}$, and note that we are looking to produce all unique permutations of $n$ elements of $\integers_{N}$. These can be ordered to produce:
+\begin{align*}
+&(0, 0,\ldots 0, 0) \\
+&(0, 0, \ldots 0, 1) \\
+&\ldots \\ 
+&(0, 0, \ldots 0, N-1) \\
+&(0, 0, \ldots 1, 0) \\
+&\ldots 
+\end{align*}
+These can be enumerated as the numbers $0,1,\ldots N^{n}-1$ in base $N$, which can be seen by treating each element of the tuple as a coefficient in the base expansion of a number. For example, any number $N\in\wholes$ can be expressed as a sum over powers of 2:
+\begin{equation}
+N = \sum_{j=0}^{n}{c_{j}2^{j}}
+\end{equation}
+for some $n\in\wholes$. While this is true, it is also subject to some redundancy, because we have shown that the positive-time correlation is sufficient for reconstruction all negative times (see section~\ref{sec:correlation_function}), so we actually only need to compute this factor for all time-ordered tuples. Additionally, any tuple containing the same photon twice is not important, because there will never be any structure to a photon correlated with itself. Thus we need only include the tuples for which the indices are ordered and unique, the upper hypertriangle in index space.
+
+Additionally, because the window will move to eliminate the first photon, any correlation not involving this photon should not be handled now. Thus the index tuples of interest are:
+\begin{align*}
+&(0,1,\ldots,n-2, n-1)\\
+&(0,1,\ldots,n-2, n)\\
+&\ldots\\
+&(0,1,\ldots,n-2,N-1)\\
+&(0,1,\ldots,n-1,n)\\
+&\ldots\\
+&(0,N-n,\ldots N-1)
+\end{align*}
+
+To generate these combinations of indices, apply the following algorithm:
+\begin{enumerate}
+\item[0.] Define $x\leftarrow(0,1,\ldots n-1)$, and index the $j$th element of $x$ as $x_{j}$. 
+\item Yield $x$.
+\item Increment as many digits of $x$ as necessary:
+  \begin{enumerate}
+  \item Set $j\leftarrow n-1$.  
+  \item If $j\le 1$, halt this loop.
+  \item Increment $x_{j}$. 
+  \item If $x_{j}\ge N$, set $x_{j}\leftarrow 0$, decrement $j$, and go to 1(b) (overflow of this digit).
+  \item Otherwise, set $j\leftarrow 0$, decrement $j$, and go to 1(b) (no overflow, stop incrementing).
+  \end{enumerate}
+\item Refill the overflowed digits of $x$:
+ \begin{enumerate}
+ \item If $x_{1}=0$, we have incremented up to the first index. Set $x_{1}\leftarrow x_{1}'+1$.
+ \item Set $j\leftarrow 1$.
+ \item If $j\ge n$, halt this loop.
+ \item If $x_{j}=0$, set $x_{j}\leftarrow x_{j-1}+1$ (increment the digit based on the previous non-overflowed digit).
+ \item Increment $j$, and go to 3(c).
+ \end{enumerate}
+\item If $x_{n-1}\ge N$, halt. This is not a valid tuple of indices, which means we have exhausted all of the valid tuples.
+\item Otherwise, go to 1.
+\end{enumerate}
+This algorithm is not perfect, as we must loop over all elements of the tuple in the refilling step. This is ultimately a minor cost and could be accounted for in the implementation, but for \correlate{} the algorithm was implemented as described.
+
+In long form, we start at the right end of the tuple, incrementing values while moving left until we find a value which does not overflow past $N$. Once we find this value, we stop incrementing, then form the next possible tuple from the leading non-zero index, or the previous value of the leading digit if we have overflowed that as well. If the tuple can be refilled without overflowing, it is valid and we yield it. Otherwise, we have reached the end and are finished.
+
+From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($N^{n-1}$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
+
+To see the implementation of this algorithm in \correlate, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
+
+\subsubsection{Production of the correlation event, given a photon tuple}
+There are two distinct modes enabled in \correlate{} for producing the correlation events: with and without ordering of channels. We will deal with the time-ordered, channel-unordered case first. 
+
+Given a tuple of photons $(\photon_{0},\ldots\photon_{n-1})$ known to satisfy the conditions for including in calculating \gn{n}, we must produce the time differences $(\tau_{1}, \ldots\tau_{n-1})$. This can be done with the following algorithm:
+\begin{enumerate}
+\item[0.] Set $j\leftarrow 1$.
+\item If $j\ge n$, halt and yield $(\tau_{1},\ldots\tau_{n-1})$.
+\item Set $\tau_{j}\leftarrow \Time(\photon_{j}) - \Time(\photon_{0})$.
+\item Increment $j$ and go to 1.
+\end{enumerate}
+This process scales as O($n$), although the constant factor is quite small relative to the other steps in the overall algorithm. Correlation for T3 mode involves a second term for the pulse difference, but it otherwise identical.
+
+To perform this same step for channel-ordered (time-unordered) photons, we can pre-populate a list of all possible channel orders and combinations and the order of the indices to choose, instead of incrementing from start to finish. The details of this will be described in section~\ref{sec:histogram}, but the result is that the cost of this operation is only upfront, and there is essentially no additional cost once the list of combinations exists.
+
 %\subsubsection{Definition of the correlation as the order of a set}
 %As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
 %
@@ -1179,11 +1336,57 @@ the same, with channels ordered:
 \label{sec:histogram}
 
 \subsection{Purpose}
+This program performs a multi-dimensional histogram in time and pulse dimensions for T2 and T3 correlation events produced by \correlate. The output is a set of histogram bins and the number of events which fell into each. 
+
+Additionally, \histogram{} can be used to build a histogram of T3 events as would be done in interactive mode. To do this, set the mode to T3, and order to 1.
+
 \subsection{Command-line syntax}
 \begin{verbatim}
+Usage: histogram [-v] [-i file_in] [-o file_out] [-p print_every]
+                 -d <left_time_limit, time_increment, 
+                     right_time_limit> 
+                 -e <left_pulse_limit, pulse_increment, 
+                     right_pulse_limit> 
+                 -c channels -g order -m mode
+
+         -v, --verbose: Print debug-level information.
+         -i, --file-in: Input file. By default, this is stdin
+        -o, --file-out: Output file. By default, this is stdout.
+            -m, --mode: Stream type. This is either t2 or t3, 
+                        and the style of the output will be 
+                        different for each.
+     -d <time>, --time: The upper and lower bounds for the time
+                        axis in the histogram, along with the 
+                        number of bins to create. The required 
+                        format is lower,bins,upper (no spaces).
+   -e <pulse>, --pulse: Same as time, but for pulses. This is 
+                        only relevant in t3 mode.
+        -c, --channels: The number of channels in the incoming
+                        stream. By default, this is 2 (Picoharp
+                        or TimeHarp).
+           -g, --order: The order of the correlation performed.
+                        By default, this is 2 (the standard 
+                        cross-correlation.
+      -D, --time-scale: Sets whether the time scale is "linear", 
+                        "log". or "log-zero" (includes zero-time
+                        peak in the first bin. The default is a
+                        linear scale.
+     -E, --pulse-scale: Sets whether the pulse scale is "linear", 
+                        "log", or "log-zero". The default is a 
+                        linear scale.
+            -h, --help: Print this message.
+
+            This program assumes that the channels are presented
+            in order.
 \end{verbatim}
 
 \subsubsection{Input}
+The expected input is the ascii output of \correlate, except for an order 1 of T3 data. These parameters specify a histogramming of the individual timing events, to recover the histogram which would have been obtained in interactive mode.
+
+As for the rest of the parameters, most of these follow the same pattern as \correlate and therefore will not be discussed here. The new flags involve definitions for the time and pulse dimensions: \texttt{--time}, \texttt{--time-scale}, \texttt{--pulse},  and \texttt{--pulse-scale}. The time and pulse dimensions behave identically, so we will only discuss the properties of one here.
+
+For \texttt{--time}, the parameters specify the lower and upper bounds of the time axis, as well as the number of bins to create along that axis.
+
 \subsubsection{Output}
 
 \subsection{Examples of usage}

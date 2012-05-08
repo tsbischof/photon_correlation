@@ -25,7 +25,7 @@ void usage(void) {
 "                        style of the output will be different for each.\n"
 "     -d <time>, --time: The upper and lower bounds for the time axis in the\n"
 "                        histogram, along with the number of bins to create.\n"
-"                        the required format is lower,bins,upper (no spaces).\n"
+"                        The required format is lower,bins,upper (no spaces).\n"
 "   -e <pulse>, --pulse: Same as time, but for pulses. This is only relevant\n"
 "                        in t3 mode.\n"
 "        -c, --channels: The number of channels in the incoming stream. By\n"
