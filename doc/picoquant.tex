@@ -21,6 +21,8 @@
 \renewcommand{\vec}{\mathbf}
 \newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
 \newcommand{\eV}{\textnormal{eV}}
+\newcommand{\channel}{\ensuremath{c}}
+\newcommand{\channels}{\ensuremath{C}}
 \newcommand{\Channel}{\ensuremath{\mathcal{C}}}
 \newcommand{\Time}{\ensuremath{\mathcal{T}}}
 \newcommand{\photon}{\ensuremath{\gamma}}
@@ -121,7 +123,7 @@ For a well-designed system these errors should not be very large, but if an appl
 \subsection{Correlation techniques}
 A number of techniques involving the correlation of one or more signals exist, and their use in fluorescence microscopy requires that we be able to calculate correlation functions of the following form:
 \begin{equation}
-\gn{n}(\tau_{1}, \ldots \tau_{n-1}) \approx \frac
+\gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
 	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
 	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
 \end{equation}
@@ -157,14 +159,14 @@ This section will detail the mathematics of calculating correlation functions \g
 
 If you are not familiar with notation such as
 \begin{align}
-Z_{n} &= \abs{\braces{a|a\in\integers;~ a\in\integers/n}} \\
+c &= \braces{(a,b)|a,b\in\integers;~a/b\in\integers} \\
 F&:\wholes\times\integers\rightarrow\reals \\
 &\sum_{z\in\integers_{n}}{z^{2}}
 \end{align}
 you should read appendix~\ref{sec:notation} before reading the remainder of this section.
 
 \subsection{Definition of the correlation function}
-A signal $I(t)$ is a non-negative, real-valued function of whole time:
+A signal $I(t)$ is a non-negative, real-valued function of whole time\footnote{In principle, we could all the function to return negative numbers without mathematical problems, but this affects our interpretation of the result and is more natural for the problems laid out in this paper.}:
 \begin{equation}
 I:\wholes\rightarrow\reals^{*}
 \end{equation}
@@ -253,6 +255,7 @@ This is a somewhat complicated expression, but we see that there are two Gaussia
 Calculation of higher-order correlations is also possible, but the results quickly become verbose and are not worthwhile presenting here.
 
 \subsection{The true meaning of $I(t)$}
+\label{sec:sampling_intensity}
 For a real measurement, the signal $I(t)$ is real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I(t)$ really is
 \begin{equation}
 I(t) = \left.\angles{\iota(t')}\right|_{t'\in[t,t+\Delta t)} = \frac{1}{\Delta t}\int_{t}^{t+\Delta t}{\iota(t'),dt'}
@@ -283,11 +286,11 @@ To begin with, the definition of the signal on a single channel can be expressed
 \end{equation}
 In long form, this signal is the set of all detected photons, restricted to those whose channels matches the channel specified (see appendix~\ref{sec:notation} for more details). Here, there is no longer an explicit time dependence, but we can define that with an additional parameter:
 \begin{equation}
-\photons_{c}(t) = \abs{\braces{\photon\left|\begin{split}
+\photons_{c}(t) = \abs{\braces{\photon\left|\begin{aligned}
                                           \photon\in\photons; \\
                                            \Channel(\photon)=c;\\
                                            \Time(\photon)=t
-                                     \end{split}\right.}}
+                                     \end{aligned}\right.}}
 \end{equation}
 where here the \abs{\cdot} indicate the number of elements in the set. To recover the complete signal \photons:
 \begin{equation}
@@ -327,56 +330,89 @@ Next, consider the set of photons satisfying some specified time delay $\tau$:
 \begin{equation}
 \angles{I(t)I(t+\tau)}\propto
          \abs{\braces{(\photon_{0},\photon_{1})
-               \left|\begin{split}
+               \left|\begin{aligned}
                      \photon_{0},\photon_{1}\in\photons;\\
                      \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                     \end{split}\right.}}
+                     \end{aligned}\right.}}
 \end{equation}
-This is accurate up to a normalization constant, which is related to the units of \wholes. In a real-world experiment, the time resolution $\resolution$ will carry some units (e.g. picoseconds), such that the true time is some multiple $n\epsilon$ for $n\in\wholes$. Here we define $\resolution=1$, but later this value will change and it is important to keep track of it in the definition. As such, given the time resolution $\resolution$ indicating that the function \Time(\photon) really reports the number of photons in a time span $[t, t+\resolution)$, the normalized average correlation becomes
+This is accurate up to a normalization constant, which is related to the resolution of \Time. As discussed in section~\ref{sec:sampling_intensity}, the function does not have infinite resolution but instead approximates some true function by sampling for an interval we will call \resolution. As such, the set defined is actually for a square in time space with length \resolution{} ($t$ and $\tau$ are really $[t,t+\resolution)$ and $[\tau,\tau+\resolution)$), so we must correct for this value to be completely general:
 \begin{equation}
 \angles{I(t)I(t+\tau)}=    
          \frac{1}{\resolution^{2}}
          \abs{\braces{(\photon_{0},\photon_{1})
-               \left|\begin{split}
+               \left|\begin{aligned}
                      \photon_{0},\photon_{1}\in\photons;\\
                      \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                     \end{split}\right.}}
+                     \end{aligned}\right.}}
 \end{equation}
+For the most precise form of this calculation, $\resolution=1$, but for practical reasons it will become necessary to undersample the correlation function by increasing the effective value of \resolution. This resolution should also be allowed to vary with $\tau$, so we will denote its full behavior $\resolution_{c}(\tau)$, where the $c$ subscript indicates its associated channel. Note that the reference channel $\channel_{0}$ does not have a varying resolution, because it has not associated time delay (see equation~\ref{eq:gn}). See section~\ref{sec:histogram} for more details.
+
 Putting this together, the full autocorrelation is
 \begin{equation}
-\gn{2}(\tau) = \frac{\integrationtime^{2}}{\abs{\photons}^{2}\resolution^{2}}
+\gn{2}(\tau) = \frac{\integrationtime^{2}}{\abs{\photons}^{2}\resolution\resolution(\tau)}
                 \abs{\braces{(\photon_{0}, \photon_{1}),
-                              \left|\begin{split}
+                              \left|\begin{aligned}
                               \photon_{0},\photon_{1}\in\photons \\
                               \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                              \end{split}\right.}}
+                              \end{aligned}\right.}}
 \end{equation}
-Extension of this result to higher dimensions and multiple channels proceeds much as before, resulting in the following two-channel cross-correlation:
+Extension of this result to higher dimensions and multiple channels proceeds much as before, giving the following two-channel cross-correlation:
 \begin{equation}
 \gn{2}(\tau) = \sum\limits_{(c_{0},c_{1})\in C^{2}}
                     {
                     \frac{\integrationtime^{2}}
                          {\abs{\photons_{c_{0}}}\abs{\photons_{c_{1}}}
-                                \epsilon_{c_{0}}\epsilon_{c_{1}}}
+                                \resolution_{c_{0}}\resolution_{c_{1}}(\tau)}
                     \abs{\braces{(\photon_{0},\photon_{1})
-                          \left|\begin{split}
+                          \left|\begin{aligned}
                           \photon_{0}\in\photons_{c_{0}};\\
                           \photon_{1}\in\photons_{c_{1}};\\
                           \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                          \end{split}\right.}}
+                          \end{aligned}\right.}}
                     }
 \end{equation}
 and this result for higher dimensions:
 \begin{equation}
 \label{eq:gn_set}
 \begin{split}
-\gn{n}&(\tau_{1},\ldots\tau_{n-1}) \\
-    & = \sum\limits_{\vec{c}\in C^{n}}
+&\gn{n}(\tau_{1},\ldots\tau_{n-1})= \\
+& \sum\limits_{\vec{c}\in C^{n}}
                     {
                     \left[
                     \left(
-                    \prod_{j=0}^{n-1}{\frac{\integrationtime}
-                                           {\abs{\photons_{c_{j}}}\resolution_{c_{j}}}}
+                    \frac{\integrationtime}{\abs{\photons_{c_{0}}}\resolution_{c_{0}}}
+                    \prod_{j=1}^{n-1}{\frac{\integrationtime}
+                                           {\abs{\photons_{c_{j}}}\resolution_{c_{j}}(\tau_{j})}}
+                    \right)
+                    \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
+                          \left|\begin{aligned}
+                          \photon_{0}\in\photons_{c_{0}};\\
+                          \photon_{1}\in\photons_{c_{1}};\\
+                          \ldots;\\
+                          \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
+                          \ldots
+                          \end{aligned}\right.}}
+                    \right]
+                    }
+\end{split}
+\end{equation}
+
+\subsubsection{The \gn{n} for T3 data can calculated like \gn{2n} for T2 data}
+Given the notation in equation~\ref{eq:gn_set}, we see that the two timing dimensions of T3 data can be treated as separate conditions in the set, with a second unit of resolution associated with \Pulse. Calling this unit of resolution $\kappa$ and the relative pulse difference $\rho$, the full expression is:
+\begin{equation}
+\label{eq:gn_set_t3}
+\begin{split}
+&\gn{n}(\tau_{1},\rho_{1},\ldots\tau_{n-1},\rho_{n-1}) = \\
+    &  \sum\limits_{\vec{c}\in \channels^{n}}
+                    {
+                    \left[
+                    \frac{\integrationtime^{2}}
+                         {\abs{\photons_{\channel_{0}}}\resolution_{\channel_{0}}\kappa_{\channel_{0}}}
+                    \left(
+                    \prod_{j=1}^{n-1}{\frac{\integrationtime^{2}}
+                                           {\abs{\photons_{c_{j}}}^{2}
+                                            \resolution_{c_{j}}(\tau_{j})
+                                            \kappa_{c_{j}}(\tau_{j})}}
                     \right)
                     \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
                           \left|\begin{split}
@@ -384,12 +420,31 @@ and this result for higher dimensions:
                           \photon_{1}\in\photons_{c_{1}};\\
                           \ldots;\\
                           \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
+                          \Pulse(\photon_{1})-\Pulse(\photon_{0})=\rho_{1};\\
                           \ldots
                           \end{split}\right.}}
                     \right]
                     }
 \end{split}
 \end{equation}
+This form is nearly identical to a \gn{2n} for T2 data, except that we still sample the channel combinations from $\channels^{n}$, reflecting the fact that $\tau_{j}$ and $\rho_{j}$ are associated with the same channel $\channel_{j}$. We will continue to discuss T2-type correlation functions, but do not that the machinery developed for such uses can easily be repurposed for T3 data.
+
+\subsection{Subdividing the problem of calculating \gn{n}}
+Examining equation~\ref{eq:gn_set}, it is evident that there are a few distinct factors associated with each term of the sum:
+\begin{itemize}
+\item $\lambda$: the integration time
+\item $\abs{\photons_{c}}$: the number of photons with a given channel \channel.
+\item $\resolution_{c}(\tau)$: the resolution of a channel at a given time delay
+\item $(\photon_{0},\ldots)$: $n$-tuples of photons with particular properties
+\end{itemize}
+Because these factors can be calculated or defined independently, we will turn our focus to the efficient determination of the value of each of these factors. Roughly, the terms can be calculated using the following programs:
+\begin{itemize}
+\item $\lambda$: \intensity
+\item $\abs{\photons_{c}}$: \intensity
+\item $\resolution_{c}(\tau)$: \picoquant, \histogram
+\item $(\photon_{0},\ldots)$: \correlate
+\end{itemize}
+The remainder of this paper is devoted to specifying how each term may be calculated efficiently and accurately.
 
 %In principle it is possible to bin these photon arrivals to count the number of arrivals in some time interval and recover the vector-like signal discussed above, but such steps introduce a range of subtle artifacts related to the precise origin of time and definition of bin resolution. These problems are largely avoidable if we instead develop a definition of \gn{n} which involves counting these events directly.
 
@@ -1063,64 +1118,65 @@ the same, with channels ordered:
 \end{verbatim}
 
 \subsection{Implementation details}
-\label{sec:correlation_implementation}
-\subsubsection{Definition of the correlation as the order of a set}
-As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
-
-In equation~\ref{eq:g2}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
-\begin{equation}
-\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}
-\end{equation}
-To simplify matters, we will start with the autocorrelation of a signal channel:
-\begin{equation}
-\angles{I(t)I(t+\tau)}
-\end{equation}
-In this situation, the signal can be thought of as being composed of some sum of delta functions with peak centers at the times photons arrived. Thus the contribution of any given pair of photons to the correlation at time $\tau$ is nonzero only if the difference of their arrival times is $\tau$. Thus, for a given value of $\tau$ and photon arrival times \braces{t}:
-\begin{equation}
-\gn{2}(\tau) \propto \left| \braces{(t_{j}, t_{k}) | t_{j},t_{k}\in\braces{t}; t_{j}-t_{k}=\tau} \right|
-\end{equation}
-This result can be extended to higher orders by enforcing the restriction that a tuple of time differences must be satisfied:
-\begin{equation}
-\begin{split}
-\gn{n}(\tau_{1}, &\ldots \tau_{n-1}) \propto \\
-   &\left| \braces{
-       (t_{0}, \ldots t_{n-1})
-       \left|\begin{split}
-       t_{0},\ldots t_{n-1}\in\braces{t}; \\
-       (t_{1}, \ldots t_{n-1}) - (t_{0}, \ldots t_{0}) = (\tau_{1}, \ldots \tau_{n-1})
-       \end{split}\right.
-%       \begin{gather*}
-%        \\
-%       
-%       \end{gather*}
-   } \right|
-\end{split}
-\end{equation}
-
-\subsubsection{Mapping T3 data onto T2-like data}
-Now that we have a general expression for calculation of \gn{n}, it is worthwhile to make an aside describing how to map T3 data onto T2-like data for correlation. Consider the basic form of a tuple of $n$ T3 records:
-\begin{equation}
-\left((c_{0}, p_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}, t_{n-1})\right)
-\end{equation}
-which can be mapped isomorphically onto:
-\begin{equation}
-\left((c_{0}, p_{0}), (c_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}), (c_{n-1}, t_{n-1})\right)
-\end{equation}
-which looks like a tuple for T2 records:
-\begin{equation}
-\left((c_{0}, t_{0}), \ldots (c_{n-1}, t_{n-1})\right)
-\end{equation}
-Ultimately, a T3 tuple of length $n$ can be mapped onto a corresponding tuple of length $2n$, such that any correlation \gn{n} of T3 data can be treated exactly as a corresponding correlation \gn{2n} of T2 data.
-
-\subsubsection{Correlation of the time-ordered stream}
-As with \intensity, \correlate{} expects a time-ordered stream (see section~\ref{sec:intensity_implementation}). 
-
-% For a correlation of order $n$, every unique combination of $n$ elements of the stream can contribute to \gn{n}, so the full correlation of stream of lengh $N$  costs O(N$^{n}$) to compute. This is reduced for a fixed window width to approximately O(Nw$^{n-1}$) for a window of width w, for reasons that will become clear shortly.
+%\label{sec:correlation_implementation}
+%\subsubsection{Definition of the correlation as the order of a set}
+%As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
+%
+%In equation~\ref{eq:g2}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
+%\begin{equation}
+%\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}
+%\end{equation}
+%To simplify matters, we will start with the autocorrelation of a signal channel:
+%\begin{equation}
+%\angles{I(t)I(t+\tau)}
+%\end{equation}
+%In this situation, the signal can be thought of as being composed of some sum of delta functions with peak centers at the times photons arrived. Thus the contribution of any given pair of photons to the correlation at time $\tau$ is nonzero only if the difference of their arrival times is $\tau$. Thus, for a given value of $\tau$ and photon arrival times \braces{t}:
+%\begin{equation}
+%\gn{2}(\tau) \propto \left| \braces{(t_{j}, t_{k}) | t_{j},t_{k}\in\braces{t}; t_{j}-t_{k}=\tau} \right|
+%\end{equation}
+%This result can be extended to higher orders by enforcing the restriction that a tuple of time differences must be satisfied:
+%\begin{equation}
+%\begin{split}
+%\gn{n}(\tau_{1}, &\ldots \tau_{n-1}) \propto \\
+%   &\left| \braces{
+%       (t_{0}, \ldots t_{n-1})
+%       \left|\begin{split}
+%       t_{0},\ldots t_{n-1}\in\braces{t}; \\
+%       (t_{1}, \ldots t_{n-1}) - (t_{0}, \ldots t_{0}) = (\tau_{1}, \ldots \tau_{n-1})
+%       \end{split}\right.
+%%       \begin{gather*}
+%%        \\
+%%       
+%%       \end{gather*}
+%   } \right|
+%\end{split}
+%\end{equation}
+%
+%\subsubsection{Mapping T3 data onto T2-like data}
+%Now that we have a general expression for calculation of \gn{n}, it is worthwhile to make an aside describing how to map T3 data onto T2-like data for correlation. Consider the basic form of a tuple of $n$ T3 records:
+%\begin{equation}
+%\left((c_{0}, p_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}, t_{n-1})\right)
+%\end{equation}
+%which can be mapped isomorphically onto:
+%\begin{equation}
+%\left((c_{0}, p_{0}), (c_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}), (c_{n-1}, t_{n-1})\right)
+%\end{equation}
+%which looks like a tuple for T2 records:
+%\begin{equation}
+%\left((c_{0}, t_{0}), \ldots (c_{n-1}, t_{n-1})\right)
+%\end{equation}
+%Ultimately, a T3 tuple of length $n$ can be mapped onto a corresponding tuple of length $2n$, such that any correlation \gn{n} of T3 data can be treated exactly as a corresponding correlation \gn{2n} of T2 data.
+%
+%\subsubsection{Correlation of the time-ordered stream}
+%As with \intensity, \correlate{} expects a time-ordered stream (see section~\ref{sec:intensity_implementation}). 
+%
+%% For a correlation of order $n$, every unique combination of $n$ elements of the stream can contribute to \gn{n}, so the full correlation of stream of lengh $N$  costs O(N$^{n}$) to compute. This is reduced for a fixed window width to approximately O(Nw$^{n-1}$) for a window of width w, for reasons that will become clear shortly.
 
 
 
 
 \section{Histogram}
+\label{sec:histogram}
 
 \subsection{Purpose}
 \subsection{Command-line syntax}
