@@ -5,7 +5,7 @@
 \usepackage{appendix}
 \usepackage{enumerate}
 
-\newcommand{\cps}{cps}
+\newcommand{\cps}{\textnormal{cps}}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
 \newcommand{\angles}[1]{\ensuremath{\left\langle #1 \right\rangle}}
 \newcommand{\stdin}{\texttt{stdin}}
@@ -32,8 +32,12 @@
 \newcommand{\integrationtime}{\ensuremath{\Xi}}
 \newcommand{\timewindow}{\ensuremath{\xi}}
 \newcommand{\resolution}{\ensuremath{\epsilon}}
+\newcommand{\Index}{\ensuremath{\mathcal{J}}}
+\newcommand{\Histogram}{\ensuremath{\mathcal{H}}}
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil #1\right\rceil}}
+\newcommand{\GN}{\texttt{gn}}
 
-\title{Picoquant: Tools for reading and analyzing Picoquant data files}
+\title{Correlate: Tools for performing $n$th order correlations of photon arrivals}
 \author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
 \date{\today}
 
@@ -154,7 +158,9 @@ The main processing software (\picoquant, \intensity, \correlate, \histogram) is
 
 In addition to the C code, several analysis scripts written in Python have been provided in \text{scripts/}. These include routines to read in the outputs of most of the processing software, generate correlation functions, plot lifetime data, and so on. 
 
-All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. They have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. Non-standard libraries are not used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software, although it will require some modification for different compiler configurations.
+All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. The C programs have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. Non-standard libraries are not used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software, although it will require some modification for different compiler configurations.
+
+The Python programs have been tested primarily with version 2.7 on the same systems described above, but should also work in versions 3.x.
 
 \section{The mathematics of calculating \gn{n}}
 \label{sec:math_background}
@@ -164,7 +170,8 @@ If you are not familiar with notation such as
 \begin{align}
 c &= \braces{(a,b)|a,b\in\integers;~a/b\in\integers} \\
 F&:\wholes\times\integers\rightarrow\reals \\
-&\sum_{z\in\integers_{n}}{z^{2}}
+&\sum_{z\in\integers_{n}}{z^{2}} \\
+&A\cap B
 \end{align}
 you should read appendix~\ref{sec:notation} before reading the remainder of this section.
 
@@ -746,7 +753,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 ...
 \end{verbatim}
 
-\subsection{Reading t2/t3 data}
+\subsection{Reading T2/T3 data}
 \begin{verbatim}
 > picoquant --file-in data.pt2
 0,7128264
@@ -772,7 +779,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 1,274,58624
 \end{verbatim}
 
-\subsection{Translating t3 data to t2 data}
+\subsection{Translating T3 data to T2 data}
 \begin{verbatim}
 > picoquant --file-in data.pt3 --to-t2
 1,41248184
@@ -957,24 +964,30 @@ For a disordered stream of length $N$ and $M$ time bins, it is most efficient to
 If instead the stream is time-ordered, as is the case for data from \picoquant, it is more efficient to choose a time bin and count the associated elements. In this case, an entry is drawn from the stream, and if it falls in the bin the count for that bin is incremented. If the entry does not fall in the stream, the stream has passed that bin and the count for that bin is reported. In this latter case, the element from the stream is retained until its bin is found. This process is overall of order O(N), because there is only a constant cost associated with moving between the bins, even if they are not regularly spaced.
 
 The algorithm can be expressed more concisely as:
-\begin{verbatim}
-bin = next(bins)
-intensity = 0
-time = next(data_stream)
-
-while time != None and bin != None:
-    if time in bin:
-        intensity += 1
-        time = next(data_stream)
-    else:
-        yield(bin, intensity)        
-        intensity = 0
-        bin = next(bins)
-
-yield(bin, intensity)
-\end{verbatim}
-
-As is evident from this algorithm, the process can be run continuously for a stream, yielding results without the need to process the entire stream.
+\begin{enumerate}
+\item Set $b$ to the next bin bounds, the bin intensity $I\leftarrow 0$, and draw a time $t$ from the stream.
+\item If either $t$ or $b$ does not exist, go to 5. 
+\item If $t\in b$, increment $I$, draw a new time $t$ from the stream, and go to 2.
+\item We are outside the bin now. Yield $(b,I)$, set $I\leftarrow 0$, draw a new bin $b$, and go to 2.
+\item We have reached the end of the stream. Yield $(b,I)$ and halt.
+\end{enumerate}
+%\begin{verbatim}
+%bin = next(bins)
+%intensity = 0
+%time = next(data_stream)
+%
+%while time != None and bin != None:
+%    if time in bin:
+%        intensity += 1
+%        time = next(data_stream)
+%    else:
+%        yield(bin, intensity)        
+%        intensity = 0
+%        bin = next(bins)
+%
+%yield(bin, intensity)
+%\end{verbatim}
+As is evident from this algorithm, the process can be run continuously for a stream, yielding results without the need to process the entire stream. In practice, the final step will yield the lower bound of the bin and the final time seen, to avoid undersampling issues.
 
 \section{Correlate}
 \label{sec:correlate}
@@ -1336,9 +1349,12 @@ To perform this same step for channel-ordered (time-unordered) photons, we can p
 \label{sec:histogram}
 
 \subsection{Purpose}
-This program performs a multi-dimensional histogram in time and pulse dimensions for T2 and T3 correlation events produced by \correlate. The output is a set of histogram bins and the number of events which fell into each. 
+This program performs a multi-dimensional histogram in time and pulse dimensions for T2 and T3 correlation events produced by \correlate. The output is a set of histogram bins and the number of events which fell into each. This output is \textit{not} normalized by bin width or any other factor, and represents the raw number of counts falling into each bin.
 
 Additionally, \histogram{} can be used to build a histogram of T3 events as would be done in interactive mode. To do this, set the mode to T3, and order to 1.
+
+For \gn{n>2}, all time dimensions are defined identically, and all pulse dimensions are defined identically.
+
 
 \subsection{Command-line syntax}
 \begin{verbatim}
@@ -1385,13 +1401,215 @@ The expected input is the ascii output of \correlate, except for an order 1 of T
 
 As for the rest of the parameters, most of these follow the same pattern as \correlate and therefore will not be discussed here. The new flags involve definitions for the time and pulse dimensions: \texttt{--time}, \texttt{--time-scale}, \texttt{--pulse},  and \texttt{--pulse-scale}. The time and pulse dimensions behave identically, so we will only discuss the properties of one here.
 
-For \texttt{--time}, the parameters specify the lower and upper bounds of the time axis, as well as the number of bins to create along that axis.
+For \texttt{--time}, the parameters specify the lower and upper bounds of the time axis, as well as the number of bins $n$ to create along that axis. For a linear spacing, the bin width $\Delta t$ is $(t_{\max}-t_{\min})/n$, such that the bins are defined by the ranges
+\begin{equation}
+\begin{aligned}
+&[t_{\min},t_{\min}+\Delta t),\\
+&[t_{\min}+\Delta t,t_{\min}+2\Delta t),\\
+&\ldots\\
+&[t_{\min}+(n-1)\Delta t,t_{\min}+n\Delta t)
+\end{aligned}
+\end{equation}
+This linear spacing is the default behavior, but the flag \texttt{--time-scale} can produce two other scales: log, and log-zero. The log scale creates bins with fixed width over the span of $[\log(t_{\min}),\log(t_{\max}))$, as if often desired for measurements requiring long and short time correlations. The log-zero scale has identical behavior, except that any zero-time correlations ($\tau=0$) are placed into the first bin. Note that the log scale cannot handle zero-time correlations, and neither log not log-zero can handle negative-time correlations. These values will be dropped from the histogram, with an error message indicating this has happened.
 
 \subsubsection{Output}
+After the input stream terminates, \histogram{} outputs the bin definitions and the number of counts associated with that bin. Generically, this format is:
+\begin{verbatim}
+channel 0, channel 1, bin (1,1) lower, bin (1,1) upper, ...,
+    channel 2, ... , 
+    counts \n
+\end{verbatim}
+where the channels are integers, bin edges are floats, and the counts are integers. For every bin in the histogram, one line will be output. For T2 mode, the bin definition has only one dimension (time), so the format is:
+\begin{verbatim}
+channel 0, channel 1, time 1 lower, time 1 upper, 
+           channel 2, time 2 lower, ...,
+           counts \n
+\end{verbatim}
+T3 data have an additional dimension (pulse):
+\begin{verbatim}
+channel 0, channel 1, pulse 1 lower, pulse 1 upper,
+                      time 1 lower, time 1 uppper,
+           channel 2, ...
+           counts \n
+\end{verbatim}
+See section~\ref{sec:histogram_examples} for specific examples of output in these formats.
+
 
 \subsection{Examples of usage}
-\subsection{Implementation details}
+\label{sec:histogram_examples}
+\subsubsection{Time-averaged photoluminescence lifetime from T3 data}
+In T3 mode, a correlation order \gn{1} is code for interactive-like behavior. Formally this is a correlation of the laser pulse and the system response, but this language is not often used.
+\begin{verbatim}
+> picoquant --file-in data.pt3 |  \
+  histogram --mode t3 --order 1 --channels 2 \
+            --time 0,10,500000
+0,0.00,50000.00,0
+0,50000.00,100000.00,0
+...
+1,0.00,50000.00,11267838
+1,50000.00,100000.00,14947845
+1,100000.00,150000.00,1512803
+1,150000.00,200000.00,1152498
+1,200000.00,250000.00,1037717
+1,250000.00,300000.00,973572
+1,300000.00,350000.00,932802
+1,350000.00,400000.00,899615
+1,400000.00,450000.00,12278
+1,450000.00,500000.00,0
+\end{verbatim}
+Note that \texttt{histogram} will operate on channel 0 as well, even though channel 1 is the only channel with any signal. This costs extra memory and some computational overhead at startup, but ultimately the cost is insignificant compared to the cost of processing the data stream.
 
+\subsubsection{\gn{2} from T2 data}
+This data represents an electronic sync source (channel 4) and the detection of the laser itself.
+\begin{verbatim}
+> picoquant --file-in data.ht2 | \
+  correlate --mode t2 --order 2 \
+            --channels 5 \
+            --max-time-distance 1000 | \
+  histogram --mode t2 --order 2 \
+            --channels 5 \
+            --time 0,10,1000
+0,0,0.00,100.00,0
+...
+0,4,0.00,100.00,43
+0,4,100.00,200.00,24
+0,4,200.00,300.00,38
+0,4,300.00,400.00,43
+0,4,400.00,500.00,44
+...
+4,4,900.00,1000.00,0
+\end{verbatim}
+
+\subsubsection{\gn{2} from T3 data}
+\begin{verbatim}
+> picoquant --file-in data.pt3 | \
+  correlate --mode t3 --channels 2 \
+            --order 2 \
+            --max-pulse-distance 3 \
+  histogram --mode t3 --channels 2 \
+            --order 2 --pulse 0,3,3 \
+            --time -500000,2,500000
+0,0,0.00,1.00,-500000.00,0.00,0
+...
+1,1,0.00,1.00,-500000.00,0.00,0
+1,1,0.00,1.00,0.00,500000.00,104640
+1,1,1.00,2.00,-500000.00,0.00,123289
+1,1,1.00,2.00,0.00,500000.00,124676
+1,1,2.00,3.00,-500000.00,0.00,231962
+1,1,2.00,3.00,0.00,500000.00,231694
+\end{verbatim}
+As a benchmark, on a computer with a dual-core 3\giga\hertz{} processor running 32-bit OpenSUSE 12.1, this command required 25\second{} of wall time, for \texttt{data.ht3} containing 32.7 million photon records (18.1\kilo\cps) for a total of 0.8 million correlation events.
+
+\subsubsection{\gn{3} from T2 data}
+This T2 data is the same as the laser data from before:
+\begin{verbatim}
+> picoquant --file-in data.ht2 | \
+  correlate --mode t2 --order 2 \
+            --channels 5 \
+            --max-time-distance 1000000 | \
+  histogram --mode t2 --order 2 \
+            --channels 5 \
+            --time 0,1,1000000
+0,0,0.00,1000000.00,0,0.00,1000000.00,31
+0,0,0.00,1000000.00,1,0.00,1000000.00,55
+0,0,0.00,1000000.00,2,0.00,1000000.00,57
+...
+4,0,0.00,1000000.00,2,0.00,1000000.00,2710
+4,0,0.00,1000000.00,3,0.00,1000000.00,2235
+4,0,0.00,1000000.00,4,0.00,1000000.00,0
+...
+\end{verbatim}
+Note how much larger the time window must be to catch significant numbers of higher-order events.
+
+\subsection{Implementation details}
+The problem of populating and returning histograms for all possible correlations can be broken into a few distinct steps:
+\begin{enumerate}
+\item Construct a histogram for every permutation of channels.
+\item For a given correlation event:
+  \begin{enumerate}
+  \item Identify the histogram corresponding to the permutation of channels.
+  \item Identify the bin associated with the parameters of the correlation.
+  \item Increment that bin in that histogram.
+  \end{enumerate}
+\item For every bin of every histogram, print the bin definition and associated counts
+\end{enumerate}
+As such, each of these will be discussed separately.
+
+\subsubsection{The histograms can be enumerated as a base-$N$ numbers}
+Each histogram corresponds to a single cross-correlation identify by the vector $\vec{\channel}\in\channels^{n}$, for $\channels$ the set of all channels and correlation order $n$. As such, if we enumerate the channels as $\braces{0,1,\ldots N-1}$ and assign powers of $N$ to each index of the vector, we have found a way to uniquely identify the vector as an integer. If we index $\vec{\channel}=(\channel_{0},\channel_{1}\ldots)$, we can use the following function for enumeration:
+\begin{equation}
+\Index(\vec{c}) = \sum_{j=0}^{n-1}{c_{j}N^{n-j}}
+\end{equation}
+If $c_{j}\in\integers_{2}$ and $N=2$, this is identical to the conversion of $n$ binary digits to an integer. As is convention, we define the left-most digit ($\channel_{0}$) as carrying the highest power ($N^{n-1}$) and the right-most digit ($\channel_{n-1}$) as carrying the lowest power ($N^{0}=1$).
+
+As an aside, note that this function is isomorphic (invertible), although we will never need to exploit this feature here. 
+
+Thus, for any vector $\vec{c}$ encountered in the stream we have a method for identifying its corresponding cross-correlation and therefore the histogram it corresponds to. We also know there must be $N^{n}$ histograms, and therefore we pre-allocate them in memory before performing the actual processing of the stream. This leads to some amount of computational overhead for each instance of \histogram, but ultimately this will almost always be negligible in comparison with the cost of processing the stream. 
+
+To see how this is implemented in \histogram, the functions \texttt{*combinations*} in \texttt{combinations.c} handle the base-$N$ number mathematics and the population of an array containing all $\vec{\channel}\in\channels$. These routines also determine the sorted list of indices and the order of indexing required to obtain the sort, as used for the \texttt{--channels-ordered} flag of \correlate. 
+
+\subsubsection{A histogram is function of $n$-dimensional vectors mapping mapping onto integers}
+Now that we can enumerate all histograms and identify the histogram some permutation of channels corresponds to, we can ignore the channels and focus on the timing (time or pulse) component of the correlation event. More specifically, each time dimension of the correlation is some value $t\in\integers$, and for each dimension we have specified some subset of $\integers$ to assign values to. Formally, we can assign any such $t$ to some value in $\integers_{a}$ for some $a\in\integers^{+}$. 
+
+To see how this is performed, consider the role of the time limits $t_{\min}$ and $t_{\max}$. These define a range $[t_{\min},t_{\max})\subset\integers$ that $t$ is allowed to fall into (if $t\not\in[t_{\min},t_{\max})$ we reject it). Furthermore, we define a number of bins $\braces{b}=B$ which are themselves non-overlapping ranges in $[t_{\min},t_{\max})$ spanning the full range:
+\begin{align}
+\bigcup\limits_{b\in B}{b} &= [t_{\min},t_{\max}) \\
+b_{j}\cap b_{k}&\not=\emptyset~\iff j=k
+\end{align} 
+As such, we can order and enumerate these bins by sorting their lower bound. This provides an isomorphic map from bin number to some index $j\in\integers_{\abs{B}}$, so any $t\in[t_{min},t_{max})$ can be mapped onto a value $\integers_{\abs{B}}$. 
+
+Collecting all of these dimensions, we see that any given tuple of bin assignments $(a_{1},\ldots)$ is an element of bin space:
+\begin{equation}
+(a_{1},\ldots a_{n-1})\in B_{1}\times\ldots~B_{n-1}
+\end{equation}
+For this paper, the histogram counts the number of events associated with each such bin, so it is a function
+\begin{equation}
+\Histogram:B_{1}\times\ldots~B_{n-1}\rightarrow\wholes
+\end{equation}
+In principle the target set could also be \reals{} or something else, but \wholes{} is most appropriate here. Referring to equation~\ref{eq:gn_set}, we see that this function is exactly
+\begin{equation}
+\Histogram(a_{1},\ldots a_{n-1}) = \abs{\braces{(\photon_{0}.\ldots\photon_{n-1})
+                                              \left|\begin{aligned}
+                                              \gamma_{0}\in\photons_{c_{0}};\\ 
+                                              \ldots;\\                                              
+                                              \Time(\photon_{1})-\Time(\photon_{0})\in b_{a_{0}};\\
+                                              \ldots
+                                              \end{aligned}\right.}}
+\end{equation}
+where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\epsilon_{c_{j}})$, and the channel definitions have been set previously. While we could normalize the result by the size of the bins $b_{a_{j}}$ here, this will be handled later to prevent precision issues.
+
+From this, the algorithm for incrementing a bin is:
+\begin{enumerate}
+\item Draw a correlation event $g_{\photon}$ from the stream of correlation events. 
+\item If $g_{\photon}$ does not exist, halt.
+\item Determine the index of the histogram from $(\Channel(\photon_{0}), \Channel(\photon_{1}),\ldots\Channel(\photon_{n-1}))$.
+\item Determine the bin indices $(a_{1},\ldots a_{n-1})$ from $(\tau_{1},\ldots\tau_{n-1})$ by binary searches over each dimension.
+\item If any index $a_{j}$ is undefined, the event is not associated with \Histogram{} because some value is outside the valid range. Go to 1.
+\item Increment the number of counts for the bin $\Histogram(a_{1},\ldots a_{n-1})$ and go to 1.
+\end{enumerate}
+In step 4, the binary search refers to the standard binary search algorithm. To see how this is performed, note that we have set $B$ of bins $b_{j}$ as defined above. We wish to associate some value $t$ with the bin $b_{a}$ such that $t\in b_{a}$. If no such $b_{a}\in B$ exists, we will indicate as such. Therefore, we are looking to search the tuple of indices $(0,1,\ldots \abs{B}-1)$ for the correct index as efficiently as possible, without any prior knowledge of the form of $b_{a}$. Such an algorithm is:
+\begin{enumerate}
+\item[0.] If $t\not\in[t_{\min},t_{\max})$, return $\emptyset$.
+\item Set $a_{low}\leftarrow 0$, $a_{high}\leftarrow\abs{B}$.
+\item Set $a\leftarrow\ceil{\frac{a_{high}-a_{low}}{2}}$
+\item If $t\in b_{a}$, return $a$.
+\item If $t>\max(b_{a})$, the index is too low. Set $a_{low}\leftarrow a$ and go to 2.
+\item The index is too high. Set $a_{high}\leftarrow a$ and go to 2.
+\end{enumerate}
+Because the region of search halves with each successive step, this algorithm scales as O($\log(\abs{B})$). This could be reduced to O(1) if we require that the bins are linearly spaced, but for the moderate additional cost we maintain maximum flexibility of bin definitions. Given these considerations, we see that processing a correlation event costs O($n\log(\abs{B})$), which could be reduced to O($n$) if we restrict the bins to linear spacing\footnote{This factor of $n$ is really $2n$ for T3 mode, since we have pulse and time dimensions. This factor is left out here by convention but it is important to note that it does exist.}.
+
+To see how this is implemented in \histogram, see \texttt{histogram\_gn.c} and \texttt{histogram\_t*.c}.
+
+\subsubsection{Printing the histogram}
+Having exhausted the stream of correlation events, the final task is to print all of the histogram bins in a readable format. This is done by iterating over the histograms, then iterating over the bins, printing the counts associated with each bin. How this process is performed should be evident from the preceding discussion, and for the details refer to the routine \texttt{print\_gn\_histogram} in \texttt{histogram\_gn.c}.
+
+\section{GN}
+\subsection{Purpose}
+Given the $n$th-order histogram output from \histogram, \GN{} assembles the positive-time cross-correlations and produces all unique cross-correlations with negative time, in addition to the autocorrelation. These results are normalized to the bin width by default, but this behavior be suppressed with the flag \texttt{--no-bin-normalization}.
+
+\subsection{Command-line syntax}
+\subsection{Examples of usage}
+\subsection{Implementation}
 
 \section{Applications}
 \subsection{Time-dependent photoluminescence lifetime}
@@ -1401,6 +1619,10 @@ For \texttt{--time}, the parameters specify the lower and upper bounds of the ti
 \begin{appendix}
 \section{Mathematical notation}
 \label{sec:notation}
+\subsection{Sets}
+
+\subsection{Named sets}
+\wholes, \integers
 \end{appendix}
 
 \end{document}
