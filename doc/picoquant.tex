@@ -37,6 +37,7 @@
 \newcommand{\ceil}[1]{\ensuremath{\left\lceil #1\right\rceil}}
 \newcommand{\GN}{\texttt{gn}}
 
+
 \title{Correlate: Tools for performing $n$th order correlations of photon arrivals}
 \author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
 \date{\today}
@@ -201,7 +202,7 @@ I(c,t)\equiv I_{c}(t)
 \end{equation}
 Given this, we can separate the signal $I$ into a sum of signals over all channels:
 \begin{equation}
-I(t) \equiv \sum_{c\in C}{I_{c}(t)}
+I(t) = \sum_{c\in C}{I_{c}(t)}
 \end{equation}
 Under the definition of an autocorrelation as in equation~\ref{eq:autocorrelation}, we can substitute this new value and expand the result to obtain:
 \begin{equation}
@@ -318,12 +319,12 @@ for which $\Pulse(\photon)$ returns the pulse number for which the photon arrive
 \subsection{Calculating \gn{n} by counting photons}
 As before, we will begin our discussion of correlation functions by constructing a set formulation of the autocorrelation. Fundamentally, we must consider two halves of a problem:
 \begin{equation}
-\gn{n}((\tau_{1},\ldots))=\frac{\textnormal{number of events which satisfy a given time delay}}
+\gn{n}(\tau_{1},\ldots)=\frac{\textnormal{number of events which satisfy a given time delay}}
      {\textnormal{average number of photons per unit of time}}
 \end{equation}
 The denominator is simpler to express, so we will start there. In a given experiment of finite length, there will be some absolute beginning and end of time, such that all detected photons are elements of the subset
 \begin{equation}
-C\times N_{\integrationtime}
+\channels\times \wholes_{\integrationtime}
 \end{equation}
 for a total experiment time \integrationtime. That is, there exists some time $\integrationtime\in\wholes$ such that
 \begin{equation}
@@ -331,7 +332,7 @@ for a total experiment time \integrationtime. That is, there exists some time $\
 \end{equation}
 Here, the integration time is defined such that there are \integrationtime{} time units which pass during the experiment, since time begins with 0. This sets the minimal value for \integrationtime{} to be one greater than the arrival time of the final photon in the experiment, or
 \begin{equation}
-\integrationtime\ge\max\braces{\Time(\photon)|\photon\in\photons}
+\integrationtime\ge\max(\braces{\Time(\photon)|\photon\in\photons})
 \end{equation}
 Now that we have determined the total units of time represented by \photons{} (either by a defined value or by some maximal time \Time(\photon)+1), the average number of photons arriving per unit of time is
 \begin{equation}
@@ -443,14 +444,14 @@ This form is nearly identical to a \gn{2n} for T2 data, except that we still sam
 \subsection{Subdividing the problem of calculating \gn{n}}
 Examining equation~\ref{eq:gn_set}, it is evident that there are a few distinct factors associated with each term of the sum:
 \begin{itemize}
-\item $\lambda$: the integration time
+\item $\integrationtime$: the integration time
 \item $\abs{\photons_{c}}$: the number of photons with a given channel \channel.
 \item $\resolution_{c}(\tau)$: the resolution of a channel at a given time delay
 \item $(\photon_{0},\ldots)$: $n$-tuples of photons with particular properties
 \end{itemize}
 Because these factors can be calculated or defined independently, we will turn our focus to the efficient determination of the value of each of these factors. Roughly, the terms can be calculated using the following programs:
 \begin{itemize}
-\item $\lambda$: \intensity
+\item $\integrationtime$: \intensity
 \item $\abs{\photons_{c}}$: \intensity
 \item $\resolution_{c}(\tau)$: \picoquant, \histogram
 \item $(\photon_{0},\ldots)$: \correlate, \histogram
@@ -1271,7 +1272,7 @@ This algorithm is not perfect, as we must loop over all elements of the tuple in
 
 In long form, we start at the right end of the tuple, incrementing values while moving left until we find a value which does not overflow past $N$. Once we find this value, we stop incrementing, then form the next possible tuple from the leading non-zero index, or the previous value of the leading digit if we have overflowed that as well. If the tuple can be refilled without overflowing, it is valid and we yield it. Otherwise, we have reached the end and are finished.
 
-From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($N^{n-1}$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
+From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($nN$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
 
 To see the implementation of this algorithm in \correlate, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
 
@@ -1608,21 +1609,121 @@ Having exhausted the stream of correlation events, the final task is to print al
 Given the $n$th-order histogram output from \histogram, \GN{} assembles the positive-time cross-correlations and produces all unique cross-correlations with negative time, in addition to the autocorrelation. These results are normalized to the bin width by default, but this behavior be suppressed with the flag \texttt{--no-bin-normalization}.
 
 \subsection{Command-line syntax}
+
 \subsection{Examples of usage}
+
 \subsection{Implementation}
+Most of the basic algorithms for this program have been laid out previously, so we will focus on the high-level tasks \gn{} must accomplish:
+\begin{enumerate}
+\item Read in and parse the output from \histogram.
+\item Determine what correlations are sufficient to represent the full set of correlations.
+\item For each final correlation, calculate its values by summing the appropriate constituent correlations.
+\item Normalize the counts in each bin.
+\item Return the final normalized correlations.
+\end{enumerate}
+The second through fourth steps are non-trivial, so we will outline them briefly.
+
+For the second step, the important correlations are those for which the combinations of channels are unique. For example, for \gn{2} with two channels, the set of all channel permutations is
+\begin{equation}
+\braces{(0,0),(0,1),(1,0),(1,1)}
+\end{equation}
+We have already shown that the negative-time correlation of $(j,k)$ can be recovered from the positive-time $(k,j)$, such that the full correlations here can be represented by
+\begin{equation}
+\braces{(0,0),(0,1),(1,1)}
+\end{equation}
+The choice of combination is arbitrary, and the convention of \gn{} is to choose the first combination in the sorted queue of combinations, as here. Combining the excess correlations is a matter of determining the correct parity of each time dimension and adding the counts of the appropriate bins. There is also a step required to make the autocorrelation symmetric, but this simply a matter of drawing values from a bin and its mirror and thus not too difficult to read from the implementation.
+
+Finally, normalization is required. This can be achieved by noting the resolution of the measurement,  determining the number of time steps which fall within the bounds of each bin, and dividing by the appropriate value of $\resolution_{c}(\tau)$, as in equation~\ref{eq:gn_set}. As for the integration time and number of photons on a channel, this is handled by a call to \texttt{intensity}.
+
+This explanation is terse, but ultimately the code should be reasonably straightforward to read, given an understanding of this paper thus far.
 
 \section{Applications}
+Now that we have laid the framework for the efficient calculation of \gn{n} for photon-arrival data, we can apply the result to interesting scientific problems.
+
 \subsection{Time-dependent photoluminescence lifetime}
 \subsection{Bunching and antibunching}
 \subsection{Fluorescence blinking}
 
+\appendixpage
 \begin{appendix}
 \section{Mathematical notation}
 \label{sec:notation}
-\subsection{Sets}
+In this paper, there is extensive use of mathematical notation following some union of standards from various fields of mathematics. What follows is an attempt to define as much of this jargon as possible, such that a reader with a moderate background in the field could be reminded of its meaning.
 
-\subsection{Named sets}
-\wholes, \integers
+%\newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
+%\newcommand{\angles}[1]{\ensuremath{\left\langle #1 \right\rangle}}
+%\newcommand{\integers}{\ensuremath{\mathbb{Z}}}
+%\newcommand{\wholes}{\ensuremath{\mathbb{N}}}
+%\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+%\renewcommand{\vec}{\mathbf}
+%\newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
+
+\subsection{Glossary}
+\begin{itemize}
+\item tuple
+\item set
+\end{itemize}
+
+\subsection{Variables}
+\begin{itemize}
+\item $a$: Index of a bin in a histogram.
+\item $b$: Time bin as specified by lower and upper bounds. When subscripted, this can indicate bin bounds or reference the bin by index (made clear by context).
+\item $\channel$: Detection channel, typically represented by some whole number.
+\item $\channels$: The set of all detection channels in an experiment.
+\item $\Channel$: Function of a photon which returns the detection channel the photon arrived on.
+\item $\delta$: A change in some variable.
+\item $\resolution$: Time resolution of a detection channel.
+\item $f$: Frequency.
+\item $\gn{n}$: Correlation function of $n$th order.
+\item $\photon$: Photon, a tuple consisting of a detection channel and some number of arrival time properties.
+\item $\photons$: The set of all photons in an experiment. A subscript typically indicates some subset, such as photons on a detection channel or in some specified time window.
+\item $\Index$: Function returning the index of a histogram, given the set of channels and a tuple of elements of that set.
+\item $\Histogram$: The histogram function, which accepts bin definitions and outputs the counts in those bins.
+\item $\iota$: A ``real'' physical signal being sampled in an experiment.
+\item $I$: Signal, a real-valued function of time.
+\item $n$: The order of a correlation.
+\item $N$: The number of elements in a set, the length of a stream or vector, or the number of detection channels.
+\item $p$: Pulse number.
+\item $\Pulse$: Function of a photon which returns the pulse the photon arrived after.
+\item $\rho$: Pulse delay.
+\item $t$: Time.
+\item $\Time$: Function of a photon which returns the arrival time of the photon.
+\item $\tau$:  Time delay.
+\item $\timewindow$: Time window, some subset of time in the experiment.
+\item $\integrationtime$: Integration time for the experiment.
+\item $\emptyset$: The empty set, or a lack of a value.
+\end{itemize}
+
+\subsection{Sets}
+\begin{itemize}
+\item $\cap$ ($\bigcap$): Intersection of two (some number of) sets.
+\item $\cup$ ($\bigcup$): Union of two (some number of) sets.
+\item $\in$: Inclusion, indication that an element is a member of a set.
+\item $\abs{\cdot}$: Magnitude of a scalar or vector, or the number of elements in a set.
+\item $\max,\min$: The maximum or minimum elements of a set, given some rule for sorting made clear explicitly or by context.
+\end{itemize}
+
+\subsubsection{Set builder notation}
+Frequently, this paper contains expressions such as
+\begin{equation}
+\photons_{\channel}=\braces{\photon\left|\photon\in\photons;~\Channel(\photon)=\channel\right.}
+\end{equation}
+
+\subsubsection{Ranges}
+
+\subsection{Other functions and relations}
+\begin{itemize}
+\item \angles{\cdot}: Average of the bracketed quantity over some variable or number of variables.
+\item $\times$: Cartesian product of two sets.
+\item $\sum$: Sum of some number of quantities.
+\item $\prod$: Product of some number of quantities.
+\item $\leftarrow,\rightarrow$: Assignment of some value to a variable, or association in a function.
+\item $\ceil{\cdot}$: The smallest integer at least as large as the indicated quantity.
+\item $\abs{\cdot}$: Magnitude of a scalar or vector, or the number of elements in a set.
+\item $\equiv$: Indicates two quantities are equivalent. Typically used to denote a change in notation.
+\item $\propto$: Indicates proportionality; the two sides of the relation are equal upon multiplication of one side by some scalar factor, which could be unity.
+\end{itemize}
+
 \end{appendix}
 
 \end{document}
