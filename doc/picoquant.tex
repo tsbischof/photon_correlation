@@ -38,7 +38,7 @@
 \newcommand{\GN}{\texttt{gn}}
 
 
-\title{Correlate: Tools for performing $n$th order correlations of photon arrivals}
+\title{Correlation: Tools for performing $n$th order correlations of time-tagged photon arrivals}
 \author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
 \date{\today}
 
@@ -294,7 +294,7 @@ the set of all detected photons. This is the signal relevant to photon-correlati
 
 To begin with, the definition of the signal on a single channel can be expressed as:
 \begin{equation}
-\photons_{c} = \braces{\photon\left|\photon\in\photons; \Channel(\photon)=c\right.}
+\photons_{c} = \braces{\photon\left|\photon\in\photons;~\Channel(\photon)=c\right.}
 \end{equation}
 In long form, this signal is the set of all detected photons, restricted to those whose channels matches the channel specified (see appendix~\ref{sec:notation} for more details). Here, there is no longer an explicit time dependence, but we can define that with an additional parameter:
 \begin{equation}
@@ -1567,7 +1567,7 @@ For this paper, the histogram counts the number of events associated with each s
 \begin{equation}
 \Histogram:B_{1}\times\ldots~B_{n-1}\rightarrow\wholes
 \end{equation}
-In principle the target set could also be \reals{} or something else, but \wholes{} is most appropriate here. Referring to equation~\ref{eq:gn_set}, we see that this function is exactly
+In principle the target set could also be \reals{} or something else, but \wholes{} is most appropriate here. Referring to equation~\ref{eq:gn_set}, we see that this function is
 \begin{equation}
 \Histogram(a_{1},\ldots a_{n-1}) = \abs{\braces{(\photon_{0}.\ldots\photon_{n-1})
                                               \left|\begin{aligned}
@@ -1577,7 +1577,9 @@ In principle the target set could also be \reals{} or something else, but \whole
                                               \ldots
                                               \end{aligned}\right.}}
 \end{equation}
-where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\epsilon_{c_{j}})$, and the channel definitions have been set previously. While we could normalize the result by the size of the bins $b_{a_{j}}$ here, this will be handled later to prevent precision issues.
+where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\epsilon_{c_{j}})$, and the channel definitions have been set previously. More exactly, this is a function of a set of photons which returns a function mapping bin defintions to whole numbers, but this expression here should be sufficient to convey the general understanding of what must happen.
+
+While we could normalize the result by the size of the bins $b_{a_{j}}$ here, this will be handled later to prevent precision issues. 
 
 From this, the algorithm for incrementing a bin is:
 \begin{enumerate}
@@ -1627,11 +1629,11 @@ For the second step, the important correlations are those for which the combinat
 \begin{equation}
 \braces{(0,0),(0,1),(1,0),(1,1)}
 \end{equation}
-We have already shown that the negative-time correlation of $(j,k)$ can be recovered from the positive-time $(k,j)$, such that the full correlations here can be represented by
+We have already shown that the negative-time correlation of $(j,k)$ can be recovered from the positive-time $(k,j)$, such that the full correlations here can be represented by combining members of the sets
 \begin{equation}
-\braces{(0,0),(0,1),(1,1)}
+\braces{\braces{(0,0)},\braces{(0,1),(1,0)},\braces{(1,1)}}
 \end{equation}
-The choice of combination is arbitrary, and the convention of \gn{} is to choose the first combination in the sorted queue of combinations, as here. Combining the excess correlations is a matter of determining the correct parity of each time dimension and adding the counts of the appropriate bins. There is also a step required to make the autocorrelation symmetric, but this simply a matter of drawing values from a bin and its mirror and thus not too difficult to read from the implementation.
+Combining the excess correlations is a matter of determining the correct parity of each time dimension and adding the counts of the appropriate bins. There is also a step required to make the autocorrelation symmetric, but this simply a matter of drawing values from a bin and its mirror and thus not too difficult to read from the implementation.
 
 Finally, normalization is required. This can be achieved by noting the resolution of the measurement,  determining the number of time steps which fall within the bounds of each bin, and dividing by the appropriate value of $\resolution_{c}(\tau)$, as in equation~\ref{eq:gn_set}. As for the integration time and number of photons on a channel, this is handled by a call to \texttt{intensity}.
 
@@ -1703,8 +1705,18 @@ In this paper, there is extensive use of mathematical notation following some un
 \item $\max,\min$: The maximum or minimum elements of a set, given some rule for sorting made clear explicitly or by context.
 \end{itemize}
 
+\subsubsection{Named sets}
+There are a number of important sets which arise frequently in this paper:
+\begin{itemize}
+\item
+\end{itemize}
+Additionally, there are modifiers used to indicate special subsets:
+\begin{itemize}
+\item
+\end{itemize}
+
 \subsubsection{Set builder notation}
-Frequently, this paper contains expressions such as
+Frequently, this paper contains expressions in the following form:
 \begin{equation}
 \photons_{\channel}=\braces{\photon\left|\photon\in\photons;~\Channel(\photon)=\channel\right.}
 \end{equation}
