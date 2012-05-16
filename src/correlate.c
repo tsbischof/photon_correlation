@@ -46,8 +46,10 @@ void usage(void) {
 "                          cross-correlation of two channels.\n"
 "          -c, --channels: Number of channels in the incoming stream. By\n"
 "                          default, this is 2 (Picoharp).\n"
-"  -r, --channels-ordered: Organize the output such that the channels are\n"
-"                          in order. By default, this is not performed.\n"
+"     -P, --positive-only: Output only the correlations with positive time\n"
+"                          offsets. This is most useful for logarithmic\n"
+"                          binning, where negative values could cause errors.\n"
+"                          By default, all photon permutations are output.\n"
 "              -h, --help: Print this message.\n"
 "\n"
 "       This program assumes the input stream is time-ordered.\n",
@@ -73,7 +75,7 @@ int main(int argc, char *argv[]) {
 		{"max-pulse-distance", required_argument, 0, 'e'},
 		{"order", required_argument, 0, 'g'},
 		{"channels", required_argument, 0, 'c'},
-		{"channels-ordered", no_argument, 0, 'r'},
+		{"positive-only", no_argument, 0, 'P'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
 
@@ -88,7 +90,7 @@ int main(int argc, char *argv[]) {
 	options.max_pulse_distance = 0;
 	options.order = 2;
 	options.channels = 2;
-	options.channels_ordered = 0;
+	options.positive_only = 0;
 
 	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:c:r", long_options,
 				&option_index)) != -1 ) {
@@ -126,7 +128,7 @@ int main(int argc, char *argv[]) {
 			case 'c':
 				options.channels = strtol(optarg, NULL, 10);
 				break;
-			case 'r':
+			case 'P':
 				options.channels_ordered = 1;
 				break;
 			case '?':

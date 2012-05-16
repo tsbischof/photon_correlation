@@ -214,15 +214,8 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 				}
 			}
 
-			combination_index = get_combination_index(combination);
-			debug("Combination index: %d\n", combination_index);
+			for ( permutation_index = 0; permutation_index
 
-			/* Now that we have the indices to use, print out the result.
- 			 */
-
-			if ( options->channels_ordered ) {
-				offset = offsets->offsets[
-							combinations->indices[combination_index][0]];
 			} else {
 				offset = offsets->offsets[0];
 			}
