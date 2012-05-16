@@ -59,6 +59,7 @@ class HistogramBin:
           self.counts = counts
           self.edges = tuple(map(lambda x: x[1:], self._bins))
           self.channels = tuple(map(lambda x: x[0], self._bins))
+          self.correlation = tuple(sorted([ref_channel] + list(self.channels)))
           
 if __name__ == "__main__":
      n_channels = 4
@@ -68,15 +69,9 @@ if __name__ == "__main__":
      with open("blargh_t2.g3") as data:
           histograms.from_stream(data)
 
-     print(histograms.bins[0].ref_channel, histograms.bins[0].channels)
-
-     correlations = list()
+     correlations = dict()
      for correlation in unique_correlations(n_channels, order):
-          print(correlation, (correlation[0], correlation[1:]))
-          histogram = Histogram(T2, n_channels, order)
+          correlations[correlation] = Histogram(T2, n_channels, order)
 
-          for my_bin in filter(lambda x: correlation[1:] == x.channels \
-                               and correlation[0] == x.ref_channel, \
-                               histograms.bins):
-               histogram.add(my_bin)
-
+     for my_bin in histograms.bins:
+          correlations[correlation].add(my_bin)
