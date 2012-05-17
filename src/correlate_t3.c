@@ -60,19 +60,17 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	int done = 0;
 	t3_queue_t *queue;
 	t3_t *correlation_block;
-	combinations_t *combinations;
-	combination_t *combination;
+	permutations_t *permutations;
 	offsets_t *offsets;
 
 	/* Allocate space in the queue. */
 	queue = allocate_t3_queue(options);
 	correlation_block = (t3_t *)malloc(sizeof(t3_t)*options->order);
-	offsets = allocate_offsets(options->channels, options->order);
-	combinations = make_combinations(options->channels, options->order);
-	combination = allocate_combination(options->channels, options->order);
+	offsets = allocate_offsets(options->order);
+	permutations = make_permutations(options->order, options->positive_only);
 
 	if ( queue == NULL || offsets == NULL || correlation_block == NULL ||
-			combinations == NULL || combination == NULL ) {
+			permutations == NULL ) {
 		error("Could not allocate memory for correlation.\n");
 		result = -1;
 	}
@@ -88,17 +86,15 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * determine the distance by referencing the correct 
 		 * channel combination.
 		 */	
-		correlate_t3_block(out_stream, queue, 
-					combinations, combination,
+		correlate_t3_block(out_stream, queue, permutations,
 					offsets, correlation_block, options); 
 	}
 
 	/* Cleanup */
 	free_t3_queue(&queue);
-	free_combinations(&combinations);
 	free_offsets(&offsets);
 	free(correlation_block);
-	free_combination(&combination);
+	free_permutations(&permutations);
 	
 	return(result);
 }
@@ -161,7 +157,7 @@ int valid_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 }
 
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue, 
-		combinations_t *combinations, combination_t *combination,
+		permutations_t *permutations,
 		offsets_t *offsets, t3_t *correlation_block, options_t *options) {
 	/* For the pairs (left_index, j1, j2,...jn) for j=left_index+1 
  	 * to right_index, determine:
@@ -172,12 +168,12 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
  	 * 4. Actually print the correlation.
  	 */
 	int i;
-	int combination_index;
 	int time_distance;
 	long long int pulse_distance;
 	t3_t left;
 	t3_t right;
 	int offset;
+	int permutation;
 
 	debug("---------------------------------\n");
 	debug("Initializing the offset array.\n");
@@ -195,56 +191,32 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 		
 		if ( valid_distance_t3(&left, &right, options) ) {
 			debug("Close enough for correlation.\n");
-			/* We have a tuple of offsets from left_index, which means we now 
- 			 * want to perform the correlation. First, obtain the index for 
- 			 * where we will find this combination in the array of combinations.
-	 		 */
-			for ( i = 0; i < options->order; i++ ) {
-				combination->digits[i] = get_queue_item_t3(queue, 
-												offsets->offsets[i]).channel;
-				if ( combination->digits[i] >= options->channels ) {
-					error("Channel %d exceeds the limit of the run.\n", 
-							combination->digits[i]);
-					return(-1);
-				}
-			}
-
-			combination_index = get_combination_index(combination);
-			debug("Combination index: %d\n", combination_index);
-
-			/* Now that we have the indices to use, print out the result.  */
-			if ( options->channels_ordered ) {
+			for ( permutation = 0; permutation < permutations->n_permutations;
+					permutation++  ) {
 				offset = offsets->offsets[
-							combinations->indices[combination_index][0]];
-			} else {
-				offset = offsets->offsets[0];
-			}
+						permutations->permutations[permutation][0]];
+				left =  get_queue_item_t3(queue, offset);
+				fprintf(out_stream, "%d", left.channel);
 
-			left = get_queue_item_t3(queue, offset);
-
-			fprintf(out_stream, "%d", left.channel);
-
-			for ( i = 1; i < options->order; i++ ) {
-				if ( options->channels_ordered ) {
+				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
-									combinations->indices[
-										combination_index][i]];
-				} else {
-					offset = offsets->offsets[i];
+							permutations->permutations[permutation][i]];
+					right =	get_queue_item_t3(queue, offset);
+					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
+							left.channel, left.pulse_number, left.time,
+							right.channel, right.pulse_number, right.time);
+	
+					time_distance = (right.time - left.time);
+					pulse_distance = (right.pulse_number - left.pulse_number);
+	
+					fprintf(out_stream, 
+							",%u,%lld,%d", 
+							right.channel, 
+							pulse_distance, 
+							time_distance);
 				}
-
-				right =	get_queue_item_t3(queue, offset);
-				debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
-						left.channel, left.pulse_number, left.time,
-						right.channel, right.pulse_number, right.time);
-
-				time_distance = (right.time - left.time);
-				pulse_distance = (right.pulse_number - left.pulse_number);
-
-				fprintf(out_stream, ",%u,%lld,%d", right.channel, 
-						pulse_distance, time_distance);
+				fprintf(out_stream, "\n"); 
 			}
-			fprintf(out_stream, "\n"); 
 		} else {
 			debug("Not close enough for correlation.\n");
 		}

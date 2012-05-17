@@ -56,19 +56,17 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	int done = 0;
 	t2_queue_t *queue;
 	t2_t *correlation_block;
-	combinations_t *combinations;
-	combination_t *combination;
+	permutations_t *permutations;
 	offsets_t *offsets;
 
 	/* Allocate space in the queue. */
 	queue = allocate_t2_queue(options);
 	correlation_block = (t2_t *)malloc(sizeof(t2_t)*options->order);
-	offsets = allocate_offsets(options->channels, options->order);
-	combinations = make_combinations(options->channels, options->order);
-	combination = allocate_combination(options->channels, options->order);
+	offsets = allocate_offsets(options->order);
+	permutations = make_permutations(options->order, options->positive_only);
 
 	if ( queue == NULL || offsets == NULL || correlation_block == NULL ||
-			combinations == NULL || combination == NULL ) {
+				permutations == NULL ) {
 		error("Could not allocate memory for correlation..\n");
 		result = -1;
 	}
@@ -84,8 +82,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
 		 */	
-		correlate_t2_block(out_stream, queue, 
-					combinations, combination,
+		correlate_t2_block(out_stream, queue, permutations,
 					offsets, correlation_block, options); 
 	}
 
@@ -93,14 +90,12 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* Cleanup */
 	debug("Freeing t2 queue.\n");
 	free_t2_queue(&queue);
-	debug("Freeing combinations.\n");
-	free_combinations(&combinations);
 	debug("Freeing offsets.\n");
 	free_offsets(&offsets);
 	debug("Freeing correlation block.\n");
 	free(correlation_block);
-	debug("Freeing combination.\n");
-	free_combination(&combination);
+	debug("Freeing permutations.\n");
+	free_permutations(&permutations);
 	debug("Done cleaning up.\n");
 	
 	return(result);
@@ -164,7 +159,7 @@ int valid_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 }
 
 int correlate_t2_block(FILE *out_stream, t2_queue_t *queue, 
-		combinations_t *combinations, combination_t *combination,
+		permutations_t *permutations,
 		offsets_t *offsets, t2_t *correlation_block, options_t *options) {
 	/* For the pairs (left_index, j1, j2,...jn) for j=left_index+1 
  	 * to right_index, determine:
@@ -175,11 +170,11 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
  	 * 4. Actually print the correlation.
  	 */
 	int i;
-	int combination_index;
 	long long int time_distance;
 	t2_t left;
 	t2_t right;
 	int offset;
+	int permutation;
 
 	debug("---------------------------------\n");
 	debug("Initializing the offset array.\n");
@@ -200,45 +195,37 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 					"get %lld/%lld).\n",
 					left.time, right.time, right.time-left.time,
 					options->max_time_distance);
-			/* We have a tuple of offsets from left_index, which means we now 
- 			 * want to perform the correlation. First, obtain the index for 
- 			 * where we will find this combination in the array of combinations.
-	 		 */
-			for ( i = 0; i < options->order; i++ ) {
-				combination->digits[i] = get_queue_item_t2(queue, 
-												offsets->offsets[i]).channel;
-				if ( combination->digits[i] >= options->channels ) {
-					error("Channel %d exceeds the limit of the run.\n", 
-							combination->digits[i]);
-					return(-1);
-				}
-			}
+			/* We have picked out a set of photons of size equal to the order
+			 * of the correlation, so we now must determine their time offsets
+			 * for all possible permutations of their order.
+			 */
+			for ( permutation = 0; permutation < permutations->n_permutations;
+					permutation++ ) {
+				/* The first photon is the reference one, so we should keep
+ 				 * track of it separately as we iterate over the others.
+ 				 */
+				offset = offsets->offsets[
+						permutations->permutations[permutation][0]];
+				left = get_queue_item_t2(queue, offset);
+				fprintf(out_stream, "%d", left.channel);
 
-			for ( permutation_index = 0; permutation_index
-
-			} else {
-				offset = offsets->offsets[0];
-			}
-			left = get_queue_item_t2(queue, offset);
-			fprintf(out_stream, "%d", left.channel);
-			for ( i = 1; i < options->order; i++ ) {
-				if ( options->channels_ordered ) {
+				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
-									combinations->indices[
-										combination_index][i]];
-				} else {
-					offset = offsets->offsets[i];
+							permutations->permutations[permutation][i]];
+					right = get_queue_item_t2(queue, offset);
+
+					debug("(%d, %lld) <-> (%d, %lld)\n", 
+							left.channel, left.time,
+							right.channel, right.time);
+
+					time_distance = (right.time - left.time);
+					fprintf(out_stream, 
+							",%d,%lld", 
+							right.channel, 
+							time_distance);
 				}
-				right = get_queue_item_t2(queue, offset);
-
-				debug("(%d, %lld) <-> (%d, %lld)\n", 
-						left.channel, left.time,
-						right.channel, right.time);
-
-				time_distance = (right.time - left.time);
-				fprintf(out_stream, ",%d,%lld", right.channel, time_distance);
+				fprintf(out_stream, "\n"); 
 			}
-			fprintf(out_stream, "\n"); 
 		} else {
 			debug("Not close enough for correlation.\n");
 		}

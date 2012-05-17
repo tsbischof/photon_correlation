@@ -22,7 +22,7 @@ int valid_distance_t3(t3_t *left, t3_t *right, options_t *options);
 
 int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options);
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
-		combinations_t *combinations, combination_t *combination,
+		permutations_t *permutations,
 		offsets_t *offsets, t3_t *correlation_block, options_t *options);
 
 #endif

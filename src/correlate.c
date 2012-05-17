@@ -44,8 +44,6 @@ void usage(void) {
 "             -g, --order: Order (g(n)(t1...tn-1)) of the correlation to\n"
 "                          perform. By default this is 2, the standard\n"
 "                          cross-correlation of two channels.\n"
-"          -c, --channels: Number of channels in the incoming stream. By\n"
-"                          default, this is 2 (Picoharp).\n"
 "     -P, --positive-only: Output only the correlations with positive time\n"
 "                          offsets. This is most useful for logarithmic\n"
 "                          binning, where negative values could cause errors.\n"
@@ -74,7 +72,6 @@ int main(int argc, char *argv[]) {
 		{"max-time-distance", required_argument, 0, 'd'},
 		{"max-pulse-distance", required_argument, 0, 'e'},
 		{"order", required_argument, 0, 'g'},
-		{"channels", required_argument, 0, 'c'},
 		{"positive-only", no_argument, 0, 'P'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}};
@@ -89,10 +86,9 @@ int main(int argc, char *argv[]) {
 	options.max_time_distance = 0;
 	options.max_pulse_distance = 0;
 	options.order = 2;
-	options.channels = 2;
 	options.positive_only = 0;
 
-	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:c:r", long_options,
+	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:r", long_options,
 				&option_index)) != -1 ) {
 		switch (c) { 
 			case 'h':
@@ -125,11 +121,8 @@ int main(int argc, char *argv[]) {
 			case 'g':
 				options.order = strtol(optarg, NULL, 10);
 				break;
-			case 'c':
-				options.channels = strtol(optarg, NULL, 10);
-				break;
 			case 'P':
-				options.channels_ordered = 1;
+				options.positive_only = 1;
 				break;
 			case '?':
 				usage();
@@ -164,23 +157,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if ( options.channels < 1 ) {
-		error("Must have at least one channel (%d specified).\n", 
-				options.channels);
-		result += -1;
-	}
-
 	if ( options.order > 4 ) {
 		warn("A correlation of order %d will require extensive "
 				"time to compute.\n", options.order);
 	}
-
-/*	printf("%s, %s, %s\n", options.in_filename, options.out_filename,
-			options.mode_string);
-	printf("%d, %d\n", options.mode, options.print_every);
-	printf("%lld, %lld, %lld\n", options.queue_size, options.max_time_distance,
-			options.max_pulse_distance);
-	printf("%d, %d\n", options.order, options.channels); */
 
 	/* Begin the calculation. */
 	if ( result ) {

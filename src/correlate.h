@@ -13,7 +13,6 @@ typedef struct {
 	long long int max_time_distance;
 	long long int max_pulse_distance;
 	int order;
-	int channels;
 	int positive_only;
 } options_t;
 

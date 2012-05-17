@@ -231,8 +231,6 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 		/* The combinations refer to combinations of channels, so we only
 		 * need to allocate for as many as we have channels.
 		 */
-		histograms->combinations = make_combinations(histograms->channels,
-				histograms->order);
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
 
@@ -243,7 +241,6 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
 
 		if ( histograms->edges == NULL 
-				|| histograms->combinations == NULL
 				|| histograms->combination == NULL 
 				|| histograms->current_values == NULL
 				|| histograms->histograms == NULL ) {
@@ -326,8 +323,6 @@ void free_t3_histograms(t3_histograms_t **histograms) {
 		free((*histograms)->current_values);
 		debug("Freeing combination.\n");
 		free_combination(&(*histograms)->combination);
-		debug("Freeing combinations.\n");
-		free_combinations(&(*histograms)->combinations);
 
 		for ( i = 0; (*histograms)->edges != NULL 
 				&& i < 2*(*histograms)->channels; i++ ) {

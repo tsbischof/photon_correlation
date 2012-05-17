@@ -30,13 +30,13 @@ PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
 PICOQUANT_LIB = 
 
 CORRELATE_OBJ = correlate.o error.o combinations.o files.o modes.o strings.o \
-		correlate_t2.o \
+		correlate_t2.o t2.o \
 		correlate_t3.o t3.o
 CORRELATE_LIB = 
 
 HISTOGRAM_OBJ = histogram.o error.o files.o modes.o combinations.o strings.o \
 		histogram_gn.o \
-		histogram_t2.o \
+		histogram_t2.o t2.o \
 		histogram_t3.o t3.o 
 HISTOGRAM_LIB = -lm
 

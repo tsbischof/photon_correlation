@@ -15,7 +15,6 @@ typedef struct {
 	edges_t **edges;
 	int channels;
 	int order;
-	combinations_t *combinations;
 	combination_t *combination;
 	long long int *current_values;
 	gn_histogram_t **histograms;

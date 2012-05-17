@@ -121,8 +121,6 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 		histograms->order = options->order;
 		histograms->edges = (edges_t **)malloc(sizeof(edges_t *)*
 				histograms->channels);
-		histograms->combinations = make_combinations(histograms->channels,
-				histograms->order);
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
 		histograms->current_values = (long long int *)malloc(
@@ -131,7 +129,6 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
 
 		if ( histograms->edges == NULL 
-				|| histograms->combinations == NULL
 				|| histograms->combination == NULL 
 				|| histograms->current_values == NULL
 				|| histograms->histograms == NULL ) {
@@ -193,8 +190,6 @@ void free_t2_histograms(t2_histograms_t **histograms) {
 		free((*histograms)->current_values);
 		debug("Freeing combination.\n");
 		free_combination(&(*histograms)->combination);
-		debug("Freeing combinations.\n");
-		free_combinations(&(*histograms)->combinations);
 
 		for ( i = 0; (*histograms)->edges != NULL 
 				&& i < (*histograms)->channels; i++ ) {
