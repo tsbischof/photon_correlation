@@ -57,8 +57,8 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 		unsigned int histogram_channel, int n_histogram_channels,
 		long long int base_time, unsigned int record_time,
 		pq_options_t *options);
-void pq_print_interactive(FILE *out_stream, int curve, double time, 
-		int counts, pq_options_t *options);
+void pq_print_interactive(FILE *out_stream, int curve, double left_time, 
+		double right_time, int counts, pq_options_t *options);
 void print_status(long long int count, pq_options_t *options);
 void external_marker(FILE *out_stream, unsigned int marker, 
 		pq_options_t *options);

@@ -681,15 +681,17 @@ void hh_v10_interactive_data_print(FILE *out_stream,
 		pq_options_t *options) {
 	int i;
 	int j;
-	double t;
+	double left_time;
+	double time_step;
 
 	for ( i = 0; i < hh_header->NumberOfCurves; i++ ) {
-		t = (double)interactive->Curve[i].Offset;
+		left_time = (double)interactive->Curve[i].Offset;
+		time_step = interactive->Curve[i].Resolution*1e-3;
 		for ( j = 0; j < interactive->Curve[i].HistogramBins; j++ ) { 
-			pq_print_interactive(out_stream, i, t, 
+			pq_print_interactive(out_stream, i, left_time, left_time+time_step, 
 					interactive->Counts[i][j], options);
 			/* Check the picosecond conversion and time offset */
-			t += interactive->Curve[i].Resolution*1e-3;
+			left_time += time_step;
 		}
 	}
 }

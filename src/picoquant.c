@@ -158,13 +158,14 @@ void print_status(long long int count, pq_options_t *options) {
 	}
 }
 
-void pq_print_interactive(FILE *out_stream, int curve, double time,
-		int counts, pq_options_t *options) {
+void pq_print_interactive(FILE *out_stream, int curve, double left_time,
+		double right_time, int counts, pq_options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(&time, 1, sizeof(time), out_stream);
 		fwrite(&counts, 1, sizeof(counts), out_stream);
 	} else {
-		fprintf(out_stream, "%d,%.3lf,%d\n", curve, time, counts);
+		fprintf(out_stream, "%d,%.3lf,%.3lf,%d\n", curve, left_time,
+				right_time, counts);
 	}
 }
 

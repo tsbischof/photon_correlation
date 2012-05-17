@@ -331,14 +331,16 @@ void th_v20_interactive_data_print(FILE *out_stream,
 		pq_options_t *options) {
 	int i;
 	int j;
-	double t;
+	double left_time;
+	double time_step;
 
 	for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
-		t = (double)(*interactive)[i].Offset;
+		left_time = (double)(*interactive)[i].Offset;
+		time_step = (*interactive)[i].Resolution;
 		for ( j = 0; j < th_header->NumberOfChannels; j++ ) { 
-			pq_print_interactive(out_stream, i, t, 
+			pq_print_interactive(out_stream, i, left_time, left_time+time_step,
 					(*interactive)[i].Counts[j], options);
-			t += (*interactive)[i].Resolution;
+			left_time += time_step;
 		}
 	}
 }
