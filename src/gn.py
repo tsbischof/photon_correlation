@@ -108,44 +108,31 @@ class HistogramBin(object):
 
                # To normalize the counts, we must account for the average
                # number of photons per unit phase space, and the volume
-               # of phase space counted.
+               # of phase space counted:
+               #                            1
+               # ------------------------------------------------
+               # (sum average intensity)^n (bin width)
                #
-               # For the reference channel, we have:
-               #          (integration time)
-               # -------------------------------------------------------------
-               # (integration time-largest time delay)(counts in the channel)
-               # For each dimension of time.
-               #
-               # For the other channels, we have the same thing, except the
-               # resolution now includes all of the possible times in the bin,
-               # based on its width and the resolution of the measurement:
-               #          (integration time)
-               # -----------------------------------
-               # (bin width)(counts in the channel)
+               # where bin width is a product over dimensions and the
+               # average intensity is summed over all channels (full signal).
                if self.mode == T2:
-                    integration_time = intensities[self.ref_channel].span(
-                         time_resolution)
+                    integration_time = max(
+                         map(lambda x: x.span(time_resolution),
+                             intensities))
+                    average_intensities = map(
+                         lambda x: fractions.Fraction(
+                              x.counts, x.span(time_resolution)),
+                         intensities)
+                    order = len(self.correlation)
                     
-                    counts *= integration_time               
-                    counts /= intensities[self.ref_channel].counts
+                    counts /= sum(average_intensities)**order
 
-                    # The amount of space the reference channel is integrated
-                    # over is the integration time, minus the greatest possible
-                    # displacement to another photon.
-                    displacement = max(
-                         map(abs,
-                             flatten(
-                                  map(lambda x: map(lambda y: y.bounds, x),
-                                      self.time_bins))))
-                    counts /= integration_time - \
-                              int(displacement/time_resolution)
+                    # The reference channel draws an integration time's worth of
+                    # uncertainty
+                    counts /= integration_time
 
+                    # The others get the width of the histogram bin.
                     for channel, time_bin in zip(self.channels, self.time_bins):
-                         print(intensities[channel].span(time_resolution),
-                               intensities[channel].counts*\
-                               time_bin[0].span(time_resolution))
-                         counts *= intensities[channel].span(time_resolution)
-                         counts /= intensities[channel].counts
                          counts /= time_bin[0].span(time_resolution)
 
           except ZeroDivisionError:
@@ -203,8 +190,9 @@ if __name__ == "__main__":
      mode = T2
      n_channels = 4
      order = 2
-     filename = "blargh_{0}.g{1}".format(mode, order)
-     intensity_filename = "blargh_{0}.intensity".format(mode)
+     name_base = "blargh1"
+     filename = "{0}_{1}.g{2}".format(name_base, mode, order)
+     intensity_filename = "{0}_{1}.intensity".format(name_base, mode)
      time_resolution = 1
      pulse_resolution = 1
 
@@ -228,10 +216,7 @@ if __name__ == "__main__":
                                                 n_channels,
                                                 order):
                correlations[histogram_bin.correlation].add_bin(histogram_bin)
-               autocorrelation.add_bin(
-                    histogram_bin.normalized(intensities,
-                                             time_resolution,
-                                             pulse_resolution))
+               autocorrelation.add_bin(histogram_bin)
 ##               break
 
 ##     for correlation, histogram in sorted(correlations.items()):
@@ -241,4 +226,6 @@ if __name__ == "__main__":
 ##
      print("g({0})".format(order))
      for time_bins, counts in autocorrelation:
-          print(time_bins, float(counts))
+          print(time_bins,
+                float(counts)*intensities[0].span(time_resolution)\
+                /(66666*sum(map(lambda x: x.counts, intensities.values()))**2))
