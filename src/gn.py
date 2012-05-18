@@ -128,25 +128,25 @@ class HistogramBin(object):
                     
                     counts *= integration_time               
                     counts /= intensities[self.ref_channel].counts
-                    counts /= (integration_time -
-                               max(
-                                    map(abs,
-                                        flatten(
-                                             map(lambda x:
-                                                 map(lambda y: y.bounds,
-                                                     x),
-                                                 self.time_bins)))))
+
+                    # The amount of space the reference channel is integrated
+                    # over is the integration time, minus the greatest possible
+                    # displacement to another photon.
+                    displacement = max(
+                         map(abs,
+                             flatten(
+                                  map(lambda x: map(lambda y: y.bounds, x),
+                                      self.time_bins))))
+                    counts /= integration_time - \
+                              int(displacement/time_resolution)
 
                     for channel, time_bin in zip(self.channels, self.time_bins):
-##                         print(float(counts),
-##                               intensities[channel].span(time_resolution),
-##                               intensities[channel].counts,
-##                               time_bin[0].span(time_resolution))
+                         print(intensities[channel].span(time_resolution),
+                               intensities[channel].counts*\
+                               time_bin[0].span(time_resolution))
                          counts *= intensities[channel].span(time_resolution)
                          counts /= intensities[channel].counts
                          counts /= time_bin[0].span(time_resolution)
-                         
-##               print(float(counts))
 
           except ZeroDivisionError:
                # Some resolution or intensity was 0
