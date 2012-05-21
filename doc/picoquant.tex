@@ -8,6 +8,9 @@
 \newcommand{\cps}{\textnormal{cps}}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
 \newcommand{\angles}[1]{\ensuremath{\left\langle #1 \right\rangle}}
+\newcommand{\brackets}[1]{\ensuremath{\left[ #1 \right]}}
+\newcommand{\parens}[1]{\ensuremath{\left( #1 \right)}}
+\newcommand{\setbuilder}[2]{\ensuremath{\braces{#1 \left| #2 \right.}}}
 \newcommand{\stdin}{\texttt{stdin}}
 \newcommand{\stdout}{\texttt{stdout}}
 \newcommand{\stderr}{\texttt{stderr}}
@@ -19,7 +22,8 @@
 \newcommand{\integers}{\ensuremath{\mathbb{Z}}}
 \newcommand{\wholes}{\ensuremath{\mathbb{N}}}
 \newcommand{\reals}{\ensuremath{\mathbb{R}}}
-\renewcommand{\vec}{\mathbf}
+\newcommand{\rationals}{\ensuremath{\mathbb{Q}}}
+\renewcommand{\vec}{\boldsymbol}
 \newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
 \newcommand{\eV}{\textnormal{eV}}
 \newcommand{\channel}{\ensuremath{c}}
@@ -36,6 +40,9 @@
 \newcommand{\Histogram}{\ensuremath{\mathcal{H}}}
 \newcommand{\ceil}[1]{\ensuremath{\left\lceil #1\right\rceil}}
 \newcommand{\GN}{\texttt{gn}}
+\newcommand{\tstart}{\ensuremath{t_{\textnormal{start}}}}
+\newcommand{\tstop}{\ensuremath{t_{\textnormal{stop}}}}
+\newcommand{\correlationset}{\ensuremath{G}}
 
 
 \title{Correlation: Tools for performing $n$th order correlations of time-tagged photon arrivals}
@@ -132,8 +139,8 @@ For a well-designed system these errors should not be very large, but if an appl
 A number of techniques involving the correlation of one or more signals exist, and their use in fluorescence microscopy requires that we be able to calculate correlation functions of the following form:
 \begin{equation}
 \gn{n}(\tau_{1}, \ldots \tau_{n-1}) = \frac
-	{\angles{I_{0}(t)\prod_{j=1}^{n-1}{I_{j}(t+\tau_{j})}}}
-	{\angles{I_{0}(t)}\prod_{j=1}^{n-1}{\angles{I_{j}(t+\tau_{j})}}}
+	{\angles{I(t)\prod_{j=1}^{n-1}{I(t+\tau_{j})}}}
+	{\angles{I(t)}^{n}}
 \end{equation}
 The details of calculating this function will be laid out in section~\ref{sec:math_background}. For now, note that the problem can be divided into three distinct parts:
 \begin{enumerate}
@@ -178,43 +185,67 @@ you should read appendix~\ref{sec:notation} before reading the remainder of this
 
 \subsection{Definition of the correlation function}
 \label{sec:correlation_function}
-A signal $I(t)$ is a non-negative, real-valued function of whole time\footnote{In principle, we could all the function to return negative numbers without mathematical problems, but this affects our interpretation of the result and is more natural for the problems laid out in this paper.}:
+A signal $I(t)$ is a function of real time which returns non-negative values\footnote{Correlations can be defined for negative-valued functions, but for our purposes non-negative functions are the most physically meaningful.}:
 \begin{equation}
-I:\wholes\rightarrow\reals^{*}
+I:\reals\rightarrow\reals^{*}
 \end{equation}
-In practice such a function may represent a physical quantity such as voltage, and we will develop our understanding of photon correlations by developing first an understanding of how to correlate this sort of function. 
+In practice such a function may represent a physical quantity such as voltage, and we will develop our understanding of photon correlations by developing first an understanding of how to correlate real-valued functions. 
 
-The simplest non-trivial correlation of a function is the autocorrelation, which measures the average probability that the value of the function for a time $t+\tau$ will be greater than, less than, or equal to its value at $t$. This can be calculated as:
+The simplest non-trivial correlation of a function is the autocorrelation, which measures the average predictability of the value of the function for a time $t+\tau$, given its value at $t$. By this we mean that a function is more, less, or equally likely to increase than decrease after the time delay. Formally, this is a function which maps a signal to a function mapping time vectors to scalar, and  can be calculated as
+\begin{equation}
+\gn{2}(I(t);\tau) = \frac{\angles{I(t)I(t+\tau)}}
+                    {\angles{I(t)}\angles{I(t+\tau)}}
+\end{equation}
+where the angled brackets indicate an average over all values of $t$. Implicit in this definition is the assumption that $I(t)$ have a non-zero value for some time, because the average must be non-zero for the result to be well-defined. Practically, this imposes the requirement that a signal must exist, so it is not too onerous. Because we will typically define $I(t)$ in context, we will drop it from the notation 
 \begin{equation}
 \label{eq:autocorrelation}
 \gn{2}(\tau) = \frac{\angles{I(t)I(t+\tau)}}
                     {\angles{I(t)}\angles{I(t+\tau)}}
 \end{equation}
-Here, $\gn{2}>1$ indicates supercorrelation, that the function is more likely than not to increase in value after a time delay $\tau$. If $\gn{2}<1$, the function is more likely than not to decrease in value after a time delay $\tau$. And in the middle, if $\gn{2}=1$, the function has equal probability to increase, decrease, or remain constant. The meaning of the exact magnitude of $\gn{2}(\tau)$ can be discussed in the context of a particular function, but these general principles should always apply.
+This formula can be interpreted as a measure of the periodic structure of $I(t)$: the denominator represents the average density of signal over a volume in phase space, while the numerator represents the density of events where the signal has some non-random behavior relative to all origins of time. 
+%Here, $\gn{2}>1$ indicates supercorrelation, that the function is more likely than not to increase in value after a time delay $\tau$. If $\gn{2}<1$, the function is more likely than not to decrease in value after a time delay $\tau$. And in the middle, if $\gn{2}=1$, the function has equal probability to increase, decrease, or remain constant. The meaning of the exact magnitude of $\gn{2}(\tau)$ can be discussed in the context of a particular function, but these general principles should always apply.
 
 In many cases, an autocorrelation is an oversimplification of a signal, and it is useful to be able to compare the cross-correlations of two or more channels instead. For example, if our function $I$ is endowed with a second dimension indicating the identity of a detection channel from the set $C$ of detection channels, it takes the form
 \begin{equation}
-I:C\times\wholes\rightarrow\reals^{*}
+I:C\times\reals\rightarrow\reals^{*}
 \end{equation}
-where $\times$ is the Cartesian product of elements from $C$ and $\integers^{*}$. For example, if $C=\braces{0, 1}$, elements of $C\times\wholes$ take the form of 2-tuples such as (0, 10), (1, 17), (0, 0), and so on. Under this notation, $I$ is now a function of two variables and follows the form $I(c, t)$. For clarity of future notation, we will include the channel variable as a subscript:
+where $\times$ is the Cartesian product of elements from $\channels$ and $\reals^{*}$. For example, if $\channels=\braces{0, 1}$, elements of $\channels\times\wholes$ take the form of 2-tuples such as (0, 10), (1, 17), (0, 0), and so on. Under this notation, $I$ is now a function of two variables and follows the form $I(c, t)$. For clarity of future notation, we will include the channel variable as a subscript:
 \begin{equation}
-I(c,t)\equiv I_{c}(t)
+I_{c}(t)\equiv I(c,t) 
 \end{equation}
 Given this, we can separate the signal $I$ into a sum of signals over all channels:
 \begin{equation}
 I(t) = \sum_{c\in C}{I_{c}(t)}
 \end{equation}
 Under the definition of an autocorrelation as in equation~\ref{eq:autocorrelation}, we can substitute this new value and expand the result to obtain:
-\begin{equation}
-\gn{2}(\tau)=\sum_{(c_{0},c_{1})\in C^{2}}{\frac{\angles{I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}
-                                                {\angles{I_{c_{0}(t)}}\angles{I_{c_{1}}(t+\tau)}}}
-\end{equation}
-where $(c_{0},c_{1})\in C^{2}$ indicates 2-tuple elements of the set $C\times C$. We see that, if $C$ contains a single element (we have only one detection channel), the function returns to the form shown in equation~\ref{eq:autocorrelation}. But if we have a set $C$ with more than one element, there are more than one term in the summation, which each take the form
+\begin{align}
+\label{eq:signal_g2}
+\gn{2}(\tau) &= \frac
+     {\angles{
+       \left(\sum_{\channel\in\channels}{I_{c}(t)}\right)
+       \left(\sum_{\channel\in\channels}{I_{c}(t+\tau)}\right)}}
+     {\angles{\sum_{\channel\in\channels}{I_{c}(t)}}
+      \angles{\sum_{\channel\in\channels}{I_{c}(t+\tau)}}} \\
+             &= \frac{\angles{\sum_{\vec{\channel}\in\channels}{
+                             I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}}
+                     {\left(\sum_{\channel\in\channels}{\angles{I_{c}(t)}}\right)
+                      \left(\sum_{\channel\in\channels}{\angles{I_{c}(t+\tau)}}\right)}
+%\gn{2}(\tau) &= \frac{\angles{\left(\sum_{\channel\in\channels}{I_{c}(t)}\right)
+%                              \left(\prod_{j=1}^{n-1}{
+%                                          \sum_{\channel\in\channels}{I_{c}(t+\tau_{j})}}\right)}}
+%                     {\angles{\sum_{\channel\in\channels}{I_{c}(t)}}
+%                      \prod_{j=1}^{n-1}{\angles{\sum_{\channel\in\channels}{I_{c}(t+\tau_{j})}}}} \\
+%             &= \frac{\angles{\sum_{\vec{\channel}\in\channels}{
+%                             \left(I_{c_{0}}(t)\prod_{j=1}^{n-1}{I_{c_{j}}(t+\tau_{j})}\right)}}}
+%                     {\angles{\sum_{\channel\in\channels}{I_{c}(t)}}^{n}}
+\end{align}
+where $\vec{\channel}\equiv(\channel_{0},\channel_{1})\in\channels^{2}$ indicates 2-tuple elements of the set $\channels\times\channels$. We see that, if $\channels$ contains a single element (we have only one detection channel), the function returns to the form shown in equation~\ref{eq:autocorrelation}. Note also that we can consider a single cross-correlation term, though these are distinct from the terms in the autocorrelation sum:
 \begin{equation}
 \gn{2}_{(c_{0},c_{1})}(\tau)=\frac{\angles{I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}
-                                                {\angles{I_{c_{0}(t)}}\angles{I_{c_{1}}(t+\tau)}}
+                                                {\angles{I_{c_{0}}(t)}\angles{I_{c_{1}}(t+\tau)}}
 \end{equation}
-We will focus most of our attention on the individual cross-correlations, because these contain more specific information than the full autocorrelation found by summation over all channel combinations ($\vec{c}\equiv (c_{0}, c_{1},\ldots)\in C^{n}$). 
+If we ignore the normalization and retain just the cross term, we see that each cross-correlation contains the information necessary for reconstructing the full autocorrelation, though we must have knowledge of the individual average intensities to do so. As such, we will focus most of our attention on calculating the cross-correlation terms.
+
 As an aside, note that the interchange of two channels is equivalent to inversion of their relative time delay:
 \begin{align}
 \gn{2}_{(c_{0},c_{1})}(\tau)&=\frac{\angles{I_{c_{0}}(t)I_{c_{1}}(t+\tau)}}
@@ -225,238 +256,522 @@ As an aside, note that the interchange of two channels is equivalent to inversio
 \end{align}
 This relationship implies that, while cross-correlations may be asymmetric about $\tau=0$, the full autocorrelation must be symmetric. 
 
-Now that we have generalized this definition to an arbitrary number of channels, we can also generalize the correlation to an arbitrary order $n$:
+Now that we have generalized this definition to an arbitrary number of channels, we can also generalize the correlation to an arbitrary order $n$ by drawing cross-correlation terms $\vec{\channel}\in\channels^{n}$:
 \begin{equation}
 \label{eq:gn}
-\gn{n}(\tau_{1},\ldots\tau_{n-1}) = \sum_{\vec{c}\in C^{n}}{
-     \frac{\angles{I_{c_{0}}(t)\prod_{j=1}^{n-1}{I_{c_{j}}(t+\tau_{j})}}}
-          {\angles{I_{c_{0}}(t)}\prod_{j=1}^{n-1}{\angles{I_{c_{j}}(t+\tau_{j})}}}} 
+\gn{n}(\tau_{1},\ldots\tau_{n-1}) = 
+     \frac{\sum_{\vec{\channel}\in\channels^{n}}
+                {\angles{I_{\channel_{0}}(t)\prod_{j=1}^{n-1}{I_{\channel_{j}}(t+\tau_{j})}}}}
+     {\left(\sum_{\channel\in\channels}{\angles{I_{\channel}(t)}}\right)
+      \left(\prod_{j=1}^{n-1}
+                 {\sum_{\channel\in\channels}
+                       {\angles{I_{\channel}(t+\tau_{j})}}}\right)}
 \end{equation}
+The interpretation of this equation is the same as before, except that the correlation is measured as a density in $n$-dimensional space.
 
 \subsubsection{Examples of correlations of functions}
 To become more familiar with the behavior of these correlation functions, we should evaluate them for a few familiar functions. For example, for $I(t)=1+\sin{(t)}$:
 \begin{align}
+\label{eq:sine_correlation}
 \gn{2}(\tau) &= \frac{\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\left(1+\sin{(t+\tau)}\right)\,dt}}
                      {\left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t)}\right)\,dt}\right)
                       \left(\frac{1}{2\pi}\int_{-\pi}^{\pi}{\left(1+\sin{(t+\tau)}\right)\,dt}\right)} \\
              &= 1 + \frac{1}{2}\cos{(\tau)}
 \end{align}
-For, this result says that, given that our function at some value at time $t$, after a small time delay $\tau\approx 0$ the value is likely to have increased ($\gn{2}=1.5$). If you were expecting $\gn{2}(0)$ to be 1, note that the correlation function is not strictly an increase or decrease of the value of the function, but instead more akin to a weighted average of that character. Thus, while the function has intervals of equal size over which it increases ($t\pmod{2\pi} \in (0,\frac{\pi}{2})\cup(\frac{3\pi}{2})$) or decreases ($t\pmod{2\pi} \in (\frac{\pi}{2},\frac{3\pi}{2})$), the time it spends with value greater than average ($t\pmod{2\pi}\in(0,\pi)$) weighs more heavily. 
+For, this result says that, given that our function at some value at time $t$, after a small time delay $\tau\approx 0$ the value is likely to have increased ($\gn{2}=1.5$). After a delay of $\tau=\pi/2\textnormal{ or }3\pi/2$, the function is equally likely to have increased as decreased, and its correlation is therefore indistinguishable from that of a randomly-distributed function.
 
-Additionally, at $\tau=2\pi$, the value of the function is exactly what it was at $\tau=0$, so $\gn{2}(2\pi)=1$.
-
-Moving on, consider a signal composed of two Gaussian functions:
+Moving on, consider a signal composed of two sine waves:
 \begin{align}
-I_{0}(t) &= \frac{1}{\sigma_{0}\sqrt{2\pi}}\exp{\left(-(t-\mu_{0})^{2}/(2\sigma_{0}^{2})\right)} \\
-I_{1}(t) &= \frac{1}{\sigma_{1}\sqrt{2\pi}}\exp{\left(-(t-\mu_{1})^{2}/(2\sigma_{1}^{2})\right)} \\
+I_{0}(t) &= 1+\sin(t) \\
+I_{1}(t) &= 1+\sin(2t) \\
 I(t) &= I_{0}(t)+I_{1}(t)
 \end{align}
-We can calculate the full autocorrelation as the sum of the cross-correlations:
+We can calculate the full autocorrelation:
 \begin{align}
-\gn{2}(\tau) &= \gn{2}_{(0,0)}(\tau)+\gn{2}_{(0,1)}(\tau)+\gn{2}_{(1,0)}(\tau)+\gn{2}_{(1,1)}(\tau) \\
-             &= \frac{\exp{\left(-\frac{\tau^{2}}{4\sigma_{0}^2}\right)}}{2\sigma_{0}\sqrt{\pi}}
-                + \frac{\exp{\left(-\frac{(\mu_{0}-\mu_{1}+\tau)^{2}}{2(\sigma_{0}^{2}+\sigma_{1}^{2})}\right)}}
-                        {\sqrt{2\pi(\sigma_{0}^{2}+\sigma_{1}^{2})}} \nonumber \\
-                &~~~~+ \frac{\exp{\left(-\frac{(\mu_{0}-\mu_{1}-\tau)^{2}}{2(\sigma_{0}^{2}+\sigma_{1}^{2})}\right)}}
-                        {\sqrt{2\pi(\sigma_{0}^{2}+\sigma_{1}^{2})}}
-                +
-                \frac{\exp{\left(-\frac{\tau^{2}}{4\sigma_{1}^2}\right)}}{2\sigma_{1}\sqrt{\pi}}
+\gn{2}(\tau) = 2 + \frac{1}{4}\cos(\tau) + \frac{1}{4}\cos(2\tau)
 \end{align}
-This is a somewhat complicated expression, but we see that there are two Gaussians centered at $\tau=0$, as well as two Gaussians centered at $\abs{\mu_{0}-\mu_{1}}$ on either side of the origin. 
+or individual cross-correlations:
+\begin{align}
+\gn{2}_{(0,0)}(\tau) &= 1+\frac{1}{2}\cos(\tau) \\
+\gn{2}_{(0,1)}(\tau) = \gn{2}_{(1,0)}(\tau) &= 1 \\
+\gn{2}_{(1,1)}(\tau) &= 1+\frac{1}{2}\cos(2\tau)
+\end{align}
+Calculation of higher-order correlations is also possible, though the results quickly become quite verbose:
+\begin{align}
+\gn{3}(\tau) &= 1
+               + \frac{1}{8}\cos(\tau_{1})
+               + \frac{1}{8}\cos(2\tau_{1})
+               + \frac{1}{8}\cos(\tau_{1}-\tau_{2}) \nonumber\\
+            &  + \frac{1}{8}\cos(2(\tau_{1}-\tau_{2}))
+               + \frac{1}{8}\cos(\tau_{2})
+               + \frac{1}{8}\cos(2\tau_{2})  \nonumber \\
+            &  - \frac{1}{32}\sin(\tau_{1}-2\tau_{2})
+               - \frac{1}{32}\sin(2\tau_{1}-\tau_{2})
+               + \frac{1}{32}\sin(\tau_{1}+\tau_{2})
+\end{align}
 
-Calculation of higher-order correlations is also possible, but the results quickly become verbose and are not worthwhile presenting here.
-
-\subsection{The true meaning of $I(t)$}
-\label{sec:sampling_intensity}
-For a real measurement, the signal $I(t)$ is real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I(t)$ really is
+\subsection{Photon arrivals can be represented by $\delta$-functions}
+To begin to see how we may calculate correlations of photon arrival times, consider the essential character we must capture: any given detection channel $c$ may detect up to a single photon at any time, and that detection event occurs at some fixed times $t$. As such, we can uniquely define a photon as an element $\photon$ by its channel and arrival time:
 \begin{equation}
-I(t) = \left.\angles{\iota(t')}\right|_{t'\in[t,t+\Delta t)} = \frac{1}{\Delta t}\int_{t}^{t+\Delta t}{\iota(t'),dt'}
+\photon=(c,t)\in\channels\times\reals
 \end{equation}
-for the true function $\iota(t)$ being approximated by the measurement. As such, the $I(t)$ over time can be represented meaningfully as a vector representing the value of the function for evenly-spaced values of $t$, and the correlations can be determined as inner products of displacements of that vector. More concretely, consider a signal $\vec{I}\in\left(\reals^{*}\right)^{N}$ representing $N$ samples of $I(t)$ at $t=0, \Delta t, \ldots$, with elements indexed as $\vec{I}(0), \vec{I}(1),\ldots$. To calculate $\gn{2}(\tau)$ for $\tau\in\wholes$:
+Furthermore, given a set of photons $\photons$, we can define the signal consisting of all detected photons as a sum over $\delta$ functions\footnote{$\delta(\vec{x})=0$ if and only if $\vec{x}=\vec{0}$, and $\int_{-\infty}^{\infty}{\delta(\vec{x})\,d\vec{x}}=1$.}:
 \begin{equation}
-\gn{2}(\tau) = \frac{\sum_{j=0}^{N-\tau}{\vec{I}(j)\vec{I}(j+\tau)}}
-                    {\sum_{j=0}^{N-\tau}{\vec{I}(j)}\sum_{j=0}^{N-\tau}{\vec{I}(j+\tau)}}
+\label{eq:delta_function_signal}
+I_{\channel}(t) = \sum_{\photon\in\photons}
+                       {\delta\left(\channel-\Channel(\photon),t-\Time(\photon)\right)}
 \end{equation}
-Note that, for $\tau\rightarrow N$, the number of elements in the sum approaches 0. This represents the undersampled region of the correlation, and as such it is necessary to define the correlation window as significantly smaller than the sampled window in order to obtain a meaningful estimate of $\gn{2}(\tau)$.
-
-This definition of a signal is useful for many measurements of some gross quantity which can be said to sample a non-trivial range of values in $\reals^{*}$ or \wholes. However, photon-counting produces a signal which is fundamentally binary (in $\integers_{2}$), indicating that either a photon has arrived in the time interval, or none has. In principle we can treat this vector in the same way as we do $\vec{I}$, but this is inefficient: there are only a few bins which will have any signal, and a great number which contain nothing. Therefore, for a binary signal which only occasionally has a non-zero value, it is worthwhile to develop different forms for the correlation expressed in equation~\ref{eq:gn}.
-
-\subsection{Defining the signal of photon arrivals}
-In practice, any given single-photon detector can detect exactly one photon at a time, such that any photon arrival can be defined unique by its detection channel and arrival time. Therefore, the photon $\gamma$ can be represented as a 2-tuple:
+where $\Channel$ is a function of a photon which returns the detection channel the photon arrived on, and $\Time$ is a similar function which returns arrival time. To simplify the notation, we can define a subset of photons associated with each channel:
 \begin{equation}
-\photon\equiv (c, t)\in C\times\wholes
+\photons_{\channel} = \setbuilder{\photon}{\photon\in\photons;~\Channel(\photon)=\channel}
+                      \subseteq\photons
 \end{equation}
-We define the functions $\Channel(\photon)$ and $\Time(\photon)$ to return the channel and arrival time of a photon \photon. From this definition, call
+where the set builder notation denotes the elements of a set and the conditions they must satisfy for inclusion in the set. In long form, the set $\photons_{\channel}$ is the set of all photons in $\photons$ which arrived on channel $\channel$. As before, we can recover the full signal by the union of all channel signals:
 \begin{equation}
-\photons\equiv\braces{\photon}\subset C\times\wholes
+\photons = \bigcup\limits_{\channel\in\channels}{\photons_{\channel}}
 \end{equation}
-the set of all detected photons. This is the signal relevant to photon-correlation methods, and its form requires that we recast the correlation function in a way which is more directly applicable. 
-
-To begin with, the definition of the signal on a single channel can be expressed as:
-\begin{equation}
-\photons_{c} = \braces{\photon\left|\photon\in\photons;~\Channel(\photon)=c\right.}
-\end{equation}
-In long form, this signal is the set of all detected photons, restricted to those whose channels matches the channel specified (see appendix~\ref{sec:notation} for more details). Here, there is no longer an explicit time dependence, but we can define that with an additional parameter:
-\begin{equation}
-\photons_{c}(t) = \abs{\braces{\photon\left|\begin{aligned}
-                                          \photon\in\photons; \\
-                                           \Channel(\photon)=c;\\
-                                           \Time(\photon)=t
-                                     \end{aligned}\right.}}
-\end{equation}
-where here the \abs{\cdot} indicate the number of elements in the set. To recover the complete signal \photons:
-\begin{equation}
-\photons = \bigcup\limits_{c\in C}{\photons_{c}}
-\end{equation}
-
-\subsubsection{T3 mode is akin to T2 mode, but a second time dimension}
-As discussed in section~\ref{sec:modes}, T3 mode has a definition distinct from that of T2 mode:
-\begin{equation}
-\photon\equiv(c,p,t)\in C\times\wholes\times\wholes
-\end{equation}
-for which $\Pulse(\photon)$ returns the pulse number for which the photon arrived. While the definitions are not perfectly clean, we will show shortly how T3 photons can be treated exactly like a pair of T2 photons, with some restrictions.
-
-\subsection{Calculating \gn{n} by counting photons}
-As before, we will begin our discussion of correlation functions by constructing a set formulation of the autocorrelation. Fundamentally, we must consider two halves of a problem:
-\begin{equation}
-\gn{n}(\tau_{1},\ldots)=\frac{\textnormal{number of events which satisfy a given time delay}}
-     {\textnormal{average number of photons per unit of time}}
-\end{equation}
-The denominator is simpler to express, so we will start there. In a given experiment of finite length, there will be some absolute beginning and end of time, such that all detected photons are elements of the subset
-\begin{equation}
-\channels\times \wholes_{\integrationtime}
-\end{equation}
-for a total experiment time \integrationtime. That is, there exists some time $\integrationtime\in\wholes$ such that
-\begin{equation}
-\braces{\photon\left|\photon\in\photons;\Time(\photon)\ge\integrationtime\right.} = \emptyset
-\end{equation}
-Here, the integration time is defined such that there are \integrationtime{} time units which pass during the experiment, since time begins with 0. This sets the minimal value for \integrationtime{} to be one greater than the arrival time of the final photon in the experiment, or
-\begin{equation}
-\integrationtime\ge\max(\braces{\Time(\photon)|\photon\in\photons})
-\end{equation}
-Now that we have determined the total units of time represented by \photons{} (either by a defined value or by some maximal time \Time(\photon)+1), the average number of photons arriving per unit of time is
-\begin{equation}
-\angles{I(t)} = \frac{\abs{\photons}}{\integrationtime}
-\end{equation}
-Next, consider the set of photons satisfying some specified time delay $\tau$:
-\begin{equation}
-\angles{I(t)I(t+\tau)}\propto
-         \abs{\braces{(\photon_{0},\photon_{1})
-               \left|\begin{aligned}
-                     \photon_{0},\photon_{1}\in\photons;\\
-                     \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                     \end{aligned}\right.}}
-\end{equation}
-This is accurate up to a normalization constant, which is related to the resolution of \Time. As discussed in section~\ref{sec:sampling_intensity}, the function does not have infinite resolution but instead approximates some true function by sampling for an interval we will call \resolution. As such, the set defined is actually for a square in time space with length \resolution{} ($t$ and $\tau$ are really $[t,t+\resolution)$ and $[\tau,\tau+\resolution)$), so we must correct for this value to be completely general:
-\begin{equation}
-\angles{I(t)I(t+\tau)}=    
-         \frac{1}{\resolution^{2}}
-         \abs{\braces{(\photon_{0},\photon_{1})
-               \left|\begin{aligned}
-                     \photon_{0},\photon_{1}\in\photons;\\
-                     \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                     \end{aligned}\right.}}
-\end{equation}
-For the most precise form of this calculation, $\resolution=1$, but for practical reasons it will become necessary to undersample the correlation function by increasing the effective value of \resolution. This resolution should also be allowed to vary with $\tau$, so we will denote its full behavior $\resolution_{c}(\tau)$, where the $c$ subscript indicates its associated channel. Note that the reference channel $\channel_{0}$ does not have a varying resolution, because it has not associated time delay (see equation~\ref{eq:gn}). See section~\ref{sec:histogram} for more details.
-
-Putting this together, the full autocorrelation is
-\begin{equation}
-\gn{2}(\tau) = \frac{\integrationtime^{2}}{\abs{\photons}^{2}\resolution\resolution(\tau)}
-                \abs{\braces{(\photon_{0}, \photon_{1}),
-                              \left|\begin{aligned}
-                              \photon_{0},\photon_{1}\in\photons \\
-                              \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                              \end{aligned}\right.}}
-\end{equation}
-Extension of this result to higher dimensions and multiple channels proceeds much as before, giving the following two-channel cross-correlation:
-\begin{equation}
-\gn{2}(\tau) = \sum\limits_{(c_{0},c_{1})\in C^{2}}
-                    {
-                    \frac{\integrationtime^{2}}
-                         {\abs{\photons_{c_{0}}}\abs{\photons_{c_{1}}}
-                                \resolution_{c_{0}}\resolution_{c_{1}}(\tau)}
-                    \abs{\braces{(\photon_{0},\photon_{1})
-                          \left|\begin{aligned}
-                          \photon_{0}\in\photons_{c_{0}};\\
-                          \photon_{1}\in\photons_{c_{1}};\\
-                          \Time(\photon_{1})-\Time(\photon_{0})=\tau
-                          \end{aligned}\right.}}
-                    }
-\end{equation}
-and this result for higher dimensions:
-\begin{equation}
-\label{eq:gn_set}
-\begin{split}
-&\gn{n}(\tau_{1},\ldots\tau_{n-1})= \\
-& \sum\limits_{\vec{c}\in C^{n}}
-                    {
-                    \left[
+Because we have discretized the signal into a set of photons, we can more efficiently describe operations on the signal as counting subsets of the signal. For example, the autocorrelation of the signal $\photons$ can be calculated by integrating the associated $\delta$-functions:
+\begin{align}
+\gn{2}(\tau) &= \frac{\int{\left(\sum_{\photon\in\photons}{\delta(t - \Time(\photon))}\right)
+                    \left(\sum_{\photon\in\photons}{\delta(t+\tau-\Time(\photon))}\right)dt}}
+                   {\left(
+                       \int{\brackets{
+                                \sum_{\photon\in\photons}
+                                     {\delta(t-\Time(\photon))}}dt}\right)
                     \left(
-                    \frac{\integrationtime}{\abs{\photons_{c_{0}}}\resolution_{c_{0}}}
-                    \prod_{j=1}^{n-1}{\frac{\integrationtime}
-                                           {\abs{\photons_{c_{j}}}\resolution_{c_{j}}(\tau_{j})}}
-                    \right)
-                    \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
-                          \left|\begin{aligned}
-                          \photon_{0}\in\photons_{c_{0}};\\
-                          \photon_{1}\in\photons_{c_{1}};\\
+                       \int{\brackets{
+                                \sum_{\photon\in\photons}
+                                     {\delta(t+\tau-\Time(\photon))}}dt}\right)}
+\end{align}
+but the same result can be expressed much more simply by counting events:
+\begin{equation}
+\gn{2}(\tau) \propto \abs{\setbuilder
+                                  {(\photon_{0},\photon_{1})}
+                                  {\left|\begin{aligned}
+                                        \photon_{0}\in\photons;\\
+                                        \photon_{1}\in\photons;\\
+                                        \abs{\braces{\photon_{0},\photon_{1}}}=2;\\
+                                        \Time(\photon_{1})-\Time(\photon_{0})=\tau;
+                                  \end{aligned}\right.}}
+\end{equation}
+where $(\photon_{0},\photon_{1})$ represents a pair of photons, and the third condition indicates that the two photons are not identical. This restriction helps distinguish the contribution of distinct pairs of photons to the correlation at $\tau=0$, which would otherwise be a sum of all photons and all photon pairs arriving simultaneously. The normalization factor is not quite as straightforward to calculate as for the continuous case, so we should spend some time simplifying the problem until that calculation becomes practical.
+
+\subsection{Correlation over a finite time range}
+In a physical experiment, time has a well-defined beginning and end: time begins when the experiment starts, and ends when it stops. Here the term experiment can mean a complete experiment or some subset of time in a larger measurement, but ultimately the important result is that the time range of the experiment is some range of time:
+\begin{equation}
+\integrationtime = [\tstart,\tstop)\subset\reals
+\end{equation}
+where the bracket notation indicates that the subset contains all values at least as great as $t_{\textnormal{start}}$ and less than $t_{\textnormal{stop}}$. Moreover, we will typically divide time into equally-spaced blocks, such that each block of experiment time can be indexed by some whole number:
+\begin{equation}
+\integrationtime = \braces{\tstart,\tstart+\Delta t,\ldots} 
+       \rightarrow \braces{0,1,\ldots} = \integers_{N}
+\end{equation}
+where $N=\abs{\integrationtime}$ is the number of time blocks in the measurement. As such, any signal $I(t)$ can be treated as a function of whole time:
+\begin{equation}
+I:\wholes\rightarrow\reals^{*}
+\end{equation}
+More simply, because there are a finite number of values for which $I(t)$ is defined, we can treat it as a vector in signal space:
+\begin{equation}
+I(t) \equiv \vec{I}\in \left(\reals^{*}\right)^{N}
+\end{equation}
+where the indices $\vec{I}(0)$ represent the value of $I(t)$ for the given time block. 
+
+Given this, the autocorrelation can be defined as a sum over all times in the experiment:
+\begin{align}
+\gn{2}(\tau) &= \frac{\frac{1}{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)\vec{I}(j+\tau)}}
+                     {\parens{\frac{1}{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)}}
+                      \parens{\frac{1}{N-\tau}\sum_{j=\tau}^{N-1}{\vec{I}(j)}}} \nonumber \\
+\label{eq:discrete_g2} &= \frac{\parens{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)\vec{I}(j+\tau)}}
+                    {\parens{\sum_{j=0}^{N-\tau-1}{\vec{I}(j)}}
+                     \parens{\sum_{j=\tau}^{N-1}{\vec{I}(j)}}}
+\end{align}
+Note that the normalization factor corresponding to the averaging dimension is limited to the range of values in the summation. This is not an important effect when $\tau\ll N$, but for $\tau\approx N$ the correction is significant.
+
+Now that we have a method for calculating the discrete correlation function, we should consider how this will be performed for photons. One method would be to choose the subdivisions of time $\timewindow$, and define $I(\timewindow)$ to be the number of photons found with arrival times in $\timewindow$. Depending on the definition of $\timewindow$ this could be any whole number up to the number of photons in the set, and equation~\ref{eq:discrete_g2} could be applied. However, this is inefficient: for practical measurements, $I(t)=0$ for a significant percentage of times $t$, and we must spend significant effort summing over zero-valued terms. As such, we will recast the problem as counting elements in a set:
+\begin{equation}
+\label{eq:photon_g2}
+\gn{2}(\tau) = \frac{\parens{\abs{\integrationtime}-\tau}
+                     \abs{\setbuilder{(\photon_{0},\photon_{1})}
+                                     {\begin{aligned}
+                                      \photon_{0}\in\photons;\\
+                                      \photon_{1}\in\photons;\\
+                                      \abs{\braces{\photon_{0},\photon_{1}}}=2;\\
+                                      \Time(\photon_{1})-\Time(\photon_{0})=\tau;
+                                      \end{aligned}}}}
+                    {
+                             \abs{\setbuilder{\photon}{\begin{aligned}
+                                                      \photon\in\photons;\\
+                                                      \Time(\photon)-\tau\in\integrationtime
+                                                      \end{aligned}}}
+                             \abs{\setbuilder{\photon}{\begin{aligned}
+                                                      \photon\in\photons;\\
+                                                      \Time(\photon)+\tau\in\integrationtime
+                                                      \end{aligned}}}}
+\end{equation} 
+This formula is actually an implicit improvement over equation~\ref{eq:discrete_g2}, because it can handle both positive and negative $\tau$, though it we could rewrite the latter equation to handle negative $\tau$ as needed.
+
+One final factor we have left out is the resolution of the experiment. When converting from real to whole time we implicitly assigned each subset $\timewindow$ to some whole number index, such that the time delay $\tau$ really represents a range of possible delays. In the final formula, we will include this factor, but for now we will leave it out for simplicity.
+
+\subsection{The full \gn{n} for photon correlation}
+To extend the result of equation~\ref{eq:photon_g2} to multiple time dimensions, we must consider first what the normalization factor actually represents. In each discrete, finite-time correlation we restricted the limits of each time dimension to the values which could support a given time delay, that is, all $t$ under consideration for a given $\tau$ were chosen such that $t+\tau <N$. More generally:
+\begin{equation}
+t\in\setbuilder{t}{t+\tau\in\integrationtime}
+\end{equation}
+For higher dimensions, we must consider all possible time spans:
+\begin{equation}
+\label{eq:allowed_time_size}
+\integrationtime_{\vec{\tau}} = 
+     \setbuilder{t}{\begin{aligned}
+                   t+\tau_{1}\in\integrationtime; \\
+                   t+\tau_{2}\in\integrationtime; \\
+                   \ldots
+                   \end{aligned}}
+\end{equation}
+where $\integrationtime_{\vec{\tau}}$ represents the subset of times valid for the given time delays. On a practical note, it is straightforward to show the following:
+\begin{equation}
+\abs{\integrationtime_{\vec{\tau}}}
+   \equiv\abs{\setbuilder{t}{\begin{aligned}
+                   t+\tau_{1}\in\integrationtime; \\
+                   t+\tau_{2}\in\integrationtime; \\
+                   \ldots
+                   \end{aligned}}}
+   = \abs{\integrationtime} - \max{\braces{\abs{\tau_{1}},\ldots}}
+\end{equation}
+To simplify later results, we can define subsets of photons whose arrival times are in this subset of time:
+\begin{equation}
+\photons_{\integrationtime_{\vec{\tau}},\tau_{j}} 
+    \equiv \setbuilder{\photon} 
+                      {\begin{aligned}
+                       \photon\in\photons; \\
+                       \Time(\photon)+\tau_{j}\in\integrationtime_{\vec{\tau}}
+                       \end{aligned}}
+\end{equation}
+where $\tau_{j}$ is the $j$th index of $\vec{\tau}$. Omission of this value is equivalent to $\tau_{j}=0$. Additionally, denote the correlation set by:
+\begin{equation}
+G_{\vec{\tau}} 
+    \equiv \setbuilder{(\photon_{0},\ldots\photon_{n-1})}
+                         {\begin{aligned}
+                          \photon_{0}\in\photons;\\
                           \ldots;\\
+                          \photon_{n-1}\in\photons;\\
+                          \abs{\braces{\photon_{0},\ldots\photon_{n-1}}}=n;\\
                           \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
                           \ldots
-                          \end{aligned}\right.}}
-                    \right]
-                    }
-\end{split}
+                          \end{aligned}}
 \end{equation}
 
-\subsubsection{The \gn{n} for T3 data can calculated like \gn{2n} for T2 data}
-Given the notation in equation~\ref{eq:gn_set}, we see that the two timing dimensions of T3 data can be treated as separate conditions in the set, with a second unit of resolution associated with \Pulse. Calling this unit of resolution $\kappa$ and the relative pulse difference $\rho$, the full expression is:
+Given this result, we can assemble the full $n$th-order autocorrelation function:
 \begin{equation}
-\label{eq:gn_set_t3}
-\begin{split}
-&\gn{n}(\tau_{1},\rho_{1},\ldots\tau_{n-1},\rho_{n-1}) = \\
-    &  \sum\limits_{\vec{c}\in \channels^{n}}
-                    {
-                    \left[
-                    \frac{\integrationtime^{2}}
-                         {\abs{\photons_{\channel_{0}}}\resolution_{\channel_{0}}\kappa_{\channel_{0}}}
-                    \left(
-                    \prod_{j=1}^{n-1}{\frac{\integrationtime^{2}}
-                                           {\abs{\photons_{c_{j}}}^{2}
-                                            \resolution_{c_{j}}(\tau_{j})
-                                            \kappa_{c_{j}}(\tau_{j})}}
-                    \right)
-                    \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
-                          \left|\begin{split}
-                          \photon_{0}\in\photons_{c_{0}};\\
-                          \photon_{1}\in\photons_{c_{1}};\\
-                          \ldots;\\
-                          \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
-                          \Pulse(\photon_{1})-\Pulse(\photon_{0})=\rho_{1};\\
-                          \ldots
-                          \end{split}\right.}}
-                    \right]
-                    }
-\end{split}
+\gn{n}(\tau_{1},\ldots\tau_{n-1}) = 
+   \frac{\abs{\integrationtime_{\vec{\tau}}}^{n-1}
+         \abs{G_{\vec{\tau}}}}
+        {\abs{\photons_{\integrationtime_{\vec{\tau}}}}
+         \prod_{j=1}^{n-1}
+               {\abs{\photons_{\integrationtime_{\vec{\tau}},\tau_{j}}}}}
 \end{equation}
-This form is nearly identical to a \gn{2n} for T2 data, except that we still sample the channel combinations from $\channels^{n}$, reflecting the fact that $\tau_{j}$ and $\rho_{j}$ are associated with the same channel $\channel_{j}$. We will continue to discuss T2-type correlation functions, but do not that the machinery developed for such uses can easily be repurposed for T3 data.
+By addition of further conditions, we can write the result for an individual cross-correlation:
+\begin{equation}
+\gn{n}_{\vec{\channel}}(\tau_{1},\ldots\tau_{n-1}) = 
+   \frac{\abs{\integrationtime_{\vec{\tau}}}^{n-1}
+         \abs{\correlationset_{\vec{\tau},\vec{\channel}}}}
+        {\abs{\photons_{\integrationtime_{\vec{\tau}},\channel_{0}}}
+         \prod_{j=1}^{n-1}
+               {\abs{\photons_{\integrationtime_{\vec{\tau}},\channel_{j},\tau_{j}}}}}
+\end{equation}
+or express the autocorrelation as a sum over cross-correlation terms:
+\begin{equation}
+\gn{n}(\tau_{1},\ldots\tau_{n-1}) = 
+   \frac{\abs{\integrationtime_{\vec{\tau}}}^{n-1}
+         \sum_{\vec{\channel}\in\channels^{n}}
+         {\abs{G_{\vec{\tau},\vec{\channel}}}}}
+        {\abs{\photons_{\integrationtime_{\vec{\tau}}}}
+         \prod_{j=1}^{n-1}
+               {\abs{\photons_{\integrationtime_{\vec{\tau}},\tau_{j}}}}}
+\end{equation}
 
-\subsection{Subdividing the problem of calculating \gn{n}}
-Examining equation~\ref{eq:gn_set}, it is evident that there are a few distinct factors associated with each term of the sum:
-\begin{itemize}
-\item $\integrationtime$: the integration time
-\item $\abs{\photons_{c}}$: the number of photons with a given channel \channel.
-\item $\resolution_{c}(\tau)$: the resolution of a channel at a given time delay
-\item $(\photon_{0},\ldots)$: $n$-tuples of photons with particular properties
-\end{itemize}
-Because these factors can be calculated or defined independently, we will turn our focus to the efficient determination of the value of each of these factors. Roughly, the terms can be calculated using the following programs:
-\begin{itemize}
-\item $\integrationtime$: \intensity
-\item $\abs{\photons_{c}}$: \intensity
-\item $\resolution_{c}(\tau)$: \picoquant, \histogram
-\item $(\photon_{0},\ldots)$: \correlate, \histogram
-\end{itemize}
-The remainder of this paper is devoted to specifying how each term may be calculated efficiently and accurately.
+As a final note, one important practical consideration is the fact that the time delays $\tau$ do not really represent single times but some range of times. This was implicit in the conversion from real to whole time and ultimately is just a rescaling of the time units, which is why we did not concern ourselves with it at the time. A more important consideration relates to choices of groupings of whole number time $\tau$, which is of importance for histogramming real data. To account for these windows $\resolution$, the correlation term must be normalized to account for the increased effective volume of phase space: in the current formula, the term measures the average number of correlation events per volume time space, and increasing the width of any dimension increases the volume of phase space. Thus the extra correction is found by dividing by the effective volume of phase space:
+\begin{equation}
+\label{eq:full_gn}
+\gn{n}(\resolution_{1},\ldots\resolution_{n-1}) = 
+   \parens{
+        \frac{\abs{\integrationtime_{\vec{\tau}}}^{n-1}}
+             {\prod_{j=1}^{n-1}{\abs{\resolution_{j}}}}}
+   \parens{
+        \frac{\sum_{\vec{\channel}\in\channels^{n}}
+                   {\abs{\correlationset_{\vec{\tau},\vec{\channel}}}}}
+             {\abs{\photons_{\integrationtime_{\vec{\resolution}}}}
+              \prod_{j=1}^{n-1}
+                    {\abs{\photons_{\integrationtime_{\vec{\epsilon}},\resolution_{j}}}}}}
+\end{equation}
+This formula will be the basis of all further discussion, so if the definitions of its constituent terms are not clear you should work through this section again.
+
+The remainder of this paper will discuss the practical methods for calculating all of these values efficiently and accurately.
+
+\subsubsection{Calculating \gn{n} for T3 data}
+Equation~\ref{eq:full_gn} describes the formula for calculating the autocorrelation of a set of photons tagged with arrival channel and time. Extension of the result is a matter of introducing a second time vector $\vec{\rho}$ of pulse delays, and construction of sets with further restrictions $\Pulse(\photon_{j})-\Pulse(\photon_{0})=\rho$, where the function $\Pulse$ returns the pulse number of a photon. In many regards, this turns the \gn{n} function into one more akin to \gn{2n}, but with the restriction that $\tau_{j}$ and $\rho_{j}$ are associated with channel $\channel_{j}$.
+
+
+%The finite range of time affects the definition of an average by a scalar normalization factor, as implicitly included in equation~\ref{eq:sine_correlation}:
+%\begin{equation}
+%\angles{I(t)} = \frac{\int_{\integrationtime}{I(t)\,dt}}
+%                     {\abs{\integrationtime}}
+%\end{equation}
+%weere $\int_{\integrationtime}$ is equivalent to $\int_{\tstop}^{\tstart}$ and $\abs{\integrationtime}=(\tstop-\tstart)$.. Consequently, each average in the autocorrelation picks up a factor of inverse integration time. The cross term is unfortunately not quite as simple to normalize:
+%\begin{equation}
+%\angles{I(t)I(t+\tau)} = \frac{\int_{\integrationtime\setminus[0,\tau)}{I(t)I(t+\tau)\,dt}}
+%                              {\abs{\integrationtime\setminus[0,\tau)}}
+%\end{equation}
+%where $\setminus$ indicates the removal of some values from the set of times $\integrationtime$. 
+%\begin{align}
+%\gn{n}(\tau_{1},\ldots\tau_{n-1})
+%  &= 
+%     \frac{\abs{\integrationtime}^{-1}
+%           \sum_{\vec{\channel}\in\channels^{n}}
+%                {\brackets{
+%                      \int_{\integrationtime}
+%                           {\brackets{I_{\channel_{0}}(t)
+%                                     \prod_{j=1}^{n-1}{I_{\channel_{j}}(t+\tau_{j})}}
+%                            dt}}}}
+%     {\abs{\integrationtime}^{-n}
+%      \left(\sum_{\channel\in\channels}
+%                 {\int_{\integrationtime}
+%                       {I_{\channel}(t)\,dt}}\right)
+%      \prod_{j=1}^{n-1}
+%            \left({\sum_{\channel\in\channels}
+%                        {\brackets{\int_{\integrationtime}
+%                                        {I_{\channel}(t+\tau_{j})\,dt}}}}\right)} \\
+%  &=      \frac{\abs{\integrationtime}^{n-1}
+%           \sum_{\vec{\channel}\in\channels^{n}}
+%                {\brackets{
+%                      \int_{\integrationtime}
+%                           {\brackets{I_{\channel_{0}}(t)
+%                                     \prod_{j=1}^{n-1}{I_{\channel_{j}}(t+\tau_{j})}}
+%                            dt}}}}
+%     {\left(\sum_{\channel\in\channels}
+%                 {\int_{\integrationtime}
+%                       {I_{\channel}(t)\,dt}}\right)
+%      \prod_{j=1}^{n-1}
+%            \left({\sum_{\channel\in\channels}
+%                        {\brackets{\int_{\integrationtime}
+%                                        {I_{\channel}(t+\tau_{j})\,dt}}}}\right)} 
+%\end{align}
+%
+%
+%\subsection{Correlation of photons over discrete time steps}
+%For physical reasons it is often convenient to sample the value of a signal at some fixed time interval. As such, the value of the signal is known for some values $\tstart,\tstart+\Delta t,\ldots$, which can be index as $0,1,\ldots$. Similarly, the set of times $\integrationtime$ ceases to represent a continuous range and instead becomes some finite subset of whole numbers. Formally, we now have:
+%\begin{align}
+%I:\wholes\rightarrow\reals^{*} \\
+%\integrationtime \equiv \integers_{N}
+%\end{align}
+%where $\wholes$ is the set of whole numbers \braces{0,1,\ldots} and $N$ is the number of times sampled. One subtle but important consequence of mapping is that different experiments may carry different time steps, so we will define $\resolution$ as the resolution in a particular experiment. Substituting these results, we obtain the discrete correlation function:
+%\begin{equation}
+%\gn{n}(\tau_{1},\ldots\tau_{n-1}) = 
+%     \frac{\abs{\integrationtime}^{n-1}
+%           \sum_{\vec{\channel}\in\channels^{n}}
+%                {\brackets{
+%                      \sum_{t\in\integrationtime}
+%                           {\brackets{\resolution_{c_{0}} I_{\channel_{0}}(t)
+%                                      \prod_{j=1}^{n-1}{I_{\channel_{j}}(t+\tau_{j})}}}}}}
+%     {\left(\sum_{\channel\in\channels}
+%                 {\int_{\integrationtime}
+%                       {I_{\channel}(t)\,dt}}\right)
+%      \prod_{j=1}^{n-1}
+%            \left({\sum_{\channel\in\channels}
+%                        {\int_{\integrationtime}
+%                              {I_{\channel}(t+\tau_{j})\,dt}}}\right)}
+%\end{equation}
+
+%\subsection{The true meaning of $I(t)$}
+%\label{sec:sampling_intensity}
+%For a real measurement, the signal $I(t)$ is real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I(t)$ really is
+%\begin{equation}
+%I(t) = \left.\angles{\iota(t')}\right|_{t'\in[t,t+\Delta t)} = \frac{1}{\Delta t}\int_{t}^{t+\Delta t}{\iota(t'),dt'}
+%\end{equation}
+%for the true function $\iota(t)$ being approximated by the measurement. As such, the $I(t)$ over time can be represented meaningfully as a vector representing the value of the function for evenly-spaced values of $t$, and the correlations can be determined as inner products of displacements of that vector. More concretely, consider a signal $\vec{I}\in\left(\reals^{*}\right)^{N}$ representing $N$ samples of $I(t)$ at $t=0, \Delta t, \ldots$, with elements indexed as $\vec{I}(0), \vec{I}(1),\ldots$. To calculate $\gn{2}(\tau)$ for $\tau\in\wholes$:
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\sum_{j=0}^{N-\tau}{\vec{I}(j)\vec{I}(j+\tau)}}
+%                    {\sum_{j=0}^{N-\tau}{\vec{I}(j)}\sum_{j=0}^{N-\tau}{\vec{I}(j+\tau)}}
+%\end{equation}
+%Note that, for $\tau\rightarrow N$, the number of elements in the sum approaches 0. This represents the undersampled region of the correlation, and as such it is necessary to define the correlation window as significantly smaller than the sampled window in order to obtain a meaningful estimate of $\gn{2}(\tau)$.
+%
+%This definition of a signal is useful for many measurements of some gross quantity which can be said to sample a non-trivial range of values in $\reals^{*}$ or \wholes. However, photon-counting produces a signal which is fundamentally binary (in $\integers_{2}$), indicating that either a photon has arrived in the time interval, or none has. In principle we can treat this vector in the same way as we do $\vec{I}$, but this is inefficient: there are only a few bins which will have any signal, and a great number which contain nothing. Therefore, for a binary signal which only occasionally has a non-zero value, it is worthwhile to develop different forms for the correlation expressed in equation~\ref{eq:gn}.
+%
+%\subsection{Defining the signal of photon arrivals}
+%In practice, any given single-photon detector can detect exactly one photon at a time, such that any photon arrival can be defined unique by its detection channel and arrival time. Therefore, the photon $\gamma$ can be represented as a 2-tuple:
+%\begin{equation}
+%\photon\equiv (c, t)\in C\times\wholes
+%\end{equation}
+%We define the functions $\Channel(\photon)$ and $\Time(\photon)$ to return the channel and arrival time of a photon \photon. From this definition, call
+%\begin{equation}
+%\photons\equiv\braces{\photon}\subset C\times\wholes
+%\end{equation}
+%the set of all detected photons. This is the signal relevant to photon-correlation methods, and its form requires that we recast the correlation function in a way which is more directly applicable. 
+%
+%To begin with, the definition of the signal on a single channel can be expressed as:
+%\begin{equation}
+%\photons_{c} = \braces{\photon\left|\photon\in\photons;~\Channel(\photon)=c\right.}
+%\end{equation}
+%In long form, this signal is the set of all detected photons, restricted to those whose channels matches the channel specified (see appendix~\ref{sec:notation} for more details). Here, there is no longer an explicit time dependence, but we can define that with an additional parameter:
+%\begin{equation}
+%\photons_{c}(t) = \abs{\braces{\photon\left|\begin{aligned}
+%                                          \photon\in\photons; \\
+%                                           \Channel(\photon)=c;\\
+%                                           \Time(\photon)=t
+%                                     \end{aligned}\right.}}
+%\end{equation}
+%where here the \abs{\cdot} indicate the number of elements in the set. To recover the complete signal \photons:
+%\begin{equation}
+%\photons = \bigcup\limits_{c\in C}{\photons_{c}}
+%\end{equation}
+%
+%\subsubsection{T3 mode is akin to T2 mode, but a second time dimension}
+%As discussed in section~\ref{sec:modes}, T3 mode has a definition distinct from that of T2 mode:
+%\begin{equation}
+%\photon\equiv(c,p,t)\in C\times\wholes\times\wholes
+%\end{equation}
+%for which $\Pulse(\photon)$ returns the pulse number for which the photon arrived. While the definitions are not perfectly clean, we will show shortly how T3 photons can be treated exactly like a pair of T2 photons, with some restrictions.
+%
+%\subsection{Calculating \gn{n} by counting photons}
+%As before, we will begin our discussion of correlation functions by constructing a set formulation of the autocorrelation. Fundamentally, we must consider two halves of a problem:
+%\begin{equation}
+%\gn{n}(\tau_{1},\ldots)=\frac{\textnormal{number of events which satisfy a given time delay}}
+%     {\textnormal{average number of photons per unit of time}}
+%\end{equation}
+%The denominator is simpler to express, so we will start there. In a given experiment of finite length, there will be some absolute beginning and end of time, such that all detected photons are elements of the subset
+%\begin{equation}
+%\channels\times \wholes_{\integrationtime}
+%\end{equation}
+%for a total experiment time \integrationtime. That is, there exists some time $\integrationtime\in\wholes$ such that
+%\begin{equation}
+%\braces{\photon\left|\photon\in\photons;\Time(\photon)\ge\integrationtime\right.} = \emptyset
+%\end{equation}
+%Here, the integration time is defined such that there are \integrationtime{} time units which pass during the experiment, since time begins with 0. This sets the minimal value for \integrationtime{} to be one greater than the arrival time of the final photon in the experiment, or
+%\begin{equation}
+%\integrationtime\ge\max(\braces{\Time(\photon)|\photon\in\photons})
+%\end{equation}
+%Now that we have determined the total units of time represented by \photons{} (either by a defined value or by some maximal time \Time(\photon)+1), the average number of photons arriving per unit of time is
+%\begin{equation}
+%\angles{I(t)} = \frac{\abs{\photons}}{\integrationtime}
+%\end{equation}
+%Next, consider the set of photons satisfying some specified time delay $\tau$:
+%\begin{equation}
+%\angles{I(t)I(t+\tau)}\propto
+%         \abs{\braces{(\photon_{0},\photon_{1})
+%               \left|\begin{aligned}
+%                     \photon_{0},\photon_{1}\in\photons;\\
+%                     \Time(\photon_{1})-\Time(\photon_{0})=\tau
+%                     \end{aligned}\right.}}
+%\end{equation}
+%This is accurate up to a normalization constant, which is related to the resolution of \Time. As discussed in section~\ref{sec:sampling_intensity}, the function does not have infinite resolution but instead approximates some true function by sampling for an interval we will call \resolution. As such, the set defined is actually for a square in time space with length \resolution{} ($t$ and $\tau$ are really $[t,t+\resolution)$ and $[\tau,\tau+\resolution)$), so we must correct for this value to be completely general:
+%\begin{equation}
+%\angles{I(t)I(t+\tau)}=    
+%         \frac{1}{\resolution^{2}}
+%         \abs{\braces{(\photon_{0},\photon_{1})
+%               \left|\begin{aligned}
+%                     \photon_{0},\photon_{1}\in\photons;\\
+%                     \Time(\photon_{1})-\Time(\photon_{0})=\tau
+%                     \end{aligned}\right.}}
+%\end{equation}
+%For the most precise form of this calculation, $\resolution=1$, but for practical reasons it will become necessary to undersample the correlation function by increasing the effective value of \resolution. This resolution should also be allowed to vary with $\tau$, so we will denote its full behavior $\resolution_{c}(\tau)$, where the $c$ subscript indicates its associated channel. Note that the reference channel $\channel_{0}$ does not have a varying resolution, because it has not associated time delay (see equation~\ref{eq:gn}). See section~\ref{sec:histogram} for more details.
+%
+%Putting this together, the full autocorrelation is
+%\begin{equation}
+%\gn{2}(\tau) = \frac{\integrationtime^{2}}{\abs{\photons}^{2}\resolution\resolution(\tau)}
+%                \abs{\braces{(\photon_{0}, \photon_{1}),
+%                              \left|\begin{aligned}
+%                              \photon_{0},\photon_{1}\in\photons \\
+%                              \Time(\photon_{1})-\Time(\photon_{0})=\tau
+%                              \end{aligned}\right.}}
+%\end{equation}
+%Extension of this result to higher dimensions and multiple channels proceeds much as before, giving the following two-channel cross-correlation:
+%\begin{equation}
+%\gn{2}(\tau) = \sum\limits_{(c_{0},c_{1})\in C^{2}}
+%                    {
+%                    \frac{\integrationtime^{2}}
+%                         {\abs{\photons_{c_{0}}}\abs{\photons_{c_{1}}}
+%                                \resolution_{c_{0}}\resolution_{c_{1}}(\tau)}
+%                    \abs{\braces{(\photon_{0},\photon_{1})
+%                          \left|\begin{aligned}
+%                          \photon_{0}\in\photons_{c_{0}};\\
+%                          \photon_{1}\in\photons_{c_{1}};\\
+%                          \Time(\photon_{1})-\Time(\photon_{0})=\tau
+%                          \end{aligned}\right.}}
+%                    }
+%\end{equation}
+%and this result for higher dimensions:
+%\begin{equation}
+%\label{eq:gn_set}
+%\begin{split}
+%&\gn{n}(\tau_{1},\ldots\tau_{n-1})= \\
+%& \sum\limits_{\vec{c}\in C^{n}}
+%                    {
+%                    \left[
+%                    \left(
+%                    \frac{\integrationtime}{\abs{\photons_{c_{0}}}\resolution_{c_{0}}}
+%                    \prod_{j=1}^{n-1}{\frac{\integrationtime}
+%                                           {\abs{\photons_{c_{j}}}\resolution_{c_{j}}(\tau_{j})}}
+%                    \right)
+%                    \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
+%                          \left|\begin{aligned}
+%                          \photon_{0}\in\photons_{c_{0}};\\
+%                          \photon_{1}\in\photons_{c_{1}};\\
+%                          \ldots;\\
+%                          \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
+%                          \ldots
+%                          \end{aligned}\right.}}
+%                    \right]
+%                    }
+%\end{split}
+%\end{equation}
+%
+%\subsubsection{The \gn{n} for T3 data can calculated like \gn{2n} for T2 data}
+%Given the notation in equation~\ref{eq:gn_set}, we see that the two timing dimensions of T3 data can be treated as separate conditions in the set, with a second unit of resolution associated with \Pulse. Calling this unit of resolution $\kappa$ and the relative pulse difference $\rho$, the full expression is:
+%\begin{equation}
+%\label{eq:gn_set_t3}
+%\begin{split}
+%&\gn{n}(\tau_{1},\rho_{1},\ldots\tau_{n-1},\rho_{n-1}) = \\
+%    &  \sum\limits_{\vec{c}\in \channels^{n}}
+%                    {
+%                    \left[
+%                    \frac{\integrationtime^{2}}
+%                         {\abs{\photons_{\channel_{0}}}\resolution_{\channel_{0}}\kappa_{\channel_{0}}}
+%                    \left(
+%                    \prod_{j=1}^{n-1}{\frac{\integrationtime^{2}}
+%                                           {\abs{\photons_{c_{j}}}^{2}
+%                                            \resolution_{c_{j}}(\tau_{j})
+%                                            \kappa_{c_{j}}(\tau_{j})}}
+%                    \right)
+%                    \abs{\braces{(\photon_{0},\ldots\photon_{n-1})
+%                          \left|\begin{split}
+%                          \photon_{0}\in\photons_{c_{0}};\\
+%                          \photon_{1}\in\photons_{c_{1}};\\
+%                          \ldots;\\
+%                          \Time(\photon_{1})-\Time(\photon_{0})=\tau_{1};\\
+%                          \Pulse(\photon_{1})-\Pulse(\photon_{0})=\rho_{1};\\
+%                          \ldots
+%                          \end{split}\right.}}
+%                    \right]
+%                    }
+%\end{split}
+%\end{equation}
+%This form is nearly identical to a \gn{2n} for T2 data, except that we still sample the channel combinations from $\channels^{n}$, reflecting the fact that $\tau_{j}$ and $\rho_{j}$ are associated with the same channel $\channel_{j}$. We will continue to discuss T2-type correlation functions, but do not that the machinery developed for such uses can easily be repurposed for T3 data.
+%
+%\subsection{Subdividing the problem of calculating \gn{n}}
+%Examining equation~\ref{eq:gn_set}, it is evident that there are a few distinct factors associated with each term of the sum:
+%\begin{itemize}
+%\item $\integrationtime$: the integration time
+%\item $\abs{\photons_{c}}$: the number of photons with a given channel \channel.
+%\item $\resolution_{c}(\tau)$: the resolution of a channel at a given time delay
+%\item $(\photon_{0},\ldots)$: $n$-tuples of photons with particular properties
+%\end{itemize}
+%Because these factors can be calculated or defined independently, we will turn our focus to the efficient determination of the value of each of these factors. Roughly, the terms can be calculated using the following programs:
+%\begin{itemize}
+%\item $\integrationtime$: \intensity
+%\item $\abs{\photons_{c}}$: \intensity
+%\item $\resolution_{c}(\tau)$: \picoquant, \histogram
+%\item $(\photon_{0},\ldots)$: \correlate, \histogram
+%\end{itemize}
+%The remainder of this paper is devoted to specifying how each term may be calculated efficiently and accurately.
 
 %In principle it is possible to bin these photon arrivals to count the number of arrivals in some time interval and recover the vector-like signal discussed above, but such steps introduce a range of subtle artifacts related to the precise origin of time and definition of bin resolution. These problems are largely avoidable if we instead develop a definition of \gn{n} which involves counting these events directly.
 
@@ -573,7 +888,7 @@ The remainder of this paper is devoted to specifying how each term may be calcul
 %                    }}}
 %                    {\abs{\braces{T}}^{2}/\left(max(T)-min(T)\right)^{2}}
 %\end{equation}
-%where $min$ and $max$ are the functions which return the minimum and maximum values of a set, respectively. Even this definition is not quite sufficient: the measurement carries its own unit of time $\epsilon$, which means that any time $t$ specified is really a range $[t,t+\epsilon)$, so with appropriate normalization the result becomes:
+%where $min$ and $max$ are the functions which return the minimum and maximum values of a set, respectively. Even this definition is not quite sufficient: the measurement carries its own unit of time $\resolution$, which means that any time $t$ specified is really a range $[t,t+\resolution)$, so with appropriate normalization the result becomes:
 %\begin{equation}
 %\gn{2}(\tau) = \frac{\abs{\braces{(t_{j}, t_{k})\left|
 %                          \begin{split} 
@@ -581,7 +896,7 @@ The remainder of this paper is devoted to specifying how each term may be calcul
 %                            t_{j}-t_{k}=\tau
 %                          \end{split}\right.
 %                    }}}
-%                    {\epsilon^{2}\abs{\braces{T}}^{2}/\left(max(T)-t\right)^{2}}
+%                    {\resolution^{2}\abs{\braces{T}}^{2}/\left(max(T)-t\right)^{2}}
 %\end{equation}
 %This result is identical to the normalization of histogrammed values, which will be discussed later.
 %
@@ -593,9 +908,9 @@ The remainder of this paper is devoted to specifying how each term may be calcul
 %                                      t_{0}\in T_{0}; t_{1}\in T_{1};\ldots \\
 %                                      t_{1}-t_{0} = \tau_{1}; \ldots
 %                                      \end{split}\right.}}}
-%                                {\prod_{j=0}^{n-1}{\epsilon_{j}\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
+%                                {\prod_{j=0}^{n-1}{\resolution_{j}\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
 %\end{equation}
-%Typically, the signals being correlated will come from the same device, such that all $\epsilon_{j}$ are equal, leading to the final formula:
+%Typically, the signals being correlated will come from the same device, such that all $\resolution_{j}$ are equal, leading to the final formula:
 %\begin{equation}
 %\label{eq:gn_set}
 %\gn{n}(\tau_{1}, \ldots) = \frac{\abs{\braces{(t_{0}, t_{1}, \ldots)\left|
@@ -603,7 +918,7 @@ The remainder of this paper is devoted to specifying how each term may be calcul
 %                                      t_{0}\in T_{0}; t_{1}\in T_{1};\ldots \\
 %                                      t_{1}-t_{0} = \tau_{1}; \ldots
 %                                      \end{split}\right.}}}
-%                                {\prod_{j=0}^{n-1}{\epsilon\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
+%                                {\prod_{j=0}^{n-1}{\resolution\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
 %\end{equation}
 %
 %\subsection{Subdividing the problem of calculating \gn{n}}
@@ -1577,7 +1892,7 @@ In principle the target set could also be \reals{} or something else, but \whole
                                               \ldots
                                               \end{aligned}\right.}}
 \end{equation}
-where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\epsilon_{c_{j}})$, and the channel definitions have been set previously. More exactly, this is a function of a set of photons which returns a function mapping bin defintions to whole numbers, but this expression here should be sufficient to convey the general understanding of what must happen.
+where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\resolution_{c_{j}})$, and the channel definitions have been set previously. More exactly, this is a function of a set of photons which returns a function mapping bin defintions to whole numbers, but this expression here should be sufficient to convey the general understanding of what must happen.
 
 While we could normalize the result by the size of the bins $b_{a_{j}}$ here, this will be handled later to prevent precision issues. 
 
@@ -1708,11 +2023,14 @@ In this paper, there is extensive use of mathematical notation following some un
 \subsubsection{Named sets}
 There are a number of important sets which arise frequently in this paper:
 \begin{itemize}
-\item
+\item \reals: The set of all real numbers
+\item \integers: The set of all integers (\braces{\ldots-1,0,1,\ldots}).
+\item \wholes: The set of all positive integers, and zero (\braces{0,1,\ldots}).
 \end{itemize}
 Additionally, there are modifiers used to indicate special subsets:
 \begin{itemize}
-\item
+\item $\cdot^{*}$: As a superscript, this indicates that the set only contains non-negative numbers. For example, $\reals^{*}$ contains all elements $x$ such that $\abs{x}=x$.
+\item $\cdot_{n}$: As a subscript, this indicates a cyclic group of order $n$. For example, $\integers_{n}=\braces{0,1,\ldots,n-1}=\integers/n$. 
 \end{itemize}
 
 \subsubsection{Set builder notation}
@@ -1720,6 +2038,17 @@ Frequently, this paper contains expressions in the following form:
 \begin{equation}
 \photons_{\channel}=\braces{\photon\left|\photon\in\photons;~\Channel(\photon)=\channel\right.}
 \end{equation}
+To read this notation, start left of the pipe to see what elements of the set look like. In this case, all elements are photons (\photon). To the right side of the pipe are the properties these elements must have, that the photon exists in the set \photons{} of photons, and that its arrival channel is $c$. 
+
+Other examples of this notation include:
+\begin{align}
+\reals^{*} &= \setbuilder{x}
+                        {x\in\reals; \abs{x}=x} \\
+\rationals &= \setbuilder{(p,q)}
+                        {p,q\in\integers} \\
+A\times B &= \setbuilder{(a,b)}
+                       {a\in A;~b\in B}                       
+\end{align}
 
 \subsubsection{Ranges}
 
