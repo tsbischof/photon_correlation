@@ -413,7 +413,7 @@ Now that we have a method for calculating the discrete correlation function, we 
                                                       \Time(\photon)+\tau\in\integrationtime
                                                       \end{aligned}}}}
 \end{equation} 
-This formula is actually an implicit improvement over equation~\ref{eq:discrete_g2}, because it can handle both positive and negative $\tau$, though it we could rewrite the latter equation to handle negative $\tau$ as needed.
+This formula is actually an implicit improvement over equation~\ref{eq:discrete_g2}, because it can handle both positive and negative $\tau$, though we could rewrite the latter equation to handle negative $\tau$ as needed.
 
 One final factor we have left out is the resolution of the experiment. When converting from real to whole time we implicitly assigned each subset $\timewindow$ to some whole number index, such that the time delay $\tau$ really represents a range of possible delays. In the final formula, we will include this factor, but for now we will leave it out for simplicity.
 
@@ -1573,61 +1573,88 @@ The problem \correlate{} must address is that of generating efficiently the set 
         \begin{aligned}
         \photon_{0}\in\photons_{c_{0}};\\
         \ldots; \\
-        \abs{\photon_{0},\ldots\photon_{n-1}}=n;\\
+        \abs{\braces{\photon_{0},\ldots\photon_{n-1}}}=n;\\
         \Time(\photon_{1})-\Time(\photon_{0})=\tau_{0};\\
-        \ldots;
+        \ldots
         \end{aligned}
         \right.}
 \end{equation}
-In long form, we must find all tuples of photons which satisfy specific rules for their relative time delays. To do this, we will start with the information we can know or enforce for the incoming stream of photons \photons:
+In long form, we must find all tuples of $n$ unique photons which satisfy specific rules for their relative time delays. To do this, we will start with the information we can know or enforce for the incoming stream of photons \photons:
 \begin{enumerate}
 \item The set \photons{} of all photons is time-ordered ($\Time(\photon_{j})\le\Time(\photon_{k})$ for $j<k$).
-\item The correlation will only be meaningful for a time window $\timewindow\subset\wholes$ much smaller than the integration time window ($[0, \integrationtime)$).
+\item The correlation will only be meaningful for a time window $\timewindow\subseteq\integrationtime$  much smaller in span than the full integration time.
 \end{enumerate}
-This latter rule can be expressed as a modification of the conditions in the set:
-\begin{align}
-\photons_{\timewindow}\equiv\braces{\photon\left|\photon\in\photons;~\Time(\photon)\in\timewindow\right.}\\
-\braces{(\photon_{0},\ldots\photon_{n-1})
-        \left|
-        \begin{aligned}
-        \photon_{0}\in\photons_{c_{0}}\cap\photons_{\timewindow};\\
-        \ldots; \\
-        \Time(\photon_{1})-\Time(\photon_{0})=\tau_{0};\\
-        \ldots;
-        \end{aligned}
-        \right.}
-\end{align}
-The former rule simplifies the algorithm we will devise to perform this calculation.
+From this, we see that it should be possible to start from some photon in the stream, find all possible tuples including that photon, then remove it from consideration and move on. That is, for a given photon \photon, there will be some subset of possible times \timewindow{} in which correlation tuples can exist, and once we have exhausted all photons in that window we can ignore the original photon for all future correlations. 
 
-\subsubsection{The photons in a time window can be found efficiently}
-Without loss of generality, we define a window window of time $\timewindow$ such that, for some bounds $a,b\in\wholes$, $a<b$:
-\begin{equation}
-\timewindow = [a,b)
-\end{equation}
-If we allow $a\rightarrow0$ and $b\rightarrow\integrationtime$, we recover the full set of times for the experiment, but for practical matters we will focus on this window \timewindow.
-
-Given that \photons{} is time-ordered, we can always draw from it a photon \photon{} with minimal time, so from here we will treat \photons{} as a queue, a structure which holds an arbitrary number of elements in a well-defined order. This queue is time-ordered, although there is some ambiguity in how to order photons arriving on different channels at the same time. Ultimately, the ordering of such photons is not important, but we can define a second order parameter for the channel if needed.
-
-In principle we could enumerate all time windows \timewindow{} with some specified \abs{\timewindow} and find events in that window, but there are far more windows than photons (otherwise, we could have treated the signal as a vector, as in section~\ref{sec:sampling_intensity}). Therefore, it is much more efficient to choose each window as starting at some photon, and draw photons from the queue until the window limit is surpassed. Once we have drawn this sub-queue $\photons_{\timewindow}$ we can turn our attention to generation of photon tuples from that set.
-
-Up to the tuple generation, our algorithm is:
+Our task can thus be divided into three main procedures:
 \begin{enumerate}
-\item[0.] Set $\photons_{\timewindow}=\emptyset$, correlation order $n$.
-\item Draw the next element $\photon$ from $\photons$:
-  \begin{enumerate}
-  \item If $\photon$ exists, add it to the last position in $\photons_{\timewindow}$.
-  \item If no $\photon$ exists (the queue is empty):
-    \begin{enumerate}
-    \item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
-    \item Halt.
-    \end{enumerate}
-  \end{enumerate}
-\item Call $\photon_{-1}$ the last photon in $\photons_{\timewindow}$ and $\photon_{0}$ the first.
-\item If $\Time(\photon_{-1})-\Time(\photon_{0})\ge\abs{\timewindow}$, go to 1.
-\item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
-\item Remove the $\photon_{0}$ from $\photons_{\timewindow}$, then go to 1.
+\item Generate each subset $\photons_{\timewindow}$.
+\item Generate all unique tuples $\vec{\photon}$ of $n$ photons in a given $\photons_{\timewindow}$.
+\item Calculate the relative time delays of the photons in $\vec{\photon}$.
 \end{enumerate}
-From this algorithm it is evident that the cost of building the windows scales most directly with the number of photons (we never have to perform more than $\abs{\photons}$ iterations of this algorithm), giving O(\abs{\photons}) for this step. 
+%This latter rule can be expressed as a modification of the conditions in the set:
+%\begin{align}
+%\photons_{\timewindow}\equiv\braces{\photon\left|\photon\in\photons;~\Time(\photon)\in\timewindow\right.}\\
+%\braces{(\photon_{0},\ldots\photon_{n-1})
+%        \left|
+%        \begin{aligned}
+%        \photon_{0}\in\photons_{c_{0}}\cap\photons_{\timewindow};\\
+%        \ldots; \\
+%        \Time(\photon_{1})-\Time(\photon_{0})=\tau_{0};\\
+%        \ldots;
+%        \end{aligned}
+%        \right.}
+%\end{align}
+%The former rule simplifies the algorithm we will devise to perform this calculation.
+
+\subsubsection{The set $\photons_{\timewindow}$ can be generated efficiently}
+Given a photon to base correlations from, the particular $\timewindow$ representing the span of possible times can be defined as:
+\begin{equation}
+\timewindow = \left[ \Time(\photon), \Time(\photon) + \abs{\timewindow} \right)
+\end{equation}
+Because the photon stream is time-ordered, we can generate the set by the following algorithm:
+\begin{lstlisting}
+for index, src_photon in enumerate(photons):
+    current_photons = list()
+    for dst_photon in enumerate(photons[index:]):
+        if dst_photon.time - src_photon.time \ 
+            < max_distance:
+            current_photons.append(dst_photon)
+        else:
+            break
+
+    correlate(src_photon, current_photons)
+\end{lstlisting}
+For each photon the stream the algorithm must examine enough photons to reach the end of $\timewindow$, so each event costs an amount proportional to the average density of photons in the stream, or roughyl O($\abs{\timewindow}$). Each photon must be processed, so the whole algorithm costs O($\abs{\photons}\abs{\timewindow}$). In the limit that $\timewindow=\integrationtime$, the algorithm costs O($\abs{\photons}^2$); at worst, for each photon it is necessary to compare with all other photons in the stream.
+
+%Without loss of generality, we define a window window of time $\timewindow$ such that, for some bounds $a,b\in\wholes$, $a<b$:
+%\begin{equation}
+%\timewindow = [a,b)
+%\end{equation}
+%If we allow $a\rightarrow0$ and $b\rightarrow\integrationtime$, we recover the full set of times for the experiment, but for practical matters we will focus on this window \timewindow.
+%
+%Given that \photons{} is time-ordered, we can always draw from it a photon \photon{} with minimal time, so from here we will treat \photons{} as a queue, a structure which holds an arbitrary number of elements in a well-defined order. This queue is time-ordered, although there is some ambiguity in how to order photons arriving on different channels at the same time. Ultimately, the ordering of such photons is not important, but we can define a second order parameter for the channel if needed.
+%
+%In principle we could enumerate all time windows \timewindow{} with some specified \abs{\timewindow} and find events in that window, but there are far more windows than photons (otherwise, we could have treated the signal as a vector, as in section~\ref{sec:sampling_intensity}). Therefore, it is much more efficient to choose each window as starting at some photon, and draw photons from the queue until the window limit is surpassed. Once we have drawn this sub-queue $\photons_{\timewindow}$ we can turn our attention to generation of photon tuples from that set.
+%
+%Up to the tuple generation, our algorithm is:
+%\begin{enumerate}
+%\item[0.] Set $\photons_{\timewindow}=\emptyset$, correlation order $n$.
+%\item Draw the next element $\photon$ from $\photons$:
+%  \begin{enumerate}
+%  \item If $\photon$ exists, add it to the last position in $\photons_{\timewindow}$.
+%  \item If no $\photon$ exists (the queue is empty):
+%    \begin{enumerate}
+%    \item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
+%    \item Halt.
+%    \end{enumerate}
+%  \end{enumerate}
+%\item Call $\photon_{-1}$ the last photon in $\photons_{\timewindow}$ and $\photon_{0}$ the first.
+%\item If $\Time(\photon_{-1})-\Time(\photon_{0})\ge\abs{\timewindow}$, go to 1.
+%\item If $\abs{\photons_{\timewindow}}\ge n$, generate tuples from $\photons_{\timewindow}$.
+%\item Remove the $\photon_{0}$ from $\photons_{\timewindow}$, then go to 1.
+%\end{enumerate}
+%From this algorithm it is evident that the cost of building the windows scales most directly with the number of photons (we never have to perform more than $\abs{\photons}$ iterations of this algorithm), giving O(\abs{\photons}) for this step. 
 
 To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant to this section, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
 
