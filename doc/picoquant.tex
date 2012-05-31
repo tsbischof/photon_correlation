@@ -5,6 +5,7 @@
 \usepackage{appendix}
 \usepackage{enumerate}
 \usepackage{listings}
+\usepackage{url}
 
 \newcommand{\cps}{\textnormal{cps}}
 \newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
@@ -49,8 +50,9 @@
 \newcommand{\nth}{\ensuremath{n}\textnormal{th}}
 
 
-\title{Correlation: Tools for performing $n$th order correlations of time-tagged photon arrivals}
-\author{Thomas Bischof \\ \texttt{tbischof@mit.edu}}
+\title{Picoquant: General-purpose tools for interacting with photon-arrival data, and for performing $n$th order correlations \\ 
+v1.0}
+\author{Thomas Bischof \\ \texttt{tbischof@mit.edu} \\ \url{http://tsbischof.dyndns.org}}
 \date{\today}
 
 \begin{document}
@@ -72,6 +74,7 @@ In the chapters devoted to the various programs, the documentation is divided fu
 \item Theoretical overview of the purpose of the program
 \item Details of the implementation
 \end{enumerate}
+If you are familiar with the details of photon correlation methods, you can safely skip to the sections describing the different programs, and to the discussion of their applications. 
 
 \subsection{A (very) brief overview of photon-arrival timing}
 In single-molecule spectroscopy, single-photon detectors are often used to perform time-resolved experiments. Detectors such as silicon-based avalanche photodiodes (APDs) can be used to detect the arrival time a photon with about 500\pico\second{} resolution, and can detect up to $10^{7}$ photons per second before saturation, abbreviated as 10\mega\cps{} hereafter (counts per second). Hardware capable of resolving these arrival times is of great use for revealing time-dependent structure to the photon stream, such as intensity fluctuations and bunching, so various hardware designs have been developed to permit such measurements.
@@ -95,11 +98,11 @@ Considering these distinct modes, it is important to spend some time discussing 
 \subsubsection{Interactive (histogram)}
 A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to reconstruct the decay curve it is necessary to average the result over many pulses of the laser, binning the arrival times of the emitted photons relative to that of the laser. If measuring this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
 
-Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $(b_{j}, b_{j+1})$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
+Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $\parens{b_{j}\upminus, b_{j}\upplus}$ and the number of counts $n_{j}$ associated with that bin, so the data can be represented by the set:
 \begin{equation}
-\braces{((b_{j}, b_{j+1}), n_{j})}
+\braces{\parens{\parens{b_{j}\upminus, b_{j}\upplus}, n_{j}}}
 \end{equation}
-The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $t\in[b_{j}, b_{j+1})$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance; typical detectors have two orders of magnitude more timing jitter than the timing hardware, so the exact definition of the histogram bin has a negligible effect.
+The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $t\in\left[b_{j}, b_{j+1}\right)$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance; typical detectors have two orders of magnitude more timing jitter than the timing hardware, so the exact definition of the histogram bin has a negligible effect.
 
 \subsubsection{T2}
 In T2 mode, all input channels are connected to photon detectors. At the start of the experiment, an internal clock is reset and started, providing a master timing reference. As a pulse arrives, the machine emits data encoding the channel and time of arrival, so the data follow the form:
@@ -168,7 +171,7 @@ All programs are designed to operate on a data stream until that stream terminat
 
 The main processing software (\picoquant, \intensity, \correlate, \histogram) is written in the C programming language, using the C99 standard. Where necessary, the definitions of data types have been defined to be of fixed width, but otherwise the definitions are those minimal for handling reasonable values. For example, in T2 mode time is defined as a signed 64-bit integer, representing $\approx 10^{19}\pico\second$, or $10^{7}\second$, or $106$ days. Pulses are counted as signed 64-bit integers, limiting their total to several thousand years of 10\mega\hertz{} pulsed laser excitation. With luck, your experiments will not exceed these values. 
 
-In addition to the C code, several analysis scripts written in Python have been provided in \text{scripts/}. These include routines to read in the outputs of most of the processing software, generate correlation functions, plot lifetime data, and so on. 
+In addition to the C code, several analysis scripts written in Python have been provided in \texttt{scripts/}. These include routines to read in the outputs of most of the processing software, generate correlation functions, plot lifetime data, and so on. 
 
 All programs will display command-line syntax when the flag \texttt{-h} or \texttt{--help} is given. The C programs have been tested most thoroughly on 32-bit and 64-bit Linux systems with the GNU C compiler, but in principle should work on any system with a C99-compliant compiler. Non-standard libraries are not used, to limit portability issues. A Makefile is present in the \texttt{src} directory which should be sufficient for compiling the software, although it will require some modification for different compiler configurations.
 
@@ -447,11 +450,11 @@ Assembling these, the complete correlation function takes following form:
 \gn{n}\parens{\vec{\resolution}} = \parens{\frac{\prod_{j=1}^{n-1}
                                                        {\abs{\integrationtime_{
                                                                  \vec{\resolution},
-                                                                 \vec{\resolution_{j}}}}}}
+                                                                 \resolution_{j}}}}}
                                                 {\prod_{j=0}^{n-1}
                                                        {\abs{\photons_{
                                                                  \vec{\resolution},
-                                                                 \vec{\resolution_{j}}}}}}}
+                                                                 \resolution_{j}}}}}}
                             \parens{\frac{\sum_{\vec{\channel}\in\channels^{n}}
                                                {\abs{\correlationset_{\vec{\resolution},
                                                                       \vec{\channel}}}}}
@@ -585,7 +588,7 @@ And with that, we have defined all of the necessary sets to be calculated on the
 %This formula will be the basis of all further discussion, so if the definitions of its constituent terms are not clear you should work through this section again.
 
 \subsubsection{Calculating \gn{n} for T3 data}
-Equation~\ref{eq:full_gn} describes the formula for calculating the autocorrelation of a set of photons tagged with arrival channel and time. Extension of the result is a matter of introducing a second time vector $\vec{\rho}$ of pulse delays, and construction of sets with further restrictions $\Pulse(\photon_{j})-\Pulse(\photon_{0})=\rho$, where the function $\Pulse$ returns the pulse number of a photon. In many regards, this turns the \gn{n} function into one more akin to \gn{2n}, but with the restriction that $\tau_{j}$ and $\rho_{j}$ are associated with channel $\channel_{j}$.
+Equation~\ref{eq:gn_full} describes the formula for calculating the autocorrelation of a set of photons tagged with arrival channel and time. Extension of the result is a matter of introducing a second time vector $\vec{\rho}$ of pulse delays, and construction of sets with further restrictions $\Pulse(\photon_{j})-\Pulse(\photon_{0})=\rho$, where the function $\Pulse$ returns the pulse number of a photon. In many regards, this turns the \gn{n} function into one more akin to \gn{2n}, but with the restriction that $\tau_{j}$ and $\rho_{j}$ are associated with channel $\channel_{j}$.
 
 \subsubsection{Calculating a single cross-correlation}
 Following the logic of the preceding sections, if we wish to calculate a single cross-correlation for a given set of channels, we can use:
@@ -595,11 +598,11 @@ Following the logic of the preceding sections, if we wish to calculate a single 
        \parens{\frac{\prod_{j=1}^{n-1}
                            {\abs{\integrationtime_{
                                         \vec{\resolution},
-                                        \vec{\resolution_{j}}}}}}
+                                        \resolution_{j}}}}}
                     {\prod_{j=0}^{n-1}
                            {\abs{\photons_{
                                         \vec{\resolution},
-                                        \vec{\resolution_{j}},
+                                        \resolution_{j},
                                         \channel_{j}}}}}}
       \parens{\frac{\abs{\correlationset_{\vec{\resolution},
                                           \vec{\channel},
@@ -1607,7 +1610,7 @@ Our task can thus be divided into three main procedures:
 %\end{align}
 %The former rule simplifies the algorithm we will devise to perform this calculation.
 
-\subsubsection{The set $\photons_{\timewindow}$ can be generated efficiently}
+\subsubsection{The set $\photons_{\timewindow}$ can be generated efficiently from a time-ordered \photons}
 Given a photon to base correlations from, the particular $\timewindow$ representing the span of possible times can be defined as:
 \begin{equation}
 \timewindow = \left[ \Time(\photon), \Time(\photon) + \abs{\timewindow} \right)
@@ -1983,7 +1986,7 @@ This data represents an electronic sync source (channel 4) and the detection of 
 1,1,2.00,3.00,-500000.00,0.00,231962
 1,1,2.00,3.00,0.00,500000.00,231694
 \end{verbatim}
-As a benchmark, on a computer with a dual-core 3\giga\hertz{} processor running 32-bit OpenSUSE 12.1, this command required 25\second{} of wall time, for \texttt{data.ht3} containing 32.7 million photon records (18.1\kilo\cps) for a total of 0.8 million correlation events.
+As a rough benchmark, on a computer with a dual-core 3\giga\hertz{} processor running 32-bit Linux, this command required 25\second{} of wall time, for \texttt{data.ht3} containing 32.7 million photon records (18.1\kilo\cps) for a total of 0.8 million correlation events.
 
 \subsubsection{\gn{3} from T2 data}
 This T2 data is the same as the laser data from before:
@@ -2023,7 +2026,7 @@ As such, each of these will be discussed separately.
 \subsubsection{The cross-correlations can be enumerated as a base-$\abs{\channels}$ numbers}
 Each histogram corresponds to a single cross-correlation, as identified by the tuple $\vec{\channel}\in\channels^{n}$, for $\channels$ the set of all channels and correlation order $n$. As such, if we enumerate the channels as whole numbers ($0, 1, \ldots$), it is evident that each element of the tuple can be treated as the coefficient of an $n$-digit number in base $\abs{\channels}$. Mapping these tuples onto the set of whole numbers can thus be achieved by the following formula:
 \begin{equation}
-\Index(\vec{\channel}) = \sum_{j=0}^{n-1}{\channel_{j}\abs{\channels}^{n-j}}
+\Index(\vec{\channel}) = \sum_{j=0}^{n-1}{\channel_{j}\abs{\channels}^{n-1-j}}
 \end{equation}
 where the elements $\channel$ refer implicitly to the index of that channel in our enumeration.
 If $\abs{\channels}=2$, this is identical to the expression of an $n$-digit binary number.
@@ -2054,6 +2057,7 @@ def binary_search(value, bins):
     while True:
         middle = (upper - lower)/2
         if value in bins[middle]:
+            # Just right
             return(middle)
         elif value < bins[middle]:
             # Too high
@@ -2080,20 +2084,54 @@ Given the $n$th-order histogram output from \histogram, \GN{} assembles the cros
 \subsection{Examples of usage}
 
 \subsection{Implementation}
-Most of the basic algorithms for this program have been laid out previously, so we will focus on the high-level tasks \gn{} must accomplish:
+Most of the basic algorithms for this program have been laid out previously, so we will focus on the high-level tasks \GN{} must accomplish:
 \begin{enumerate}
 \item Parse the output from \histogram.
 \item For the autocorrelation, sum all counts from each cross-correlation.
-\item For normalization, apply average intensities and bin widths,
+\item For normalization, apply average intensities and bin widths.
 \item Return the final correlations.
 \end{enumerate}
 
 \section{Applications}
-Now that we have laid the framework for the efficient calculation of \gn{n} for photon-arrival data, we can apply the result to interesting scientific problems.
+Now that we have laid the framework for the efficient handling of photon-arrival data, we can apply the results to interesting scientific problems.
+
+\subsection{Fluorescence blinking}
+In many fluorescent molecules, the emission is not steady at the single-molecule level, and it is useful to characterize this intermittency. One standard method for accomplishing this is to estimate the rate of photon arrival at fixed intervals in time, then determine the rate at which this rate fluctuates across some threshold. The procedure is as follows:
+\begin{enumerate}
+\item Define a series of fixed-width time bins for counting photons.
+\item Determine how many photons arrive in each bin, and normalize the counts to determine an average rate of photon arrivals in that bin.
+\item Given a threshold, map the count rate in each bin to 0 (below threshold) or 1 (above).
+\item Determine the duration of each on (1) or off (0) period, and compute the histogram of these durations.
+\end{enumerate}
+
+For an example implementation. see \texttt{scripts/blinking.py}.
 
 \subsection{Time-dependent photoluminescence lifetime}
-\subsection{Bunching and antibunching}
-\subsection{Fluorescence blinking}
+The PL lifetime can be recovered from T3 data by calculating the order 1 histogram:
+\begin{verbatim}
+> picoquant --file-in data.pt3 | \
+  histogram --mode t3 \
+            --order 1 \
+            --channels 2 \
+            --time 0,10000,100000000
+\end{verbatim}
+In some situations it is desirable to calculate the PL lifetime for some interval of time and compare that with the lifetime at other intervals. This can be achieved by dividing the photon stream and histogramming the result accordingly. See \texttt{scripts/time\_dependent\_pl.py} for more details.
+
+\subsection{Photon correlation spectroscopy}
+By calculating the cross-correlation of two detection channels, we can study important properties of a signal, such as the number of fluorophores represented. This ultimately means we need to calculate \gn{2} for the signal, with the following steps:
+\begin{enumerate}
+\item Generate the stream of correlation events from the stream of photons.
+\item Bin the events to form the cross-correlations.
+\item Use the intensities at each channel to normalize the cross-correlation.
+\end{enumerate}
+See \GN{} for details of the implementation.
+
+\subsubsection{Bunching and antibunching}
+For t2 data, calculating \gn{2} with linear bin spacing should be sufficient. For t3 data, choosing a pulse bin width of 1 will enable direct comparison of the response to a single or neighboring pulses, as used in multi-exciton emission studies.
+
+\subsubsection{Fluorescence correlation spectroscopy}
+The correlator is reasonably fast and can handle the long time delays required for FCS measurements. One slight modification is that we will typically want a logarithmic time axis, which can be achieved by passing the flag \texttt{--time-scale log} to \GN{} or \histogram. Additionally, it is often useful to perform this measurement with the full autocorrelation, since the time delays are well beyond the dead time of the hardware, so use the full autocorrelation returned by \GN.
+
 
 \appendixpage
 \begin{appendix}
@@ -2111,8 +2149,8 @@ In this paper, there is extensive use of mathematical notation following some un
 
 \subsection{Glossary}
 \begin{itemize}
-\item tuple
-\item set
+\item set: A collection of things. Typically indicated by \braces{\cdot}.
+\item tuple: An ordered set of a finite number of elements, typically indicated by \parens{\cdot}. Similar in structure to a vector.
 \end{itemize}
 
 \subsection{Variables}
@@ -2142,7 +2180,7 @@ In this paper, there is extensive use of mathematical notation following some un
 \item $\tau$:  Time delay.
 \item $\timewindow$: Time window, some subset of time in the experiment.
 \item $\integrationtime$: Integration time for the experiment.
-\item $\emptyset$: The empty set, or a lack of a value.
+%\item $\emptyset$: The empty set, or a lack of a value.
 \end{itemize}
 
 \subsection{Sets}
@@ -2166,6 +2204,7 @@ There are a number of important sets which arise frequently in this paper:
 Additionally, there are modifiers used to indicate special subsets:
 \begin{itemize}
 \item $\cdot^{*}$: As a superscript, this indicates that the set only contains non-negative numbers. For example, $\reals^{*}$ contains all elements $x$ such that $\abs{x}=x$.
+\item $\cdot^{+}$: As a superscript, this indicates that the set only contains positive numbers. 
 \item $\cdot_{n}$: As a subscript, this indicates a cyclic group of order $n$. For example, $\integers_{n}=\braces{0,1,\ldots,n-1}=\integers/n$. 
 \end{itemize}
 
@@ -2181,7 +2220,7 @@ Other examples of this notation include:
 \reals^{*} &= \setbuilder{x}
                         {x\in\reals; \abs{x}=x} \\
 \rationals &= \setbuilder{(p,q)}
-                        {p,q\in\integers} \\
+                        {p\in\integers;~q\in\integers^{+}} \\
 A\times B &= \setbuilder{(a,b)}
                        {a\in A;~b\in B}                       
 \end{align}

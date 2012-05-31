@@ -6,15 +6,15 @@ import fractions
 import math
 import functools
 import collections
+import optparse
 
-T2 = "t2"
-T3 = "t3"
+picoquant = "picoquant"
+intensity = "intensity"
+correlate = "correlate"
+histogram = "histogram"
 
-##def make_ordered_channels(n_channels, order):
-##     for permutation in itertools.product(range(n_channels), repeat=order):
-##          sorted_permutation = tuple(sorted(permutation))
-##          if permutation != sorted_permutation:
-##               # We must deal with it?
+t2 = "t2"
+t3 = "t3"
 
 def flatten(LoL):
      for elem in LoL:
@@ -33,12 +33,12 @@ def chunks(L, n=2):
                chunk = list()
 
 def get_bins(bins, mode):
-     if mode == T2:
+     if mode == t2:
           for chunk in chunks(bins, 3):
                channel = int(chunk[0])
                bounds = (float(chunk[1]), float(chunk[2]))
                yield((channel, TimeBin(bounds)))
-     elif mode == T3:
+     elif mode == t3:
           for chunk in chunks(bins, 5):
                yield((int(chunk[0]),
                       tuple(map(lambda x: TimeBin(x),
@@ -48,19 +48,12 @@ def get_bins(bins, mode):
      else:
           raise(ValueError("Mode [0} not recognized.".format(mode)))
 
-def unique_correlations(n_channels, order):
-     return(
-          itertools.combinations_with_replacement(
-               itertools.repeat(range(n_channels), order),
-               order))
-
 def all_correlations(n_channels, order):
      return(
           itertools.product(
                range(n_channels),
                repeat=order))
-                                                    
-
+     
 class Histogram(object):
      def __init__(self, mode, n_channels, order, correlation=tuple()):
           self.n_channels = n_channels
@@ -98,14 +91,7 @@ class Histogram(object):
                     # Each term starts with the raw counts.
                     counts = fractions.Fraction(self.counts, 1)
 
-                    # To normalize the counts, we must account for the
-                    # average
-                    # number of photons per unit phase space, and the volume
-                    # of phase space counted:
-                    #                 1
-                    # ---------------------------------------
-                    # prod(average intensity) prod(bin width)
-                    if self.mode == T2:
+                    if self.mode == t2:
                          integration_time = intensities[self.ref_channel].span(
                               time_resolution)
 
@@ -193,7 +179,50 @@ def autocorrelation_from_cross(correlations, intensities):
      pass
 
 if __name__ == "__main__":
-     mode = T2
+    parser = optparse.OptionParser()
+    parser.add_option("-m", "--mode", dest="mode",
+                      help="Mode to interpret the data as. By default, "
+                          "the program will attempt to guess the mode.",
+                      action="store")
+    parser.add_option("-w", "--intensity-bin-width", dest="intensity_bin_width",
+                      help="Set the bin width for an intensity run, in ms (t2) "
+                          "or pulses (t3).",
+                      action="store", type=float)
+    parser.add_option("-n", "--number", dest="number",
+                       help="Number of entries to process. By default, all "
+                           "entries are processed.",
+                       action="store", type=int)
+    parser.add_option("-c", "--channels", dest="channels",
+                      help="Number of channels in the data. The default is "
+                          "to guess the number from the file type.",
+                      action="store", type=int)
+    parser.add_option("-g", "--order", dest="order",
+                      help="Order of the correlation to run. The default is 2.",
+                      action="store", type=int)
+    parser.add_option("-v", "--verbose", dest="verbose",
+                      help="Print debug-level information.",
+                      action="store_true", default=False)
+    parser.add_option("-q", "--quiet", dest="quiet",
+                      help="Suppress all non-vital messages.",
+                      action="store_true", default=False)
+    parser.add_option("-d", "--time", dest="time_limits",
+                      help="Specify the time limits for a histogram run, "
+                          "as lower,bins,upper.",
+                      action="store")
+    parser.add_option("-e", "--pulse", dest="pulse_limits",
+                      help="Specify the pulse limits for a histogram run.",
+                      action="store")
+    parser.add_option("-D", "--time-scale", dest="time_scale",
+                      help="Scale for the time axis of a histogram run. Can "
+                      "be linear, log, or log-zero (includes zero-time bin)",
+                      default="linear", action="store")
+    parser.add_option("-p", "--print-every", dest="print_every",
+                      help="Print the record number whenever it is divisible "
+                      "by this number. By default, nothing is printed.",
+                      default=0, action="store", type=int)
+
+    
+     mode = t2
      n_channels = 4
      order = 3
      name_base = "blargh"

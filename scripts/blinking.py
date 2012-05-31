@@ -113,7 +113,7 @@ if __name__ == "__main__":
                       help="Number of channels in the data. The default is "
                           "to guess the number from the file type.",
                       action="store", type=int, default=2)
-    parser.add_option("-t", "--threshold", dest="threshold",
+    parser.add_option("-H", "--threshold", dest="threshold",
                       help="Threshold rate of photon arrival for blinking "
                            "analysis, in counts per second.",
                       action="store", type=float)
