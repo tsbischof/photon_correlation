@@ -3,7 +3,13 @@ function histograms = read_g2(filename)
 % format output by histogram.
 %
 % The output is a 2d array of histograms, indexed by the channels 
-% corresponding to the particular cross-correlation.
+% corresponding to the particular cross-correlation. The histograms are
+% represented as a 2d array, with the first column indicating the centers
+% of each bin and the second column the counts in those bins.
+%
+% For example, to plot a histogram for the cross-correlation (1,1):
+% histograms = read_g2('blargh.pt2.g2')
+% plot(histograms{1,1}(:,1), histograms{1,1}(:,2))
 stream = fopen(filename, 'r');
 raw_histogram = textscan(stream, '%d32,%d32,%f64,%f64,%d64\n');
 
