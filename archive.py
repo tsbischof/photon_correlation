@@ -39,22 +39,24 @@ def archive_source(source_dirs, suffixes):
 def make_executables(targets):
     for target in targets:
         if target == "linux_x86":
-            os.chdir("src")
-            subprocess.Popen(["make", "clean"]).wait()
-            subprocess.Popen(["make"]).wait()
-
-            archive = "{0}-{1}-{2}.tar.bz2".format(base_name,
-                                           target,
-                                           version)
+            archive = os.path.join(archive_dir,
+                                   "{0}-{1}-{2}.tar.bz2".format(base_name,
+                                                                target,
+                                                                version))
 
             with tarfile.open(archive, "w:bz2") as tar_file:
+                os.chdir("scripts")
+                tar_file.add("gn.py")
+                os.chdir(os.pardir)
+ 
+                os.chdir("src")
+                subprocess.Popen(["make", "clean"]).wait()
+                subprocess.Popen(["make"]).wait()
                 for executable in executables:
                     tar_file.add(executable)
+                subprocess.Popen(["make", "clean"]).wait()
 
-            subprocess.Popen(["make", "clean"]).wait()
-
-            shutil.move(archive, os.path.join(os.pardir, archive_dir, archive))
-            os.chdir(os.pardir)                                         
+                os.chdir(os.pardir)                                         
             
 
 if __name__ == "__main__":
