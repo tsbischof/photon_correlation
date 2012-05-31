@@ -21,7 +21,7 @@ counts = raw_histogram{5};
 n_channels = src_channels(end)+1;
 n_bins = length(src_channels)/(n_channels^2);
 
-histograms = cell(2,2);
+histograms = cell(n_channels,n_channels);
 
 for src_channel=1:n_channels
     for dst_channel=1:n_channels

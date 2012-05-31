@@ -1656,83 +1656,123 @@ For each photon the stream the algorithm must examine enough photons to reach th
 %\end{enumerate}
 %From this algorithm it is evident that the cost of building the windows scales most directly with the number of photons (we never have to perform more than $\abs{\photons}$ iterations of this algorithm), giving O(\abs{\photons}) for this step. 
 
-To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant to this section, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
+To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
 
 \subsubsection{Generating correlation events (photon tuples) from $\photons_{\timewindow}$}
-Given the algorithm to find all subqueues $\photons_{\timewindow}$, we turn our attention to finding the tuples $(\photon_{0},\ldots\photon_{n-1})$ in a given $\photons_{\timewindow}$. Formally, we want to generate the elements of the set
-\begin{equation}
-\braces{(\photon_{0},\ldots\photon_{n-1})\left|\photon_{0},\ldots\in\photons_{\timewindow}\right.}
-\end{equation}
-This is actually a quite familiar problem, if we ignore the photon structure and instead focus on producing the appropriate indices from the queue. Call $N\equiv\abs{\photons_{\timewindow}}$, and note that we are looking to produce all unique permutations of $n$ elements of $\integers_{N}$. These can be ordered to produce:
-\begin{align*}
-&(0, 0,\ldots 0, 0) \\
-&(0, 0, \ldots 0, 1) \\
-&\ldots \\ 
-&(0, 0, \ldots 0, N-1) \\
-&(0, 0, \ldots 1, 0) \\
-&\ldots 
-\end{align*}
-These can be enumerated as the numbers $0,1,\ldots N^{n}-1$ in base $N$, which can be seen by treating each element of the tuple as a coefficient in the base expansion of a number. For example, any number $N\in\wholes$ can be expressed as a sum over powers of 2:
-\begin{equation}
-N = \sum_{j=0}^{n}{c_{j}2^{j}}
-\end{equation}
-for some $n\in\wholes$. While this is true, it is also subject to some redundancy, because we have shown that the positive-time correlation is sufficient for reconstruction all negative times (see section~\ref{sec:correlation_function}), so we actually only need to compute this factor for all time-ordered tuples. Additionally, any tuple containing the same photon twice is not important, because there will never be any structure to a photon correlated with itself. Thus we need only include the tuples for which the indices are ordered and unique, the upper hypertriangle in index space.
+Given a subset of photons $\photons_{\timewindow}$ and an original tagged photon $\photon_{0}$, we must generate all tuples of $n$ unique photons from this pool. That is, we must generate all unique combinations of $n$ photons from the set $\braces{\photon_{0}}\cup\photons_{\timewindow}$, or equivalently all unique combinations of $n$ choices of  $\abs{\braces{\photon_{0}}\cup\photons_{\timewindow}}$ items. Combination generation algorithms are well-established, and the one used here works by incrementing the trailing digits as needed:
+\begin{lstlisting}
+combination = range(1, n)
+limit = N
 
-Additionally, because the window will move to eliminate the first photon, any correlation not involving this photon should not be handled now. Thus the index tuples of interest are:
-\begin{align*}
-&(0,1,\ldots,n-2, n-1)\\
-&(0,1,\ldots,n-2, n)\\
-&\ldots\\
-&(0,1,\ldots,n-2,N-1)\\
-&(0,1,\ldots,n-1,n)\\
-&\ldots\\
-&(0,N-n,\ldots N-1)
-\end{align*}
-
-To generate these combinations of indices, apply the following algorithm:
+def next_combination(combination, limit):
+    leading_digit = combination[0]
+    
+    for index in reversed(range(len(combination))):
+        final_index = index
+        combination[index] = (combination[index]+1) \
+                             % limit
+        if combination[index] != 0:
+            # No overflow, so we have a valid new value.
+            break
+    
+    if final_index == 0:
+        combination[0] = leading_digit + 1
+       
+    for index in range(final_index, len(combination)):
+        combination[index] = combination[index-1] + 1
+    
+    # If True, the combination is valid. 
+    return(combination[-1] < limit) 
+\end{lstlisting}
+This is a bit obtuse, so we will work out an example. Say we have 4 photons to correlate to order 3. We only want unique photons, so the first combination will be $(0,1,2)$ where we have included the tagged photon for clarity. To get the next combination, we increment the final digit and obtain $(0,1,3)$. This is still valid (all indices are within the limit), so we use it. The next combination is a bit trickier, and we follow these steps to obtain it:
 \begin{enumerate}
-\item[0.] Define $x\leftarrow(0,1,\ldots n-1)$, and index the $j$th element of $x$ as $x_{j}$. 
-\item Yield $x$.
-\item Increment as many digits of $x$ as necessary:
-  \begin{enumerate}
-  \item Set $j\leftarrow n-1$.  
-  \item If $j\le 1$, halt this loop.
-  \item Increment $x_{j}$. 
-  \item If $x_{j}\ge N$, set $x_{j}\leftarrow 0$, decrement $j$, and go to 1(b) (overflow of this digit).
-  \item Otherwise, set $j\leftarrow 0$, decrement $j$, and go to 1(b) (no overflow, stop incrementing).
-  \end{enumerate}
-\item Refill the overflowed digits of $x$:
- \begin{enumerate}
- \item If $x_{1}=0$, we have incremented up to the first index. Set $x_{1}\leftarrow x_{1}'+1$.
- \item Set $j\leftarrow 1$.
- \item If $j\ge n$, halt this loop.
- \item If $x_{j}=0$, set $x_{j}\leftarrow x_{j-1}+1$ (increment the digit based on the previous non-overflowed digit).
- \item Increment $j$, and go to 3(c).
- \end{enumerate}
-\item If $x_{n-1}\ge N$, halt. This is not a valid tuple of indices, which means we have exhausted all of the valid tuples.
-\item Otherwise, go to 1.
+\item $(1,3+1 \pmod{4}) = (1, 0)$
+\item $(1+1, 0) = (2, 0)$
+\item We have incremented a value without causing an integer overflow (mod 4), so now we must repopulate the overflowed digits with the smallest possible value.
+\item $(2, 2+1) = (2, 3)$
+\item $3 < 4$, so this is a valid combination.
 \end{enumerate}
-This algorithm is not perfect, as we must loop over all elements of the tuple in the refilling step. This is ultimately a minor cost and could be accounted for in the implementation, but for \correlate{} the algorithm was implemented as described.
+This process is repeated up to $(0,2,3)$, at which point $(0,3,4)$ would be generated. As this is not valid, we receive \texttt{False} as output to indicate as such, and the generation stops.
 
-In long form, we start at the right end of the tuple, incrementing values while moving left until we find a value which does not overflow past $N$. Once we find this value, we stop incrementing, then form the next possible tuple from the leading non-zero index, or the previous value of the leading digit if we have overflowed that as well. If the tuple can be refilled without overflowing, it is valid and we yield it. Otherwise, we have reached the end and are finished.
+The exact scaling of this algorithm could be worked out by noting the frequency of incrementing $1, 2, \ldots$ digits, but we know it must cost something less than $n$ increments per step. Thus, this generation algorithm will process any given set $\photons_{\timewindow}$ in better than O($n\abs{\photons_{\timewindow}}$) time.
 
-From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($nN$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
-
+%Given the algorithm to find all subqueues $\photons_{\timewindow}$, we turn our attention to finding the tuples $(\photon_{0},\ldots\photon_{n-1})$ in a given $\photons_{\timewindow}$. Formally, we want to generate the elements of the set
+%\begin{equation}
+%\braces{(\photon_{0},\ldots\photon_{n-1})\left|\photon_{0},\ldots\in\photons_{\timewindow}\right.}
+%\end{equation}
+%This is actually a quite familiar problem, if we ignore the photon structure and instead focus on producing the appropriate indices from the queue. Call $N\equiv\abs{\photons_{\timewindow}}$, and note that we are looking to produce all unique permutations of $n$ elements of $\integers_{N}$. These can be ordered to produce:
+%\begin{align*}
+%&(0, 0,\ldots 0, 0) \\
+%&(0, 0, \ldots 0, 1) \\
+%&\ldots \\ 
+%&(0, 0, \ldots 0, N-1) \\
+%&(0, 0, \ldots 1, 0) \\
+%&\ldots 
+%\end{align*}
+%These can be enumerated as the numbers $0,1,\ldots N^{n}-1$ in base $N$, which can be seen by treating each element of the tuple as a coefficient in the base expansion of a number. For example, any number $N\in\wholes$ can be expressed as a sum over powers of 2:
+%\begin{equation}
+%N = \sum_{j=0}^{n}{c_{j}2^{j}}
+%\end{equation}
+%for some $n\in\wholes$. While this is true, it is also subject to some redundancy, because we have shown that the positive-time correlation is sufficient for reconstruction all negative times (see section~\ref{sec:correlation_function}), so we actually only need to compute this factor for all time-ordered tuples. Additionally, any tuple containing the same photon twice is not important, because there will never be any structure to a photon correlated with itself. Thus we need only include the tuples for which the indices are ordered and unique, the upper hypertriangle in index space.
+%
+%Additionally, because the window will move to eliminate the first photon, any correlation not involving this photon should not be handled now. Thus the index tuples of interest are:
+%\begin{align*}
+%&(0,1,\ldots,n-2, n-1)\\
+%&(0,1,\ldots,n-2, n)\\
+%&\ldots\\
+%&(0,1,\ldots,n-2,N-1)\\
+%&(0,1,\ldots,n-1,n)\\
+%&\ldots\\
+%&(0,N-n,\ldots N-1)
+%\end{align*}
+%
+%To generate these combinations of indices, apply the following algorithm:
+%\begin{enumerate}
+%\item[0.] Define $x\leftarrow(0,1,\ldots n-1)$, and index the $j$th element of $x$ as $x_{j}$. 
+%\item Yield $x$.
+%\item Increment as many digits of $x$ as necessary:
+%  \begin{enumerate}
+%  \item Set $j\leftarrow n-1$.  
+%  \item If $j\le 1$, halt this loop.
+%  \item Increment $x_{j}$. 
+%  \item If $x_{j}\ge N$, set $x_{j}\leftarrow 0$, decrement $j$, and go to 1(b) (overflow of this digit).
+%  \item Otherwise, set $j\leftarrow 0$, decrement $j$, and go to 1(b) (no overflow, stop incrementing).
+%  \end{enumerate}
+%\item Refill the overflowed digits of $x$:
+% \begin{enumerate}
+% \item If $x_{1}=0$, we have incremented up to the first index. Set $x_{1}\leftarrow x_{1}'+1$.
+% \item Set $j\leftarrow 1$.
+% \item If $j\ge n$, halt this loop.
+% \item If $x_{j}=0$, set $x_{j}\leftarrow x_{j-1}+1$ (increment the digit based on the previous non-overflowed digit).
+% \item Increment $j$, and go to 3(c).
+% \end{enumerate}
+%\item If $x_{n-1}\ge N$, halt. This is not a valid tuple of indices, which means we have exhausted all of the valid tuples.
+%\item Otherwise, go to 1.
+%\end{enumerate}
+%This algorithm is not perfect, as we must loop over all elements of the tuple in the refilling step. This is ultimately a minor cost and could be accounted for in the implementation, but for \correlate{} the algorithm was implemented as described.
+%
+%In long form, we start at the right end of the tuple, incrementing values while moving left until we find a value which does not overflow past $N$. Once we find this value, we stop incrementing, then form the next possible tuple from the leading non-zero index, or the previous value of the leading digit if we have overflowed that as well. If the tuple can be refilled without overflowing, it is valid and we yield it. Otherwise, we have reached the end and are finished.
+%
+%From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($nN$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
+%
 To see the implementation of this algorithm in \correlate, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
 
 \subsubsection{Production of the correlation event, given a photon tuple}
-There are two distinct modes enabled in \correlate{} for producing the correlation events: with and without ordering of channels. We will deal with the time-ordered, channel-unordered case first. 
+Given a tuple of $n$ photons, all correlation events corresponding to that tuple can be achieved by determining the displacements between all permutations of those photons. For example, two photons $\photon_{0}$ and $\photon_{1}$ will contribute both to $\gn{2}_{(0,1)}$ and $\gn{2}_{(1,0)}$, so we must consider the $\tau$ produced by treating each ordering of the two photons. Generation of permutations is an equivalent problem to generation of integers in some base, such that no two digits are identical. In the code, this is achieved by incrementing through all $n$-digit numbers in base $n$, and storing the ones with no identical digits in an array for later usage. This requires the generation of $n^{n}$ values and the storage of $n!$ values, but this should be a small number in most circumstances. 
 
-Given a tuple of photons $(\photon_{0},\ldots\photon_{n-1})$ known to satisfy the conditions for including in calculating \gn{n}, we must produce the time differences $(\tau_{1}, \ldots\tau_{n-1})$. This can be done with the following algorithm:
-\begin{enumerate}
-\item[0.] Set $j\leftarrow 1$.
-\item If $j\ge n$, halt and yield $(\tau_{1},\ldots\tau_{n-1})$.
-\item Set $\tau_{j}\leftarrow \Time(\photon_{j}) - \Time(\photon_{0})$.
-\item Increment $j$ and go to 1.
-\end{enumerate}
-This process scales as O($n$), although the constant factor is quite small relative to the other steps in the overall algorithm. Correlation for T3 mode involves a second term for the pulse difference, but it otherwise identical.
-
-To perform this same step for channel-ordered (time-unordered) photons, we can pre-populate a list of all possible channel orders and combinations and the order of the indices to choose, instead of incrementing from start to finish. The details of this will be described in section~\ref{sec:histogram}, but the result is that the cost of this operation is only upfront, and there is essentially no additional cost once the list of combinations exists.
+To see how the permutations are generated, see \texttt{combinations.c}. To see how these are used, see \texttt{correlate\_t*.c}, particularly the \texttt{correlate\_t*\_block} procedures.
+%There are two distinct modes enabled in \correlate{} for producing the correlation events: with and without ordering of channels. We will deal with the time-ordered, channel-unordered case first. 
+%
+%Given a tuple of photons $(\photon_{0},\ldots\photon_{n-1})$ known to satisfy the conditions for including in calculating \gn{n}, we must produce the time differences $(\tau_{1}, \ldots\tau_{n-1})$. This can be done with the following algorithm:
+%\begin{enumerate}
+%\item[0.] Set $j\leftarrow 1$.
+%\item If $j\ge n$, halt and yield $(\tau_{1},\ldots\tau_{n-1})$.
+%\item Set $\tau_{j}\leftarrow \Time(\photon_{j}) - \Time(\photon_{0})$.
+%\item Increment $j$ and go to 1.
+%\end{enumerate}
+%This process scales as O($n$), although the constant factor is quite small relative to the other steps in the overall algorithm. Correlation for T3 mode involves a second term for the pulse difference, but it otherwise identical.
+%
+%To perform this same step for channel-ordered (time-unordered) photons, we can pre-populate a list of all possible channel orders and combinations and the order of the indices to choose, instead of incrementing from start to finish. The details of this will be described in section~\ref{sec:histogram}, but the result is that the cost of this operation is only upfront, and there is essentially no additional cost once the list of combinations exists.
 
 %\subsubsection{Definition of the correlation as the order of a set}
 %As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
@@ -1980,79 +2020,60 @@ The problem of populating and returning histograms for all possible correlations
 \end{enumerate}
 As such, each of these will be discussed separately.
 
-\subsubsection{The histograms can be enumerated as a base-$N$ numbers}
-Each histogram corresponds to a single cross-correlation identify by the vector $\vec{\channel}\in\channels^{n}$, for $\channels$ the set of all channels and correlation order $n$. As such, if we enumerate the channels as $\braces{0,1,\ldots N-1}$ and assign powers of $N$ to each index of the vector, we have found a way to uniquely identify the vector as an integer. If we index $\vec{\channel}=(\channel_{0},\channel_{1}\ldots)$, we can use the following function for enumeration:
+\subsubsection{The cross-correlations can be enumerated as a base-$\abs{\channels}$ numbers}
+Each histogram corresponds to a single cross-correlation, as identified by the tuple $\vec{\channel}\in\channels^{n}$, for $\channels$ the set of all channels and correlation order $n$. As such, if we enumerate the channels as whole numbers ($0, 1, \ldots$), it is evident that each element of the tuple can be treated as the coefficient of an $n$-digit number in base $\abs{\channels}$. Mapping these tuples onto the set of whole numbers can thus be achieved by the following formula:
 \begin{equation}
-\Index(\vec{c}) = \sum_{j=0}^{n-1}{c_{j}N^{n-j}}
+\Index(\vec{\channel}) = \sum_{j=0}^{n-1}{\channel_{j}\abs{\channels}^{n-j}}
 \end{equation}
-If $c_{j}\in\integers_{2}$ and $N=2$, this is identical to the conversion of $n$ binary digits to an integer. As is convention, we define the left-most digit ($\channel_{0}$) as carrying the highest power ($N^{n-1}$) and the right-most digit ($\channel_{n-1}$) as carrying the lowest power ($N^{0}=1$).
+where the elements $\channel$ refer implicitly to the index of that channel in our enumeration.
+If $\abs{\channels}=2$, this is identical to the expression of an $n$-digit binary number.
 
-As an aside, note that this function is isomorphic (invertible), although we will never need to exploit this feature here. 
+In the software, all possible cross-correlations are enumerated and the corresponding histograms allocated before beginning the calculation. This requires some computational overhead at instantiation, and if an application requires the calculation of large numbers of histograms it may be more efficient to modify the code to output and reset upon receiving particular signals.
 
-Thus, for any vector $\vec{c}$ encountered in the stream we have a method for identifying its corresponding cross-correlation and therefore the histogram it corresponds to. We also know there must be $N^{n}$ histograms, and therefore we pre-allocate them in memory before performing the actual processing of the stream. This leads to some amount of computational overhead for each instance of \histogram, but ultimately this will almost always be negligible in comparison with the cost of processing the stream. 
-
-To see how this is implemented in \histogram, the functions \texttt{*combinations*} in \texttt{combinations.c} handle the base-$N$ number mathematics and the population of an array containing all $\vec{\channel}\in\channels$. These routines also determine the sorted list of indices and the order of indexing required to obtain the sort, as used for the \texttt{--channels-ordered} flag of \correlate. 
+The implementation of these methods can be found in \texttt{histogram\_gn.c} and \texttt{combinations.c}.
 
 \subsubsection{A histogram is function of $n$-dimensional vectors mapping mapping onto integers}
-Now that we can enumerate all histograms and identify the histogram some permutation of channels corresponds to, we can ignore the channels and focus on the timing (time or pulse) component of the correlation event. More specifically, each time dimension of the correlation is some value $t\in\integers$, and for each dimension we have specified some subset of $\integers$ to assign values to. Formally, we can assign any such $t$ to some value in $\integers_{a}$ for some $a\in\integers^{+}$. 
+Once the particular cross-correlation has been identified, the task falls to that of incrementing a counter corresponding to the appropriate histogram bin. The purpose of a histogram is to divide some phase space into well-defined smaller blocks, and then to count the number of events which fall into those blocks. We will restrict ourselves to rectangular volumes, so the task of identifying the correct volume of phase space can be reduced to determining the correct index along all axes, and thus each indexing step is identical to that for a single-dimensional histogram. 
 
-To see how this is performed, consider the role of the time limits $t_{\min}$ and $t_{\max}$. These define a range $[t_{\min},t_{\max})\subset\integers$ that $t$ is allowed to fall into (if $t\not\in[t_{\min},t_{\max})$ we reject it). Furthermore, we define a number of bins $\braces{b}=B$ which are themselves non-overlapping ranges in $[t_{\min},t_{\max})$ spanning the full range:
-\begin{align}
-\bigcup\limits_{b\in B}{b} &= [t_{\min},t_{\max}) \\
-b_{j}\cap b_{k}&\not=\emptyset~\iff j=k
-\end{align} 
-As such, we can order and enumerate these bins by sorting their lower bound. This provides an isomorphic map from bin number to some index $j\in\integers_{\abs{B}}$, so any $t\in[t_{min},t_{max})$ can be mapped onto a value $\integers_{\abs{B}}$. 
+In one dimension, we first define a range of values into which the events can fall, for example $\timewindow=\left[\timewindow\upminus,\timewindow\upplus\right)\subset\integers$. Next, we define some number $N$ of ranges $\resolution$ whose members collectively span $\timewindow$. These $\resolution$ can be enumerated $0,1,\ldots N-1$, so assign these indices in order to the sorted $\resolution$. Now this one dimension is represented by an $N$-dimensional vector whose dimensions represent some $\resolution$. The task then turns to mapping any value $z\in\integers$ to the appropriate $\resolution$.
 
-Collecting all of these dimensions, we see that any given tuple of bin assignments $(a_{1},\ldots)$ is an element of bin space:
+For linearly-spaced sub-ranges, this identification can be achieved in O(1) time by:
 \begin{equation}
-(a_{1},\ldots a_{n-1})\in B_{1}\times\ldots~B_{n-1}
+\Index(x) = \timewindow\upminus + x\parens{\frac{\timewindow\upplus-\timewindow\upminus}{N}}
 \end{equation}
-For this paper, the histogram counts the number of events associated with each such bin, so it is a function
-\begin{equation}
-\Histogram:B_{1}\times\ldots~B_{n-1}\rightarrow\wholes
-\end{equation}
-In principle the target set could also be \reals{} or something else, but \wholes{} is most appropriate here. Referring to equation~\ref{eq:gn_set}, we see that this function is
-\begin{equation}
-\Histogram(a_{1},\ldots a_{n-1}) = \abs{\braces{(\photon_{0}.\ldots\photon_{n-1})
-                                              \left|\begin{aligned}
-                                              \gamma_{0}\in\photons_{c_{0}};\\ 
-                                              \ldots;\\                                              
-                                              \Time(\photon_{1})-\Time(\photon_{0})\in b_{a_{0}};\\
-                                              \ldots
-                                              \end{aligned}\right.}}
-\end{equation}
-where the ranges $b_{a_{j}}$ have replaced the implicit ranges $[\tau_{j},\tau_{j}+\resolution_{c_{j}})$, and the channel definitions have been set previously. More exactly, this is a function of a set of photons which returns a function mapping bin defintions to whole numbers, but this expression here should be sufficient to convey the general understanding of what must happen.
+However, in the code this is not used, and instead a more general binary search algorithm (costing O($\log(N)$)) is implemented to permit arbitrary spacings of these ranges. The binary algorithm determines the placement of an element into a sorted list by iterative division of the list into upper and lower halves, until the appropriate element is define. This is implemented as:
+\begin{lstlisting}
+def binary_search(value, bins):
+    upper = len(bins)
+    lower = 0
+    
+    if value < bins[0] or values > bins[-1]:
+        # Not in the bounds
+        return(False)
+     
+    while True:
+        middle = (upper - lower)/2
+        if value in bins[middle]:
+            return(middle)
+        elif value < bins[middle]:
+            # Too high
+            upper = middle
+        else:
+            # Too low
+            lower = middle
+\end{lstlisting}
+Because this must be performed for each dimension of the correlation, the search costs O($n\log{(N)}$) time, compared to the O($n$) for the complete linear search. 
 
-While we could normalize the result by the size of the bins $b_{a_{j}}$ here, this will be handled later to prevent precision issues. 
-
-From this, the algorithm for incrementing a bin is:
-\begin{enumerate}
-\item Draw a correlation event $g_{\photon}$ from the stream of correlation events. 
-\item If $g_{\photon}$ does not exist, halt.
-\item Determine the index of the histogram from $(\Channel(\photon_{0}), \Channel(\photon_{1}),\ldots\Channel(\photon_{n-1}))$.
-\item Determine the bin indices $(a_{1},\ldots a_{n-1})$ from $(\tau_{1},\ldots\tau_{n-1})$ by binary searches over each dimension.
-\item If any index $a_{j}$ is undefined, the event is not associated with \Histogram{} because some value is outside the valid range. Go to 1.
-\item Increment the number of counts for the bin $\Histogram(a_{1},\ldots a_{n-1})$ and go to 1.
-\end{enumerate}
-In step 4, the binary search refers to the standard binary search algorithm. To see how this is performed, note that we have set $B$ of bins $b_{j}$ as defined above. We wish to associate some value $t$ with the bin $b_{a}$ such that $t\in b_{a}$. If no such $b_{a}\in B$ exists, we will indicate as such. Therefore, we are looking to search the tuple of indices $(0,1,\ldots \abs{B}-1)$ for the correct index as efficiently as possible, without any prior knowledge of the form of $b_{a}$. Such an algorithm is:
-\begin{enumerate}
-\item[0.] If $t\not\in[t_{\min},t_{\max})$, return $\emptyset$.
-\item Set $a_{low}\leftarrow 0$, $a_{high}\leftarrow\abs{B}$.
-\item Set $a\leftarrow\ceil{\frac{a_{high}-a_{low}}{2}}$
-\item If $t\in b_{a}$, return $a$.
-\item If $t>\max(b_{a})$, the index is too low. Set $a_{low}\leftarrow a$ and go to 2.
-\item The index is too high. Set $a_{high}\leftarrow a$ and go to 2.
-\end{enumerate}
-Because the region of search halves with each successive step, this algorithm scales as O($\log(\abs{B})$). This could be reduced to O(1) if we require that the bins are linearly spaced, but for the moderate additional cost we maintain maximum flexibility of bin definitions. Given these considerations, we see that processing a correlation event costs O($n\log(\abs{B})$), which could be reduced to O($n$) if we restrict the bins to linear spacing\footnote{This factor of $n$ is really $2n$ for T3 mode, since we have pulse and time dimensions. This factor is left out here by convention but it is important to note that it does exist.}.
-
-To see how this is implemented in \histogram, see \texttt{histogram\_gn.c} and \texttt{histogram\_t*.c}.
+To see how this is implemented in \histogram, see \texttt{histogram\_gn.c} and \texttt{histogram\_t*.c}. 
 
 \subsubsection{Printing the histogram}
 Having exhausted the stream of correlation events, the final task is to print all of the histogram bins in a readable format. This is done by iterating over the histograms, then iterating over the bins, printing the counts associated with each bin. How this process is performed should be evident from the preceding discussion, and for the details refer to the routine \texttt{print\_gn\_histogram} in \texttt{histogram\_gn.c}.
 
+Note that the output of $\histogram$ is not normalized in any way: only the number of counts is reported for each bin.
+
 \section{GN}
 \subsection{Purpose}
-Given the $n$th-order histogram output from \histogram, \GN{} assembles the positive-time cross-correlations and produces all unique cross-correlations with negative time, in addition to the autocorrelation. These results are normalized to the bin width by default, but this behavior be suppressed with the flag \texttt{--no-bin-normalization}.
+Given the $n$th-order histogram output from \histogram, \GN{} assembles the cross-correlations and produces all cross-correlations and the full autocorrelation. These results are normalized by intensity and bin width by default, but this behavior be suppressed with the flag \texttt{--no-bin-normalization}.
 
 \subsection{Command-line syntax}
 
@@ -2061,27 +2082,11 @@ Given the $n$th-order histogram output from \histogram, \GN{} assembles the posi
 \subsection{Implementation}
 Most of the basic algorithms for this program have been laid out previously, so we will focus on the high-level tasks \gn{} must accomplish:
 \begin{enumerate}
-\item Read in and parse the output from \histogram.
-\item Determine what correlations are sufficient to represent the full set of correlations.
-\item For each final correlation, calculate its values by summing the appropriate constituent correlations.
-\item Normalize the counts in each bin.
-\item Return the final normalized correlations.
+\item Parse the output from \histogram.
+\item For the autocorrelation, sum all counts from each cross-correlation.
+\item For normalization, apply average intensities and bin widths,
+\item Return the final correlations.
 \end{enumerate}
-The second through fourth steps are non-trivial, so we will outline them briefly.
-
-For the second step, the important correlations are those for which the combinations of channels are unique. For example, for \gn{2} with two channels, the set of all channel permutations is
-\begin{equation}
-\braces{(0,0),(0,1),(1,0),(1,1)}
-\end{equation}
-We have already shown that the negative-time correlation of $(j,k)$ can be recovered from the positive-time $(k,j)$, such that the full correlations here can be represented by combining members of the sets
-\begin{equation}
-\braces{\braces{(0,0)},\braces{(0,1),(1,0)},\braces{(1,1)}}
-\end{equation}
-Combining the excess correlations is a matter of determining the correct parity of each time dimension and adding the counts of the appropriate bins. There is also a step required to make the autocorrelation symmetric, but this simply a matter of drawing values from a bin and its mirror and thus not too difficult to read from the implementation.
-
-Finally, normalization is required. This can be achieved by noting the resolution of the measurement,  determining the number of time steps which fall within the bounds of each bin, and dividing by the appropriate value of $\resolution_{c}(\tau)$, as in equation~\ref{eq:gn_set}. As for the integration time and number of photons on a channel, this is handled by a call to \texttt{intensity}.
-
-This explanation is terse, but ultimately the code should be reasonably straightforward to read, given an understanding of this paper thus far.
 
 \section{Applications}
 Now that we have laid the framework for the efficient calculation of \gn{n} for photon-arrival data, we can apply the result to interesting scientific problems.
@@ -2124,11 +2129,11 @@ In this paper, there is extensive use of mathematical notation following some un
 \item $\photon$: Photon, a tuple consisting of a detection channel and some number of arrival time properties.
 \item $\photons$: The set of all photons in an experiment. A subscript typically indicates some subset, such as photons on a detection channel or in some specified time window.
 \item $\Index$: Function returning the index of a histogram, given the set of channels and a tuple of elements of that set.
-\item $\Histogram$: The histogram function, which accepts bin definitions and outputs the counts in those bins.
-\item $\iota$: A ``real'' physical signal being sampled in an experiment.
+%\item $\Histogram$: The histogram function, which accepts bin definitions and outputs the counts in those bins.
+%\item $\iota$: A ``real'' physical signal being sampled in an experiment.
 \item $I$: Signal, a real-valued function of time.
 \item $n$: The order of a correlation.
-\item $N$: The number of elements in a set, the length of a stream or vector, or the number of detection channels.
+%\item $N$: The number of elements in a set, the length of a stream or vector, or the number of detection channels.
 \item $p$: Pulse number.
 \item $\Pulse$: Function of a photon which returns the pulse the photon arrived after.
 \item $\rho$: Pulse delay.
@@ -2190,7 +2195,7 @@ To indicate that one of the endpoints is not included in the set, a parenthesis 
 \begin{equation}
 \left[0,1\right) = \setbuilder{x}{x\in\reals;~x\ge 0;~x<1}
 \end{equation}
-The set drawn from is typically made clear by context.
+The source set is typically made clear by context.
 
 \subsection{Other functions and relations}
 \begin{itemize}
