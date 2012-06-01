@@ -5,8 +5,8 @@ import subprocess
 import logging
 import csv
 
-INTENSITY = "intensity"
-PICOQUANT = "picoquant"
+INTENSITY = "..\\src\\intensity"
+PICOQUANT = "..\\src\\picoquant"
 T2 = "t2"
 T3 = "t3"
 

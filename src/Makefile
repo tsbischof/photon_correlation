@@ -8,20 +8,7 @@ ifeq (${TARGET}, linux32)
 	CC = cc
 	LD = cc
 endif
-ifeq (${TARGET}, linux64)
-	MKDIR = mkdir -p
-	RM = rm -r
-	TEST = test
-	CC = cc
-	LD = cc
-endif
 ifeq (${TARGET}, win32)
-	MKDIR = mkdir
-	RM = del /Q
-	CC = mingw32-gcc
-	LD = mingw32-gcc
-endif
-ifeq (${TARGET}, win64)
 	MKDIR = mkdir
 	RM = del /Q
 	CC = mingw32-gcc
@@ -42,8 +29,6 @@ CFLAGS += -DVERSION_MINOR=0
 CFLAGS += -O3
 
 LDFLAGS = ${CFLAGS}
-
-
 INSTALL_DIR = ${HOME}/bin/
 
 PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
