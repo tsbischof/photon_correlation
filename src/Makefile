@@ -1,27 +1,27 @@
-TARGET ?= "linux32"
+TARGET ?= linux32
 
 # Set up the compilers and whatnot
-ifeq (${TARGET}, "linux32")
+ifeq (${TARGET}, linux32)
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
 	CC = cc
 	LD = cc
 endif
-ifeq (${TARGET}, "linux64")
+ifeq (${TARGET}, linux64)
 	MKDIR = mkdir -p
 	RM = rm -r
 	TEST = test
 	CC = cc
 	LD = cc
 endif
-ifeq (${TARGET}, "win32")
+ifeq (${TARGET}, win32)
 	MKDIR = mkdir
 	RM = del /Q
 	CC = mingw32-gcc
 	LD = mingw32-gcc
 endif
-ifeq (${TARGET}, "win64")
+ifeq (${TARGET}, win64)
 	MKDIR = mkdir
 	RM = del /Q
 	CC = mingw32-gcc
