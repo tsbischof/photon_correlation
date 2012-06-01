@@ -13,7 +13,7 @@ archive_dir = os.path.join("dist", version)
 source_dirs = ["doc", "scripts", "src"]
 suffixes = [".py", ".c", ".h", "Makefile", ".tex", ".pdf", "README", ".m"]
 archive_base = "{0}-{1}".format(base_name, version)
-platforms = ["linux_x86"]
+platforms = ["linux_x86", "linux_x86_64"]
 executables = ["picoquant", "correlate", "histogram", "intensity"]
 
 def archive_source(source_dirs, suffixes):
@@ -37,8 +37,11 @@ def archive_source(source_dirs, suffixes):
                 zip_file.write(filename)
 
 def make_executables(targets):
+    host_uname = os.uname()
+    platform = "{0}_{1}".format(host_uname[0].lower(), host_uname[4])
     for target in targets:
-        if target == "linux_x86":
+        if (target == "linux_x86" and target == platform) or \
+           (target == "linux_x86_64" and target == platform):
             archive = os.path.join(archive_dir,
                                    "{0}-{1}-{2}.tar.bz2".format(base_name,
                                                                 target,
@@ -61,7 +64,7 @@ def make_executables(targets):
 
 if __name__ == "__main__":
     try:
-        os.mkdir(archive_dir)
+        os.makedirs(archive_dir)
     except OSError as error:
         if not os.path.isdir(archive_dir):
             raise(error)

@@ -11,13 +11,13 @@ import logging
 import os
 import subprocess
 
-picoquant = "picoquant"
-intensity = "intensity"
-correlate = "correlate"
-histogram = "histogram"
+PICOQUANT = "picoquant"
+INTENSITY = "intensity"
+CORRELATE = "correlate"
+HISTOGRAM = "histogram"
 
-t2 = "t2"
-t3 = "t3"
+T2 = "t2"
+T3 = "t3"
 
 class Limits(object):
     def __init__(self, limit_str):
@@ -31,10 +31,10 @@ class Limits(object):
         return(",".join(map(str, [self.lower, self.bins, self.upper])))
 
 def guess_mode(filename):
-    if filename.lower().endswith(t2):
-        return(t2)
-    elif filename.lower().endswith(t3):
-        return(t3)
+    if filename.lower().endswith(T2):
+        return(T2)
+    elif filename.lower().endswith(T3):
+        return(T3)
     else:
         raise(ValueError("Mode could not be identified "
                          "for {0}.".format(filename)))
@@ -207,7 +207,7 @@ def Histograms(object):
         self.read(filename)
 
 def get_resolution_cmd(filename):
-    return([picoquant, "--file-in", filename, "--resolution-only"])
+    return([PICOQUANT, "--file-in", filename, "--resolution-only"])
 
 def get_resolution(filename):
     raw_resolution = subprocess.Popen(get_resolution_cmd(filename),
@@ -216,7 +216,7 @@ def get_resolution(filename):
 
 def get_photon_stream_cmd(filename, number, print_every):                         
     # Build the photon stream command.
-    photon_stream_cmd = [picoquant,
+    photon_stream_cmd = [PICOQUANT,
                          "--file-in", filename]
     if number:
         photon_stream_cmd.extend(["--number", str(number)])
@@ -227,13 +227,13 @@ def get_photon_stream_cmd(filename, number, print_every):
 
 def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits):
     # Build the correlation command.
-    correlate_cmd = [correlate,
+    correlate_cmd = [CORRELATE,
                      "--mode", mode,
                      "--order", str(order),
                      "--max-time-distance",
                               str(max([abs(time_limits.lower),
                                        abs(time_limits.upper)]))]
-    if mode == t3:
+    if mode == T3:
         correlate_cmd.extend(["--max-pulse-distance",
                               str(max([abs(pulse_limits.lower),
                                        abs(pulse_limits.upper)]))])
@@ -244,19 +244,19 @@ def get_histogram_cmd(filename, dst_filename, mode, channels, order,
                       time_limits, pulse_limits,
                       time_scale, pulse_scale):
     # Build the histogram command.
-    histogram_cmd = [histogram,
+    histogram_cmd = [HISTOGRAM,
                      "--file-out", dst_filename,
                      "--mode", mode,
                      "--order", str(order),
                      "--channels", str(channels),
                      "--time", str(time_limits)]
-    if mode == t3:
+    if mode == T3:
         histogram_cmd.extend(["--pulse", str(pulse_limits)])
 
     return(histogram_cmd)
 
 def get_intensity_cmd(filename, dst_filename, mode, channels):
-    return([intensity,
+    return([INTENSITY,
             "--mode", mode,
             "--channels", str(channels),
             "--count-all",
@@ -317,7 +317,7 @@ def get_histograms(filename, mode, channels, order,
 def calculate_gn(filename, mode, channels, order,
                      time_limits, pulse_limits,
                      time_scale, pulse_scale,
-                     number, print_every):
+                     number, print_every, normalize):
     logging.info("Processing {0}".format(filename))
     if not mode:
         try:
@@ -326,19 +326,23 @@ def calculate_gn(filename, mode, channels, order,
             logging.error(error)
             return(False)
 
-    if mode == t3 and not pulse_limits:
+    if mode == T3 and not pulse_limits:
         logging.error("Must specify pulse limits for t3 data.")
         return(False)
 
     # Gather the histograms.
-    intensities = get_intensities(filename, mode, channels, number, print_every)
+
     histograms = get_histograms(filename, mode, channels, order,
                                 time_limits, pulse_limits,
                                 time_scale, pulse_scale,
                                 number, print_every)
-    resolution = get_resolution(filename)
-    
 
+    if normalize:
+        resolution = get_resolution(filename)
+        intensities = get_intensities(filename, mode, channels,
+                                      number, print_every)
+##        final_histograms = normalize_histograms(histograms)
+    
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
@@ -376,6 +380,9 @@ if __name__ == "__main__":
                       help="Print the record number whenever it is divisible "
                       "by this number. By default, nothing is printed.",
                       default=0, action="store", type=int)
+    parser.add_option("-N", "--no-normalize", action="store_true",
+                      help="Suppress the usual normalization routine.",
+                      default=False)
 
     options, args = parser.parse_args()
     logging.debug("Options: {0}".format(options))
@@ -403,12 +410,13 @@ if __name__ == "__main__":
     time_scale = options.time_scale
     pulse_scale = options.pulse_scale
     print_every = options.print_every
+    normalize = not options.no_normalize
 
     for filename in args:
         calculate_gn(filename, mode, channels, order,
                      time_limits, pulse_limits,
                      time_scale, pulse_scale,
-                     number, print_every)
+                     number, print_every, normalize)
 
     
 ##     mode = t2

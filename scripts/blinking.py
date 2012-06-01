@@ -2,15 +2,18 @@
 
 import optparse
 import subprocess
+import logging
 import csv
 
-import numpy
-import matplotlib.pyplot as plt
+INTENSITY = "intensity"
+PICOQUANT = "picoquant"
+T2 = "t2"
+T3 = "t3"
 
-intensity = "intensity"
-picoquant = "picoquant"
-t2 = "t2"
-t3 = "t3"
+def count_unique(L):
+    for unique in sorted(set(L)):
+        yield(unique,
+              len(list(filter(lambda x: x == unique, L))))
 
 def ms_to_ps(x):
     return(int(x*10**9))
@@ -47,15 +50,15 @@ def on_off_times(stream, channels, threshold):
             else:
                 since_last_flip[channel] += 1
 
-def intensity_stream(filename, mode, channels, bin_width):
-    if mode == t2:
+def intensity_stream(filename, mode, channels, bin_width, print_intensities):
+    if mode == T2:
         my_bin_width = ms_to_ps(bin_width)
     else:
         my_bin_width = int(bin_width)
 
-    picoquant_cmd = [picoquant,
+    picoquant_cmd = [PICOQUANT,
                      "--file-in", filename]
-    intensity_cmd = [intensity,
+    intensity_cmd = [INTENSITY,
                      "--bin-width", str(my_bin_width),
                      "--mode", mode,
                      "--channels", str(channels)]
@@ -71,12 +74,18 @@ def intensity_stream(filename, mode, channels, bin_width):
         intensities = map(lambda counts: float(counts)/bin_width,
                           channel_counts)
 
+        if print_intensities:
+            for channel, channel_intensity in zip(range(channels), intensities):
+                print(channel, channel_intensity)
+
         yield(intensities)
 
-def blinking(filename, mode, channels, bin_width, threshold):
-    print(filename)
+def blinking(filename, mode, channels, bin_width, threshold,
+             print_intensities):
+    logging.info("Processing {0}".format(filename))
 
-    intensities = intensity_stream(filename, mode, channels, bin_width)
+    intensities = intensity_stream(filename, mode, channels, bin_width,
+                                   print_intensities)
 
     all_events = dict()
     for channel in range(channels):
@@ -88,6 +97,8 @@ def blinking(filename, mode, channels, bin_width, threshold):
 
     # Things you can do:
     # - plot histograms
+##import numpy
+##import matplotlib.pyplot as plt
 ##    for channel, events in all_events.items():
 ##        for state, durations in events.items():
 ##            plt.clf()
@@ -96,10 +107,24 @@ def blinking(filename, mode, channels, bin_width, threshold):
 ##            plt.ylabel("Counts")
 ##            plt.show()
 
-    return(all_events)
+    with open("{0}.blinking_{1:d}_{2:.2f}".format(\
+        filename, bin_width, threshold), "w") as blinking_file:
+        writer = csv.writer(blinking_file)
+        for channel, events in all_events.items():
+            for state, durations in events.items():
+                for duration, counts in count_unique(durations):
+                    writer.writerow(list(map(str,
+                                             (channel,
+                                              state,
+                                              duration,
+                                              counts))))
+                
+                
         
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    
     parser = optparse.OptionParser()
     parser.add_option("-m", "--mode", dest="mode",
                       help="Mode to interpret the data as. By default, "
@@ -117,6 +142,10 @@ if __name__ == "__main__":
                       help="Threshold rate of photon arrival for blinking "
                            "analysis, in counts per second.",
                       action="store", type=float)
+    parser.add_option("-p", "--print-intensities", dest="print_intensities",
+                      help="Print the intensity of the stream. This can be "
+                           "helpful when choosing a threshold",
+                      action="store_true", default=False)
 
     (options, args) = parser.parse_args()
 
@@ -132,6 +161,9 @@ if __name__ == "__main__":
         threshold = options.threshold
     else:
         raise(ValueError("Must specify a threshold."))
+
+    print_intensities = options.print_intensities
     
     for filename in args:
-        blinking(filename, mode, channels, bin_width, threshold)
+        blinking(filename, mode, channels,
+                 bin_width, threshold, print_intensities)
