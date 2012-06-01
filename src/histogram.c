@@ -18,6 +18,8 @@ void usage(void) {
 "                 -e <left_pulse_limit, pulse_increment, right_pulse_limit> \n"
 "                 -c channels -g order -m mode\n"
 "\n"
+"       Version %d.%d\n"
+"\n"
 "         -v, --verbose: Print debug-level information.\n"
 "         -i, --file-in: Input file. By default, this is stdin\n"
 "        -o, --file-out: Output file. By default, this is stdout.\n"
@@ -40,7 +42,8 @@ void usage(void) {
 "                        scale.\n"
 "            -h, --help: Print this message.\n"
 "\n"
-"            This program assumes that the channels are presented in order.\n");
+"            This program assumes that the channels are presented in order.\n",
+				VERSION_MAJOR, VERSION_MINOR);
 }
 
 int main(int argc, char *argv[]) {

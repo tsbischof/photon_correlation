@@ -23,6 +23,8 @@ void pq_usage(void) {
 "Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]\n"
 "                 [-p print_every] [-n number] [-b] [-z] [-t]\n"
 "\n"
+"       Version %d.%d\n"
+"\n"
 "        -i, --file-in: Input file. By default, this is stdin.\n"
 "       -o, --file-out: Output file. By default, this is stdout.\n"
 "         -n, --number: Number of entries to process (most pertinent for\n"
@@ -44,7 +46,8 @@ void pq_usage(void) {
 "           -h, --help: Print this message.\n"
 "\n"
 "The file type and version will be detected automatically from the file header."
-"\n");
+"\n",
+				VERSION_MAJOR, VERSION_MINOR);
 }
 
 pq_dispatch_t pq_get_dispatch(pq_options_t *options, pq_header_t *pq_header) {

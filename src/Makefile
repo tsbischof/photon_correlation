@@ -12,6 +12,8 @@ CFLAGS += -std=c99
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
 CFLAGS += -D_FILE_OFFSET_BITS=64
+CFLAGS += -DVERSION_MAJOR=1
+CFLAGS += -DVERSION_MINOR=0
 # For use while debugging.
 #CFLAGS += -g -O0
 CFLAGS += -O3

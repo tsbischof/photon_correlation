@@ -21,6 +21,8 @@ void usage(void) {
 "Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels] [-a] [-l]\n"
 "                 -w bin_width -m mode\n"
 "\n"
+"       Version %d.%d\n"
+"\n"
 "           -v, --verbose: Print debug-level information.\n"
 "           -i, --file-in: Input file. By default, this is STDIN.\n"
 "          -o, --file-out: Output file. By default, this is STDOUT.\n"
@@ -37,7 +39,8 @@ void usage(void) {
 "       This program assumes the input stream is time-ordered.\n"
 "\n"
 "       If counting all events or printing the last one, the time\n"
-"       written will be the time of the last event seen.\n");
+"       written will be the time of the last event seen.\n",
+				VERSION_MAJOR, VERSION_MINOR);
 }
 
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {

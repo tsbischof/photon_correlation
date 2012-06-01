@@ -25,6 +25,8 @@ void usage(void) {
 "                 [-p print_every] [-q queue_size] [-d max_time_distance] \n"
 "                 [-e max_pulse_distance] [-r] -g order -c channels -m mode\n"
 "\n"
+"       Version %d.%d\n"
+"\n"
 "           -v, --verbose: Print debug-level information.\n"
 "           -i, --file-in: Input file. By default, this is STDIN.\n"
 "          -o, --file-out: Output file. By default, this is STDOUT.\n"
@@ -51,6 +53,7 @@ void usage(void) {
 "              -h, --help: Print this message.\n"
 "\n"
 "       This program assumes the input stream is time-ordered.\n",
+			VERSION_MAJOR, VERSION_MINOR,
 			QUEUE_SIZE);
 }
 
