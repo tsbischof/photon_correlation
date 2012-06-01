@@ -71,14 +71,18 @@ def intensity_stream(filename, mode, channels, bin_width, print_intensities):
 
     for line in csv.reader(bin_stream.stdout):
         channel_counts = map(int, line[2:])
-        intensities = map(lambda counts: float(counts)/bin_width,
-                          channel_counts)
+        time_delta = float(int(line[1]) - int(line[0]))/10**9
+        if time_delta == bin_width:
+            # We want to skip the last bin if it does not have the correct
+            # duration.
+            intensities = map(lambda counts: float(counts)/bin_width,
+                              channel_counts)
 
-        if print_intensities:
-            for channel, channel_intensity in zip(range(channels), intensities):
-                print(channel, channel_intensity)
+            if print_intensities:
+                for channel, channel_intensity in zip(range(channels), intensities):
+                    print(channel, channel_intensity)
 
-        yield(intensities)
+            yield(intensities)
 
 def blinking(filename, mode, channels, bin_width, threshold,
              print_intensities):
@@ -107,7 +111,7 @@ def blinking(filename, mode, channels, bin_width, threshold,
 ##            plt.ylabel("Counts")
 ##            plt.show()
 
-    with open("{0}.blinking_{1:d}_{2:.2f}".format(\
+    with open("{0}.blinking_{1:.2f}_{2:.2f}".format(\
         filename, bin_width, threshold), "w") as blinking_file:
         writer = csv.writer(blinking_file)
         for channel, events in all_events.items():
@@ -116,7 +120,7 @@ def blinking(filename, mode, channels, bin_width, threshold,
                     writer.writerow(list(map(str,
                                              (channel,
                                               state,
-                                              duration,
+                                              duration*bin_width,
                                               counts))))
                 
                 

@@ -201,10 +201,45 @@ def all_cross_correlations(channels, order):
 ##def autocorrelation_from_cross(correlations, intensities):
 ##     pass
 
-def Histograms(object):
-    def __init__(self, filename):
+class CrossCorrelations(object):
+    def __init__(self, filename, mode, channels, order):
         self._filename = filename
-        self.read(filename)
+        self.mode = mode
+        self.channels = channels
+        self.order = order
+        self._bins = None
+        self._bins_cross_norm = None
+        self._bins_auto = None
+        self._bins_auto_norm = None
+
+    def bins(self):
+        if not self._bins:
+            logging.debug("Loading bins from {0}".format(self._filename))
+            with open(self._filename) as stream:
+                self._bins = bins_from_stream(csv.reader(stream),
+                                              self.mode)
+
+        return(self._bins)
+
+    def cross_correlations(self, intensities=None, normalize=False):
+        if normalize:
+            dst_filename = "{0}.norm".format(self._filename)
+            logging.info("Normalized cross-correlations written to {0}".format(
+                dst_filename))
+        else:
+            logging.info("Cross-correlations written to {0}".format(
+                self._filename))
+
+    def autocorrelation(self, intensities=None, normalize=False):
+        if normalize:
+            dst_filename = "{0}.auto.norm".format(self._filename)
+            logging.info("Normalized autocorrelation written to {0}".format(
+                dst_filename))
+
+        else:
+            dst_filename = "{0}.auto".format(self._filename)
+            logging.info("Autocorrelation written to {0}".format(
+                dst_filename))
 
 def get_resolution_cmd(filename):
     return([PICOQUANT, "--file-in", filename, "--resolution-only"])
@@ -311,9 +346,9 @@ def get_histograms(filename, mode, channels, order,
                               time_scale, pulse_scale),
             stdin=correlate_stream.stdout).wait()
 
-    return(Histograms(dst_filename))
+    # histograms now exist, load them into memory for great profit.
+    return(CrossCorrelations(dst_filename, mode, channels, order))
                               
-
 def calculate_gn(filename, mode, channels, order,
                      time_limits, pulse_limits,
                      time_scale, pulse_scale,
@@ -336,12 +371,25 @@ def calculate_gn(filename, mode, channels, order,
                                 time_limits, pulse_limits,
                                 time_scale, pulse_scale,
                                 number, print_every)
+    histograms.autocorrelation()
 
     if normalize:
-        resolution = get_resolution(filename)
-        intensities = get_intensities(filename, mode, channels,
-                                      number, print_every)
-##        final_histograms = normalize_histograms(histograms)
+        normalize_histograms(histograms, filename,
+                             mode, channels, order,
+                             number, print_every)
+
+def normalize_histograms(histograms, filename, order,
+                         mode, channels, number, print_every):
+    time_resolution = get_resolution(filename)
+    if mode == T3:
+        pulse_resolution = 1
+        
+    intensities = get_intensities(filename, mode, channels,
+                                  number, print_every)
+
+    histograms.autocorrelation(intensities=intensities, normalize=True)
+    histograms.cross_correlations(intensities=intensities, normalize=True)                                        
+    
     
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
