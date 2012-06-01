@@ -1,1 +1,0 @@
--use the Windows pipe interface to make an improved, cross-platform version of popen for Matlab. See http://msdn.microsoft.com/en-us/library/windows/desktop/aa365780%28v=vs.85%29.aspx
