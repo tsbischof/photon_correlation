@@ -3,6 +3,7 @@
 import optparse
 import csv
 import subprocess
+import logging
 
 picoquant = "picoquant"
 histogram = "histogram"
@@ -27,8 +28,10 @@ def time_dependent_pl(filename, channels, bin_width, time_limits):
 
     while not done:
         if not histogrammer:
-            histogram_name = "{0}.g1.{1:06d}".format(filename, histogram_index)
-            print(histogram_name, pulse_limit)
+            histogram_name = "{0}.g1.{1:.2f}_{2:.2f}".format(
+                filename, histogram_index*bin_width,
+                (histogram_index+1)*bin_width)
+            logging.info(histogram_name)
             current_histogram = subprocess.Popen(
                 histogram_cmd +
                 ["--file-out", histogram_name],
@@ -60,6 +63,8 @@ def time_dependent_pl(filename, channels, bin_width, time_limits):
         
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    
     usage = "time_dependent_pl.py [options] filenames"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-w", "--bin-width", dest="bin_width",
