@@ -283,7 +283,8 @@ def get_photon_stream_cmd(filename, number, print_every):
 
     return(photon_stream_cmd)
 
-def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits):
+def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
+                      time_scale, pulse_scale):
     # Build the correlation command.
     correlate_cmd = [CORRELATE,
                      "--mode", mode,
@@ -296,6 +297,9 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits):
                               str(max([abs(pulse_limits.lower),
                                        abs(pulse_limits.upper)]))])
 
+    if "log" in time_scale or "log" in pulse_scale:
+        correlate_cmd.extend(["--positive-only"])
+
     return(correlate_cmd)
 
 def get_histogram_cmd(filename, dst_filename, mode, channels, order,
@@ -307,9 +311,11 @@ def get_histogram_cmd(filename, dst_filename, mode, channels, order,
                      "--mode", mode,
                      "--order", str(order),
                      "--channels", str(channels),
-                     "--time", str(time_limits)]
+                     "--time", str(time_limits),
+                     "--time-scale", time_scale]
     if mode == T3:
-        histogram_cmd.extend(["--pulse", str(pulse_limits)])
+        histogram_cmd.extend(["--pulse", str(pulse_limits),
+                              "--pulse-scale", pulse_scale])
 
     return(histogram_cmd)
 
@@ -360,7 +366,8 @@ def get_histograms(filename, mode, channels, order,
         correlate_stream = subprocess.Popen(
             get_correlate_cmd(filename,
                               mode, order,
-                              time_limits, pulse_limits),
+                              time_limits, pulse_limits,
+                              time_scale, pulse_scale),
             stdin=photon_stream.stdout, stdout=subprocess.PIPE)
         histogram_stream = subprocess.Popen(
             get_histogram_cmd(filename, dst_filename,
