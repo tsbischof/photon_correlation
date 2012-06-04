@@ -5,12 +5,14 @@ ifeq (${TARGET}, linux32)
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
+	CP = cp -p
 	CC = cc
 	LD = cc
 endif
 ifeq (${TARGET}, win32)
 	MKDIR = mkdir
 	RM = del /Q
+	CP = copy
 	CC = mingw32-gcc
 	LD = mingw32-gcc
 endif

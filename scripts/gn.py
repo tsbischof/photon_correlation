@@ -143,63 +143,66 @@ def all_cross_correlations(channels, order):
 ##                    raise(AttributeError(error))
 ##
 ##               yield(HistogramBin(histogram_bin.bounds, counts))
-##
-##class HistogramBin(object):
-##     def __init__(self, mode, ref_channel, bins, counts):
-##          self.mode = mode
-##          self.ref_channel = ref_channel
-##          self._bins = tuple(bins)
-##          self.counts = counts
-##          self.time_bins = tuple(map(lambda x: x[1:], self._bins))
-##          self.channels = tuple(map(lambda x: x[0], self._bins))
-##          self.correlation = tuple([self.ref_channel] + list(self.channels))
-##          
-##class TimeBin(object):
-##     def __init__(self, bounds, counts=0):
-##          self.bounds = bounds
-##          self.counts = counts
-##
-##     def __str__(self):
-##          return(str(self.bounds))
-##
-##     def span(self, resolution=None):
-##          if resolution:
-##               return(int(math.ceil(float(self.bounds[1])/resolution)
-##                         - math.floor(float(self.bounds[0])/resolution)))
-##          else:
-##               return(self.bounds[1] - self.bounds[0])
-##
-##     def __lt__(self, other):
-##          return(self.bounds < other.bounds)
-##
-##     def __gt__(self, other):
-##          return(self.bounds > other.bounds)
-##
-##     def __eq__(self, other):
-##          return(self.bounds == other.bounds)
-##
-##     def __le__(self, other):
-##          return(self.bounds <= other.bounds)
-##
-##     def __ge__(self, other):
-##          return(self.bounds >= other.bounds)
-##
-##     def __hash__(self):
-##          return(self.bounds.__hash__())
-##               
-##          
-##def bins_from_stream(stream, mode, n_channels, order):
-##     for line in csv.reader(stream):
-##          ref_channel = int(line.pop(0))
-##          counts = int(line.pop(-1))
-##
-##          yield(HistogramBin(mode,
-##                             ref_channel,
-##                             get_bins(line, mode),
-##                             counts))
-##
-##def autocorrelation_from_cross(correlations, intensities):
-##     pass
+
+class HistogramBin(object):
+    def __init__(self, mode, ref_channel, bins, counts):
+        self.mode = mode
+        self.ref_channel = ref_channel
+        self._bins = tuple(bins)
+        self.counts = counts
+        self.time_bins = tuple(map(lambda x: x[1:], self._bins))
+        self.channels = tuple(map(lambda x: x[0], self._bins))
+        self.correlation = tuple([self.ref_channel] + list(self.channels))
+
+##    def space_normalize(self):
+##        volume = 1 
+##        for time_bin in self.time_bins:
+##            volume *= time_bin.span(
+        
+          
+class TimeBin(object):
+     def __init__(self, bounds, counts=0):
+          self.bounds = bounds
+          self.counts = counts
+
+     def __str__(self):
+          return(str(self.bounds))
+
+     def span(self, resolution=None):
+          if resolution:
+               return(int(math.ceil(float(self.bounds[1])/resolution)
+                         - math.floor(float(self.bounds[0])/resolution)))
+          else:
+               return(self.bounds[1] - self.bounds[0])
+
+     def __lt__(self, other):
+          return(self.bounds < other.bounds)
+
+     def __gt__(self, other):
+          return(self.bounds > other.bounds)
+
+     def __eq__(self, other):
+          return(self.bounds == other.bounds)
+
+     def __le__(self, other):
+          return(self.bounds <= other.bounds)
+
+     def __ge__(self, other):
+          return(self.bounds >= other.bounds)
+
+     def __hash__(self):
+          return(self.bounds.__hash__())
+               
+          
+def bins_from_stream(stream, mode, n_channels, order):
+     for line in csv.reader(stream):
+          ref_channel = int(line.pop(0))
+          counts = int(line.pop(-1))
+
+          yield(HistogramBin(mode,
+                             ref_channel,
+                             get_bins(line, mode),
+                             counts))
 
 class CrossCorrelations(object):
     def __init__(self, filename, mode, channels, order):
@@ -207,10 +210,10 @@ class CrossCorrelations(object):
         self.mode = mode
         self.channels = channels
         self.order = order
-        self._bins = None
-        self._bins_cross_norm = None
-        self._bins_auto = None
-        self._bins_auto_norm = None
+        self._bins = list()
+        self._bins_cross_norm = list()
+        self._bins_auto = list()
+        self._bins_auto_norm = list()
 
     def bins(self):
         if not self._bins:
@@ -224,6 +227,26 @@ class CrossCorrelations(object):
     def cross_correlations(self, intensities=None, normalize=False):
         if normalize:
             dst_filename = "{0}.norm".format(self._filename)
+
+##            intensity_normalization = dict()
+##            for correlation in all_cross_correlations(channels, order):
+##                intensity_normalization[correlation] = fractions.Fraction(1,1)
+##
+##                for channel in correlation:
+##                    intensity_normalization[correlation] *= \
+##                                fractions.Fraction(intensities[channel][0],
+##                                                   intensities[channel][1])
+##
+##            for cross_bin in self.bins:
+##                try:
+##                    cross_bin.counts /= intensity_normalization[\
+##                        cross_bin.correlation]
+##                    cross_bin.space_normalize()
+##                except ZeroDivisionError:
+##                    cross_bin.counts = 0
+##
+##                self._bins_cross_norm.append(cross_bin)                
+##                
             logging.info("Normalized cross-correlations written to {0}".format(
                 dst_filename))
         else:
