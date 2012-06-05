@@ -25,7 +25,7 @@ class Limits(object):
         # Handle conversion from ms to ps.
         self.lower = int(float(limits[0])*10**9)
         self.bins = int(limits[1])
-        self.upper = int(float(limits[2])*10**9)
+        self.upper = int(float(limits[2])*10**9) 
 
     def __str__(self):
         return(",".join(map(str, [self.lower, self.bins, self.upper])))
@@ -291,11 +291,11 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
                      "--order", str(order),
                      "--max-time-distance",
                               str(max([abs(time_limits.lower),
-                                       abs(time_limits.upper)]))]
+                                       abs(time_limits.upper)]-1))]
     if mode == T3:
         correlate_cmd.extend(["--max-pulse-distance",
                               str(max([abs(pulse_limits.lower),
-                                       abs(pulse_limits.upper)]))])
+                                       abs(pulse_limits.upper)]-1))])
 
     if "log" in time_scale or "log" in pulse_scale:
         correlate_cmd.extend(["--positive-only"])
