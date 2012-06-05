@@ -447,7 +447,7 @@ These effective time resolutions affect the volume of phase space under consider
 Assembling these, the complete correlation function takes following form:
 \begin{equation}
 \label{eq:gn_full}
-\gn{n}\parens{\vec{\resolution}} = \parens{\frac{\prod_{j=1}^{n-1}
+\gn{n}\parens{\vec{\resolution}} = \parens{\frac{\prod_{j=0}^{n-1}
                                                        {\abs{\integrationtime_{
                                                                  \vec{\resolution},
                                                                  \resolution_{j}}}}}
@@ -458,9 +458,8 @@ Assembling these, the complete correlation function takes following form:
                             \parens{\frac{\sum_{\vec{\channel}\in\channels^{n}}
                                                {\abs{\correlationset_{\vec{\resolution},
                                                                       \vec{\channel}}}}}
-                                         {\prod_{j=1}^{n-1}{\abs{\resolution_{j}}}}}
+                                         {\prod_{j=0}^{n-1}{\abs{\resolution_{j}}}}}
 \end{equation}
-Note that some of the products are indexed from 1 and not 0. This results from the cancellation of the $\integrationtime_{\vec{\resolution},\resolution_{0}}$ term which appears both as a factor normalizing the average density of photons and as the normalization of the correlation set. This arises exactly as before, though the notation obscures the fact somewhat.
 
 Now that we have defined each of these terms, we can turn our focus to calculating them. First, the set $\integrationtime_{\vec{\resolution},\resolution_{j}}$ is defined as the range of times accessible to the $j$th dimension of the correlation. If we extend the prior arguments to multiple dimensions, we find this to be:
 \begin{equation}
