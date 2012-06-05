@@ -375,12 +375,20 @@ int gn_histogram_get_index(gn_histogram_t *histogram,
 		debug("Done\n");
 	}
 
-	if ( index < 0 ) {
-		error("Error while computing bin index (got %d).\n", index);
-		return(-1);
-	} else if ( index >= histogram->n_bins ) {
-		error("Encountered a bin index (%d) greater than the number of "
-				"bins in the histogram (%d).\n", index, histogram->n_bins);
+	if ( index < 0 || index > histogram->n_bins ) {
+		error("Error while computing bin index for raw value: \n");
+		fprintf(stderr, "(");
+		for ( i = 0; i < histogram->n_dimensions; i++ ) {
+			fprintf(stderr, "%lld,", values[i]);
+		}
+		fprintf(stderr, "\b)\n");
+	
+		if ( index < 0 ) {
+			fprintf(stderr, "Got %d.\n", index);
+		} else {
+			fprintf(stderr, "Got %d, which exceeds the number of "
+                            "available bins.\n", index);
+		}
 		return(-1);
 	} else {
 		return(index);
@@ -398,11 +406,20 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 		index += histogram->index_bases[i]*indices[i];
 	}
 
-	if ( index < 0 ) {
-		return(-1);
-	} else if ( index > histogram->n_bins ) {
-		error("Encountered a bin index (%d) greater than the number of "
-				"bins in the histogram (%d).\n", index, histogram->n_bins);
+	if ( index < 0 || index > histogram->n_bins ) {
+		error("Error while computing bin index for indices: \n");
+		fprintf(stderr, "(");
+		for ( i = 0; i < histogram->n_dimensions; i++ ) {
+			fprintf(stderr, "%d,", indices[i]);
+		}
+		fprintf(stderr, "\b)\n");
+	
+		if ( index < 0 ) {
+			fprintf(stderr, "Got %d.\n", index);
+		} else {
+			fprintf(stderr, "Got %d, which exceeds the number of "
+                            "available bins.\n", index);
+		}
 		return(-1);
 	} else {
 		return(index);
