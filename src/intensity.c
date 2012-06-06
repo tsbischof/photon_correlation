@@ -13,12 +13,9 @@
 #include "t2.h"
 #include "t3.h"
 
-#define MODE_T2 2
-#define MODE_T3 3
-
 void usage(void) {
 	fprintf(stdout, 
-"Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels] [-a] [-l]\n"
+"Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels] [-a]\n"
 "                 -w bin_width -m mode\n"
 "\n"
 "       Version %d.%d\n"

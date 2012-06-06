@@ -33,6 +33,8 @@ CFLAGS += -O3
 LDFLAGS = ${CFLAGS}
 INSTALL_DIR = ${HOME}/bin/
 
+TARGETS = 
+
 PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
 		t2.o t3.o \
 		picoharp.o picoharp/ph_v20.o \
@@ -40,23 +42,32 @@ PICOQUANT_OBJ = picoquant.o error.o types.o strings.o files.o \
 		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
 				timeharp/th_v50.o timeharp/th_v60.o 
 PICOQUANT_LIB = 
+TARGETS += picoquant
 
 CORRELATE_OBJ = correlate.o error.o combinations.o files.o modes.o strings.o \
 		correlate_t2.o t2.o \
 		correlate_t3.o t3.o
 CORRELATE_LIB = 
+TARGETS += correlate
 
 HISTOGRAM_OBJ = histogram.o error.o files.o modes.o combinations.o strings.o \
 		histogram_gn.o \
 		histogram_t2.o t2.o \
 		histogram_t3.o t3.o 
 HISTOGRAM_LIB = -lm
+TARGETS += histogram
 
-INTENSITY_OBJ = intensity.o error.o types.o modes.o strings.o files.o \
+INTENSITY_OBJ = intensity.o error.o modes.o strings.o files.o \
 		t2.o t3.o
 INTENSITY_LIB = 
+TARGETS += intensity
 
-TARGETS = picoquant correlate histogram intensity
+BIN_INTENSITY_OBJ = bin_intensity.o error.o files.o modes.o strings.o \
+		bin_intensity_t2.o t2.o \
+		bin_intensity_t3.o t3.o \
+		histogram_gn.o
+BIN_INTENSITY_LIB = -lm
+TARGETS += bin_intensity
 
 all: ${TARGETS}
 
@@ -78,6 +89,9 @@ histogram: ${HISTOGRAM_OBJ}
 
 intensity: ${INTENSITY_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${INTENSITY_LIB}
+
+bin_intensity: ${BIN_INTENSITY_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${BIN_INTENSITY_LIB}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 
