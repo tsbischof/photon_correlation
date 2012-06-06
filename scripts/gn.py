@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import itertools
 import csv
@@ -10,6 +10,7 @@ import optparse
 import logging
 import os
 import subprocess
+import copy
 
 PICOQUANT = "picoquant"
 INTENSITY = "intensity"
@@ -30,73 +31,42 @@ class Limits(object):
     def __str__(self):
         return(",".join(map(str, [self.lower, self.bins, self.upper])))
 
-def guess_mode(filename):
-    if filename.lower().endswith(T2):
-        return(T2)
-    elif filename.lower().endswith(T3):
-        return(T3)
-    else:
-        raise(ValueError("Mode could not be identified "
-                         "for {0}.".format(filename)))
-
-def flatten(LoL):
-     for elem in LoL:
-          if isinstance(elem, collections.Iterable):
-               for minor in flatten(elem):
-                    yield(minor)
-          else:
-               yield(elem)
-
-def chunks(L, n=2):
-     chunk = list()
-     for elem in L:
-          chunk.append(elem)
-          if len(chunk) >= n:
-               yield(chunk)
-               chunk = list()
-
-def all_cross_correlations(channels, order):
-     return(
-          itertools.product(
-               range(channels),
-               repeat=order))
-
-
-def get_bins(bins, mode, time_resolution=None, pulse_resolution=None):
-     if mode == T2:
-          for chunk in chunks(bins, 3):
-               channel = int(chunk[0])
-               bounds = (float(chunk[1]), float(chunk[2]))
-               yield((channel,
-                      TimeBin(bounds,
-                              resolution=time_resolution)))
-     elif mode == T3:
-          for chunk in chunks(bins, 5):
-              channel = int(chunk[0])
-              pulse_bounds = (float(chunk[1]), float(chunk[2]))
-              time_bounds = (float(chunk[3]), float(chunk[4]))
-              yield(channel,
-                    TimeBin(pulse_bounds,
-                            resolution=pulse_resolution),
-                    TimeBin(time_bounds,
-                            resolution=time_resolution))
-     else:
-          raise(ValueError("Mode [0} not recognized.".format(mode)))
-
 class HistogramBin(object):
-    def __init__(self, mode=None, ref_channel=None, bins=tuple(), counts=None):
+    def __init__(self, mode=None, ref_channel=None, bins=tuple(), counts=None,
+                 time_resolution=1, pulse_resolution=1):
         self.mode = mode
         self.ref_channel = ref_channel
         self._bins = tuple(bins)
         self.counts = counts
 
-    def from_line(self, mode, n_channels, order, line):
+        self.time_resolution = time_resolution
+        self.pulse_resolution = pulse_resolution
+
+    def from_line(self, mode, channels, order, line):
         self.line = line
         self.mode = mode
-        self.ref_channel = int(line[0])
-        self.counts = int(line[-1])
-        self._bins = tuple(get_bins(line[1:-1], mode))
+        self.ref_channel = int(self.line[0])
+        self.counts = int(self.line[-1])
+        self._bins = tuple(get_bins(self.line[1:-1], mode))
         return(self)
+
+    def to_line(self):
+        result = list()
+
+        channels = self.channels()
+        bins = self.time_bins()
+        
+        result.append(str(self.ref_channel))
+
+        for i in range(len(self.channels())):
+            result.append(str(channels[i]))
+            for dimension in bins[i]:
+                result.append(str(dimension.bounds[0]))
+                result.append(str(dimension.bounds[1]))
+
+        result.append(str(self.counts))
+
+        return(result)
 
     def time_bins(self):
         return(tuple(map(lambda x: x[1:], self._bins)))
@@ -110,113 +80,26 @@ class HistogramBin(object):
     def __hash__(self):
         return(hash(self.line))
 
-    def volume(self, time_resolution, pulse_resolution):
+    def volume(self):
         volume = 1
-        for my_bin in self._bins:
+        for my_bin in self.time_bins():
             for bounds in my_bin:
                 volume *= len(bounds)
 
         return(volume)
-
-##
-##class Histogram(object):
-##     def __init__(self, mode, n_channels, order, correlation=tuple()):
-##          self.n_channels = n_channels
-##          self.mode = mode
-##          self.order = order
-##          self.correlation = correlation
-##          
-##          self.bins = dict()
-##
-##     def __iter__(self):
-##          return(self.to_stream())
-##
-##     def add_bin(self, histogram_bin):
-##          key = histogram_bin.time_bins
-##          
-##          if key not in self.bins.keys():
-##               self.bins[key] = 0
-##
-##          self.bins[key] += histogram_bin.counts
-##
-##     def to_stream(self):
-##          for key, counts in sorted(self.bins.items()):
-##               bins = list()
-##               for dimension in key:
-##                    for time_bin in dimension:
-##                         bins.append(time_bin.bounds)
-##               yield((tuple(bins), counts))
-##
-##     def normalized(self, intensities, time_resolution=1, pulse_resolution=1):
-##          for histogram_bin in self.bins:
-##               if histogram_bin.counts == 0:
-##                    yield(histogram_bin)
-##
-##               try:
-##                    # Each term starts with the raw counts.
-##                    counts = fractions.Fraction(self.counts, 1)
-##
-##                    if self.mode == t2:
-##                         integration_time = intensities[self.ref_channel].span(
-##                              time_resolution)
-##
-##                         # The average intensity for a channel appears for
-##                         # every time the 
-##                         average_intensities = map(
-##                              lambda x: fractions.Fraction(
-##                                   x.counts, x.span(time_resolution)),
-##                              intensities)
-##                         
-##                         counts /= functools.reduce(lambda x, y: x*y,
-##                                                    average_intensities)
-##
-##                         # The reference channel draws an integration
-##                         # time's worth of uncertainty
-##                         counts /= integration_time
-##
-##                         # The others get the width of the histogram bin.
-##                         for channel, time_bin in zip(self.channels,
-##                                                      self.time_bins):
-##                              counts /= time_bin[0].span(time_resolution)
-##               except ZeroDivisionError:
-##                    # Some resolution or intensity was 0
-##                    counts = 0
-##               except AttributeError as error:
-##                    raise(AttributeError(error))
-##
-##               yield(HistogramBin(histogram_bin.bounds, counts))
-
-class HistogramBin(object):
-    def __init__(self, mode, ref_channel, bins, counts):
-        self.mode = mode
-        self.ref_channel = ref_channel
-        self._bins = tuple(bins)
-        self.counts = counts
-        self.time_bins = tuple(map(lambda x: x[1:], self._bins))
-        self.channels = tuple(map(lambda x: x[0], self._bins))
-        self.correlation = tuple([self.ref_channel] + list(self.channels))
-
-##    def space_normalize(self):
-##        volume = 1 
-##        for time_bin in self.time_bins:
-##            volume *= time_bin.span(
-        
           
 class TimeBin(object):
-     def __init__(self, bounds, counts=0):
+     def __init__(self, bounds, resolution=1):
           self.bounds = bounds
-          self.counts = counts
+          self.resolution = resolution
 
      def __str__(self):
           return(str(self.bounds))
 
      def __len__(self):
-          if self.resolution:
-               return(int(math.ceil(float(self.bounds[1])/self.resolution)
-                         - math.floor(float(self.bounds[0])/self.resolution)))
-          else:
-               return(self.bounds[1] - self.bounds[0])
-
+          return(int(math.ceil(float(self.bounds[1])/self.resolution)
+                     - math.floor(float(self.bounds[0])/self.resolution)))
+          
      def __lt__(self, other):
           return(self.bounds < other.bounds)
 
@@ -236,7 +119,8 @@ class TimeBin(object):
           return(self.bounds.__hash__())
                
 class CrossCorrelations(object):
-    def __init__(self, filename, mode, channels, order):
+    def __init__(self, filename, mode, channels, order,
+                 time_resolution=1, pulse_resolution=1):
         self._filename = filename
         self.mode = mode
         self.channels = channels
@@ -246,6 +130,9 @@ class CrossCorrelations(object):
         self._bins_auto = list()
         self._bins_auto_norm = list()
 
+        self.time_resolution = time_resolution
+        self.pulse_resolution = pulse_resolution
+
     def add_bin(self, my_bin):
         self._bins.append(my_bin)
 
@@ -253,8 +140,7 @@ class CrossCorrelations(object):
         if not self._bins:
             logging.debug("Loading bins from {0}".format(self._filename))
             with open(self._filename) as stream:
-                self._bins = bins_from_stream(csv.reader(stream),
-                                              self.mode)
+                self.from_stream(stream)
 
         return(self._bins)
 
@@ -262,6 +148,45 @@ class CrossCorrelations(object):
         if normalize:
             dst_filename = "{0}.norm".format(self._filename)
 
+            correlation_intensity = dict()
+
+            with open(dst_filename, "w") as out_stream:
+                writer = csv.writer(out_stream)
+
+                print(intensities)
+                integration_time = max(map(lambda x: x[1], intensities.values()))
+                
+                for src_bin in self.bins():
+                    my_bin = copy.deepcopy(src_bin)
+                    correlation = my_bin.correlation()
+
+                    # We need to divide by the average intensity and the
+                    # volume of phase space represented by the bin.
+                    if not correlation in correlation_intensity.keys():
+                        correlation_intensity[correlation] = 1
+
+                        for channel in correlation:
+                            correlation_intensity[correlation] *= \
+                                      fractions.Fraction(*intensities[channel])
+
+                    volume = my_bin.volume()
+                    intensity = correlation_intensity[correlation]
+
+                    try:
+                        my_bin.counts = float(
+                            fractions.Fraction(my_bin.counts) \
+                                 / (volume * intensity * integration_time))
+                    except ZeroDivisionError:
+                        my_bin.counts = 0
+
+                    writer.writerow(my_bin.to_line())
+
+
+                
+                    
+
+                
+            
 ##            intensity_normalization = dict()
 ##            for correlation in all_cross_correlations(channels, order):
 ##                intensity_normalization[correlation] = fractions.Fraction(1,1)
@@ -295,14 +220,76 @@ class CrossCorrelations(object):
 
         else:
             dst_filename = "{0}.auto".format(self._filename)
+
             logging.info("Autocorrelation written to {0}".format(
                 dst_filename))
 
 
     def from_stream(self, stream):
-        for line in stream:
-            self.add_bin(HistogramBin().from_line(line))
+        for line in csv.reader(stream):
+            self.add_bin(HistogramBin().from_line(self.mode,
+                                                  self.channels,
+                                                  self.order,
+                                                  line))
 
+
+
+
+
+
+
+def guess_mode(filename):
+    if filename.lower().endswith(T2):
+        return(T2)
+    elif filename.lower().endswith(T3):
+        return(T3)
+    else:
+        raise(ValueError("Mode could not be identified "
+                         "for {0}.".format(filename)))
+
+def flatten(LoL):
+     for elem in LoL:
+          if isinstance(elem, collections.Iterable):
+               for minor in flatten(elem):
+                    yield(minor)
+          else:
+               yield(elem)
+
+def chunks(L, n=2):
+     chunk = list()
+     for elem in L:
+          chunk.append(elem)
+          if len(chunk) >= n:
+               yield(chunk)
+               chunk = list()
+
+def all_cross_correlations(channels, order):
+     return(
+          itertools.product(
+               range(channels),
+               repeat=order))
+
+def get_bins(bins, mode, time_resolution=1, pulse_resolution=1):
+     if mode == T2:
+          for chunk in chunks(bins, 3):
+               channel = int(chunk[0])
+               bounds = (float(chunk[1]), float(chunk[2]))
+               yield((channel,
+                      TimeBin(bounds,
+                              resolution=time_resolution)))
+     elif mode == T3:
+          for chunk in chunks(bins, 5):
+              channel = int(chunk[0])
+              pulse_bounds = (float(chunk[1]), float(chunk[2]))
+              time_bounds = (float(chunk[3]), float(chunk[4]))
+              yield(channel,
+                    TimeBin(pulse_bounds,
+                            resolution=pulse_resolution),
+                    TimeBin(time_bounds,
+                            resolution=time_resolution))
+     else:
+          raise(ValueError("Mode {0} not recognized.".format(mode)))
+        
 def get_resolution_cmd(filename):
     return([PICOQUANT, "--file-in", filename, "--resolution-only"])
 
@@ -330,11 +317,11 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
                      "--order", str(order),
                      "--max-time-distance",
                               str(max([abs(time_limits.lower),
-                                       abs(time_limits.upper)]-1))]
+                                       abs(time_limits.upper)])-1)]
     if mode == T3:
         correlate_cmd.extend(["--max-pulse-distance",
                               str(max([abs(pulse_limits.lower),
-                                       abs(pulse_limits.upper)]-1))])
+                                       abs(pulse_limits.upper)])-1)])
 
     if "log" in time_scale or "log" in pulse_scale:
         correlate_cmd.extend(["--positive-only"])
@@ -450,15 +437,15 @@ def calculate_gn(filename, mode, channels, order,
 def normalize_histograms(histograms, filename, order,
                          mode, channels, number, print_every):
     time_resolution = get_resolution(filename)
-    if mode == T3:
-        pulse_resolution = 1
+    pulse_resolution = 1
         
     intensities = get_intensities(filename, mode, channels,
                                   number, print_every)
 
-    histograms.autocorrelation(intensities=intensities, normalize=True)
-    histograms.cross_correlations(intensities=intensities, normalize=True)                                        
-    
+    histograms.autocorrelation(intensities=intensities,
+                               normalize=True)
+    histograms.cross_correlations(intensities=intensities,
+                                  normalize=True)
     
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
