@@ -6,6 +6,24 @@
 #include "t2.h"
 #include "bin_intensity.h"
 
+typedef struct {
+	int length;
+	long long int left_index;
+	long long int right_index;
+	t2_t *queue;
+} counts_t2_queue_t;
+
+typedef struct {
+	int channels;
+	edges_t *bin_edges;
+	long long int **counts;
+	long long int **bin_time_limits;
+} counts_t2_t;
+
+void usage(void);
+
+#endif
+
 int bin_intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options);
 counts_t2_t *allocate_counts_t2(int channels, limits_t *time_limits);
 void init_counts_t2(counts_t2_t *counts);

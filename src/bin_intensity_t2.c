@@ -16,19 +16,20 @@
 #include "bin_intensity_t2.h"
 
 int bin_intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
-	t2_t *queue;
+	counts_t2_queue_t *queue;
 	counts_t2_t *counts;
 	int result = 0;
 	int done = 0;
 
-	queue = (t2_t *)malloc(options->queue_size*sizeof(t2_t));
+	queue = allocate_counts_t2_queue(options);
 	counts = allocate_counts_t2(options->channels, &(options->time_limits));
 
 	if ( counts == NULL || queue == NULL ) {
 		result = -1;
 	}
 
-	while ( ! done && next_counts_t2_queue(in_stream, queue, options) ) {
+	while ( ! done && 
+				next_counts_t2_queue(in_stream, queue, counts, options) ) {
 		done = count_t2(queue, options);
 	}
 
@@ -36,32 +37,11 @@ int bin_intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	debug("Cleaning up.\n");
 	free_counts_t2(&counts);
-	free(queue);
+	free_t2_queue(queue);
 	return(result);
 }
 
 counts_t2_t *allocate_counts_t2(int channels, limits_t *time_limits) {
-/*	counts_t *counts;
-	int result = 0;
-	
-	counts = (counts_t *)malloc(sizeof(counts_t));
-	if ( counts == NULL ) {
-		result = -1;
-	} else {
-		counts->channels = channels;
-		counts->counts = (long long int *)malloc(
-				sizeof(long long int)*channels);
-		if ( counts->counts == NULL ) {
-			result = -1;
-		}
-	}
-
-	if ( result ) {
-		free_counts(&counts);
-		counts = NULL;
-	}
-
-	return(counts); */
 	return(0);
 }
 
