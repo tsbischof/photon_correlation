@@ -17,6 +17,7 @@
 #include "files.h"
 #include "t2.h"
 #include "t3.h"
+#include "options.h"
 
 void pq_usage(void) {
 	fprintf(stdout, 
@@ -50,7 +51,7 @@ void pq_usage(void) {
 				VERSION_MAJOR, VERSION_MINOR);
 }
 
-pq_dispatch_t pq_get_dispatch(pq_options_t *options, pq_header_t *pq_header) {
+pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header) {
 	if ( ! strcmp(pq_header->Ident, "PicoHarp 300") ) {
 		return(ph_dispatch);
 	} else if ( ! strcmp(pq_header->Ident, "TimeHarp 200") ) {
@@ -80,7 +81,7 @@ void pq_header_print(FILE *out_stream, pq_header_t *pq_header) {
 void pq_print_t2(FILE *out_stream, long long int count,
 		unsigned int channel, 
 		long long int base_time, unsigned int record_time,
-		pq_options_t *options) {
+		options_t *options) {
 	t2_t record;
 
 	record.channel = channel;
@@ -99,7 +100,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 		unsigned int channel, 
 		long long int base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
-		pq_options_t *options) {
+		options_t *options) {
 	t3_t record;
 
 	record.channel = channel;
@@ -119,7 +120,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 void pq_print_tttr(FILE *out_stream, long long int count,
 		unsigned int histogram_channel, int n_histogram_channels,
 		long long int base_time, unsigned int record_time,
-		pq_options_t *options) {
+		options_t *options) {
 	/* This attempts to make the tttr record look t3-like. It is actually a
  	 * record of a 0->1 stop-start event, found in the histogram channel
  	 * at the time specified by the internal clock, but ultimately we can treat
@@ -147,7 +148,7 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 	print_status(count, options);
 }
 
-void print_status(long long int count, pq_options_t *options) {
+void print_status(long long int count, options_t *options) {
 	time_t rawtime;
 	struct tm *timeinfo;
 	char fmttime[80];
@@ -162,7 +163,7 @@ void print_status(long long int count, pq_options_t *options) {
 }
 
 void pq_print_interactive(FILE *out_stream, int curve, double left_time,
-		double right_time, int counts, pq_options_t *options) {
+		double right_time, int counts, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(&time, 1, sizeof(time), out_stream);
 		fwrite(&counts, 1, sizeof(counts), out_stream);
@@ -173,12 +174,12 @@ void pq_print_interactive(FILE *out_stream, int curve, double left_time,
 }
 
 void external_marker(FILE *out_stream, unsigned int marker, 
-		pq_options_t *options) {
+		options_t *options) {
 	fprintf(stderr, "External marker: %u\n", marker);
 }
 
 void print_resolution(FILE *out_stream, double resolution, 
-		pq_options_t *options) {
+		options_t *options) {
 	/* Given float representing the resolution in picoseconds, print the 
 	 * appropriate value.
 	 */
@@ -195,7 +196,7 @@ int main(int argc, char *argv[]) {
 	 * for working with this data, such as gpu-enabled correlators or 
 	 * wrappers for the data to other programming languages.
 	 */
-	pq_options_t options;
+	options_t options;
 	pq_header_t pq_header;
 	pq_dispatch_t pq_dispatch;
 

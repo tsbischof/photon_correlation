@@ -2,17 +2,7 @@
 #define INTENSITY_H_
 
 #include <stdio.h>
-
-typedef struct {
-	char *in_filename;
-	char *out_filename;
-	char *mode_string;
-	int mode;
-	long long bin_width;
-	int channels;
-	int print_last;
-	int count_all;
-} options_t;
+#include "options.h"
 
 typedef struct {
 	int channels;

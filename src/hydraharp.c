@@ -10,7 +10,7 @@
 #include "error.h"
 
 int hh_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 
 	if ( ! strcmp("1.0", pq_header->FormatVersion) ) {

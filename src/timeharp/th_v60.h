@@ -116,16 +116,16 @@ typedef struct {
 } th_v60_tttr_record_t;
 
 int th_v60_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options);
+		options_t *options);
 
 int th_v60_header_read(FILE *in_stream, th_v60_header_t *th_header,
-		pq_options_t *options);
+		options_t *options);
 void th_v60_header_free(th_v60_header_t *th_header);
 void th_v60_header_print(FILE *out_stream, th_v60_header_t *th_header);
 
 
 int th_v60_interactive_read(FILE *in_stream, th_v60_header_t *th_header,
-		th_v60_interactive_t **interactive, pq_options_t *options);
+		th_v60_interactive_t **interactive, options_t *options);
 
 void th_v60_interactive_header_free(th_v60_interactive_t **interactive,
 		th_v60_header_t *th_header);
@@ -134,10 +134,10 @@ void th_v60_interactive_header_print(FILE *out_stream,
 
 void th_v60_interactive_data_print(FILE *out_stream, 
 		th_v60_header_t *th_header, th_v60_interactive_t **interactive, 
-		pq_options_t *options);
+		options_t *options);
 
 int th_v60_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, th_v60_header_t *th_header, 
-		pq_options_t *options);
+		options_t *options);
 
 #endif

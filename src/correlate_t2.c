@@ -6,45 +6,7 @@
 #include "correlate.h"
 #include "correlate_t2.h"
 #include "combinations.h"
-
-t2_queue_t *allocate_t2_queue(options_t *options) {
-	int result = 0;
-	t2_queue_t *queue;
-
-	queue = (t2_queue_t *)malloc(sizeof(t2_queue_t));
-	if ( queue == NULL ) {
-		result = -1;
-	} else {
-		queue->length = options->queue_size;
-		queue->left_index = -1;
-		queue->right_index = -1;
-	
-		queue->queue = (t2_t *)malloc(sizeof(t2_t)*queue->length);
-		if ( queue->queue == NULL ) {
-			result = -1;
-		}
-	}
-
-	if ( result ) {
-		free_t2_queue(&queue);
-	}
-
-	return(queue);
-}
-
-void free_t2_queue(t2_queue_t **queue) {
-	if ( *queue != NULL ) {
-		if ( (*queue)->queue != NULL ) {
-			free((*queue)->queue);
-		}
-		free(*queue);
-	}
-}
-
-t2_t get_queue_item_t2(t2_queue_t *queue, int index) {
-	int true_index = (queue->left_index + index) % queue->length;
-	return(queue->queue[true_index]);
-}
+#include "options.h"
 
 int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* A t2 correlation is a direct correlation of absolute times. Therefore,
@@ -60,7 +22,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	offsets_t *offsets;
 
 	/* Allocate space in the queue. */
-	queue = allocate_t2_queue(options);
+	queue = allocate_t2_queue(options->queue_size);
 	correlation_block = (t2_t *)malloc(sizeof(t2_t)*options->order);
 	offsets = allocate_offsets(options->order);
 	permutations = make_permutations(options->order, options->positive_only);
@@ -100,7 +62,6 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	
 	return(result);
 }
-
 
 int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 	int result;

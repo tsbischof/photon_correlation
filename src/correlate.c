@@ -13,6 +13,7 @@
 #include "error.h"
 #include "files.h"
 #include "modes.h"
+#include "options.h"
 
 #define QUEUE_SIZE 100000
 

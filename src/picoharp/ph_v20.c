@@ -10,7 +10,7 @@
 #include "../types.h"
 
 int ph_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	ph_v20_header_t ph_header;
 
@@ -43,7 +43,7 @@ int ph_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
  *
  */
 int ph_v20_header_read(FILE *in_stream, ph_v20_header_t *ph_header,
-		pq_options_t *options ) {
+		options_t *options ) {
 	int i;
 	int result;
 	
@@ -128,7 +128,7 @@ void ph_v20_header_free(ph_v20_header_t *ph_header) {
  */
 int ph_v20_interactive_header_read(FILE *in_stream, 
 		ph_v20_header_t *ph_header,
-		ph_v20_interactive_t *interactive, pq_options_t *options) {
+		ph_v20_interactive_t *interactive, options_t *options) {
 	/* Read the static header data. This is a precusor to reading the
 	 * curve data itself, but separating the two gives us a chance to 
 	 * do some simpler debugging. These can be merged in the future for
@@ -157,7 +157,7 @@ int ph_v20_interactive_header_read(FILE *in_stream,
 
 int ph_v20_interactive_data_read(FILE *in_stream,
 		ph_v20_header_t *ph_header,
-		ph_v20_interactive_t *interactive, pq_options_t *options) {
+		ph_v20_interactive_t *interactive, options_t *options) {
 	/* Now the curve data. Allocate this as a 2d array and populate it 
 	 * as such.
 	 */
@@ -213,7 +213,7 @@ void ph_v20_interactive_data_free(ph_v20_header_t *ph_header,
  */
 int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, ph_v20_header_t *ph_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	ph_v20_interactive_t interactive;
 	int i;
@@ -263,7 +263,7 @@ int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
  *
  */
 int ph_v20_tttr_header_read(FILE *in_stream, ph_v20_tttr_header_t *tttr_header,
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 
 	result = fread(tttr_header, 
@@ -301,7 +301,7 @@ void ph_v20_tttr_header_free(ph_v20_tttr_header_t *tttr_header) {
  */
 int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream, 
 		ph_v20_header_t *ph_header,
-		ph_v20_tttr_header_t *tttr_header, pq_options_t *options) {
+		ph_v20_tttr_header_t *tttr_header, options_t *options) {
 	/* Read the stream until we either reach the target number of entries
 	 * or the end of the stream.
 	 */
@@ -365,7 +365,7 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
  */
 int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream, 
 		ph_v20_header_t *ph_header,
-		ph_v20_tttr_header_t *tttr_header, pq_options_t *options) {
+		ph_v20_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 	int overflows = 0;
 	long long int record_count = 0;
@@ -420,7 +420,7 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
  *
  */
 int ph_v20_tttr_stream(FILE *in_stream, FILE *out_stream,
-		pq_header_t *pq_header, ph_v20_header_t *ph_header, pq_options_t *options) {
+		pq_header_t *pq_header, ph_v20_header_t *ph_header, options_t *options) {
 	ph_v20_tttr_header_t tttr_header;
 	int result;
 
@@ -692,7 +692,7 @@ void ph_v20_interactive_header_print(FILE *out_stream,
 void ph_v20_interactive_data_print(FILE *out_stream, 
 		ph_v20_header_t *ph_header, 
 		ph_v20_interactive_t *interactive,
-		pq_options_t *options) {
+		options_t *options) {
 	int i;
 	int j;
 	double left_time;

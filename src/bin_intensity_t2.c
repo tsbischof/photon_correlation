@@ -16,70 +16,110 @@
 #include "bin_intensity_t2.h"
 
 int bin_intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
-	counts_t2_queue_t *queue;
-	counts_t2_t *counts;
+	t2_queue_t *queue;
+	t2_counts_t *counts;
 	int result = 0;
 	int done = 0;
 
-	queue = allocate_counts_t2_queue(options);
-	counts = allocate_counts_t2(options->channels, &(options->time_limits));
+	queue = allocate_t2_queue(options->queue_size);
+	counts = allocate_t2_counts(options->channels, options);
 
 	if ( counts == NULL || queue == NULL ) {
 		result = -1;
 	}
 
 	while ( ! done && 
-				next_counts_t2_queue(in_stream, queue, counts, options) ) {
+				next_t2_counts_queue(in_stream, queue, counts, options) ) {
 		done = count_t2(queue, options);
 	}
 
-	print_counts_t2(out_stream, counts);
+	print_t2_counts(out_stream, counts);
 
 	debug("Cleaning up.\n");
-	free_counts_t2(&counts);
-	free_t2_queue(queue);
+	free_t2_counts(&counts);
+	free_t2_queue(&queue);
 	return(result);
 }
 
-counts_t2_t *allocate_counts_t2(int channels, limits_t *time_limits) {
-	return(0);
-}
-
-void init_counts_t2(counts_t2_t *counts) {
-/*
+t2_counts_t *allocate_t2_counts(int channels, options_t *options) {
+	t2_counts_t *counts = NULL;
+	int result = 0;
 	int i;
 
-	for ( i = 0; i < counts->channels; i++ ) {
-		counts->counts[i] = 0;
-	}
-*/
-}
+	counts = (t2_counts_t *)malloc(sizeof(t2_counts_t));
 
-void free_counts_t2(counts_t2_t **counts) {
-/*	if ( *counts != NULL ) {
-		free((*counts)->counts);
-		free(*counts);
-	} */
-}
-
-int increment_counts_t2(counts_t2_t *counts, int channel) {
-/*	if ( channel >= 0 && channel < counts->channels ) {
-		counts->counts[channel] += 1;
-		return(0);
+	if ( counts == NULL ) {
+		result = -1;
 	} else {
-		error("Invalid channel %d requested for increment.\n", channel);
-		return(-1);
-	}*/
-	return(0);
+		counts->channels = options->channels;
+		counts->bins = options->time_limits.bins;
+		counts->bin_edges = allocate_edges(options->time_limits.bins);
+		counts->bin_counts = (bin_counts_t *)malloc(sizeof(bin_counts_t)
+				*options->time_limits.bins);
+
+		if ( counts->bin_edges == NULL || counts->bin_counts == NULL ) {
+			result = -1;
+		}
+
+		for ( i = 0; !result && i < options->time_limits.bins; i++ ) {
+			counts->bin_counts[i].counts = (long long int *)malloc(
+					sizeof(long long int)*options->channels);
+
+			if ( counts->bin_counts[i].counts == NULL ) {
+				result = -1;
+			}
+		}
+	}
+
+	if ( result ) {
+		free_t2_counts(&counts);
+		counts = NULL;
+	}
+		
+	return(counts);
 }
 
-int next_counts_t2_queue(FILE *in_stream, t2_t *queue, options_t *options) {
+void init_t2_counts(t2_counts_t *counts, options_t *options) {
+	int i,j;
+
+	edges_from_limits(counts->bin_edges, &(options->time_limits), 
+			options->time_scale);
+	
+	for ( i = 0; i < counts->bins; i++ ) {
+		counts->bin_counts[i].limits.lower = 0;
+		counts->bin_counts[i].limits.bins = 0;
+		counts->bin_counts[i].limits.upper = 0;
+
+		for ( j = 0; j < counts->channels; j++ ) {
+			counts->bin_counts[i].counts[j] = 0;	
+		}
+	}
+}
+
+void free_t2_counts(t2_counts_t **counts) {
+	int i;
+	if ( *counts != NULL ) {
+		if ( (*counts)->bin_counts != NULL ) {
+			for ( i = 0; i < (*counts)->bins; i++ ) {
+				free((*counts)->bin_counts[i].counts);
+			}
+		}
+		free(&(*counts)->bin_counts);
+
+		free_edges(&(*counts)->bin_edges);
+	} 
+
+	free(*counts);
+}
+
+int next_t2_counts_queue(FILE *in_stream, t2_queue_t *queue, 
+			t2_counts_t *counts, options_t *options) {
 	return(-1);
 }
 
-void print_counts_t2(FILE *out_stream, counts_t2_t *counts) {
+void print_t2_counts(FILE *out_stream, t2_counts_t *counts) {
 }
 
-int count_t2(t2_t *queue, options_t *options) {
+int count_t2(t2_queue_t *queue, options_t *options) {
 	return(-1);
 }

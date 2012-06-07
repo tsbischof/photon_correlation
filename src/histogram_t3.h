@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "histogram.h"
 #include "t3.h"
+#include "options.h"
 
 typedef struct {
 	unsigned int ref_channel;

@@ -158,20 +158,20 @@ typedef struct {
  * to do to them, such as reading and freeing.
  */
 int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options);
+		options_t *options);
 
 int hh_v10_header_read(FILE *in_stream, hh_v10_header_t *hh_header,
-		pq_options_t *options);
+		options_t *options);
 void hh_v10_header_free(hh_v10_header_t *hh_header);
 void hh_v10_header_print(FILE *out_stream,
 	       hh_v10_header_t *hh_header);
 
 int hh_v10_interactive_header_read(FILE *in_stream, 
 		hh_v10_header_t *hh_header,
-		hh_v10_interactive_t *interactive, pq_options_t *options);
+		hh_v10_interactive_t *interactive, options_t *options);
 int hh_v10_interactive_data_read(FILE *in_stream,
 		hh_v10_header_t *hh_header,
-		hh_v10_interactive_t *interactive, pq_options_t *options);
+		hh_v10_interactive_t *interactive, options_t *options);
 void hh_v10_interactive_header_free(hh_v10_interactive_t *interactive);
 void hh_v10_interactive_data_free(hh_v10_header_t *hh_header,
 		hh_v10_interactive_t *interactive);
@@ -181,25 +181,25 @@ void hh_v10_interactive_header_print(FILE *out_stream,
 void hh_v10_interactive_data_print(FILE *out_stream,
 		hh_v10_header_t *hh_header,
 		hh_v10_interactive_t *interactive,
-		pq_options_t *options);
+		options_t *options);
 int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, hh_v10_header_t *hh_header, 
-		pq_options_t *options);
+		options_t *options);
 
 int hh_v10_tttr_header_read(FILE *in_stream, hh_v10_tttr_header_t *tttr_header,
-		pq_options_t *options);
+		options_t *options);
 void hh_v10_tttr_header_print(FILE *out_stream, 
 		hh_v10_tttr_header_t *tttr_header);
 void hh_v10_tttr_header_free(hh_v10_tttr_header_t *tttr_header);
 
 int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream, 
 		hh_v10_header_t *hh_header,
-		hh_v10_tttr_header_t *tttr_header, pq_options_t *options);
+		hh_v10_tttr_header_t *tttr_header, options_t *options);
 int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 		hh_v10_header_t *hh_header,
-		hh_v10_tttr_header_t *tttr_header, pq_options_t *options);
+		hh_v10_tttr_header_t *tttr_header, options_t *options);
 int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream, 
 		pq_header_t *pq_header, hh_v10_header_t *hh_header, 
-		pq_options_t *options);
+		options_t *options);
 
 #endif

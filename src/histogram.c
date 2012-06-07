@@ -10,6 +10,7 @@
 #include "histogram_gn.h"
 #include "histogram_t2.h"
 #include "histogram_t3.h"
+#include "options.h"
 
 void usage(void) {
 	fprintf(stdout,

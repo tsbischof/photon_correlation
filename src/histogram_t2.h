@@ -5,6 +5,7 @@
 #include "t2.h"
 #include "histogram.h"
 #include "combinations.h"
+#include "options.h"
 
 typedef struct {
 	unsigned int ref_channel;

@@ -5,6 +5,7 @@
 #include "t2.h"
 #include "error.h"
 #include "combinations.h"
+#include "options.h"
 
 t2_correlated_t *allocate_t2_correlated(options_t *options) {
 	t2_correlated_t *record = NULL;

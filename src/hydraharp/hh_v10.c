@@ -9,7 +9,7 @@
 #include "../error.h"
 
 int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	hh_v10_header_t hh_header;
 
@@ -47,7 +47,7 @@ int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
  *
  */
 int hh_v10_header_read(FILE *in_stream, hh_v10_header_t *hh_header,
-		pq_options_t *options ) {
+		options_t *options ) {
 	int i;
 	int result;
 	
@@ -121,7 +121,7 @@ void hh_v10_header_free(hh_v10_header_t *hh_header) {
  */
 int hh_v10_interactive_header_read(FILE *in_stream, 
 		hh_v10_header_t *hh_header,
-		hh_v10_interactive_t *interactive, pq_options_t *options) {
+		hh_v10_interactive_t *interactive, options_t *options) {
 	/* Read the static header data. This is a precusor to reading the
 	 * curve data itself, but separating the two gives us a chance to 
 	 * do some simpler debugging. These can be merged in the future for
@@ -150,7 +150,7 @@ int hh_v10_interactive_header_read(FILE *in_stream,
 
 int hh_v10_interactive_data_read(FILE *in_stream,
 		hh_v10_header_t *hh_header,
-		hh_v10_interactive_t *interactive, pq_options_t *options) {
+		hh_v10_interactive_t *interactive, options_t *options) {
 	/* Now the curve data. Allocate this as a 2d array and populate it 
 	 * as such.
 	 */
@@ -205,7 +205,7 @@ void hh_v10_interactive_data_free(hh_v10_header_t *hh_header,
  */
 int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, hh_v10_header_t *hh_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	hh_v10_interactive_t interactive;
 	int i;
@@ -256,7 +256,7 @@ int hh_v10_interactive_stream(FILE *in_stream, FILE *out_stream,
  *
  */
 int hh_v10_tttr_header_read(FILE *in_stream, hh_v10_tttr_header_t *tttr_header,
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 
 	result = fread(tttr_header, 
@@ -294,7 +294,7 @@ void hh_v10_tttr_header_free(hh_v10_tttr_header_t *tttr_header) {
  */
 int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream, 
 		hh_v10_header_t *hh_header,
-		hh_v10_tttr_header_t *tttr_header, pq_options_t *options) {
+		hh_v10_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 	int overflows = 0;
 	long long int record_count = 0;
@@ -351,7 +351,7 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
  */
 int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream, 
 		hh_v10_header_t *hh_header,
-		hh_v10_tttr_header_t *tttr_header, pq_options_t *options) {
+		hh_v10_tttr_header_t *tttr_header, options_t *options) {
 	/* Read the stream until we either reach the target number of entries
 	 * or the end of the stream.
 	 */
@@ -414,7 +414,7 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
  */
 int hh_v10_tttr_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, hh_v10_header_t *hh_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	hh_v10_tttr_header_t tttr_header;
 	int result;
 
@@ -678,7 +678,7 @@ void hh_v10_interactive_header_print(FILE *out_stream,
 void hh_v10_interactive_data_print(FILE *out_stream, 
 		hh_v10_header_t *hh_header, 
 		hh_v10_interactive_t *interactive,
-		pq_options_t *options) {
+		options_t *options) {
 	int i;
 	int j;
 	double left_time;

@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "types.h"
+#include "options.h"
 
 #define	PQ_SUCCESS	0
 #define PQ_FAILURE -1
@@ -19,51 +20,38 @@
 
 #pragma pack(4)
 typedef struct {
-	char *in_filename;
-	char *out_filename;
-	char *file_type_string;
-	int file_type;
-	int number;
-	int print_header;
-	int print_every;
-	int print_resolution;
-	int binary_out;
-	int to_t2;
-} pq_options_t;
-
-typedef struct {
 	char Ident[16];
 	char FormatVersion[6];
 } pq_header_t;
 
-typedef int (*pq_dispatch_t)(FILE *, FILE *, pq_header_t *, pq_options_t *);
+typedef int (*pq_dispatch_t)(FILE *, FILE *, pq_header_t *, options_t *);
 
 void pq_usage(void);
 
-pq_dispatch_t pq_get_dispatch(pq_options_t *options, pq_header_t *pq_header);
+pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header);
 int pq_header_read(FILE *in_stream, pq_header_t *pq_header);
 void pq_header_print(FILE *out_stream, pq_header_t *pq_header);
 
 void pq_print_t2(FILE *out_stream, long long int count,
 		unsigned int channel, 
 		long long int base_time, unsigned int record_time,
-		pq_options_t *options);
+		options_t *options);
 void pq_print_t3(FILE *out_stream, long long int count,
 		unsigned int channel,
 		long long int base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
-		pq_options_t *options);
+		options_t *options);
 void pq_print_tttr(FILE *out_stream, long long int count,
 		unsigned int histogram_channel, int n_histogram_channels,
 		long long int base_time, unsigned int record_time,
-		pq_options_t *options);
+		options_t *options);
 void pq_print_interactive(FILE *out_stream, int curve, double left_time, 
-		double right_time, int counts, pq_options_t *options);
-void print_status(long long int count, pq_options_t *options);
+		double right_time, int counts, options_t *options);
+void print_status(long long int count, options_t *options);
 void external_marker(FILE *out_stream, unsigned int marker, 
-		pq_options_t *options);
+		options_t *options);
 void print_resolution(FILE *out_stream, double resolution,
-		pq_options_t *options);
+		options_t *options);
 	
 void pq_usage(void);
 

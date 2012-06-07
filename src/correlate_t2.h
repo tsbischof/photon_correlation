@@ -5,17 +5,8 @@
 #include "correlate.h"
 #include "combinations.h"
 #include "t2.h"
+#include "options.h"
 
-typedef struct {
-	int length;
-	long long int left_index;
-	long long int right_index;
-	t2_t *queue;
-} t2_queue_t;
-
-t2_queue_t *allocate_t2_queue(options_t *options);
-void free_t2_queue(t2_queue_t **queue);
-t2_t get_queue_item_t2(t2_queue_t *queue, int index);
 int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options);
 
 int valid_distance_t2(t2_t *left, t2_t *right, options_t *options);

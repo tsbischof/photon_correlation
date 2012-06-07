@@ -16,6 +16,6 @@
 #include "picoquant.h"
 
 int hh_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options);
+		options_t *options);
 
 #endif

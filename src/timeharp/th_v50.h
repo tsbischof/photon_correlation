@@ -121,38 +121,38 @@ typedef struct {
 } th_v50_tttr_record_t;
 
 int th_v50_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options);
+		options_t *options);
 
 int th_v50_header_read(FILE *in_stream, th_v50_header_t *th_header,
-		pq_options_t *options);
+		options_t *options);
 void th_v50_header_free(th_v50_header_t *th_header);
 void th_v50_header_print(FILE *out_stream, th_v50_header_t *th_header);
 
 int th_v50_interactive_read(FILE *in_stream, th_v50_header_t *th_header,
-		th_v50_interactive_t **interactive, pq_options_t *options);
+		th_v50_interactive_t **interactive, options_t *options);
 void th_v50_interactive_free(th_v50_interactive_t **interactive,
 		th_v50_header_t *th_header);
 void th_v50_interactive_header_print(FILE *out_stream, 
 		th_v50_header_t *th_header, th_v50_interactive_t **interactive);
 void th_v50_interactive_data_print(FILE *out_stream, th_v50_header_t *th_header,
-		th_v50_interactive_t **interactive, pq_options_t *options);
+		th_v50_interactive_t **interactive, options_t *options);
 int th_v50_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, th_v50_header_t *th_header, 
-		pq_options_t *options);
+		options_t *options);
 
 int th_v50_tttr_header_read(FILE *in_stream, th_v50_header_t *th_header,
-		th_v50_tttr_header_t *tttr_header, pq_options_t *options);
+		th_v50_tttr_header_t *tttr_header, options_t *options);
 void th_v50_tttr_header_print(FILE *out_stream, 
 		th_v50_tttr_header_t *tttr_header);
 void th_v50_tttr_header_free(th_v50_tttr_header_t *tttr_header);
 
 int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 		th_v50_header_t *th_header, th_v50_tttr_header_t *tttr_header,
-		pq_options_t *options);
+		options_t *options);
 
 int th_v50_tttr_stream(FILE *in_stream, FILE *out_stream, 
 		pq_header_t *pq_header, th_v50_header_t *th_header, 
-		pq_options_t *options);
+		options_t *options);
 
 
 #endif

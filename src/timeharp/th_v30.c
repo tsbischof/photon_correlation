@@ -11,7 +11,7 @@
 #include "../types.h"
 
 int th_v30_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	th_v30_header_t th_header;
 
@@ -46,7 +46,7 @@ int th_v30_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
  *
  */
 int th_v30_header_read(FILE *in_stream, th_v30_header_t *th_header,
-		pq_options_t *options ) {
+		options_t *options ) {
 	int result;
 	
 	/* First, we want to read everything that is static. This is everything
@@ -92,7 +92,7 @@ void th_v30_header_free(th_v30_header_t *th_header) {
 
 int th_v30_interactive_read(FILE *in_stream,
 		th_v30_header_t *th_header,
-		th_v30_interactive_t **interactive, pq_options_t *options) {
+		th_v30_interactive_t **interactive, options_t *options) {
 	int i;
 	int result;
 
@@ -147,7 +147,7 @@ void th_v30_interactive_free(th_v30_interactive_t **interactive,
  */
 int th_v30_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, th_v30_header_t *th_header, 
-		pq_options_t *options) {
+		options_t *options) {
 	int result;
 	th_v30_interactive_t *interactive;
 	int i;
@@ -328,7 +328,7 @@ void th_v30_interactive_header_print(FILE *out_stream,
 void th_v30_interactive_data_print(FILE *out_stream, 
 		th_v30_header_t *th_header, 
 		th_v30_interactive_t **interactive,
-		pq_options_t *options) {
+		options_t *options) {
 	int i;
 	int j;
 	double left_time;
@@ -352,7 +352,7 @@ void th_v30_interactive_data_print(FILE *out_stream,
  */
 
 int th_v30_tttr_header_read(FILE *in_stream, th_v30_header_t *th_header,
-		th_v30_tttr_header_t *tttr_header, pq_options_t *options) {
+		th_v30_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 
 	result = fread(tttr_header, sizeof(th_v30_tttr_header_t), 1, in_stream);
@@ -367,7 +367,7 @@ int th_v30_tttr_header_read(FILE *in_stream, th_v30_header_t *th_header,
 
 int th_v30_tttr_stream(FILE *in_stream, FILE *out_stream, 
 		pq_header_t *pq_header, th_v30_header_t *th_header, 
-		pq_options_t *options) { 
+		options_t *options) { 
 	th_v30_tttr_header_t tttr_header;
 	int result;
 
@@ -394,7 +394,7 @@ int th_v30_tttr_stream(FILE *in_stream, FILE *out_stream,
 
 int th_v30_tttr_record_stream(FILE *in_stream, FILE *out_stream, 
 		th_v30_header_t *th_header, th_v30_tttr_header_t *tttr_header,
-		pq_options_t *options) {
+		options_t *options) {
 	int result = 0;
 	int overflows = 0;
 	long long int record_count = 0;

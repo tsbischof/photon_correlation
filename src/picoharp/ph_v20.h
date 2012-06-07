@@ -158,19 +158,19 @@ typedef struct {
  */
 
 int ph_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
-		pq_options_t *options);
+		options_t *options);
 
 int ph_v20_header_read(FILE *in_stream, ph_v20_header_t *ph_header,
-		pq_options_t *options);
+		options_t *options);
 void ph_v20_header_free(ph_v20_header_t *ph_header);
 void ph_v20_header_print(FILE *out_stream, ph_v20_header_t *ph_header);
 
 int ph_v20_interactive_header_read(FILE *in_stream, 
 		ph_v20_header_t *ph_header,
-		ph_v20_interactive_t *interactive, pq_options_t *options);
+		ph_v20_interactive_t *interactive, options_t *options);
 int ph_v20_interactive_data_read(FILE *in_stream,
 		ph_v20_header_t *ph_header,
-		ph_v20_interactive_t *interactive, pq_options_t *options);
+		ph_v20_interactive_t *interactive, options_t *options);
 void ph_v20_interactive_header_free(ph_v20_interactive_t *interactive);
 void ph_v20_interactive_data_free(ph_v20_header_t *ph_header,
 		ph_v20_interactive_t *interactive);
@@ -180,25 +180,25 @@ void ph_v20_interactive_header_print(FILE *out_stream,
 void ph_v20_interactive_data_print(FILE *out_stream,
 		ph_v20_header_t *ph_header,
 		ph_v20_interactive_t *interactive,
-		pq_options_t *options);
+		options_t *options);
 int ph_v20_interactive_stream(FILE *in_stream, FILE *out_stream,
 		pq_header_t *pq_header, ph_v20_header_t *ph_header, 
-		pq_options_t *options);
+		options_t *options);
 
 int ph_v20_tttr_header_read(FILE *in_stream, ph_v20_tttr_header_t *tttr_header,
-		pq_options_t *options);
+		options_t *options);
 void ph_v20_tttr_header_print(FILE *out_stream, 
 		ph_v20_tttr_header_t *tttr_header);
 void ph_v20_tttr_header_free(ph_v20_tttr_header_t *tttr_header);
 
 int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream, 
 		ph_v20_header_t *ph_header,
-		ph_v20_tttr_header_t *tttr_header, pq_options_t *options);
+		ph_v20_tttr_header_t *tttr_header, options_t *options);
 int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 		ph_v20_header_t *ph_header,
-		ph_v20_tttr_header_t *tttr_header, pq_options_t *options);
+		ph_v20_tttr_header_t *tttr_header, options_t *options);
 int ph_v20_tttr_stream(FILE *in_stream, FILE *out_stream, 
 		pq_header_t *pq_header, ph_v20_header_t *ph_header, 
-		pq_options_t *options);
+		options_t *options);
 
 #endif

@@ -5,6 +5,7 @@
 #include "correlate.h"
 #include "combinations.h"
 #include "t3.h"
+#include "options.h"
 
 typedef struct {
 	int length;

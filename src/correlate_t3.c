@@ -5,6 +5,7 @@
 #include "correlate_t3.h"
 #include "combinations.h"
 #include "error.h"
+#include "options.h"
 
 t3_queue_t *allocate_t3_queue(options_t *options) {
 	int result = 0;

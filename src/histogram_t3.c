@@ -5,6 +5,7 @@
 #include "histogram_t3.h"
 #include "t3.h"
 #include "error.h"
+#include "options.h"
 
 int histogram_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	if ( options->order == 1 ) {

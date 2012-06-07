@@ -6,6 +6,11 @@
 #include "t2.h"
 
 typedef struct {
+	limits_t limits;
+	long long int *counts;
+} bin_counts_t;
+
+typedef struct {
 	char *in_filename;
 	char *out_filename;
 	char *mode_string;
@@ -21,12 +26,6 @@ typedef struct {
 	char *pulse_scale_string;
 	int pulse_scale;
 } options_t;
-
-typedef struct {
-	int channels;
-	edges_t *edges;
-	long long int **counts;
-} counts_t2_t;
 
 void usage(void);
 
