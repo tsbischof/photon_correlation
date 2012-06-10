@@ -15,8 +15,6 @@
 #include "modes.h"
 #include "options.h"
 
-#define QUEUE_SIZE 100000
-
 #define MODE_T2 2
 #define MODE_T3 3
 
