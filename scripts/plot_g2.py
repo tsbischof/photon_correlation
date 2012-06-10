@@ -2,6 +2,7 @@
 
 import csv
 import sys
+import math
 
 import matplotlib.pyplot as plt
 
@@ -18,10 +19,11 @@ if __name__ == "__main__":
 
             correlations = set(map(lambda x: (x[0], x[1]),
                                    g2))
+            channels = int(math.sqrt(len(correlations)))
 
             plt.clf()
             for index, correlation in enumerate(sorted(correlations)):
-                plt.subplot(2,2,index)
+                plt.subplot(channels, channels,index)
                 my_correlation = list(
                     filter(lambda x: (x[0], x[1]) == correlation,
                            g2))

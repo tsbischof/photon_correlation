@@ -21,12 +21,12 @@ T2 = "t2"
 T3 = "t3"
 
 class Limits(object):
-    def __init__(self, limit_str):
+    def __init__(self, limit_str, units=1):
         limits = limit_str.split(",")
         # Handle conversion from ms to ps.
-        self.lower = int(float(limits[0])*10**9)
+        self.lower = int(float(limits[0])*units)
         self.bins = int(limits[1])
-        self.upper = int(float(limits[2])*10**9) 
+        self.upper = int(float(limits[2])*units) 
 
     def __str__(self):
         return(",".join(map(str, [self.lower, self.bins, self.upper])))
@@ -180,6 +180,7 @@ class CrossCorrelations(object):
                         my_bin.counts = 0
 
                     writer.writerow(my_bin.to_line())
+                    del(my_bin)
 
 
                 
@@ -291,7 +292,11 @@ def get_bins(bins, mode, time_resolution=1, pulse_resolution=1):
           raise(ValueError("Mode {0} not recognized.".format(mode)))
         
 def get_resolution_cmd(filename):
-    return([PICOQUANT, "--file-in", filename, "--resolution-only"])
+    cmd = [PICOQUANT, "--file-in", filename, "--resolution-only"]
+
+    logging.info(cmd)
+
+    return(cmd)
 
 def get_resolution(filename):
     raw_resolution = subprocess.Popen(get_resolution_cmd(filename),
@@ -306,6 +311,8 @@ def get_photon_stream_cmd(filename, number, print_every):
         photon_stream_cmd.extend(["--number", str(number)])
     if print_every:
         photon_stream_cmd.extend(["--print-every", str(print_every)])
+
+    logging.info(photon_stream_cmd)
 
     return(photon_stream_cmd)
 
@@ -326,6 +333,8 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
     if "log" in time_scale or "log" in pulse_scale:
         correlate_cmd.extend(["--positive-only"])
 
+    logging.info(correlate_cmd)
+
     return(correlate_cmd)
 
 def get_histogram_cmd(filename, dst_filename, mode, channels, order,
@@ -343,14 +352,20 @@ def get_histogram_cmd(filename, dst_filename, mode, channels, order,
         histogram_cmd.extend(["--pulse", str(pulse_limits),
                               "--pulse-scale", pulse_scale])
 
+    logging.info(histogram_cmd)
+
     return(histogram_cmd)
 
 def get_intensity_cmd(filename, dst_filename, mode, channels):
-    return([INTENSITY,
+    cmd = [INTENSITY,
             "--mode", mode,
             "--channels", str(channels),
             "--count-all",
-            "--file-out", dst_filename])
+            "--file-out", dst_filename]
+
+    logging.debug(cmd)
+
+    return(cmd)
 
 def get_intensities(filename, mode, channels, number, print_every):
     dst_filename = "{0}.sum_intensity".format(filename)
@@ -434,8 +449,9 @@ def calculate_gn(filename, mode, channels, order,
                              mode, channels, order,
                              number, print_every)
 
-def normalize_histograms(histograms, filename, order,
-                         mode, channels, number, print_every):
+def normalize_histograms(histograms, filename,
+                         mode, channels, order,
+                         number, print_every):
     time_resolution = get_resolution(filename)
     pulse_resolution = 1
         
@@ -483,7 +499,7 @@ if __name__ == "__main__":
     parser.add_option("-p", "--print-every", dest="print_every",
                       help="Print the record number whenever it is divisible "
                       "by this number. By default, nothing is printed.",
-                      default=0, action="store", type=int)
+                      default=100000, action="store", type=int)
     parser.add_option("-N", "--no-normalize", action="store_true",
                       help="Suppress the usual normalization routine.",
                       default=False)
@@ -502,7 +518,7 @@ if __name__ == "__main__":
     order = options.order
     
     if options.time_limits:
-        time_limits = Limits(options.time_limits)
+        time_limits = Limits(options.time_limits, units=10**9)
     else:
         raise(ValueError("Must specify time limits."))
 
