@@ -115,10 +115,10 @@ int main(int argc, char *argv[]) {
 				options.queue_size = strtoll(optarg, NULL, 10);
 				break;
 			case 'd':
-				options.max_time_distance = strtol(optarg, NULL, 10);
+				options.max_time_distance = strtoll(optarg, NULL, 10);
 				break;
 			case 'e':
-				options.max_pulse_distance = strtol(optarg, NULL, 10);
+				options.max_pulse_distance = strtoll(optarg, NULL, 10);
 				break;
 			case 'g':
 				options.order = strtol(optarg, NULL, 10);
