@@ -15,6 +15,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	 * difference.
 	 */
 	int result = 0;
+	long long int record_number = 0;
 	int done = 0;
 	t2_queue_t *queue;
 	t2_t *correlation_block;
@@ -44,6 +45,9 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
 		 */	
+		record_number++;
+		print_status(record_number, options);
+
 		correlate_t2_block(out_stream, queue, permutations,
 					offsets, correlation_block, options); 
 	}

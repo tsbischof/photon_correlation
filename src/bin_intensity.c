@@ -15,6 +15,7 @@
 #include "t2.h"
 #include "t3.h"
 #include "histogram_gn.h"
+#include "options.h"
 
 #define QUEUE_SIZE 100000
 

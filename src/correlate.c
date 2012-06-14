@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "strings.h"
 #include "correlate.h"

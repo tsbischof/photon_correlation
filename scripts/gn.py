@@ -140,9 +140,12 @@ class CrossCorrelations(object):
         if not self._bins:
             logging.debug("Loading bins from {0}".format(self._filename))
             with open(self._filename) as stream:
-                self.from_stream(stream)
+                for my_bin in self.from_stream(stream):
+                    yield(my_bin)
+                
 
-        return(self._bins)
+        else:
+            yield(self._bins)
 
     def cross_correlations(self, intensities=None, normalize=False):
         if normalize:
@@ -228,10 +231,14 @@ class CrossCorrelations(object):
 
     def from_stream(self, stream):
         for line in csv.reader(stream):
-            self.add_bin(HistogramBin().from_line(self.mode,
-                                                  self.channels,
-                                                  self.order,
-                                                  line))
+            yield(HistogramBin().from_line(self.mode,
+                                           self.channels,
+                                           self.order,
+                                           line))
+#            self.add_bin(HistogramBin().from_line(self.mode,
+#                                                  self.channels,
+#                                                  self.order,
+#                                                  line))
 
 
 
@@ -317,7 +324,7 @@ def get_photon_stream_cmd(filename, number, print_every):
     return(photon_stream_cmd)
 
 def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
-                      time_scale, pulse_scale):
+                      time_scale, pulse_scale, queue_size):
     # Build the correlation command.
     correlate_cmd = [CORRELATE,
                      "--mode", mode,
@@ -332,6 +339,9 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
 
     if "log" in time_scale or "log" in pulse_scale:
         correlate_cmd.extend(["--positive-only"])
+
+    if queue_size:
+        correlate_cmd.extend(["--queue-size", str(queue_size)])
 
     logging.info(correlate_cmd)
 
@@ -395,7 +405,7 @@ def get_intensities(filename, mode, channels, number, print_every):
 def get_histograms(filename, mode, channels, order,
                    time_limits, pulse_limits,
                    time_scale, pulse_scale,
-                   number, print_every):
+                   number, print_every, queue_size):
     dst_filename = "{0}.g{1}".format(filename, order)
     if not os.path.isfile(dst_filename):
         logging.info("Performing the cross-correlation. This may take a while.")
@@ -408,7 +418,7 @@ def get_histograms(filename, mode, channels, order,
             get_correlate_cmd(filename,
                               mode, order,
                               time_limits, pulse_limits,
-                              time_scale, pulse_scale),
+                              time_scale, pulse_scale, queue_size),
             stdin=photon_stream.stdout, stdout=subprocess.PIPE)
         histogram_stream = subprocess.Popen(
             get_histogram_cmd(filename, dst_filename,
@@ -423,7 +433,7 @@ def get_histograms(filename, mode, channels, order,
 def calculate_gn(filename, mode, channels, order,
                      time_limits, pulse_limits,
                      time_scale, pulse_scale,
-                     number, print_every, normalize):
+                     number, print_every, normalize, queue_size):
     logging.info("Processing {0}".format(filename))
     if not mode:
         try:
@@ -441,7 +451,7 @@ def calculate_gn(filename, mode, channels, order,
     histograms = get_histograms(filename, mode, channels, order,
                                 time_limits, pulse_limits,
                                 time_scale, pulse_scale,
-                                number, print_every)
+                                number, print_every, queue_size)
     histograms.autocorrelation()
 
     if normalize:
@@ -503,6 +513,9 @@ if __name__ == "__main__":
     parser.add_option("-N", "--no-normalize", action="store_true",
                       help="Suppress the usual normalization routine.",
                       default=False)
+    parser.add_option("-q", "--queue-size", dest="queue_size",
+                      help="Sets the length of the correlation queue.",
+                      action="store", type=int)
 
     options, args = parser.parse_args()
     logging.debug("Options: {0}".format(options))
@@ -531,11 +544,12 @@ if __name__ == "__main__":
     pulse_scale = options.pulse_scale
     print_every = options.print_every
     normalize = not options.no_normalize
+    queue_size = options.queue_size
 
     for filename in args:
         calculate_gn(filename, mode, channels, order,
                      time_limits, pulse_limits,
                      time_scale, pulse_scale,
-                     number, print_every, normalize)
+                     number, print_every, normalize, queue_size)
 
     

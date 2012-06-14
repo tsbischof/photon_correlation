@@ -148,20 +148,6 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 	print_status(count, options);
 }
 
-void print_status(long long int count, options_t *options) {
-	time_t rawtime;
-	struct tm *timeinfo;
-	char fmttime[80];
-
-	if ( (options->print_every > 0) && 
-			( (count % options->print_every) == 0 ) ) {
-		time(&rawtime);
-		timeinfo = localtime(&rawtime);
-		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
-		fprintf(stderr, "%s: Record %20lld\n", fmttime, count);
-	}
-}
-
 void pq_print_interactive(FILE *out_stream, int curve, double left_time,
 		double right_time, int counts, options_t *options) {
 	if ( options->binary_out ) {

@@ -59,6 +59,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	 */
 	int result = 0;
 	int done = 0;
+	long long int record_number = 0;
 	t3_queue_t *queue;
 	t3_t *correlation_block;
 	permutations_t *permutations;
@@ -87,6 +88,9 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * determine the distance by referencing the correct 
 		 * channel combination.
 		 */	
+		record_number++;
+		print_status(record_number, options);
+
 		correlate_t3_block(out_stream, queue, permutations,
 					offsets, correlation_block, options); 
 	}
