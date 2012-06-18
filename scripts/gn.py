@@ -324,7 +324,7 @@ def get_photon_stream_cmd(filename, number, print_every):
     return(photon_stream_cmd)
 
 def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
-                      time_scale, pulse_scale, queue_size):
+                      time_scale, pulse_scale, queue_size, print_every):
     # Build the correlation command.
     correlate_cmd = [CORRELATE,
                      "--mode", mode,
@@ -342,6 +342,9 @@ def get_correlate_cmd(filename, mode, order, time_limits, pulse_limits,
 
     if queue_size:
         correlate_cmd.extend(["--queue-size", str(queue_size)])
+
+    if print_every:
+        correlate_cmd.extend(["--print-every", str(print_every)])
 
     logging.info(correlate_cmd)
 
@@ -412,13 +415,13 @@ def get_histograms(filename, mode, channels, order,
         photon_stream = subprocess.Popen(
             get_photon_stream_cmd(filename,
                                   number,
-                                  print_every),
+                                  None),
             stdout=subprocess.PIPE)
         correlate_stream = subprocess.Popen(
             get_correlate_cmd(filename,
                               mode, order,
                               time_limits, pulse_limits,
-                              time_scale, pulse_scale, queue_size),
+                              time_scale, pulse_scale, queue_size, print_every),
             stdin=photon_stream.stdout, stdout=subprocess.PIPE)
         histogram_stream = subprocess.Popen(
             get_histogram_cmd(filename, dst_filename,
