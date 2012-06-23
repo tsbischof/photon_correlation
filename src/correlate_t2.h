@@ -10,6 +10,8 @@
 int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options);
 
 int valid_distance_t2(t2_t *left, t2_t *right, options_t *options);
+int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options);
+int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options);
 
 int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options);
 int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,

@@ -93,6 +93,8 @@ void pq_print_t2(FILE *out_stream, long long int count,
 		fprintf(out_stream, "%u,%lld\n", record.channel, record.time);
 	}
 
+	fflush(out_stream);
+
 	print_status(count, options);
 }
 
@@ -113,6 +115,8 @@ void pq_print_t3(FILE *out_stream, long long int count,
 		fprintf(out_stream, "%u,%lld,%u\n",
 				record.channel, record.pulse_number, record.time);
 	}
+
+	fflush(out_stream);
 	
 	print_status(count, options);
 }
@@ -157,6 +161,7 @@ void pq_print_interactive(FILE *out_stream, int curve, double left_time,
 		fprintf(out_stream, "%d,%.3lf,%.3lf,%d\n", curve, left_time,
 				right_time, counts);
 	}
+	fflush(out_stream);
 }
 
 void external_marker(FILE *out_stream, unsigned int marker, 

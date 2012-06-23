@@ -20,6 +20,8 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index);
 int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options);
 
 int valid_distance_t3(t3_t *left, t3_t *right, options_t *options);
+int under_max_distance_t3(t3_t *left, t3_t *right, options_t *options);
+int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options);
 
 int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options);
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,

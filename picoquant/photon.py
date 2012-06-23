@@ -52,7 +52,8 @@ class Photon(object):
 def windows(start, step):
     lower = start
     while True:
-        yield(lower, lower + step)
+        yield(histogram.Limits(lower=lower,
+                               upper=lower+step))
         lower += step
         
 
@@ -72,9 +73,8 @@ window sequentially."""
             raise(ValueError("Must specify step size for either pulse or time"))
 
         self.windows = windows(0, self.step)
-        self.lower, self.upper = next(self.windows)
-        self.test = lambda p: self.key(p) >= self.lower and \
-                    self.key(p) < self.upper
+        self.window = next(self.windows)
+        self.test = lambda p: self.key(p) in self.window
 
         self.photons = photons
         self._done = False
@@ -93,7 +93,7 @@ window sequentially."""
         if self._done:
             raise(StopIteration)
         
-        return((self.lower, self.upper), self.populate())
+        return(self.window, self.populate())
 
     def populate(self):
         try:
@@ -103,10 +103,19 @@ window sequentially."""
         except StopIteration:
             self._done = True
 
-        self.lower, self.upper = next(self.windows)
+        self.window = next(self.windows)
 
         if self._done:
             raise(StopIteration)
+
+def encode(photons):
+    """Transform a stream of photons into a raw stream suitable for further
+processing. If the stream is already raw (subprocess output), the stream is
+passed unaltered. Otherwise, the photons are converted to bytes."""
+    if isinstance(photons, bytes):
+        return(photons)
+    else:
+        return("\n".join(map(str, photons)))
             
 if __name__ == "__main__":
     import picoquant

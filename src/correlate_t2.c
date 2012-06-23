@@ -86,7 +86,8 @@ int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 			return(queue->left_index < 
 					(queue->right_index - options->order + 2));
 		} else if ( ending_index > 0 && 
-					! valid_distance_t2(&(queue->queue[starting_index]),
+					! under_max_distance_t2(
+						&(queue->queue[starting_index]),
 						&(queue->queue[ending_index]), options) ) {
 			/* Incremented, but still outside the distance bounds. */
 			return(1);
@@ -119,8 +120,17 @@ int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
 }
 
 int valid_distance_t2(t2_t *left, t2_t *right, options_t *options) {
-	return( options->max_time_distance == 0 || 
-			llabs(right->time - left->time) <= options->max_time_distance);
+	return( under_max_distance_t2(left, right, options) 
+			&& over_min_distance_t2(left, right, options) ); 
+}
+
+int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options) {
+	return( options->max_time_distance == 0 
+			|| llabs(right->time - left->time) < options->max_time_distance);
+}
+
+int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options) {
+	return( llabs(right->time - left->time) > options->min_time_distance ) ;
 }
 
 int correlate_t2_block(FILE *out_stream, t2_queue_t *queue, 

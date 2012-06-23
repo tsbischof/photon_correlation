@@ -1,4 +1,6 @@
-from picoquant import modes
+import subprocess
+
+from picoquant import modes, files, photon
 
 class Limits(object):
     def __init__(self, lower=None, bins=1, upper=None,
@@ -35,22 +37,12 @@ class Limits(object):
     def __contains__(self, value):
         return(self.lower <= value and value < self.upper)
 
-##class HistogramBin(object):
-##    def __init__(self, correlation=None, limits=None, counts=None, string=None):
-##        if string:
-##            self.from_string(string)
-##        else:
-##            self.correlation = correlation
-##            self.limits = limits
-##            self.counts = counts
-
 class Histogram(object):
     def __init__(self, photons, order=1,
                  time_limits=None, pulse_limits=None,
                  time_scale=modes.SCALE_LINEAR, pulse_scale=modes.SCALE_LINEAR,
                  filename=None):
-        self.mode = photons.mode
-        self.channels = photons.channels
+        self.photons = photons
 
         self.order = order
         self.time_scale = time_scale
@@ -61,8 +53,48 @@ class Histogram(object):
 
         self.filename = filename
     
-        self._bins = range(10)
+        self._bins = None
+
+        if self.photons.mode == modes.T3 and \
+           self.order > 1 and \
+           not (self.time_limits and self.pulse_limits):
+            raise(ValueError("T3 mode requires pulse and time limits."))
+        elif self.photons.mode == modes.T2 and \
+             not self.time_limits:
+            raise(ValueError("T2 mode requires time limits."))
+
+        if not self.photons.mode in modes.TTTR:
+            raise(ValueError("Photon stream must be t2 or t3 type."))
+
+        self.run()
+
+    def run(self):
+        cmd = [files.HISTOGRAM,
+               "--mode", self.photons.mode,
+               "--channels", self.photons.channels]
+
+        if self.time_limits:
+            cmd.extend(["--time", str(self.time_limits),
+                        "--time-scale", self.time_scale])
+
+        if self.pulse_limits:
+            cmd.extend(["--pulse", str(self.pulse_limits),
+                        "--pulse-scale", self.pulse_scale])
+
+        if self.filename:
+            cmd.extend(["--file-out", self.filename])
+            histogrammer = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE)
+            histogrammer.communicate(self.photons.stream())
+            
+##        subprocess.Popen([files.HISTOGRAM,
 
     def bins(self):
+        if not self._bins:
+            pass
+
+        return(self._bins)
+            
         
                  

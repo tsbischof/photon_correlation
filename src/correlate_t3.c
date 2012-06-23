@@ -124,7 +124,7 @@ int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options) {
 			return(queue->left_index < 
 					(queue->right_index - options->order + 2));
 		} else if ( ending_index > 0 && 
-					! valid_distance_t3(&(queue->queue[starting_index]),
+					! under_max_distance_t3(&(queue->queue[starting_index]),
 								&(queue->queue[ending_index]), options) ) {
 			/* Incremented, but still outside the bounds. */
 			return(1);
@@ -153,12 +153,24 @@ int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options) {
 }
 
 int valid_distance_t3(t3_t *left, t3_t *right, options_t *options) {
-	return( (options->max_time_distance == 0 
+	return( under_max_distance_t3(left, right, options)
+			&& over_min_distance_t3(left, right, options) );
+}
+
+int under_max_distance_t3(t3_t *left, t3_t *right, options_t *options) {
+	return( (options->max_time_distance == 0
 				|| llabs(right->time - left->time) 
-						<= options->max_time_distance) 
-			&& (options->max_pulse_distance == 0 
+							<= options->max_time_distance)
+			&& (options->max_pulse_distance == 0
 				|| llabs(right->pulse_number - left->pulse_number) 
-						<= options->max_pulse_distance) );
+							<= options->max_pulse_distance) );
+}
+
+int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
+	return( llabs(right->time - left->time) >= options->min_time_distance 
+			&& llabs(right->pulse_number - left->pulse_number)
+					 >= options->min_pulse_distance ) ;
+
 }
 
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue, 

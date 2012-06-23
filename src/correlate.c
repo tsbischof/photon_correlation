@@ -22,8 +22,10 @@
 void usage(void) {
 	fprintf(stdout, 
 "Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b] [-n number]\n"
-"                 [-p print_every] [-q queue_size] [-d max_time_distance] \n"
-"                 [-e max_pulse_distance] [-r] -g order -c channels -m mode\n"
+"                 [-p print_every] [-q queue_size] \n"
+"                 [-d max_time_distance] [-D min_time_distance] \n"
+"                 [-e max_pulse_distance] [-E min_time_distance]\n"
+"                 [-r] -g order -c channels -m mode\n"
 "\n"
 "       Version %d.%d\n"
 "\n"
@@ -40,9 +42,11 @@ void usage(void) {
 " -d, --max-time-distance: Defines the maximum difference in time that two\n"
 "                          entries can have and still be considered for \n"
 "                          correlation (t2 and t3).\n"
+" -D, --min-time-distance: Same as above, but the minimum distance.\n"
 "-e, --max-pulse-distance: Defines the maximum difference in pulse number \n"
 "                          that two entries can have and still be considered\n"
 "                          for correlation (t3 only).\n"
+"-E, --min-pulse-distance: Same as above, but the minimum distance.\n"
 "             -g, --order: Order (g(n)(t1...tn-1)) of the correlation to\n"
 "                          perform. By default this is 2, the standard\n"
 "                          cross-correlation of two channels.\n"
@@ -73,7 +77,9 @@ int main(int argc, char *argv[]) {
 		{"mode", required_argument, 0, 'm'},
 		{"queue-size", required_argument, 0, 'q'},
 		{"max-time-distance", required_argument, 0, 'd'},
+		{"min-time-distance", required_argument, 0, 'D'},
 		{"max-pulse-distance", required_argument, 0, 'e'},
+		{"min-pulse-distance", required_argument, 0, 'E'},
 		{"order", required_argument, 0, 'g'},
 		{"positive-only", no_argument, 0, 'P'},
 		{"help", no_argument, 0, 'h'},
@@ -87,12 +93,14 @@ int main(int argc, char *argv[]) {
 	options.print_every = 0;
 	options.queue_size = QUEUE_SIZE;
 	options.max_time_distance = 0;
+	options.min_time_distance = 0;
 	options.max_pulse_distance = 0;
+	options.min_pulse_distance = 0;
 	options.order = 2;
 	options.positive_only = 0;
 
-	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:r", long_options,
-				&option_index)) != -1 ) {
+	while ( (c = getopt_long(argc, argv, "hvi:o:p:m:q:d:g:re:D:e:", 
+						long_options, &option_index)) != -1 ) {
 		switch (c) { 
 			case 'h':
 				usage();
@@ -118,8 +126,14 @@ int main(int argc, char *argv[]) {
 			case 'd':
 				options.max_time_distance = strtoll(optarg, NULL, 10);
 				break;
+			case 'D':
+				options.min_time_distance = strtoll(optarg, NULL, 10);
+				break;
 			case 'e':
 				options.max_pulse_distance = strtoll(optarg, NULL, 10);
+				break;
+			case 'E':
+				options.min_pulse_distance = strtoll(optarg, NULL, 10);
 				break;
 			case 'g':
 				options.order = strtol(optarg, NULL, 10);

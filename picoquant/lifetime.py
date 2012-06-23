@@ -13,8 +13,7 @@ if __name__ == "__main__":
     my_lifetime = lifetime(p,
                            histogram.Limits(lower=0,
                                             upper=1000000,
-                                            bins=10))
+                                            bins=10),
+                           filename="blargh.g1")
 
-    for line in my_lifetime.bins():
-        print(line)
         
