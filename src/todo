@@ -1,7 +1,6 @@
 General:
 -write interface for Python, Matlab
 -write automated test for all programs
--write up notes on Timeharp: the records for t3r are _not_ t2 or t3, but the raw data used to build the histogram. As such, they cannot simply be tied to a pulse, but we can wort of treat them as though they are. This will proabably throw off correlations (except t2 type, if we are lucky).
 -look into errno and related for dealing with errors.
 -profile performance, and look to see if there are any obvious bottlenecks
 -do a better job of detecting mode mismatch 
@@ -11,9 +10,7 @@ Scripts:
 -plotting for t3 mode correlation
 
 Picoquant:
--make sure that t3, t2 mode all output their times in picoseconds.
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
--make sure that --to-t2 is working
 
 > Testing:
 >> Picoharp

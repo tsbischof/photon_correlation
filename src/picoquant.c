@@ -215,8 +215,6 @@ int main(int argc, char *argv[]) {
 	/* Set some default values. */
 	options.in_filename = NULL;
 	options.out_filename = NULL;
-	options.file_type_string = NULL;
-	options.file_type = PQ_MODE_ERROR;
 	options.number = INT_MAX;
 	options.print_every = 0;
 	options.print_header = 0;

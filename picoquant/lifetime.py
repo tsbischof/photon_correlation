@@ -15,5 +15,3 @@ if __name__ == "__main__":
                                             upper=1000000,
                                             bins=10),
                            filename="blargh.g1")
-
-        
