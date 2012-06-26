@@ -10,6 +10,4 @@ typedef struct {
 	long long int *counts;
 } bin_counts_t;
 
-void usage(void);
-
 #endif

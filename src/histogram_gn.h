@@ -2,17 +2,7 @@
 #define HISTOGRAM_GN_
 
 #include <stdio.h>
-
-#define SCALE_UNKNOWN -1
-#define SCALE_LINEAR 1
-#define SCALE_LOG 2
-#define SCALE_LOG_ZERO 3
-
-typedef struct {
-	long long int lower;
-	int bins;
-	long long int upper;
-} limits_t;
+#include "limits.h"
 
 typedef struct {
 	int n_bins;
@@ -29,9 +19,6 @@ typedef struct {
 	edges_t **dimensions;
 	unsigned int *counts;
 } gn_histogram_t;
-
-int str_to_limits(char *str, limits_t *limits);
-int scale_parse(char *str, int *scale);
 
 edges_t *allocate_edges(int n_bins);
 void free_edges(edges_t **edges);

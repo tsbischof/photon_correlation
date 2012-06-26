@@ -6,6 +6,6 @@
 #define MODE_T2 2
 #define MODE_T3 3
 
-int mode_parse(int *mode, char *filename);
+int mode_parse(int *mode, char *mode_string);
 
 #endif

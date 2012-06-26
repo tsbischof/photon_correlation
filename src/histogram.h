@@ -4,6 +4,4 @@
 #include <stdio.h>
 #include "histogram_gn.h"
 
-void usage(void);
-
 #endif

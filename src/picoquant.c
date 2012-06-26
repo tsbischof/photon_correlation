@@ -19,38 +19,6 @@
 #include "t3.h"
 #include "options.h"
 
-void pq_usage(void) {
-	fprintf(stdout, 
-"Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]\n"
-"                 [-p print_every] [-n number] [-b] [-z] [-t]\n"
-"\n"
-"       Version %d.%d\n"
-"\n"
-"        -i, --file-in: Input file. By default, this is stdin.\n"
-"       -o, --file-out: Output file. By default, this is stdout.\n"
-"         -n, --number: Number of entries to process (most pertinent for\n"
-"                       tttr modes). By default, processes all records.\n"
-"    -p, --print-every: Print a status message after processing a specified\n"
-"                       number of entries. By default, no status message\n"
-"                       is printed.\n"
-"        -v, --verbose: Print debug-level information.\n"
-"    -r, --header-only: Print header information, but no entries. Useful for\n"
-"                       debugging and checking file integrity.\n"
-"     -b, --binary-out: Output a binary stream instead of ascii. Refer to\n"
-"                       the documentation for each mode for the details of\n"
-"                       each stream type. Generally, this will be identical\n"
-"                       to the ascii mode in typing.\n"
-"-z, --resolution-only: Print the time resolution of the measurement in \n"
-"                       picoseconds, then exit.\n"
-"          -t, --to-t2: Convert a t3 file to a t2 file. This assumes the sync\n"
-"                       channel is regular and consistent over the whole run.\n"
-"           -h, --help: Print this message.\n"
-"\n"
-"The file type and version will be detected automatically from the file header."
-"\n",
-				VERSION_MAJOR, VERSION_MINOR);
-}
-
 pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header) {
 	if ( ! strcmp(pq_header->Ident, "PicoHarp 300") ) {
 		return(ph_dispatch);
@@ -191,89 +159,27 @@ int main(int argc, char *argv[]) {
 	pq_header_t pq_header;
 	pq_dispatch_t pq_dispatch;
 
-	int c;
-	int option_index = 0;
+	int result = 0;
 
-	int result = PQ_SUCCESS;
-
-	FILE *in_stream = NULL;
-	FILE *out_stream = NULL;
-
-	static struct option long_options[] = {
-		{"file-in", required_argument, 0, 'i'},
-		{"file-out", required_argument, 0, 'o'},
-		{"header-only", no_argument, 0, 'r'},
-		{"number", required_argument, 0, 'n'},
-		{"print-every", required_argument, 0, 'p'},
-		{"verbose", no_argument, 0, 'v'},
-		{"resolution-only", no_argument, 0, 'z'},
-		{"to-t2", no_argument, 0, 't'},
-		{"binary-out", no_argument, 0, 'b'},
-		{"help", no_argument, 0, 'h'},
-		{0, 0, 0, 0}}; 
-
-	/* Set some default values. */
-	options.in_filename = NULL;
-	options.out_filename = NULL;
-	options.number = INT_MAX;
-	options.print_every = 0;
-	options.print_header = 0;
-	options.binary_out = 0;
-	options.print_resolution = 0;
-	options.to_t2 = 0;
-
-	/* Parse the command-line options. */
-	while ( (c = getopt_long(argc, argv, "hbi:o:rn:p:vzt", long_options,
-				&option_index)) != -1 ) {
-		switch (c) { 
-			case 'h':
-				pq_usage();
-				return(0);
-				break;
-			case 'b':
-				options.binary_out = 1;
-				break;
-			case 'i':
-				options.in_filename = strdup(optarg);
-				break;
-			case 'o':
-				options.out_filename = strdup(optarg);
-				break;
-			case 'r':
-				options.print_header = 1;
-				break;
-			case 'n':
-				options.number = atoi(optarg);
-				break;
-			case 'p':
-				options.print_every = atoi(optarg);
-				break;
-			case 'v':
-				verbose = 1;
-				break;
-			case 'z':
-				options.print_resolution = 1;
-				break;
-			case 't':
-				options.to_t2 = 1;
-				break;
-			case '?':
-				pq_usage();
-				return(-1);
-			default:
-				pq_usage();
-				return(-1);
-		}
-	}
-	
-	/* Perform sanity checks on the options. */
-	result += stream_open(&in_stream, stdin, options.in_filename, "rb");
-	result += stream_open(&out_stream, stdout, options.out_filename, "w");
+	program_options_t program_options = {
+		11, 
+		"This program decodes data collected using Picoquant hardware. \n"
+		"The binary data is decoded to detect the hardware version and\n"
+		"collection mode, and the data are output in a mode-specific\n"
+		"ascii format.\n"
+		"\n",
+		{OPT_HELP, OPT_VERBOSE, OPT_FILE_IN, OPT_FILE_OUT,
+				OPT_BINARY_IN, OPT_BINARY_OUT,
+				OPT_NUMBER, OPT_PRINT_EVERY, 
+				OPT_PRINT_HEADER, OPT_PRINT_RESOLUTION,
+				OPT_TO_T2}};
+		
+	result = parse_options(argc, argv, &options, &program_options);
 
 	/* Do the actual work, if we have no errors. */
-	if ( result == PQ_SUCCESS ) {
-		result = pq_header_read(in_stream, &pq_header);
-		if ( result != PQ_SUCCESS ) {
+	if ( ! result ) {
+		result = pq_header_read(options.in_stream, &pq_header);
+		if ( ! result ) {
 			error("Could not read string header.\n");
 		}
 
@@ -281,16 +187,13 @@ int main(int argc, char *argv[]) {
 		if ( pq_dispatch == NULL ) {
 			error("Could not identify board %s.\n", pq_header.Ident);
 		} else {
-			result = pq_dispatch(in_stream, out_stream, &pq_header, &options);
+			result = pq_dispatch(options.in_stream, options.out_stream, 
+					&pq_header, &options);
 		}
 	}
 		
 	/* Cleanup! */
-	stream_close(in_stream, stdin);
-	stream_close(out_stream, stdout);
-	free(options.in_filename);
-	free(options.out_filename);
-	free(options.file_type_string);
+	free_options(&options);
 
 	return(result);
 }       

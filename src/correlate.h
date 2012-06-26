@@ -4,6 +4,4 @@
 #include <stdio.h>
 #include "options.h"
 
-void usage(void);
-
 #endif

@@ -9,7 +9,6 @@ typedef struct {
 	long long int *counts;
 } counts_t;
 
-void usage(void);
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options);
 int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options);
 
