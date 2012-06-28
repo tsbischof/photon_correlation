@@ -52,7 +52,7 @@ option_t all_options[] = {
 			"reasonable if the sync source is perfectly regular."},
 	{'n', "n:", "number", 
 			"The number of entries to process. By default, \n"
-			"all entries are processed.\n"},
+			"all entries are processed."},
 	{'q', "q:", "queue-size", 
 			"The size of the queue for processingi, in number of\n"
 			"photons. By default, this is 100000, and if it is\n"
@@ -77,7 +77,9 @@ option_t all_options[] = {
 			"on a logarithmic scale."},
 	{'w', "w:", "bin-width",
 			"The width of the time bin for processing \n"
-			"photons, in picoseconds."},
+			"photons. For t2 mode, this is a number of\n"
+			"picoseconds, and for t3 mode this is a \n"
+			"number of pulses."},
 	{'A', "A", "count-all", 
 			"Rather than counting photons in a given time bin,\n"
 			"count all photons in the stream."},
@@ -200,7 +202,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		switch (c) {
 			case 'h':
 				usage(argc, argv, program_options);
-				return(-1);
+				return(USAGE);
 			case 'v':
 				verbose = 1;
 				break;

@@ -55,3 +55,11 @@ void print_status(long long int count, options_t *options) {
 		fprintf(stderr, "%s: Record %20lld\n", fmttime, count);
 	}
 }
+
+int parse_result(int result) {
+	if ( ! result || result == USAGE ) {
+		return(0);
+	} else {
+		return(result);
+	}
+}

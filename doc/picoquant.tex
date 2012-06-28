@@ -1,4 +1,4 @@
-d\documentclass{article}
+\documentclass{article}
 
 \usepackage[squaren]{SIunits}
 \usepackage{amsmath,amsfonts}
@@ -48,6 +48,7 @@ d\documentclass{article}
 \newcommand{\upplus}{\ensuremath{^{(+)}}}
 \newcommand{\upminus}{\ensuremath{^{(-)}}}
 \newcommand{\nth}{\ensuremath{n}\textnormal{th}}
+\newcommand{\closedopenrange}[2]{\ensuremath{\left[#1, #2\right)}}
 
 
 \title{Picoquant: General-purpose tools for interacting with photon-arrival data, and for performing $n$th order correlations \\ 
@@ -386,19 +387,20 @@ where each dimension of the vector space represents the possible values $I(t)$ m
 
 Given this, the autocorrelation can be defined as a sum over all times in the experiment:
 \begin{align}
-\gn{2}(\tau) &= \frac{\frac{1}{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)\vec{I}(j+\tau)}}
-                     {\parens{\frac{1}{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)}}
-                      \parens{\frac{1}{N-\tau}\sum_{j=\tau}^{N-1}{\vec{I}(j)}}} \nonumber \\
-\label{eq:discrete_g2} &= \frac{\parens{N-\tau}\sum_{j=0}^{N-\tau-1}{\vec{I}(j)\vec{I}(j+\tau)}}
-                    {\parens{\sum_{j=0}^{N-\tau-1}{\vec{I}(j)}}
-                     \parens{\sum_{j=\tau}^{N-1}{\vec{I}(j)}}}
+\gn{2}(\tau) &= \frac{\frac{1}{N}\sum_{j=0}^{N-1}{\vec{I}(j)\vec{I}(j+\tau)}}
+                     {\parens{\frac{1}{N}\sum_{j=0}^{N-1}{\vec{I}(j)}}
+                      \parens{\frac{1}{N}\sum_{j=0}^{N-1}{\vec{I}(j+\tau)}}} \nonumber \\
+\label{eq:discrete_g2} &= \frac{\parens{N}\sum_{j=0}^{N-1}{\vec{I}(j)\vec{I}(j+\tau)}}
+                    {\parens{\sum_{j=0}^{N-1}{\vec{I}(j)}}
+                     \parens{\sum_{j=0}^{N-1}{\vec{I}(j+\tau)}}}
 \end{align}
-Note that the normalization factor corresponding to the averaging dimension is limited to the range of values in the summation. This results from the fact that, with finite boundaries to time, not all times are valid for the correlation, and inclusion of these times underestimates the true value of \gn{2}. This not an important effect when $\tau\ll N$, but for $\tau\approx N$ the correction is significant, and we will explicitly include it to ensure complete accuracy (at a cost of clarity).
+Note that the index of the signal extends past those for which $\vec{I}$ is defined in the time-shifted signal. This can be reconciled by defining $\vec{I}(t)=0$ for values of $t$ outside \closedopenrange{0}{N}. Thus the time-shifted signal has an increasingly decaying intensity as the time delay increases, accounting for the fact that we have no information about the signal outside the bounds of our integration window.
+%Note that the normalization factor corresponding to the averaging dimension is limited to the range of values in the summation. This results from the fact that, with finite boundaries to time, not all times are valid for the correlation, and inclusion of these times underestimates the true value of \gn{2}. This not an important effect when $\tau\ll N$, but for $\tau\approx N$ the correction is significant, and we will explicitly include it to ensure complete accuracy (at a cost of clarity).
 
 Now that we have a method for calculating the discrete correlation function, we should consider how this will be performed for photons. One method would be to choose the subdivisions of time $\timewindow$, and define $I(\timewindow)$ to be the number of photons found with arrival times in $\timewindow$. Depending on the definition of $\timewindow$ this could be any whole number up to the number of photons in the set, and equation~\ref{eq:discrete_g2} could be applied. However, this is inefficient: for practical measurements, $I(t)=0$ for a significant percentage of times $t$, and we must spend significant effort summing over zero-valued terms. As such, we will recast the problem as counting elements in a set:
 \begin{equation}
 \label{eq:photon_g2}
-\gn{2}(\tau) = \frac{\parens{\abs{\integrationtime}-\tau}
+\gn{2}(\tau) = \frac{\parens{\abs{\integrationtime}}
                      \abs{\setbuilder{(\photon_{0},\photon_{1})}
                                      {\begin{aligned}
                                       \photon_{0}\in\photons;\\
@@ -416,8 +418,6 @@ Now that we have a method for calculating the discrete correlation function, we 
                                                       \Time(\photon)+\tau\in\integrationtime
                                                       \end{aligned}}}}
 \end{equation} 
-This formula is actually an implicit improvement over equation~\ref{eq:discrete_g2}, because it can handle both positive and negative $\tau$, though we could rewrite the latter equation to handle negative $\tau$ as needed.
-
 One final factor we have left out is the resolution of the experiment. When converting from real to whole time we implicitly assigned each subset $\timewindow$ to some whole number index, such that the time delay $\tau$ really represents a range of possible delays. In the final formula, we will include this factor, but for now we will leave it out for simplicity.
 
 \subsection{The full \gn{n} for photon correlation}
@@ -447,10 +447,7 @@ These effective time resolutions affect the volume of phase space under consider
 Assembling these, the complete correlation function takes following form:
 \begin{equation}
 \label{eq:gn_full}
-\gn{n}\parens{\vec{\resolution}} = \parens{\frac{\prod_{j=0}^{n-1}
-                                                       {\abs{\integrationtime_{
-                                                                 \vec{\resolution},
-                                                                 \resolution_{j}}}}}
+\gn{n}\parens{\vec{\resolution}} = \parens{\frac{\abs{\integrationtime}^{n}}
                                                 {\prod_{j=0}^{n-1}
                                                        {\abs{\photons_{
                                                                  \vec{\resolution},
@@ -594,10 +591,7 @@ Following the logic of the preceding sections, if we wish to calculate a single 
 \begin{equation}
 \label{eq:cross_correlation_full}
 \gn{n}_{\vec{\channel}}\parens{\resolution}  = 
-       \parens{\frac{\prod_{j=1}^{n-1}
-                           {\abs{\integrationtime_{
-                                        \vec{\resolution},
-                                        \resolution_{j}}}}}
+       \parens{\frac{\abs{\integrationtime}^{n}}
                     {\prod_{j=0}^{n-1}
                            {\abs{\photons_{
                                         \vec{\resolution},
@@ -1047,35 +1041,39 @@ Modes and software versions supported:
 \subsection{Command-line syntax}
 
 \begin{verbatim}
-Usage: picoquant [-r] [-v] [-i file_in] [-o file_out]
-                 [-p print_every] [-n number] [-b] [-z] [-t]
+Usage: picoquant [options]
 
-        -i, --file-in: Input file. By default, this is stdin.
-       -o, --file-out: Output file. By default, this is stdout.
-         -n, --number: Number of entries to process (most 
-                       pertinent for tttr modes). By default, 
-                       processes all records.
-    -p, --print-every: Print a status message after processing 
-                       a specified number of entries. By default,
-                       no status message is printed.
-        -v, --verbose: Print debug-level information.
-    -r, --header-only: Print header information, but no entries. 
-                       Useful for debugging and checking file 
-                       integrity.
-     -b, --binary-out: Output a binary stream instead of ascii. 
-                       Refer to the documentation for each mode 
-                       for the details of each stream type. 
-                       Generally, this will be identical to the
-                       ascii mode in typing.
--z, --resolution-only: Print the time resolution of the 
-                       measurement in picoseconds, then exit.
-          -t, --to-t2: Convert a t3 file to a t2 file. This
-                       assumes the sync channel is regular and
-                       consistent over the whole run.
-           -h, --help: Print this message.
+Version 1.1
 
-        The file type and version will be 
-        detected automatically from the file header.
+                -h, --help: Prints this usage message.
+             -v, --verbose: Print debug-level information.
+             -i, --file-in: Input filename. By default, this 
+                             is stdin.
+            -o, --file-out: Output filename. By default, this is stdout.
+           -a, --binary-in: Specifies that the input file is in binary format,
+                            rather than text.
+          -b, --binary-out: Specifies that the output file is in binary format,
+                            rather than text.
+              -n, --number: The number of entries to process. By default, 
+                            all entries are processed.
+         -p, --print-every: Print a status message every n entries.
+                            By default, nothing is printed.
+         -r, --header-only: Rather than processing any data, print the header
+                            of the file in an ini-like format. This is useful
+                            for debugging and verifying file settings.
+     -z, --resolution-only: Rather than processing any data, print the 
+                            resolution of the measurement. For TTTR modes, 
+                            this is a single float, but for interactive data
+                            the resolution of each curve is given.
+               -t, --to-t2: For t3 data, use the sync rate to determine the
+                            time represented by the sync count and output the
+                            data in t2 mode. Note that this will only be
+                            reasonable if the sync source is perfectly regular.
+
+This program decodes data collected using Picoquant hardware. 
+The binary data is decoded to detect the hardware version and
+collection mode, and the data are output in a mode-specific
+ascii format.
 \end{verbatim}
 
 \subsubsection{Input}

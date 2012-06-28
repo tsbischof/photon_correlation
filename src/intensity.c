@@ -165,7 +165,23 @@ int main(int argc, char *argv[]) {
 
 	program_options_t program_options = {
 		8,
-		"",
+"Given a stream of TTTR data formatted like the output of picoquant, this\n"
+"program calculates the number of photons arriving on any number of detection\n"
+"channels, divided into some number of subsets of integration time.\n"
+"\n"
+"For example, to calculate the intensity of a stream of t2 photons from a\n"
+"measurement on a Picoharp, collected in 50ms bins:\n"
+"    intensity --bin-width 50000000000 --mode t2 --channels 2\n"
+"\n"
+"The output format is:\n"
+"    time start, time stop, channel 0 counts, channel 1 counts, ...\n"
+"\n"
+"Because the final photon may not arrive at the end of a time bin, the final\n"
+"bin ends at the arrival time of the last photon, permitting post-processing\n"
+"to determine whether the effect of that edge is significant.\n"
+"\n"
+"As an alternative to time bins, all of the photons can be counted by passing\n"
+"the flag --count-all. This is useful for normalizing a signal.\n",
 		{OPT_HELP, OPT_VERBOSE,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CHANNELS,
@@ -173,9 +189,7 @@ int main(int argc, char *argv[]) {
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	if ( result ) {
-		error("Fatal error, could not begin the calculation.\n");
-	} else {
+	if ( ! result ) {
 		debug("Checking the mode.\n");
 		if ( options.mode == MODE_T2 ) {
 			debug("Mode t2.\n");
@@ -189,6 +203,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	free_options(&options);
-	
-	return(result);
+
+	return(parse_result(result));	
 }

@@ -64,7 +64,7 @@ typedef struct {
 
 typedef struct {
 	int n_options;
-	char message[1000];
+	char message[10000];
 	int options[100];
 } program_options_t;
 
