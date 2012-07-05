@@ -1,16 +1,17 @@
 import subprocess
 import csv
 import itertools
+import queue
 
 from picoquant import modes
 from picoquant import *
 
 class Photon(object):
-    def __init__(self, mode, channel=None, pulse=None, time=None, string=None):
+    def __init__(self, mode, channel=None, pulse=None, time=None,
+                 string=None, decode=True):
         self.mode = mode
-        self._string = string
         
-        if string:
+        if string and decode:
             self.from_string(string)
         else:
             self._string = string
@@ -35,6 +36,7 @@ class Photon(object):
         return(self._string)
 
     def from_string(self, string):
+        self._string = string
         parts = string.split(",")
 
         if self.mode == modes.T2:
@@ -55,13 +57,21 @@ def windows(start, step):
         yield(histogram.Limits(lower=lower,
                                upper=lower+step))
         lower += step
-        
 
-class WindowedStream(object):
+class PhotonStream(object):
+    def __iter__(self):
+        return(self)
+
+    def __next__(self):
+        raise(StopIteration)
+
+class WindowedStream(PhotonStream):
     def __init__(self, photons, pulse=None, time=None):
         """Given a stream of photons and some fixed interval over which to split
 it (based on pulse or time), this generator yields the photons found in each
 window sequentially."""
+        super(WindowedStream, self).__init__()
+        
         # Based on the outline from itertools.groupby
         if pulse:
             self.step = pulse
@@ -108,26 +118,30 @@ window sequentially."""
         if self._done:
             raise(StopIteration)
 
-def encode(photons):
-    """Transform a stream of photons into a raw stream suitable for further
-processing. If the stream is already raw (subprocess output), the stream is
-passed unaltered. Otherwise, the photons are converted to bytes."""
-    if isinstance(photons, bytes):
-        return(photons)
-    else:
-        return("\n".join(map(str, photons)))
+def byte_stream(photons):
+    
+    for photon in photons:
+        if isinstance(photon, bytes):
+            yield(photon)
+        else:
+            yield(str(photon).encode())
             
+        yield("\n".encode())
+        
 if __name__ == "__main__":
     import picoquant
-    p = picoquant.Picoquant("v20.pt2")
+    p = picoquant.Picoquant("v20.pt2", decode=True)
+
+##    for photon in p:
+##        print(photon)
 
     total = 0
     for index, block in zip(range(100),
-                            WindowedStream(p.stream(decode=True),
-                                           time=1000000000000)):
+                            WindowedStream(p,
+                                           time=int(10**12))):
         limits, photons = block
-        photons = list(photons)
-        total += len(photons)
-        print(index, limits, len(photons))
+        n_photons = len(list(photons))
+        total += n_photons
+        print(index, limits, n_photons)
 
-    print(total, len(list(p.stream(decode=True))))
+    print(total, len(list(p)))

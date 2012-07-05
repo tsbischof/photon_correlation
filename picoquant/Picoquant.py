@@ -8,8 +8,9 @@ from picoquant import files
 from picoquant import photon
 from picoquant import interactive
 
-class Picoquant(object):
-    def __init__(self, filename, channels=None, mode=None):
+class Picoquant(photon.PhotonStream):
+    def __init__(self, filename, channels=None, mode=None, decode=False):
+        super(Picoquant, self).__init__()
         if not os.path.isfile(filename):
             raise(OSError("File does not exist: {0}".format(filename)))
         else:
@@ -26,6 +27,12 @@ class Picoquant(object):
 
         self._resolution = None
         self._header = None
+
+        self._stream = None
+        self._stdout = None
+        self._stderr = None
+
+        self.decode = decode
 
     def header(self):
         if not self._header:
@@ -91,28 +98,45 @@ class Picoquant(object):
 
         return(self._resolution)
 
-    def stream(self, decode=False):
-        stdout, stderr = subprocess.Popen(
-            [files.PICOQUANT,
-             "--file-in", self.filename],
-            stdout=subprocess.PIPE,
-            bufsize=4096).communicate()
+    def __iter__(self):
+        return(self)
 
-        if decode:
+    def __next__(self):
+        if not self._stream:
+            self._stdout, self._stderr = subprocess.Popen(
+                [files.PICOQUANT,
+                 "--file-in", self.filename],
+                stdout=subprocess.PIPE,
+                bufsize=4096).communicate()
+            
             if self.mode in modes.TTTR:
-                return(map(lambda x: photon.Photon(mode=self.mode,
-                                                   string=x),
-                           stdout.decode().split("\n")[:-1]))
+                self._stream = map(lambda x: photon.Photon(mode=self.mode,
+                                                           string=x.decode(),
+                                                           decode=self.decode),
+                                   self._stdout.splitlines())
+            elif self.mode == modes.INTERACTIVE:
+                self._stream = map(
+                    lambda x: interactive.InteractiveBin(string=x.decode()),
+                    self._stdout.splitlines())
             else:
-                return(map(lambda x: interactive.InteractiveBin(string=x),
-                           stdout.decode().split("\n")[:-1]))
-        else:
-            return(stdout)
+                raise(ValueError("Mode not recognized: {0}".format(self.mode)))
+
+        if self._stderr:
+            raise(IOError("Call to picoquant failed: {0}".format(
+                self._stderr)))
+
+        try:
+            return(next(self._stream))
+        except StopIteration:
+            self._stream = None
+            raise(StopIteration)
                 
 
 if __name__ == "__main__":
     for filename in ["v20.phd", "v20.pt2"]:
         print(filename)
         p = Picoquant(filename)
-        for index, line in zip(range(10), p.stream(decode=True)):
+        print(p.resolution())
+        print(p.header())
+        for index, line in zip(range(10), p):
             print(line)

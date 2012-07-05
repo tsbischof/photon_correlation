@@ -9,7 +9,7 @@ file, such as phd or thd."""
         self.bins = list()
         self._curves = set()
 
-        for my_bin in picoquant.Picoquant(filename).stream(decode=True):
+        for my_bin in picoquant.Picoquant(filename):
             self.bins.append(my_bin)
             self._curves.add(self.bins[-1].curve)
 

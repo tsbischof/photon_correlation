@@ -62,3 +62,6 @@ Intensity:
 > Testing
 >> t2: linux64, linux32
 >> t3: linux64, linux32
+
+General:
+-make all routines more amenable to being used a a library 

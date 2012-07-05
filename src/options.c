@@ -196,7 +196,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 	options->time_scale = SCALE_LINEAR;
 	options->pulse_scale_string = NULL;
 	options->pulse_scale = SCALE_LINEAR;
-	
+
 	while ( (c = getopt_long(argc, argv, options_string,
 						long_options, &option_index)) != -1 ) {
 		switch (c) {
@@ -270,6 +270,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->time_string = strdup(optarg);
 				break;
 			case 'y':
+				printf("here\n");
 				options->pulse_string = strdup(optarg);
 				break;
 			case 'X':
@@ -328,7 +329,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 	if ( is_option(OPT_PULSE, program_options) 
 		&& ! result
 		&& options->mode == MODE_T3 
-		&& options->order != 1 ) {
+		&& options->order > 1 ) {
 		result += str_to_limits(options->pulse_string,
 								&(options->pulse_limits));
 	}
