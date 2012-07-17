@@ -16,9 +16,7 @@ typedef struct {
 
 typedef struct {
 	char *in_filename;
-	FILE *in_stream;
 	char *out_filename;
-	FILE *out_stream;
 
 	char *mode_string;
 	int mode;
@@ -81,12 +79,14 @@ enum { OPT_HELP, OPT_VERBOSE, OPT_PRINT_EVERY,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE };
 
 int parse_options(int argc, char *argv[], options_t *options, 
-		program_options_t *program_options);
+		program_options_t *program_options,
+		FILE **in_stream, FILE **out_stream);
 void usage(int argc, char *argv[], 
 		program_options_t *program_options);
 int is_option(int option, program_options_t *program_options);
 char *make_option_string(program_options_t *program_options);
 void free_options(options_t *options);
+void free_streams(FILE *in_stream, FILE *out_stream);
 char *get_options_string(program_options_t *program_options);
 
 #endif

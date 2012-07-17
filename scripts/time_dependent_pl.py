@@ -4,9 +4,26 @@ import optparse
 import csv
 import subprocess
 import logging
+import getpass
 
 picoquant = "picoquant"
 histogram = "histogram"
+
+class Limits(object):
+    def __init__(self):
+        self.lower = None
+        self.bins = None
+        self.upper = None
+
+    def __str__(self):
+        return("{0},{1},{2}".format(self.lower, self.bins, self.upper))
+
+    def from_string(self, string):
+        raw_limits = string.split(",")
+        self.lower = int(raw_limits[0])
+        self.bins = int(raw_limits[1])
+        self.upper = int(raw_limits[2])
+        return(self)
 
 def time_dependent_pl(filename, channels, bin_width, time_limits):
     photon_stream = csv.reader(
@@ -14,7 +31,7 @@ def time_dependent_pl(filename, channels, bin_width, time_limits):
                           "--file-in", filename],
                          stdout=subprocess.PIPE).stdout)
     histogram_cmd = [histogram,
-                     "--time", time_limits,
+                     "--time", str(time_limits),
                      "--channels", str(channels),
                      "--mode", "t3",
                      "--order", "1"]
@@ -28,9 +45,16 @@ def time_dependent_pl(filename, channels, bin_width, time_limits):
 
     while not done:
         if not histogrammer:
-            histogram_name = "{0}.g1.{1:.2f}_{2:.2f}".format(
-                filename, histogram_index*bin_width,
-                (histogram_index+1)*bin_width)
+            if getpass.getuser() == "rcorrea":
+                histogram_name = "{0}.g1.{1:08d}".format(
+                    filename,
+                    histogram_index)
+            else:
+                histogram_name = "{0}.g1.{1:020d}_{2:020d}".format(
+                    filename,
+                    pulse_limit-bin_width,
+                    pulse_limit)
+                
             logging.info(histogram_name)
             current_histogram = subprocess.Popen(
                 histogram_cmd +
@@ -74,10 +98,6 @@ if __name__ == "__main__":
     parser.add_option("-c", "--channels", dest="channels",
                       help="Number of channels in the data. The default is 2.",
                       action="store", type=int, default=2)
-    parser.add_option("-H", "--threshold", dest="threshold",
-                      help="Threshold rate of photon arrival for blinking "
-                           "analysis, in counts per second.",
-                      action="store", type=float)
     parser.add_option("-d", "--time", dest="time_limits",
                       help="Time bounds for the histograms, as required by "
                            "histogram.",
@@ -89,7 +109,7 @@ if __name__ == "__main__":
     bin_width = options.bin_width
 
     if options.time_limits:
-        time_limits = options.time_limits
+        time_limits = Limits().from_string(options.time_limits)
     else:
         raise(ValueError("Must specify time limits."))
     

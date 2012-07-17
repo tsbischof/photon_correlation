@@ -108,7 +108,8 @@ option_t all_options[] = {
 	};
 
 int parse_options(int argc, char *argv[], options_t *options, 
-		program_options_t *program_options) {
+		program_options_t *program_options,
+		FILE **in_stream, FILE **out_stream) {
 	int c;
 	int option_index = 0;
 	int result = 0;
@@ -158,9 +159,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 	options_string = get_options_string(program_options);
 
 	options->in_filename = NULL;
-	options->in_stream = NULL;
 	options->out_filename = NULL;
-	options->out_stream = NULL;
 
 	options->mode_string = NULL;
 	options->mode = MODE_UNKNOWN;
@@ -290,10 +289,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 		warn("Binary file mode not yet supported.\n");
 	}
 
-	result += stream_open(&(options->in_stream), 
-					stdin, options->in_filename, "r");
-	result += stream_open(&(options->out_stream),
-					stdout, options->out_filename, "w");
+	result += stream_open(in_stream, stdin, options->in_filename, "r");
+	result += stream_open(out_stream, stdout, options->out_filename, "w");
 		
 	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
 		error("Must have at least 1 channel (%d specified).\n", 
@@ -396,9 +393,11 @@ void free_options(options_t *options) {
 	free(options->pulse_string);
 	free(options->time_scale_string);
 	free(options->pulse_scale_string);
-	
-	stream_close(options->in_stream, stdin);
-	stream_close(options->out_stream, stdout);
+}
+
+void free_streams(FILE *in_stream, FILE *out_stream) {
+	stream_close(in_stream, stdin);
+	stream_close(out_stream, stdout);
 }
 
 char *get_options_string(program_options_t *program_options) {

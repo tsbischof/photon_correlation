@@ -161,6 +161,9 @@ int main(int argc, char *argv[]) {
 
 	int result = 0;
 
+	FILE *in_stream = NULL;
+	FILE *out_stream = NULL;
+
 	program_options_t program_options = {
 		11, 
 "This program decodes data collected using Picoquant hardware. \n"
@@ -201,11 +204,12 @@ int main(int argc, char *argv[]) {
 				OPT_PRINT_HEADER, OPT_PRINT_RESOLUTION,
 				OPT_TO_T2}};
 		
-	result = parse_options(argc, argv, &options, &program_options);
+	result = parse_options(argc, argv, &options, &program_options,
+			&in_stream, &out_stream);
 
 	/* Do the actual work, if we have no errors. */
 	if ( ! result ) {
-		result = pq_header_read(options.in_stream, &pq_header);
+		result = pq_header_read(in_stream, &pq_header);
 		if ( result ) {
 			error("Could not read string header.\n");
 		} else {
@@ -213,7 +217,7 @@ int main(int argc, char *argv[]) {
 			if ( pq_dispatch == NULL ) {
 				error("Could not identify board %s.\n", pq_header.Ident);
 			} else {
-				result = pq_dispatch(options.in_stream, options.out_stream, 
+				result = pq_dispatch(in_stream, out_stream, 
 						&pq_header, &options);
 			}
 		}
@@ -221,6 +225,7 @@ int main(int argc, char *argv[]) {
 		
 	/* Cleanup! */
 	free_options(&options);
+	free_streams(in_stream, out_stream);
 
 	return(parse_result(result));
 }       

@@ -167,7 +167,7 @@ class HistogramBin(object):
 
     def correlation(self):
         if not self._correlation:
-            self._correlation = tuple([self.ref_channel]
+            self._correlation = tuple([self.ref_channel] +
                                       list(map(lambda x: x[0], self._bins)))
 
         return(self._correlation)

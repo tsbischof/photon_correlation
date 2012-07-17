@@ -21,6 +21,9 @@ int main(int argc, char *argv[]) {
 
 	options_t options;
 
+	FILE *in_stream = NULL;
+	FILE *out_stream = NULL;
+
 	program_options_t program_options = {
 		13,
 "This program accepts TTTR photon data and outputs a stream of correlation \n"
@@ -52,24 +55,24 @@ int main(int argc, char *argv[]) {
 			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE}};
 
 	
-	result = parse_options(argc, argv, &options, &program_options);
+	result = parse_options(argc, argv, &options, &program_options,
+			&in_stream, &out_stream);
 
 	/* Begin the calculation. */
 	if ( ! result ) {
 		debug("Checking the mode.\n");
 		if ( options.mode == MODE_T2 ) {
 			debug("Mode t2.\n");
-			result = correlate_t2(options.in_stream, options.out_stream,
-						 &options);
+			result = correlate_t2(in_stream, out_stream, &options);
 		} else if ( options.mode == MODE_T3 ) {
 			debug("Mode t3.\n");
-			result = correlate_t3(options.in_stream, options.out_stream,
-						 &options);
+			result = correlate_t3(in_stream, out_stream, &options);
 		} 
 	}
 
 	/* Free memory. */
 	free_options(&options);
+	free_streams(in_stream, out_stream);
 	
 	return(parse_result(result));
 }

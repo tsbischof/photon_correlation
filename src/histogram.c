@@ -16,6 +16,9 @@ int main(int argc, char *argv[]) {
 
 	options_t options;
 
+	FILE *in_stream = NULL;
+	FILE *out_stream = NULL;
+
 	program_options_t program_options = {
 		11,
 "Histogram collects a set of photon correlation events and counts them into\n"
@@ -36,22 +39,22 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE}};
 
-	result = parse_options(argc, argv, &options, &program_options);
+	result = parse_options(argc, argv, &options, &program_options,
+			&in_stream, &out_stream);
 
 	if ( ! result ) {
 		debug("Checking the mode.\n");
 		if ( options.mode == MODE_T2 ) {
 			debug("Mode t2.\n");
-			result = histogram_t2(options.in_stream, options.out_stream,
-									 &options);
+			result = histogram_t2(in_stream, out_stream, &options);
 		} else if ( options.mode == MODE_T3 ) {
 			debug("Mode t3.\n");
-			result =  histogram_t3(options.in_stream, options.out_stream,
-									&options);
+			result =  histogram_t3(in_stream, out_stream, &options);
 		}
 	}
 			
 	free_options(&options);
+	free_streams(in_stream, out_stream);
 
 	return(parse_result(result));
 }
