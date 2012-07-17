@@ -7,45 +7,6 @@
 #include "error.h"
 #include "options.h"
 
-t3_queue_t *allocate_t3_queue(options_t *options) {
-	int result = 0;
-	t3_queue_t *queue;
-
-	queue = (t3_queue_t *)malloc(sizeof(t3_queue_t));
-	if ( queue == NULL ) {
-		result = -1;
-	} else {
-		queue->length = options->queue_size;
-		queue->left_index = -1;
-		queue->right_index = -1;
-	
-		queue->queue = (t3_t *)malloc(sizeof(t3_t)*queue->length);
-		if ( queue->queue == NULL ) {
-			result = -1;
-		}
-	}
-
-	if ( result ) {
-		free_t3_queue(&queue);
-	}
-
-	return(queue);
-}
-
-void free_t3_queue(t3_queue_t **queue) {
-	if ( *queue != NULL ) {
-		if ( (*queue)->queue != NULL ) {
-			free((*queue)->queue);
-		}
-		free(*queue);
-	}
-}
-
-t3_t get_queue_item_t3(t3_queue_t *queue, int index) {
-	int true_index = (queue->left_index + index) % queue->length;
-	return(queue->queue[true_index]);
-}
-
 int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* A t3 record has three parts: 
 	 * -channel number
@@ -62,17 +23,19 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	long long int record_number = 0;
 	t3_queue_t *queue;
 	t3_t *correlation_block;
+	t3_correlation_t *correlation;
 	permutations_t *permutations;
 	offsets_t *offsets;
 
 	/* Allocate space in the queue. */
-	queue = allocate_t3_queue(options);
+	queue = allocate_t3_queue(options->queue_size);
 	correlation_block = (t3_t *)malloc(sizeof(t3_t)*options->order);
 	offsets = allocate_offsets(options->order);
 	permutations = make_permutations(options->order, options->positive_only);
+	correlation = allocate_t3_correlation(options);
 
 	if ( queue == NULL || offsets == NULL || correlation_block == NULL ||
-			permutations == NULL ) {
+			permutations == NULL || correlation == NULL ) {
 		error("Could not allocate memory for correlation.\n");
 		result = -1;
 	}
@@ -92,7 +55,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		print_status(record_number, options);
 
 		correlate_t3_block(out_stream, queue, permutations,
-					offsets, correlation_block, options); 
+					offsets, correlation_block, correlation, options); 
 	}
 
 	/* Cleanup */
@@ -100,6 +63,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	free_offsets(&offsets);
 	free(correlation_block);
 	free_permutations(&permutations);
+	free_t3_correlation(&correlation);
 	
 	return(result);
 }
@@ -175,7 +139,8 @@ int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue, 
 		permutations_t *permutations,
-		offsets_t *offsets, t3_t *correlation_block, options_t *options) {
+		offsets_t *offsets, t3_t *correlation_block, 
+		t3_correlation_t *correlation, options_t *options) {
 	/* For the pairs (left_index, j1, j2,...jn) for j=left_index+1 
  	 * to right_index, determine:
  	 * 1. If the pairs are within the correct distance (leftmost to rightmost)
@@ -185,8 +150,6 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
  	 * 4. Actually print the correlation.
  	 */
 	int i;
-	int time_distance;
-	long long int pulse_distance;
 	t3_t left;
 	t3_t right;
 	int offset;
@@ -213,30 +176,82 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
 				left =  get_queue_item_t3(queue, offset);
-				fprintf(out_stream, "%d", left.channel);
+				correlation->channels[0] = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
 					right =	get_queue_item_t3(queue, offset);
-					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
+
+/*					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
 							left.channel, left.pulse_number, left.time,
-							right.channel, right.pulse_number, right.time);
-	
-					time_distance = (right.time - left.time);
-					pulse_distance = (right.pulse_number - left.pulse_number);
-	
-					fprintf(out_stream, 
-							",%u,%lld,%d", 
-							right.channel, 
-							pulse_distance, 
-							time_distance);
+							right.channel, right.pulse_number, right.time);*/
+					correlation->delays[i].pulse = (right.pulse_number -
+							left.pulse_number);
+					correlation->delays[i].time = (right.time - left.time);
 				}
-				fprintf(out_stream, "\n"); 
+
+				print_t3_correlation(out_stream, correlation, options);
 			}
 		} else {
 			debug("Not close enough for correlation.\n");
 		}
 	}
 	return(0);
+}
+
+t3_correlation_t *allocate_t3_correlation(options_t *options) {
+	t3_correlation_t *correlation = NULL;
+	int result = 0;
+
+	correlation = (t3_correlation_t *)malloc(sizeof(t3_correlation_t));
+
+	if ( correlation == NULL ) {
+		result = -1;
+	} else {
+		correlation->order = options->order;
+		correlation->channels = (unsigned int *)malloc(
+				sizeof(unsigned int)*options->order);
+		correlation->delays = (t3_delay_t *)malloc(
+				sizeof(t3_delay_t)*options->order);
+
+		if ( correlation->channels == NULL || correlation->delays == NULL ) {				result = -1;
+		}
+	}
+
+	if ( result ) {
+		free_t3_correlation(&correlation);
+		correlation = NULL;
+	}
+
+	return(correlation);
+}
+
+void free_t3_correlation(t3_correlation_t **correlation) {
+	if ( (*correlation) != NULL ) {
+		free((*correlation)->channels);
+		free((*correlation)->delays);
+	}
+
+	free(*correlation);
+}
+
+void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+		options_t *options) {
+	int i;
+
+	fprintf(out_stream, "%u,", correlation->channels[0]);
+
+	for ( i = 1; i < correlation->order; i++ ) {	
+		fprintf(out_stream, "%u,%lld,%lld", 
+				correlation->channels[i], 
+				correlation->delays[i].pulse, 
+				correlation->delays[i].time);
+
+		if ( i+1 != correlation->order ) {
+			fprintf(out_stream, ",");
+		}
+	}
+
+	fprintf(out_stream, "\n");
 }

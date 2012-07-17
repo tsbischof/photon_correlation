@@ -20,6 +20,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_queue_t *queue;
 	t2_t *correlation_block;
 	permutations_t *permutations;
+	t2_correlation_t *correlation;
 	offsets_t *offsets;
 
 	/* Allocate space in the queue. */
@@ -27,9 +28,10 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	correlation_block = (t2_t *)malloc(sizeof(t2_t)*options->order);
 	offsets = allocate_offsets(options->order);
 	permutations = make_permutations(options->order, options->positive_only);
+	correlation = allocate_t2_correlation(options);
 
 	if ( queue == NULL || offsets == NULL || correlation_block == NULL ||
-				permutations == NULL ) {
+				permutations == NULL || correlation == NULL ) {
 		error("Could not allocate memory for correlation..\n");
 		result = -1;
 	}
@@ -49,7 +51,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		print_status(record_number, options);
 
 		correlate_t2_block(out_stream, queue, permutations,
-					offsets, correlation_block, options); 
+					offsets, correlation_block, correlation, options); 
 	}
 
 	debug("Finished correlation, freeing memory.\n");
@@ -62,6 +64,8 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	free(correlation_block);
 	debug("Freeing permutations.\n");
 	free_permutations(&permutations);
+	debug("Freeing correlation.\n");
+	free_t2_correlation(&correlation);
 	debug("Done cleaning up.\n");
 	
 	return(result);
@@ -135,7 +139,8 @@ int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 
 int correlate_t2_block(FILE *out_stream, t2_queue_t *queue, 
 		permutations_t *permutations,
-		offsets_t *offsets, t2_t *correlation_block, options_t *options) {
+		offsets_t *offsets, t2_t *correlation_block, 
+		t2_correlation_t *correlation, options_t *options) {
 	/* For the pairs (left_index, j1, j2,...jn) for j=left_index+1 
  	 * to right_index, determine:
  	 * 1. If the pairs are within the correct distance (leftmost to rightmost)
@@ -145,7 +150,6 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
  	 * 4. Actually print the correlation.
  	 */
 	int i;
-	long long int time_distance;
 	t2_t left;
 	t2_t right;
 	int offset;
@@ -182,28 +186,80 @@ int correlate_t2_block(FILE *out_stream, t2_queue_t *queue,
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
 				left = get_queue_item_t2(queue, offset);
-				fprintf(out_stream, "%d", left.channel);
+
+				correlation->channels[0] = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
 					right = get_queue_item_t2(queue, offset);
 
-					debug("(%d, %lld) <-> (%d, %lld)\n", 
+/*					debug("(%d, %lld) <-> (%d, %lld)\n", 
 							left.channel, left.time,
-							right.channel, right.time);
-
-					time_distance = (right.time - left.time);
-					fprintf(out_stream, 
-							",%d,%lld", 
-							right.channel, 
-							time_distance);
+							right.channel, right.time); */
+					correlation->channels[i] = right.channel;
+					correlation->delays[i] = (right.time - left.time);
 				}
-				fprintf(out_stream, "\n"); 
+
+				print_t2_correlation(out_stream, correlation, options);
 			}
 		} else {
 			debug("Not close enough for correlation.\n");
 		}
 	}
 	return(0);
+}
+
+t2_correlation_t *allocate_t2_correlation(options_t *options) {
+	t2_correlation_t *correlation = NULL;
+	int result = 0;
+
+	correlation = (t2_correlation_t *)malloc(sizeof(t2_correlation_t));
+
+	if ( correlation == NULL ) {
+		result = -1;
+	} else {
+		correlation->order = options->order;
+		correlation->channels = (unsigned int *)malloc(
+				sizeof(unsigned int)*options->order);
+		correlation->delays = (t2_delay_t *)malloc(
+				sizeof(t2_delay_t)*options->order);
+
+		if ( correlation->channels == NULL || correlation->delays == NULL ) {				result = -1;
+		}
+	}
+
+	if ( result ) {
+		free_t2_correlation(&correlation);
+		correlation = NULL;
+	}
+
+	return(correlation);
+}
+
+void free_t2_correlation(t2_correlation_t **correlation) {
+	if ( (*correlation) != NULL ) {
+		free((*correlation)->channels);
+		free((*correlation)->delays);
+	}
+
+	free(*correlation);
+}
+
+void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation,
+		options_t *options) {
+	int i;
+
+	fprintf(out_stream, "%u,", correlation->channels[0]);
+
+	for ( i = 1; i < correlation->order; i++ ) {	
+		fprintf(out_stream, "%u,%lld", correlation->channels[i], 
+				correlation->delays[i]);
+
+		if ( i+1 != correlation->order ) {
+			fprintf(out_stream, ",");
+		}
+	}
+
+	fprintf(out_stream, "\n");
 }

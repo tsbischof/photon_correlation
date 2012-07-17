@@ -8,15 +8,16 @@
 #include "options.h"
 
 typedef struct {
-	int length;
-	long long int left_index;
-	long long int right_index;
-	t3_t *queue;
-} t3_queue_t;
+	long long int pulse;
+	long long int time;
+} t3_delay_t;
 
-t3_queue_t *allocate_t3_queue(options_t *options);
-void free_t3_queue(t3_queue_t **queue);
-t3_t get_queue_item_t3(t3_queue_t *queue, int index);
+typedef struct {
+	int order;
+	unsigned int *channels;
+	t3_delay_t *delays;
+} t3_correlation_t;
+
 int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options);
 
 int valid_distance_t3(t3_t *left, t3_t *right, options_t *options);
@@ -26,6 +27,12 @@ int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options);
 int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options);
 int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 		permutations_t *permutations,
-		offsets_t *offsets, t3_t *correlation_block, options_t *options);
+		offsets_t *offsets, t3_t *correlation_block, 
+		t3_correlation_t *correlation, options_t *options);
+
+t3_correlation_t *allocate_t3_correlation(options_t *options);
+void free_t3_correlation(t3_correlation_t **correlation);
+void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+		options_t *options);
 
 #endif
