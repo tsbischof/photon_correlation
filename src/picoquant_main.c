@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
 	 * wrappers for the data to other programming languages.
 	 */
 	options_t options;
-	pq_header_t pq_header;
-	pq_dispatch_t pq_dispatch;
 
 	int result = 0;
 
@@ -70,18 +68,7 @@ int main(int argc, char *argv[]) {
 
 	/* Do the actual work, if we have no errors. */
 	if ( ! result ) {
-		result = pq_header_read(in_stream, &pq_header);
-		if ( result ) {
-			error("Could not read string header.\n");
-		} else {
-			pq_dispatch = pq_get_dispatch(&options, &pq_header);
-			if ( pq_dispatch == NULL ) {
-				error("Could not identify board %s.\n", pq_header.Ident);
-			} else {
-				result = pq_dispatch(in_stream, out_stream, 
-						&pq_header, &options);
-			}
-		}
+		result = pq_dispatch(in_stream, out_stream, &options);
 	}
 		
 	/* Cleanup! */

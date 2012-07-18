@@ -26,6 +26,8 @@ typedef struct {
 
 typedef int (*pq_dispatch_t)(FILE *, FILE *, pq_header_t *, options_t *);
 
+int pq_dispatch(FILE *in_stream, FILE *out_stream, options_t *options);
+
 pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header);
 int pq_header_read(FILE *in_stream, pq_header_t *pq_header);
 void pq_header_print(FILE *out_stream, pq_header_t *pq_header);

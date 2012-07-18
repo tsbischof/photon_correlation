@@ -14,6 +14,29 @@
 #include "hydraharp.h"
 #include "timeharp.h"
 
+int pq_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
+	int result;
+	pq_header_t pq_header;
+	pq_dispatch_t dispatch;
+
+	/* Do the actual work, if we have no errors. */
+	result = pq_header_read(in_stream, &pq_header);
+	if ( result ) {
+		error("Could not read string header.\n");
+	} else {
+		dispatch = pq_get_dispatch(options, &pq_header);
+		if ( dispatch == NULL ) {
+			error("Could not identify board %s.\n", pq_header.Ident);
+		} else {
+			result = dispatch(in_stream, out_stream, 
+					&pq_header, options);
+		}
+	}
+
+	return(result);
+}       
+
+
 pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header) {
 	if ( ! strcmp(pq_header->Ident, "PicoHarp 300") ) {
 		return(ph_dispatch);
