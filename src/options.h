@@ -78,6 +78,9 @@ enum { OPT_HELP, OPT_VERBOSE, OPT_PRINT_EVERY,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE };
 
+void default_options(options_t *options);
+int validate_options(program_options_t *program_options, options_t *options);
+
 int parse_options(int argc, char *argv[], options_t *options, 
 		program_options_t *program_options,
 		FILE **in_stream, FILE **out_stream);
@@ -86,7 +89,6 @@ void usage(int argc, char *argv[],
 int is_option(int option, program_options_t *program_options);
 char *make_option_string(program_options_t *program_options);
 void free_options(options_t *options);
-void free_streams(FILE *in_stream, FILE *out_stream);
 char *get_options_string(program_options_t *program_options);
 
 #endif

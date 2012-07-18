@@ -4,6 +4,7 @@
 #include "error.h"
 #include "options.h"
 #include "picoquant.h"
+#include "files.h"
 
 int main(int argc, char *argv[]) {
 	/* This software is designed to read in Picoquant data files and

@@ -5,6 +5,7 @@
 #include "modes.h"
 #include "strings.h"
 #include "error.h"
+#include "files.h"
 #include "histogram_gn.h"
 #include "histogram_t2.h"
 #include "histogram_t3.h"

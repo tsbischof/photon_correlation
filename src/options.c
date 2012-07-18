@@ -107,6 +107,103 @@ option_t all_options[] = {
 			"           bin is extended to include 0"}
 	};
 
+void default_options(options_t *options) {
+	options->in_filename = NULL;
+	options->out_filename = NULL;
+
+	options->mode_string = NULL;
+	options->mode = MODE_UNKNOWN;
+
+	options->channels = 2;
+
+	options->order = 2;
+	
+	options->print_every = 0;
+
+	options->binary_in = 0;
+	options->binary_out = 0;
+
+	options->number = LLONG_MAX;
+	options->print_header = 0;
+	options->print_resolution = 0;
+	options->to_t2 = 0;
+
+	options->queue_size = QUEUE_SIZE;
+	options->max_time_distance = 0;
+	options->min_time_distance = 0;
+	options->max_pulse_distance = 0;
+	options->min_pulse_distance = 0;
+	options->positive_only = 0;
+
+	options->bin_width = 0;
+	options->count_all = 0;
+
+	options->time_string = NULL;
+	options->pulse_string = NULL;
+
+	options->time_scale_string = NULL;
+	options->time_scale = SCALE_LINEAR;
+	options->pulse_scale_string = NULL;
+	options->pulse_scale = SCALE_LINEAR;
+}
+
+int validate_options(program_options_t *program_options, options_t *options) {
+	int result = 0;
+
+	if ( options->binary_in || options->binary_out ) {
+		warn("Binary file mode not yet supported.\n");
+	}
+
+	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
+		error("Must have at least 1 channel (%d specified).\n", 
+				options->channels);
+		result += -1;
+	}
+
+	if ( is_option(OPT_ORDER, program_options) && options->order < 1 ) {
+		error("Order of correlation/histogram must be at least 1 (%d "
+				"specified).", options->order);
+		result += -1;
+	}
+
+	if ( is_option(OPT_MODE, program_options) ) {
+		result += mode_parse(&(options->mode), options->mode_string);
+	}
+
+	if ( is_option(OPT_TIME_SCALE, program_options) ) {
+		result += scale_parse(options->time_scale_string,
+							&(options->time_scale));
+	}
+
+	if ( is_option(OPT_PULSE_SCALE, program_options) ) {
+		result += scale_parse(options->pulse_scale_string,
+							&(options->pulse_scale));
+	}
+
+	if ( is_option(OPT_TIME, program_options) ) {
+		result += str_to_limits(options->time_string,
+								&(options->time_limits));
+	}
+
+	if ( is_option(OPT_PULSE, program_options) 
+		&& ! result
+		&& options->mode == MODE_T3 
+		&& options->order > 1 ) {
+		result += str_to_limits(options->pulse_string,
+								&(options->pulse_limits));
+	}
+		
+	if ( is_option(OPT_BIN_WIDTH, program_options)
+		&& ! result
+		&& !(options->bin_width || options->count_all) ) {
+		error("Bin width must be at least 1 (%lld specified.\n", 
+				options->bin_width);
+		result += -1;
+	}
+		
+	return(result);
+}
+
 int parse_options(int argc, char *argv[], options_t *options, 
 		program_options_t *program_options,
 		FILE **in_stream, FILE **out_stream) {
@@ -157,44 +254,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{0, 0, 0, 0}};
 
 	options_string = get_options_string(program_options);
-
-	options->in_filename = NULL;
-	options->out_filename = NULL;
-
-	options->mode_string = NULL;
-	options->mode = MODE_UNKNOWN;
-
-	options->channels = 2;
-
-	options->order = 2;
-	
-	options->print_every = 0;
-
-	options->binary_in = 0;
-	options->binary_out = 0;
-
-	options->number = LLONG_MAX;
-	options->print_header = 0;
-	options->print_resolution = 0;
-	options->to_t2 = 0;
-
-	options->queue_size = QUEUE_SIZE;
-	options->max_time_distance = 0;
-	options->min_time_distance = 0;
-	options->max_pulse_distance = 0;
-	options->min_pulse_distance = 0;
-	options->positive_only = 0;
-
-	options->bin_width = 0;
-	options->count_all = 0;
-
-	options->time_string = NULL;
-	options->pulse_string = NULL;
-
-	options->time_scale_string = NULL;
-	options->time_scale = SCALE_LINEAR;
-	options->pulse_scale_string = NULL;
-	options->pulse_scale = SCALE_LINEAR;
+	default_options(options);
 
 	while ( (c = getopt_long(argc, argv, options_string,
 						long_options, &option_index)) != -1 ) {
@@ -285,60 +345,11 @@ int parse_options(int argc, char *argv[], options_t *options,
 		}
 	}
 
-	if ( options->binary_in || options->binary_out ) {
-		warn("Binary file mode not yet supported.\n");
+	if ( ! result ) {
+		result = validate_options(program_options, options);
+		result += open_streams(in_stream, options->in_filename,
+					out_stream, options->out_filename);
 	}
-
-	result += stream_open(in_stream, stdin, options->in_filename, "r");
-	result += stream_open(out_stream, stdout, options->out_filename, "w");
-		
-	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
-		error("Must have at least 1 channel (%d specified).\n", 
-				options->channels);
-		result += -1;
-	}
-
-	if ( is_option(OPT_ORDER, program_options) && options->order < 1 ) {
-		error("Order of correlation/histogram must be at least 1 (%d "
-				"specified).", options->order);
-		result += -1;
-	}
-
-	if ( is_option(OPT_MODE, program_options) ) {
-		result += mode_parse(&(options->mode), options->mode_string);
-	}
-
-	if ( is_option(OPT_TIME_SCALE, program_options) ) {
-		result += scale_parse(options->time_scale_string,
-							&(options->time_scale));
-	}
-
-	if ( is_option(OPT_PULSE_SCALE, program_options) ) {
-		result += scale_parse(options->pulse_scale_string,
-							&(options->pulse_scale));
-	}
-
-	if ( is_option(OPT_TIME, program_options) ) {
-		result += str_to_limits(options->time_string,
-								&(options->time_limits));
-	}
-
-	if ( is_option(OPT_PULSE, program_options) 
-		&& ! result
-		&& options->mode == MODE_T3 
-		&& options->order > 1 ) {
-		result += str_to_limits(options->pulse_string,
-								&(options->pulse_limits));
-	}
-		
-	if ( is_option(OPT_BIN_WIDTH, program_options)
-		&& ! result
-		&& !(options->bin_width || options->count_all) ) {
-		error("Bin width must be at least 1 (%lld specified.\n", 
-				options->bin_width);
-		result += -1;
-	}
-
 		
 	return(result);
 }
@@ -393,11 +404,6 @@ void free_options(options_t *options) {
 	free(options->pulse_string);
 	free(options->time_scale_string);
 	free(options->pulse_scale_string);
-}
-
-void free_streams(FILE *in_stream, FILE *out_stream) {
-	stream_close(in_stream, stdin);
-	stream_close(out_stream, stdout);
 }
 
 char *get_options_string(program_options_t *program_options) {
