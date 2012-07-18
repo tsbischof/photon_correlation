@@ -2,12 +2,8 @@
 #include <stdlib.h>
 
 #include "files.h"
-#include "modes.h"
 #include "error.h"
-#include "strings.h"
 #include "intensity.h"
-#include "intensity_t2.h"
-#include "intensity_t3.h"
 
 int main(int argc, char *argv[]) {
 	options_t options;
@@ -44,14 +40,7 @@ int main(int argc, char *argv[]) {
 			&in_stream, &out_stream);
 
 	if ( ! result ) {
-		debug("Checking the mode.\n");
-		if ( options.mode == MODE_T2 ) {
-			debug("Mode t2.\n");
-			result = intensity_t2(in_stream, out_stream, &options);
-		} else if ( options.mode == MODE_T3 ) {
-			debug("Mode t3.\n");
-			result = intensity_t3(in_stream, out_stream, &options);
-		} 
+		result = intensity_dispatch(in_stream, out_stream, &options);
 	}
 
 	free_options(&options);

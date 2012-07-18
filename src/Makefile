@@ -48,6 +48,7 @@ PICOQUANT_LIB =
 TARGETS += picoquant
 
 CORRELATE_OBJ = correlate_main.o ${UTIL} \
+		correlate.o \
 		combinations.o \
 		correlate_t2.o t2.o \
 		correlate_t3.o t3.o
@@ -55,6 +56,7 @@ CORRELATE_LIB =
 TARGETS += correlate
 
 HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
+		histogram.o \
 		combinations.o \
 		histogram_gn.o \
 		histogram_t2.o \
@@ -125,6 +127,7 @@ libpicoquant.so: ${LIBPICOQUANT_OBJ}
 	${CC} ${CFLAGS} -c -o $@ $< 
 
 clean:
-	${RM} ${TARGETS} ${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
-			${INTENSITY_OBJ} ${BIN_INTENSITY_OBJ} \
-			${LIB_TARGETS}
+	${RM} ${sort \
+		${TARGETS} ${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
+		${INTENSITY_OBJ} ${BIN_INTENSITY_OBJ} \
+		${LIB_TARGETS}}

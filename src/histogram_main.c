@@ -6,6 +6,7 @@
 #include "strings.h"
 #include "error.h"
 #include "files.h"
+#include "histogram.h"
 #include "histogram_gn.h"
 #include "histogram_t2.h"
 #include "histogram_t3.h"
@@ -43,14 +44,7 @@ int main(int argc, char *argv[]) {
 			&in_stream, &out_stream);
 
 	if ( ! result ) {
-		debug("Checking the mode.\n");
-		if ( options.mode == MODE_T2 ) {
-			debug("Mode t2.\n");
-			result = histogram_t2(in_stream, out_stream, &options);
-		} else if ( options.mode == MODE_T3 ) {
-			debug("Mode t3.\n");
-			result =  histogram_t3(in_stream, out_stream, &options);
-		}
+		result = histogram_dispatch(in_stream, out_stream, &options);
 	}
 			
 	free_options(&options);

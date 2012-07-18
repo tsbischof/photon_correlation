@@ -42,15 +42,7 @@ int main(int argc, char *argv[]) {
 			&in_stream, &out_stream);
 
 	if ( ! result ) {
-		debug("Checking the mode.\n");
-		if ( options.mode == MODE_T2 ) {
-			debug("Mode t2.\n");
-			result = bin_intensity_t2(in_stream, out_stream, &options);
-		} else if ( options.mode == MODE_T3 ) {
-			debug("Mode t3.\n");
-			error("Mode t3 not yet supported.\n");
-			result = - 1;
-		} 
+		result = bin_intensity_dispatch(in_stream, out_stream, &options);
 	}
 
 	free_options(&options);

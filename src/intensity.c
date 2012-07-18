@@ -2,8 +2,27 @@
 #include <string.h>
 
 #include "intensity.h"
-
+#include "intensity_t2.h"
+#include "intensity_t3.h"
+#include "modes.h"
 #include "error.h"
+
+int intensity_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
+	int result;
+
+	debug("Checking the mode.\n");
+	if ( options->mode == MODE_T2 ) {
+		debug("Mode t2.\n");
+		result = intensity_t2(in_stream, out_stream, options);
+	} else if ( options->mode == MODE_T3 ) {
+		debug("Mode t3.\n");
+		result = intensity_t3(in_stream, out_stream, options);
+	} else {
+		result = -1;
+	}
+
+	return(result);
+}
 
 counts_t *allocate_counts(int channels) {
 	counts_t *counts;
