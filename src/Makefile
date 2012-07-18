@@ -80,9 +80,9 @@ TARGETS += bin_intensity
 LIB_DIR = ${HOME}/lib
 INCLUDE_DIR = ${HOME}/include/picoquant
 LIB_TARGETS = 
-LIBPICOQUANT_OBJ = ${filter-out %main.o, \
+LIBPICOQUANT_OBJ = ${sort ${filter-out %main.o, \
 		${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
-		${INTENSITY_OBJ} ${BIN_INTENSITY_OBJ}}
+		${INTENSITY_OBJ} ${BIN_INTENSITY_OBJ}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPICOQUANT_OBJ}}
 LIBPICOQUANT_FLAGS = ${LDFLAGS} -shared -fPIC 
 LIBPICOQUANT_LIB = ${sort \
