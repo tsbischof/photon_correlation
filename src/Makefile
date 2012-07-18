@@ -57,12 +57,15 @@ TARGETS += correlate
 HISTOGRAM_OBJ = histogram.o ${UTIL} \
 		combinations.o \
 		histogram_gn.o \
-		histogram_t2.o t2.o \
-		histogram_t3.o t3.o 
+		histogram_t2.o \
+		histogram_t3.o 
 HISTOGRAM_LIB = -lm
 TARGETS += histogram
 
-INTENSITY_OBJ = intensity.o ${UTIL}
+INTENSITY_OBJ = intensity.o ${UTIL} \
+		intensity_util.o \
+		intensity_t2.o \
+		intensity_t3.o
 INTENSITY_LIB = 
 TARGETS += intensity
 
