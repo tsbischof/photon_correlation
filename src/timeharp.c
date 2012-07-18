@@ -9,7 +9,6 @@
 #include "timeharp/th_v50.h"
 #include "timeharp/th_v60.h"
 
-#include "picoquant.h"
 #include "error.h"
 
 int th_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,

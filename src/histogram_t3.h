@@ -2,8 +2,8 @@
 #define HISTOGRAM_T3_H_
 
 #include <stdio.h>
-#include "histogram.h"
 #include "t3.h"
+#include "histogram_gn.h"
 #include "options.h"
 
 typedef struct {

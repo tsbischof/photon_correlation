@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "t2.h"
-#include "histogram.h"
+#include "histogram_gn.h"
 #include "combinations.h"
 #include "options.h"
 

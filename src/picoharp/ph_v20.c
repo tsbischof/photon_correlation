@@ -5,7 +5,6 @@
 
 #include "ph_v20.h"
 #include "../picoharp.h"
-#include "../picoquant.h"
 #include "../error.h"
 #include "../types.h"
 

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "../picoquant.h"
+#include "../picoquant_util.h"
 #include "../types.h"
 
 #pragma pack(2)

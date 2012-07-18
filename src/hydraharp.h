@@ -13,7 +13,7 @@
 #define HH_MODE_T3 3
 
 #include <stdio.h>
-#include "picoquant.h"
+#include "picoquant_util.h"
 
 int hh_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		options_t *options);

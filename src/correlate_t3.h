@@ -2,7 +2,6 @@
 #define CORRELATE_T3_H_
 
 #include <stdio.h>
-#include "correlate.h"
 #include "combinations.h"
 #include "t3.h"
 #include "options.h"

@@ -5,7 +5,6 @@
 
 #include "hh_v10.h"
 #include "../hydraharp.h"
-#include "../picoquant.h"
 #include "../error.h"
 
 int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header, 

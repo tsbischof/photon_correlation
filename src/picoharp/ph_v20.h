@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "../picoquant.h"
+#include "../picoquant_util.h"
 #include "../types.h"
 
 #define PH_V20_BASE_RESOLUTION 4e-12

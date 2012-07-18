@@ -14,7 +14,7 @@
 
 #include "../timeharp.h"
 #include "../types.h"
-#include "../picoquant.h"
+#include "../picoquant_util.h"
 
 #pragma pack(2)
 typedef struct {

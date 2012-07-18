@@ -6,7 +6,6 @@
 #include "th_v30.h"
 
 #include "../timeharp.h"
-#include "../picoquant.h"
 #include "../error.h"
 #include "../types.h"
 
