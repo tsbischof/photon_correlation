@@ -2,10 +2,8 @@
 #define TH_V60_H_
 
 #include <stdio.h>
-#include <time.h>
 
-#include "../types.h"
-#include "../picoquant_util.h"
+#include "../picoquant.h"
 
 #pragma pack(2)
 typedef struct {

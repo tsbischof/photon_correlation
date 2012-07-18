@@ -1,5 +1,3 @@
-#include <time.h>
-
 #include "types.h"
 
 char* ctime32(time32 *mytime) {

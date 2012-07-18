@@ -1,21 +1,14 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <string.h>
 
-#include "hh_v10.h"
 #include "../hydraharp.h"
+#include "hh_v10.h"
+
 #include "../error.h"
 
 int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header, 
 		options_t *options) {
 	int result;
 	hh_v10_header_t hh_header;
-
-	if ( strcmp("1.0", pq_header->FormatVersion) ) {
-		warn("Version 1.0 supported, but version %s was found.\n",
-				pq_header->FormatVersion);
-	}
 
 	result = hh_v10_header_read(in_stream, &hh_header, options);
 	if ( result ) {

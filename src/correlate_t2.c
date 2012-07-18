@@ -1,12 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "t2.h"
-#include "error.h"
-#include "correlate.h"
 #include "correlate_t2.h"
-#include "combinations.h"
-#include "options.h"
+
+#include "error.h"
 
 int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* A t2 correlation is a direct correlation of absolute times. Therefore,

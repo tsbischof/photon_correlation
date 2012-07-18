@@ -8,7 +8,7 @@
 #define TH_MODE_TTTR 2
 
 #include <stdio.h>
-#include "picoquant_util.h"
+#include "picoquant.h"
 
 int th_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 				options_t *options);

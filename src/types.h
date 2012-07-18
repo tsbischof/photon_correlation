@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <stdint.h>
+#include <time.h>
 
 typedef int32_t int32;
 typedef uint32_t uint32;

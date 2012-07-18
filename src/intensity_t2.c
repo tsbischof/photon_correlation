@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "intensity_t2.h"
+#include "intensity.h"
+
+#include "t2.h"
 
 #include "error.h"
-#include "intensity_t2.h"
-#include "t2.h"
 
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_t record;

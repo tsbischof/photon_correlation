@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include "options.h"
-#include "intensity_util.h"
 
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options);
 

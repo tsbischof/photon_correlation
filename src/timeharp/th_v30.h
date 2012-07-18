@@ -10,11 +10,8 @@
  * specification of the resolution.
  */  
 #include <stdio.h>
-#include <time.h>
 
-#include "../timeharp.h"
-#include "../types.h"
-#include "../picoquant_util.h"
+#include "../picoquant.h"
 
 #pragma pack(2)
 typedef struct {

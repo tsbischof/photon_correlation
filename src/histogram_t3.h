@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "t3.h"
 #include "histogram_gn.h"
+#include "combinations.h"
 #include "options.h"
 
 typedef struct {

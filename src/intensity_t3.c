@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "intensity_t3.h"
+#include "intensity.h"
+
+#include "t3.h"
 
 #include "error.h"
-#include "intensity_t3.h"
-#include "t3.h"
 
 int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t3_t record;

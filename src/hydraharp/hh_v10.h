@@ -2,9 +2,7 @@
 #define HH_V10_H_
 
 #include <stdio.h>
-
-#include "../picoquant_util.h"
-#include "../types.h"
+#include "../picoquant.h"
 
 #pragma pack(2)
 typedef struct {

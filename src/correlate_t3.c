@@ -1,11 +1,6 @@
-#include <stdio.h>
-
-#include "t3.h"
-#include "correlate.h"
 #include "correlate_t3.h"
-#include "combinations.h"
+
 #include "error.h"
-#include "options.h"
 
 int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* A t3 record has three parts: 

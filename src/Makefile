@@ -38,8 +38,8 @@ TARGETS =
 UTIL = error.o types.o strings.o files.o options.o modes.o limits.o \
 		t2.o t3.o 
 
-PICOQUANT_OBJ = picoquant.o ${UTIL} \
-		picoquant_util.o \
+PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
+		picoquant.o \
 		picoharp.o picoharp/ph_v20.o \
 		hydraharp.o hydraharp/hh_v10.o \
 		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
@@ -47,14 +47,14 @@ PICOQUANT_OBJ = picoquant.o ${UTIL} \
 PICOQUANT_LIB = 
 TARGETS += picoquant
 
-CORRELATE_OBJ = correlate.o ${UTIL} \
+CORRELATE_OBJ = correlate_main.o ${UTIL} \
 		combinations.o \
 		correlate_t2.o t2.o \
 		correlate_t3.o t3.o
 CORRELATE_LIB = 
 TARGETS += correlate
 
-HISTOGRAM_OBJ = histogram.o ${UTIL} \
+HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
 		combinations.o \
 		histogram_gn.o \
 		histogram_t2.o \
@@ -62,14 +62,15 @@ HISTOGRAM_OBJ = histogram.o ${UTIL} \
 HISTOGRAM_LIB = -lm
 TARGETS += histogram
 
-INTENSITY_OBJ = intensity.o ${UTIL} \
-		intensity_util.o \
+INTENSITY_OBJ = intensity_main.o ${UTIL} \
+		intensity.o \
 		intensity_t2.o \
 		intensity_t3.o
 INTENSITY_LIB = 
 TARGETS += intensity
 
-BIN_INTENSITY_OBJ = bin_intensity.o ${UTIL} \
+BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
+		bin_intensity.o \
 		bin_intensity_t2.o t2.o \
 		bin_intensity_t3.o t3.o \
 		histogram_gn.o
@@ -79,13 +80,9 @@ TARGETS += bin_intensity
 LIB_DIR = ${HOME}/lib
 INCLUDE_DIR = ${HOME}/include/picoquant
 LIB_TARGETS = 
-LIBPICOQUANT_OBJ = \
-		${sort  \
-			${filter-out picoquant.o, ${PICOQUANT_OBJ}} \
-			${filter-out correlate.o, ${CORRELATE_OBJ}} \
-			${filter-out histogram.o, ${HISTOGRAM_OBJ}} \
-			${filter-out intensity.o, ${INTENSITY_OBJ}} \
-			${filter-out bin_intensity.o, ${BIN_INTENSITY_OBJ}}}
+LIBPICOQUANT_OBJ = ${filter-out %main.o, \
+		${PICOQUANT_OBJ} ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
+		${INTENSITY_OBJ} ${BIN_INTENSITY_OBJ}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPICOQUANT_OBJ}}
 LIBPICOQUANT_FLAGS = ${LDFLAGS} -shared -fPIC 
 LIBPICOQUANT_LIB = ${sort \

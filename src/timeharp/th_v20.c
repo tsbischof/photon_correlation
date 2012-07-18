@@ -1,13 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>
 
+#include "../timeharp.h"
 #include "th_v20.h"
 
-#include "../timeharp.h"
 #include "../error.h"
-#include "../types.h"
 
 int th_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		options_t *options) {

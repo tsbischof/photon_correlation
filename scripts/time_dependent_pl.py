@@ -5,6 +5,7 @@ import csv
 import subprocess
 import logging
 import getpass
+import os
 
 picoquant = "picoquant"
 histogram = "histogram"
@@ -49,6 +50,7 @@ def time_dependent_pl(filename, channels, bin_width, time_limits):
                 histogram_name = "{0}.g1.{1:08d}".format(
                     filename,
                     histogram_index)
+                os.nice(19)
             else:
                 histogram_name = "{0}.g1.{1:020d}_{2:020d}".format(
                     filename,
