@@ -350,6 +350,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 		result += open_streams(in_stream, options->in_filename,
 					out_stream, options->out_filename);
 	}
+
+	free(options_string);
 		
 	return(result);
 }
