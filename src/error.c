@@ -42,7 +42,7 @@ void warn(char *message, ...) {
 	fflush(stderr);
 }
 
-void print_status(long long int count, options_t *options) {
+void print_status(char *name, long long int count, options_t *options) {
 	time_t rawtime;
 	struct tm *timeinfo;
 	char fmttime[80];
@@ -52,7 +52,7 @@ void print_status(long long int count, options_t *options) {
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
-		fprintf(stderr, "%s: Record %20lld\n", fmttime, count);
+		fprintf(stderr, "%s: (%s) Record %20lld\n", fmttime, name, count);
 	}
 }
 

@@ -47,7 +47,6 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 		options_t *options);
 void pq_print_interactive(FILE *out_stream, int curve, double left_time, 
 		double right_time, int counts, options_t *options);
-void print_status(long long int count, options_t *options);
 void external_marker(FILE *out_stream, unsigned int marker, 
 		options_t *options);
 void print_resolution(FILE *out_stream, double resolution,

@@ -40,7 +40,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * channel combination.
 		 */	
 		record_number++;
-		print_status(record_number, options);
+		print_status("correlate", record_number, options);
 
 		correlate_t2_block(out_stream, queue, permutations,
 					offsets, correlation_block, correlation, options); 

@@ -80,7 +80,7 @@ void pq_print_t2(FILE *out_stream, long long int count,
 
 	fflush(out_stream);
 
-	print_status(count, options);
+	print_status("picoquant", count, options);
 }
 
 void pq_print_t3(FILE *out_stream, long long int count,
@@ -103,7 +103,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 
 	fflush(out_stream);
 	
-	print_status(count, options);
+	print_status("picoquant", count, options);
 }
 
 void pq_print_tttr(FILE *out_stream, long long int count,
@@ -134,7 +134,7 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 				record.time);
 	}
 
-	print_status(count, options);
+	print_status("picoquant", count, options);
 }
 
 void pq_print_interactive(FILE *out_stream, int curve, double left_time,
