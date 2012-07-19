@@ -30,9 +30,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		result = -1;
 	}
 
-	if ( result ) {
-		done = 1;
-	}
+	done = (result != 0);
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");

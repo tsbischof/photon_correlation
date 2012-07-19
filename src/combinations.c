@@ -326,6 +326,7 @@ permutations_t *allocate_permutations(int order, int latter_only) {
 
 	if ( result ) { 
 		free_permutations(&permutations);
+		permutations = NULL;
 	}
 
 	return(permutations);
@@ -338,6 +339,7 @@ void free_permutations(permutations_t **permutations) {
 		for ( i = 0; i < (*permutations)->n_permutations; i++ ) {
 			free((*permutations)->permutations[i]);
 		}
+		free((*permutations)->permutations);
 		free((*permutations));
 	}
 }

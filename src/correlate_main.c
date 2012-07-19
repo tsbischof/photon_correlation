@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include "strings.h"
+#include "correlate.h"
 #include "correlate_t2.h"
 #include "correlate_t3.h"
 #include "error.h"
@@ -59,14 +60,7 @@ int main(int argc, char *argv[]) {
 
 	/* Begin the calculation. */
 	if ( ! result ) {
-		debug("Checking the mode.\n");
-		if ( options.mode == MODE_T2 ) {
-			debug("Mode t2.\n");
-			result = correlate_t2(in_stream, out_stream, &options);
-		} else if ( options.mode == MODE_T3 ) {
-			debug("Mode t3.\n");
-			result = correlate_t3(in_stream, out_stream, &options);
-		} 
+		result = correlate_dispatch(in_stream, out_stream, &options);
 	}
 
 	/* Free memory. */
