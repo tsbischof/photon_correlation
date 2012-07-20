@@ -5,25 +5,17 @@
 #include <string.h>
 
 #include <picoquant/picoquant.h>
-#include <picoquant/correlate_t2.h>
-#include <picoquant/histogram_t2.h>
+#include <picoquant/correlate.h>
+#include <picoquant/histogram.h>
+#include <picoquant/files.h>
 #include <picoquant/modes.h>
 #include <picoquant/options.h>
 #include <picoquant/error.h>
 
 int main (int argc, char *argv[]) {
-	int i;
-	int bytes_read;
-	int status;
-	char c;
-
 	pid_t picoquant_pid = getpid();
 	pid_t correlate_pid;
 	pid_t histogram_pid;
-
-	char buffer[11];
-	buffer[10] = '\0';
-	char message[] = "Why hello there!\n";
 
 	FILE *in_stream, *out_stream;
 	int picoquant_correlate_pipe[2];
