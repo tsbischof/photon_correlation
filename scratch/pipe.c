@@ -27,6 +27,7 @@ int main (int argc, char *argv[]) {
 	default_options(&options);
 
 	options.mode = MODE_T2;
+	options.order = 4;
 	options.max_time_distance = 1000049;
 
 //	options.number = 0;
@@ -36,7 +37,7 @@ int main (int argc, char *argv[]) {
 
 	options.time_scale = SCALE_LINEAR;
 	options.time_limits.lower = -options.max_time_distance-1;
-	options.time_limits.bins = 20001;
+	options.time_limits.bins = 21;
 	options.time_limits.upper = options.max_time_distance+1;
 
 	options.print_every = 10000;
