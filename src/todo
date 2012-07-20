@@ -22,4 +22,4 @@ Intensity:
 -implement a windowed stream and count the photons coming out of it. This routine would make work easier for things like time_dependent_pl
 
 Bin intensity:
-
+-get this going and put it in with the gn calculation for fully-normalized results
