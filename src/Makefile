@@ -122,7 +122,7 @@ bin_intensity: ${BIN_INTENSITY_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${BIN_INTENSITY_LIB}
 
 libpicoquant.so: ${LIBPICOQUANT_OBJ}
-	${LD} ${LDFLAGS} ${LIBPICOQUANT_FLAGS} -o $@ $^ ${LIBPICOQUANT_LIB}
+	${LD} ${LIBPICOQUANT_FLAGS} -o $@ $^ ${LIBPICOQUANT_LIB}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 

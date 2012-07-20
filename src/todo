@@ -13,21 +13,13 @@ Picoquant:
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
 
 Correlate:
-> Testing
->> t2: linux64
->> t3: linux64
 
 Histogram:
--check that the binary search judges the bin edges as the left or right bin edge
--t3 mode seems to be having problems with > 50000 time bins
-> t2: done, need more thorough testing
-> t3_g1: done, need more thorough testing
-> t3_gn: done, need more thorough testing
+-should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings.
+-implement a linear search algorithm for linear scales
 
 Intensity:
-> Testing
->> t2: linux64, linux32
->> t3: linux64, linux32
+-implement a windowed stream and count the photons coming out of it. This routine would make work easier for things like time_dependent_pl
 
-General:
--make all routines more amenable to being used a a library 
+Bin intensity:
+
