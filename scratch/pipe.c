@@ -27,11 +27,11 @@ int main (int argc, char *argv[]) {
 	default_options(&options);
 
 	options.mode = MODE_T2;
-	options.max_time_distance = 999999;
+	options.max_time_distance = 1000049;
 
 //	options.number = 0;
 
-	options.in_filename = "/home/tsbischof/Documents/projects/picoquant/sample_data/picoharp/v20.pt2";
+	options.in_filename = "../sample_data/picoharp/v20.pt2";
 	options.out_filename = "blargh.hist";
 
 	options.time_scale = SCALE_LINEAR;

@@ -1,5 +1,5 @@
 all:
-	cc -Wall -static -o pipe pipe.c -I/home/tsbischof/include -L/home/tsbischof/lib -lpicoquant
+	cc -Wall -o pipe pipe.c -I/home/tsbischof/include -L/home/tsbischof/lib -lpicoquant
 
 clean:
 	rm -f pipe
