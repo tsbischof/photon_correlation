@@ -30,13 +30,13 @@ int next_t2_correlated(FILE *in_stream, t2_correlated_t *record,
 	int result;
 	int i;
 
-	result = (fscanf(in_stream, "%u", &(*record).ref_channel) != 1);
+	result = (fscanf(in_stream, "%d", &(*record).ref_channel) != 1);
 
 	if ( result && !feof(in_stream) ) {
 		error("Could not read reference channel from stream.\n");
 	} else {
 		for ( i = 0; i < options->order - 1; i++ ) {
-			result = ( fscanf(in_stream, ",%u,%lld", 
+			result = ( fscanf(in_stream, ",%d,%lld", 
 					&(*record).records[i].channel,
 					&(*record).records[i].time) != 2);
 			if ( result && !feof(in_stream)) {
@@ -72,9 +72,9 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 */
 		while ( !next_t2_correlated(in_stream, record, options) ) {
 			if ( verbose ) {
-				fprintf(out_stream, "Found record: %u", record->ref_channel);
+				fprintf(out_stream, "Found record: %d", record->ref_channel);
 				for ( i = 0; i < options->order-1; i++ ) {
-					fprintf(out_stream, ",%u,%lld", 
+					fprintf(out_stream, ",%d,%lld", 
 							record->records[i].channel,
 							record->records[i].time);
 				}

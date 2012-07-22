@@ -64,7 +64,7 @@ void pq_header_print(FILE *out_stream, pq_header_t *pq_header) {
 }
 
 void pq_print_t2(FILE *out_stream, long long int count,
-		unsigned int channel, 
+		int channel, 
 		long long int base_time, unsigned int record_time,
 		options_t *options) {
 	t2_t record;
@@ -75,7 +75,7 @@ void pq_print_t2(FILE *out_stream, long long int count,
 	if ( options->binary_out ) {
 		fwrite(&record, sizeof(t2_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%u,%lld\n", record.channel, record.time);
+		fprintf(out_stream, "%d,%lld\n", record.channel, record.time);
 	}
 
 	fflush(out_stream);
@@ -84,7 +84,7 @@ void pq_print_t2(FILE *out_stream, long long int count,
 }
 
 void pq_print_t3(FILE *out_stream, long long int count,
-		unsigned int channel, 
+		int channel, 
 		long long int base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
 		options_t *options) {
@@ -97,7 +97,7 @@ void pq_print_t3(FILE *out_stream, long long int count,
 	if ( options->binary_out ) {
 		fwrite(&record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%u,%lld,%u\n",
+		fprintf(out_stream, "%d,%lld,%u\n",
 				record.channel, record.pulse_number, record.time);
 	}
 
@@ -129,7 +129,7 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 	if ( options->binary_out ) {
 		fwrite(&record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%u,%lld,%u\n", 
+		fprintf(out_stream, "%d,%lld,%u\n", 
 				record.channel, record.pulse_number,
 				record.time);
 	}

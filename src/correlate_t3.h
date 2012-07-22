@@ -13,7 +13,7 @@ typedef struct {
 
 typedef struct {
 	int order;
-	unsigned int *channels;
+	int *channels;
 	t3_delay_t *delays;
 } t3_correlation_t;
 

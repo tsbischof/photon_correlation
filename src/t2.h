@@ -2,9 +2,10 @@
 #define T2_H_
 
 #include <stdio.h>
+#include "options.h"
 
 typedef struct {
-	unsigned int channel;
+	int channel;
 	long long int time;
 } t2_t;
 
@@ -28,10 +29,22 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index);
  * to produce all photons in consecutive 50ms windows.
  */
 typedef struct {
-	t2_t first_photon;
-	t2_t current_photon;
-	FILE *in_stream;
-	
+	limits_t limits;
+	long long int width;
 } t2_window_t;
+
+typedef struct {
+	t2_t current_photon;
+	int yielded_photon;
+	t2_window_t window;
+	FILE *in_stream;
+} t2_windowed_stream_t;
+
+void init_t2_window(t2_window_t *window, options_t *options);
+void next_t2_window(t2_window_t *window);
+void init_t2_windowed_stream(t2_windowed_stream_t *stream,
+		FILE *in_stream, options_t *options);
+int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
+		options_t *options);
 
 #endif

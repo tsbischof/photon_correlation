@@ -129,13 +129,13 @@ int next_t3_correlated(FILE *in_stream, t3_correlated_t *record,
 	int result;
 	int i;
 
-	result = (fscanf(in_stream, "%u", &(*record).ref_channel) != 1);
+	result = (fscanf(in_stream, "%d", &(*record).ref_channel) != 1);
 
 	if ( result && !feof(in_stream) ) {
 		error("Could not read reference channel from stream.\n");
 	} else {
 		for ( i = 0; i < options->order - 1; i++ ) {
-			result = ( fscanf(in_stream, ",%u,%lld,%d", 
+			result = ( fscanf(in_stream, ",%d,%lld,%d", 
 					&(*record).records[i].channel,
 					&(*record).records[i].pulse_number,
 					&(*record).records[i].time) != 3);
@@ -167,9 +167,9 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 */
 		while ( !next_t3_correlated(in_stream, record, options) ) {
 			if ( verbose ) {
-				fprintf(out_stream, "Found record: %u", record->ref_channel);
+				fprintf(out_stream, "Found record: %d", record->ref_channel);
 				for ( i = 0; i < options->order-1; i++ ) {
-					fprintf(out_stream, ",%u,%lld,%d", 
+					fprintf(out_stream, ",%d,%lld,%d", 
 							record->records[i].channel,
 							record->records[i].pulse_number,
 							record->records[i].time);

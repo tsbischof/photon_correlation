@@ -11,7 +11,7 @@ typedef long long int t2_delay_t;
 
 typedef struct {
 	int order;
-	unsigned int *channels;
+	int *channels;
 	t2_delay_t *delays;
 } t2_correlation_t;
 

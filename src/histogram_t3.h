@@ -8,7 +8,7 @@
 #include "options.h"
 
 typedef struct {
-	unsigned int ref_channel;
+	int ref_channel;
 	t3_t *records;
 } t3_correlated_t;
 

@@ -243,7 +243,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 
 /* Intensity */ 
 		{"bin-width", required_argument, 0, 'w'},
-		{"count-all", required_argument, 0, 'A'},
+		{"count-all", no_argument, 0, 'A'},
 
 /* Histogram */ 
 		{"time", required_argument, 0, 'x'},

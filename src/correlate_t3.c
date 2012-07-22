@@ -205,8 +205,8 @@ t3_correlation_t *allocate_t3_correlation(options_t *options) {
 		result = -1;
 	} else {
 		correlation->order = options->order;
-		correlation->channels = (unsigned int *)malloc(
-				sizeof(unsigned int)*options->order);
+		correlation->channels = (int *)malloc(
+				sizeof(int)*options->order);
 		correlation->delays = (t3_delay_t *)malloc(
 				sizeof(t3_delay_t)*options->order);
 
@@ -235,10 +235,10 @@ void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
 		options_t *options) {
 	int i;
 
-	fprintf(out_stream, "%u,", correlation->channels[0]);
+	fprintf(out_stream, "%d,", correlation->channels[0]);
 
 	for ( i = 1; i < correlation->order; i++ ) {	
-		fprintf(out_stream, "%u,%lld,%lld", 
+		fprintf(out_stream, "%d,%lld,%lld", 
 				correlation->channels[i], 
 				correlation->delays[i].pulse, 
 				correlation->delays[i].time);

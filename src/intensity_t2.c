@@ -8,40 +8,46 @@
 int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_t record;
 	counts_t *counts;
-	long long int bin_upper_limit;
 	int result = 0;
-	int done = 0;
 
+	t2_windowed_stream_t stream;
+
+	init_t2_windowed_stream(&stream, in_stream, options);
 	counts = allocate_counts(options->channels);
 
 	if ( counts == NULL ) {
 		result = -1;
 	}
 
-	bin_upper_limit = options->bin_width;
 	init_counts(counts);
 
-	done = next_t2(in_stream, &record);
+	while ( ! feof(in_stream) && result >= 0 ) {
+		result = next_t2_windowed(&stream, &record, options);
 
-	while ( ! result && ! done ) {
-		if ( (! options->count_all) && record.time > bin_upper_limit ) {
-			print_counts(out_stream, 
-					bin_upper_limit-options->bin_width, 
-					bin_upper_limit,
-					counts);
-			bin_upper_limit += options->bin_width;
-			init_counts(counts);
-		} else {
+		if ( result == 0 ) {
+			/* Photon in window. */
 			increment_counts(counts, record.channel);
-			done = next_t2(in_stream, &record);
+		} else if ( result > 0 ) {
+			/* Next window */
+			print_counts(out_stream,
+					stream.window.limits.lower,
+					stream.window.limits.upper,
+					counts);
+			next_t2_window(&(stream.window));
+			init_counts(counts);
+		} else { 
+			/* End of the stream, or at least a failure while reading it. */
+			if ( result < -1 ) {
+				error("Error while processing photon stream.\n");
+			}
 		}
 	}
 
 	print_counts(out_stream, 
-			bin_upper_limit - options->bin_width, 
-			record.time, 
+			stream.window.limits.lower,
+			record.time,
 			counts);
 
 	free_counts(&counts);
 	return(0);
-}
+} 

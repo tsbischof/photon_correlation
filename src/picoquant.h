@@ -33,11 +33,11 @@ int pq_header_read(FILE *in_stream, pq_header_t *pq_header);
 void pq_header_print(FILE *out_stream, pq_header_t *pq_header);
 
 void pq_print_t2(FILE *out_stream, long long int count,
-		unsigned int channel, 
+		int channel, 
 		long long int base_time, unsigned int record_time,
 		options_t *options);
 void pq_print_t3(FILE *out_stream, long long int count,
-		unsigned int channel,
+		int channel,
 		long long int base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
 		options_t *options);
