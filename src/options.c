@@ -329,7 +329,6 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->time_string = strdup(optarg);
 				break;
 			case 'y':
-				printf("here\n");
 				options->pulse_string = strdup(optarg);
 				break;
 			case 'X':
@@ -347,8 +346,6 @@ int parse_options(int argc, char *argv[], options_t *options,
 
 	if ( ! result ) {
 		result = validate_options(program_options, options);
-		result += open_streams(in_stream, options->in_filename,
-					out_stream, options->out_filename);
 	}
 
 	free(options_string);

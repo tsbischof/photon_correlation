@@ -41,6 +41,9 @@ int main(int argc, char *argv[]) {
 	result = parse_options(argc, argv, &options, &program_options,
 			&in_stream, &out_stream);
 
+	result += open_streams(&in_stream, options.in_filename,
+			&out_stream, options.out_filename);
+
 	if ( ! result ) {
 		result = bin_intensity_dispatch(in_stream, out_stream, &options);
 	}

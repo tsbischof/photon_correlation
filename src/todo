@@ -20,8 +20,9 @@ Histogram:
 -implement a linear search algorithm for linear scales
 
 Intensity:
--implement a windowed stream and count the photons coming out of it. This routine would make work easier for things like time_dependent_pl
---do this by wrapping the main stream and creating two accessors: next_window and next_photon. Getting the next photon and hitting the end of a window acts likean EOF and appropriate steps can be taken, while the windows will always move forward the process has not hit EOF on the main stream.
 
 Bin intensity:
 -get this going and put it in with the gn calculation for fully-normalized results
+
+Time-dependent pl/gn:
+-turn the Python scripts into C programs for speed
