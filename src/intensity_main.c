@@ -36,8 +36,7 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS,
 			OPT_BIN_WIDTH, OPT_COUNT_ALL}};
 
-	result = parse_options(argc, argv, &options, &program_options,
-			&in_stream, &out_stream);
+	result = parse_options(argc, argv, &options, &program_options);
 
 	result += open_streams(&in_stream, options.in_filename,
 			&out_stream, options.out_filename);

@@ -40,8 +40,7 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE}};
 
-	result = parse_options(argc, argv, &options, &program_options,
-			&in_stream, &out_stream);
+	result = parse_options(argc, argv, &options, &program_options);
 
 	result += open_streams(&in_stream, options.in_filename,
 			&out_stream, options.out_filename);

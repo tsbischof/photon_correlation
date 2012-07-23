@@ -205,8 +205,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 }
 
 int parse_options(int argc, char *argv[], options_t *options, 
-		program_options_t *program_options,
-		FILE **in_stream, FILE **out_stream) {
+		program_options_t *program_options) {
 	int c;
 	int option_index = 0;
 	int result = 0;

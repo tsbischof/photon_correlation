@@ -55,8 +55,7 @@ int main(int argc, char *argv[]) {
 			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE}};
 
 	
-	result = parse_options(argc, argv, &options, &program_options,
-			&in_stream, &out_stream);
+	result = parse_options(argc, argv, &options, &program_options);
 
 	result += open_streams(&in_stream, options.in_filename,
 			&out_stream, options.out_filename);

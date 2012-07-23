@@ -82,8 +82,7 @@ void default_options(options_t *options);
 int validate_options(program_options_t *program_options, options_t *options);
 
 int parse_options(int argc, char *argv[], options_t *options, 
-		program_options_t *program_options,
-		FILE **in_stream, FILE **out_stream);
+		program_options_t *program_options);
 void usage(int argc, char *argv[], 
 		program_options_t *program_options);
 int is_option(int option, program_options_t *program_options);

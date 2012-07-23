@@ -63,8 +63,7 @@ int main(int argc, char *argv[]) {
 				OPT_PRINT_HEADER, OPT_PRINT_RESOLUTION,
 				OPT_TO_T2}};
 		
-	result = parse_options(argc, argv, &options, &program_options,
-			&in_stream, &out_stream);
+	result = parse_options(argc, argv, &options, &program_options);
 
 	result += open_streams(&in_stream, options.in_filename,
 			&out_stream, options.out_filename);
