@@ -26,3 +26,7 @@ Bin intensity:
 
 Time-dependent pl/gn:
 -turn the Python scripts into C programs for speed
+
+Python:
+-write interfaces to all types of output (photons, correlations, histograms, picoquant histograms, intensity)
+-simplify histogram/correlate business: simply make tdg2 and tdpl by hard-wiring correlate and histogram, do not try to get fancy by piping those through Python objects. This just requires having a nice interface to photons through Python (already done) and a windowed stream (also already done).

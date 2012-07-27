@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		11, 
+		12, 
 "This program decodes data collected using Picoquant hardware. \n"
 "The binary data is decoded to detect the hardware version and\n"
 "collection mode, and the data are output in a mode-specific\n"
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 "\n"
 "    T3:\n"
 "        channel, pulse, time\n",
-		{OPT_HELP, OPT_VERBOSE, OPT_FILE_IN, OPT_FILE_OUT,
+		{OPT_HELP, OPT_VERSION, OPT_VERBOSE, OPT_FILE_IN, OPT_FILE_OUT,
 				OPT_BINARY_IN, OPT_BINARY_OUT,
 				OPT_NUMBER, OPT_PRINT_EVERY, 
 				OPT_PRINT_HEADER, OPT_PRINT_RESOLUTION,

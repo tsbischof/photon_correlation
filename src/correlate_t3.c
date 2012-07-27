@@ -46,10 +46,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 * determine the distance by referencing the correct 
 		 * channel combination.
 		 */	
-		record_number++;
-		print_status("correlate", record_number, options);
-
-		correlate_t3_block(out_stream, queue, permutations,
+		correlate_t3_block(out_stream, &record_number, queue, permutations,
 					offsets, correlation_block, correlation, options); 
 	}
 
@@ -132,7 +129,8 @@ int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 
 }
 
-int correlate_t3_block(FILE *out_stream, t3_queue_t *queue, 
+int correlate_t3_block(FILE *out_stream, long long int *record_number,
+		t3_queue_t *queue,
 		permutations_t *permutations,
 		offsets_t *offsets, t3_t *correlation_block, 
 		t3_correlation_t *correlation, options_t *options) {
@@ -165,6 +163,9 @@ int correlate_t3_block(FILE *out_stream, t3_queue_t *queue,
 		right = get_queue_item_t3(queue, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t3(&left, &right, options) ) {
+			(*record_number)++;
+			print_status("correlate", *record_number, options);
+
 			debug("Close enough for correlation.\n");
 			for ( permutation = 0; permutation < permutations->n_permutations;
 					permutation++  ) {

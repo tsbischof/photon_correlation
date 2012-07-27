@@ -85,4 +85,6 @@ void print_counts(FILE *out_stream, long long int lower_time,
 		}
 	}
 	fprintf(out_stream, "\n");
+
+	fflush(out_stream);
 }

@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		8,
+		9,
 "Given a stream of TTTR data formatted like the output of picoquant, this\n"
 "program calculates the number of photons arriving on any number of detection\n"
 "channels, divided into some number of subsets of integration time.\n"
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 "\n"
 "As an alternative to time bins, all of the photons can be counted by passing\n"
 "the flag --count-all. This is useful for normalizing a signal.\n",
-		{OPT_HELP, OPT_VERBOSE,
+		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CHANNELS,
 			OPT_BIN_WIDTH, OPT_COUNT_ALL}};

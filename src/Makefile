@@ -80,12 +80,16 @@ BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
 BIN_INTENSITY_LIB = -lm
 TARGETS += bin_intensity
 
-#TIME_DEPENDENT_PL_OBJ = 
-#TIME_DEPENDENT_PL_LIB = 
+GN_OBJ = gn_main.o ${UTIL}
+GN_LIB = 
+#TARGETS += gn
+
+TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${UTIL}
+TIME_DEPENDENT_PL_LIB = 
 #TARGETS += time_dependent_pl
 
-#TIME_DEPENDENT_GN_OBJ = 
-#TIME_DEPENDENT_GN_LIB = 
+TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${UTIL}
+TIME_DEPENDENT_GN_LIB = 
 #TARGETS += time_dependent_gn
 
 LIB_DIR = ${HOME}/lib

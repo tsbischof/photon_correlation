@@ -66,7 +66,8 @@ typedef struct {
 	int options[100];
 } program_options_t;
 
-enum { OPT_HELP, OPT_VERBOSE, OPT_PRINT_EVERY,
+enum { OPT_HELP, OPT_VERSION,
+		 OPT_VERBOSE, OPT_PRINT_EVERY,
 		OPT_FILE_IN, OPT_FILE_OUT,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 		OPT_BINARY_IN, OPT_BINARY_OUT,
@@ -85,6 +86,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		program_options_t *program_options);
 void usage(int argc, char *argv[], 
 		program_options_t *program_options);
+void version(int argc, char *argv[]);
 int is_option(int option, program_options_t *program_options);
 char *make_option_string(program_options_t *program_options);
 void free_options(options_t *options);

@@ -15,8 +15,10 @@
 option_t all_options[] = {
 	{'h', "h", "help", 
 			"Prints this usage message."},
-	{'v', "v", "verbose", 
+	{'V', "V", "verbose", 
 			"Print debug-level information."},
+	{'v', "v", "version",
+			"Print version information."},
 	{'p', "p:", "print-every", 
 			"Print a status message every n entries.\n"
 			"By default, nothing is printed."},
@@ -213,7 +215,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 
 	static struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
-		{"verbose", no_argument, 0, 'v'},
+		{"verbose", no_argument, 0, 'V'},
+		{"version", no_argument, 0, 'v'},
 		{"print-every", required_argument, 0, 'p'},
 
 		{"file-in", required_argument, 0, 'i'},
@@ -260,9 +263,14 @@ int parse_options(int argc, char *argv[], options_t *options,
 		switch (c) {
 			case 'h':
 				usage(argc, argv, program_options);
-				return(USAGE);
-			case 'v':
+				result = USAGE;
+				break;
+			case 'V':
 				verbose = 1;
+				break;
+			case 'v':
+				version(argc, argv);
+				result = -1;
 				break;
 			case 'p':
 				options->print_every = strtol(optarg, NULL, 10);
@@ -339,7 +347,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case '?':
 			default:
 				usage(argc, argv, program_options);
-				return(-1);
+				result = -1;
 		}
 	}
 
@@ -380,6 +388,10 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 	}
 
 	fprintf(stderr, "\n%s\n", program_options->message);
+}
+
+void version(int argc, char *argv[]) {
+	fprintf(stderr, "%s v%d.%d\n", argv[0], VERSION_MAJOR, VERSION_MINOR);
 }
 
 int is_option(int option, program_options_t *program_options) {

@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		11,
+		12,
 "Histogram collects a set of photon correlation events and counts them into\n"
 "bins defined by their relative time delays. The histograms are also\n"
 "separated by the identities of each channel in the correlation, such that\n"
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 "An order 1 correlation of t3 data is possible, since this is already \n"
 "implicitly a correlation of a sync source and a photon stream. This is\n"
 "useful for calculating a photoluminescence lifetime, for example.\n",
-		{OPT_HELP, OPT_VERBOSE,
+		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE}};

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		13,
+		14,
 "This program accepts TTTR photon data and outputs a stream of correlation \n"
 "events. For example, a correlation order 2 of t2 data will put out events of\n"
 "the form:\n"
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 "For calculating logarithmic-scale correlations, it is helpful to pass the\n"
 "--positive-only flag, which restricts the correlations to those whose \n"
 "photons are presented in temporal order.\n",
-		{OPT_VERBOSE, OPT_HELP,
+		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_ORDER,
 			OPT_PRINT_EVERY, OPT_POSITIVE_ONLY,
