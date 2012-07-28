@@ -77,14 +77,14 @@ def chunks(L, n=2):
                chunk = list()
 
 def get_bins(bins, mode, time_resolution=1, pulse_resolution=1):
-     if mode == T2:
+     if mode == modes.T2:
           for chunk in chunks(bins, 3):
                channel = int(chunk[0])
                bounds = (float(chunk[1]), float(chunk[2]))
                yield((channel,
                       TimeBin(bounds,
                               resolution=time_resolution)))
-     elif mode == T3:
+     elif mode == modes.T3:
           for chunk in chunks(bins, 5):
               channel = int(chunk[0])
               pulse_bounds = (float(chunk[1]), float(chunk[2]))
@@ -119,7 +119,8 @@ class HistogramBin(object):
             self._string = string
 
     def from_string(self, string):
-        line = ",".split(string)
+        self._string = string.strip()
+        line = string.split(",")
 
         counts = float(line[-1])
         if counts.is_integer():
@@ -127,17 +128,17 @@ class HistogramBin(object):
 
         correlation = [int(line[0])]
 
-        for my_bin in get_bins(line[1:-1], mode):
+        for my_bin in get_bins(line[1:-1], self.mode):
             correlation.append(my_bin[0])
             self._bins.append(my_bin)
         
-        self._bins = tuple(get_bins(line[1:-1], mode,
+        self._bins = tuple(get_bins(line[1:-1], self.mode,
                                     time_resolution=self.time_resolution,
                                     pulse_resolution=self.pulse_resolution))
         
-        self.ref_channel = int(self.line[0])
-        self.counts = int(self.line[-1])
-        self._bins = tuple(get_bins(self.line[1:-1], mode))
+        self.ref_channel = int(line[0])
+        self.counts = int(line[-1])
+        self._bins = tuple(get_bins(line[1:-1], self.mode))
         return(self)
 
     def __str__(self):
@@ -238,12 +239,16 @@ class Histogram(object):
                 if not os.path.isfile(self.filename):
                     histogrammer = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
-                    for my_photon in photon.byte_stream(photons):
+                    for my_photon in photon.byte_stream(self.photons):
                         histogrammer.stdin.write(my_photon)
 
                     histogrammer.stdin.write(b'\x04')
-                                    
-                self._bins = map(lambda x: HistogramBin(string=x),
+                    histogrammer.stdin.flush()
+                    histogrammer.communicate()
+
+                self._bins = map(lambda x: HistogramBin(string=x,
+                                                        mode=self.photons.mode,
+                                                        order=self.order),
                                  open(self.filename, "r"))
                 
             else:
@@ -251,20 +256,18 @@ class Histogram(object):
                                                 stdin=subprocess.PIPE,
                                                 stdout=subprocess.PIPE)
 
-                for my_photon in photon.byte_stream(photons):
+                for my_photon in photon.byte_stream(self.photons):
                     histogrammer.stdin.write(my_photon)
 
                 histogrammer.stdin.write(b'\x04')
+                histogrammer.flush()
 
-                self._bins = map(lambda x: HistogramBin(string=x.decode()),
+                self._bins = map(lambda x: HistogramBin(string=x.decode(),
+                                                        mode=self.photons.mode,
+                                                        order=self.order),
                                  histogrammer.stdout.splitlines())
 
-        try:
-            yield(next(self._bins))
-        except StopIteration:
-            self._bins = None
-            raise(StopIteration)
-
+        return(self._bins)
 
 if __name__ == "__main__":
     import picoquant

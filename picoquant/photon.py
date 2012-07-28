@@ -59,25 +59,26 @@ def windows(start, step):
         lower += step
 
 class PhotonStream(object):
+    def __init__(self, photons=list(), mode=None, order=None, channels=None):
+        self.photons = photons
+        self.mode = mode
+        self.channels = channels
+        self.order = order
+        
     def __iter__(self):
-        return(self)
+        return(self.photons)
 
-    def __next__(self):
-        raise(StopIteration)
-
-class WindowedStream(PhotonStream):
-    def __init__(self, photons, pulse=None, time=None):
+class WindowedStream:
+    def __init__(self, photons, pulse_bin=None, time_bin=None):
         """Given a stream of photons and some fixed interval over which to split
 it (based on pulse or time), this generator yields the photons found in each
-window sequentially."""
-        super(WindowedStream, self).__init__()
-        
+window sequentially."""        
         # Based on the outline from itertools.groupby
-        if pulse:
-            self.step = pulse
+        if pulse_bin:
+            self.step = pulse_bin
             self.key = lambda p: p.pulse
-        elif time:
-            self.step = time
+        elif time_bin:
+            self.step = time_bin
             self.key = lambda p: p.time
         else:
             raise(ValueError("Must specify step size for either pulse or time"))
@@ -87,6 +88,8 @@ window sequentially."""
         self.test = lambda p: self.key(p) in self.window
 
         self.photons = photons
+        self.mode = self.photons.mode
+        self.channels = self.photons.channels
         self._done = False
 
         self.current_photon = None
@@ -103,7 +106,9 @@ window sequentially."""
         if self._done:
             raise(StopIteration)
         
-        return(self.window, self.populate())
+        return(self.window, PhotonStream(photons=self.populate(),
+                                         channels=self.photons.channels,
+                                         mode=self.photons.mode))
 
     def populate(self):
         try:
@@ -138,7 +143,7 @@ if __name__ == "__main__":
     total = 0
     for index, block in zip(range(100),
                             WindowedStream(p,
-                                           time=int(10**12))):
+                                           time_bin=int(10**12))):
         limits, photons = block
         n_photons = len(list(photons))
         total += n_photons

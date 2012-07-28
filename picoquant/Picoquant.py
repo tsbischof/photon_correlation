@@ -1,7 +1,9 @@
 import subprocess
 import os
 import re
+import time
 import csv
+import logging
 
 from picoquant import modes
 from picoquant import files
@@ -9,12 +11,14 @@ from picoquant import photon
 from picoquant import interactive
 
 class Picoquant(photon.PhotonStream):
-    def __init__(self, filename, channels=None, mode=None, decode=False):
+    def __init__(self, filename, channels=None, mode=None, decode=True,
+                 print_every=None):
         super(Picoquant, self).__init__()
         if not os.path.isfile(filename):
             raise(OSError("File does not exist: {0}".format(filename)))
         else:
             self.filename = filename
+
         if mode:
             self.mode = mode
         else:
@@ -33,6 +37,9 @@ class Picoquant(photon.PhotonStream):
         self._stderr = None
 
         self.decode = decode
+
+        self.print_every = print_every
+        self.index = 0
 
     def header(self):
         if not self._header:
@@ -126,6 +133,11 @@ class Picoquant(photon.PhotonStream):
                 self._stderr)))
 
         try:
+            self.index += 1
+            if self.print_every and self.index % self.print_every == 0:
+                logging.info("{0}: (picoquant) Record {1:20d}".format(
+                    time.strftime("%Y.%m.%d %H.%M.%S"),
+                    self.index))
             return(next(self._stream))
         except StopIteration:
             self._stream = None
