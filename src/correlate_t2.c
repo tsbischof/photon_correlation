@@ -34,7 +34,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && next_t2_queue(in_stream, queue, options) ) {
+	while ( ! done && next_t2_queue_correlate(in_stream, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
@@ -60,7 +60,8 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	return(result);
 }
 
-int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options) {
+int next_t2_queue_correlate(FILE *in_stream, 
+		t2_queue_t *queue, options_t *options) {
 	int result;
 	long long int starting_index;
 	long long int ending_index;
@@ -160,9 +161,6 @@ int correlate_t2_block(FILE *out_stream, long long int *record_number,
 		right = get_queue_item_t2(queue, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t2(&left, &right, options) ) {
-			(*record_number)++;
-			print_status("correlate", *record_number, options);
-
 			debug("Close enough for correlation (between %lld and %lld to "
 					"get %lld/%lld).\n",
 					left.time, right.time, right.time-left.time,
@@ -176,6 +174,9 @@ int correlate_t2_block(FILE *out_stream, long long int *record_number,
 				/* The first photon is the reference one, so we should keep
  				 * track of it separately as we iterate over the others.
  				 */
+				(*record_number)++;
+				print_status("correlate", *record_number, options);
+
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
 				left = get_queue_item_t2(queue, offset);

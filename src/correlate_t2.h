@@ -15,7 +15,8 @@ typedef struct {
 	t2_delay_t *delays;
 } t2_correlation_t;
 
-int next_t2_queue(FILE *in_stream, t2_queue_t *queue, options_t *options);
+int next_t2_queue_correlate(FILE *in_stream, 
+		t2_queue_t *queue, options_t *options);
 
 int valid_distance_t2(t2_t *left, t2_t *right, options_t *options);
 int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options);

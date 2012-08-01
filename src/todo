@@ -14,6 +14,7 @@ Picoquant:
 -find a way to deal with offsets. Maybe an external program which takes the records in and adds the offset, with a queue of some time length (equal to the largest offset seems reasonable) to reorder the records as needed.
 
 Correlate:
+-move queue stuff into t2.c, make it possible to pass the maximum time distance as a separate parameter
 
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings.
@@ -25,8 +26,9 @@ Bin intensity:
 -get this going and put it in with the gn calculation for fully-normalized results
 
 Time-dependent pl/gn:
--turn the Python scripts into C programs for speed
+-turn the Python scripts into C programs for speed?
 
 Python:
 -write interfaces to all types of output (photons, correlations, histograms, picoquant histograms, intensity)
 -simplify histogram/correlate business: simply make tdg2 and tdpl by hard-wiring correlate and histogram, do not try to get fancy by piping those through Python objects. This just requires having a nice interface to photons through Python (already done) and a windowed stream (also already done).
+-gn needs to pass all photons to correlate/histogram, intensity, bin_intensity

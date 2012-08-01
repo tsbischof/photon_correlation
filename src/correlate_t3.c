@@ -163,12 +163,12 @@ int correlate_t3_block(FILE *out_stream, long long int *record_number,
 		right = get_queue_item_t3(queue, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t3(&left, &right, options) ) {
-			(*record_number)++;
-			print_status("correlate", *record_number, options);
-
 			debug("Close enough for correlation.\n");
 			for ( permutation = 0; permutation < permutations->n_permutations;
 					permutation++  ) {
+				(*record_number)++;
+				print_status("correlate", *record_number, options);
+
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
 				left =  get_queue_item_t3(queue, offset);

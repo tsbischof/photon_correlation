@@ -43,6 +43,12 @@ t2_queue_t *allocate_t2_queue(int queue_length) {
 	return(queue);
 }
 
+int next_t2_queue(FILE *in_stream, 
+		long long int max_time_distance,
+		t2_queue_t *queue, options_t *options) {
+	return(-1);
+}
+
 void free_t2_queue(t2_queue_t **queue) {
 	if ( *queue != NULL ) {
 		if ( (*queue)->queue != NULL ) {
