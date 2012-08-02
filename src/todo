@@ -6,6 +6,7 @@ General:
 -do a better job of detecting mode mismatch 
 -remove the clunkier debug messages.
 -check that all references to the channel are to _signed_ int
+-offsets: create a program to add an offset to all photons in a stream, based on their channels, while keeping the stream in tempoeral order.
 
 Scripts:
 -plotting for t3 mode correlation
@@ -15,6 +16,7 @@ Picoquant:
 
 Correlate:
 -move queue stuff into t2.c, make it possible to pass the maximum time distance as a separate parameter
+-populate first-only: only permit each photon to be used once, and only retain information about the most recent photon on a given channel. Perhaps this should be a separate routine, since it is much simpler than the normal correlate (retain the latest photon on each channel, only output when all channels are populated)
 
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings.

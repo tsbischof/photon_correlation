@@ -43,6 +43,7 @@ typedef struct {
 	long long int max_pulse_distance;
 	long long int min_pulse_distance;
 	int positive_only;
+	int first_only;
 
 /* Intensity */
 	long long int bin_width;
@@ -75,7 +76,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_QUEUE_SIZE, 
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
 		OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE,
-		OPT_POSITIVE_ONLY,
+		OPT_POSITIVE_ONLY, OPT_FIRST_ONLY,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE };
 

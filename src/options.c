@@ -77,6 +77,11 @@ option_t all_options[] = {
 			"only photons in their natural time order. This\n"
 			"is primarily useful for calculating correlations\n"
 			"on a logarithmic scale."},
+	{'F', "F", "first-only",
+			"Process each photon at most one time. This mimics\n"
+			"the behavior of the start-stop mode of the\n"
+			"physical correlator, which throws out a photon\n"
+			"once it has been used."},
 	{'w', "w:", "bin-width",
 			"The width of the time bin for processing \n"
 			"photons. For t2 mode, this is a number of\n"
@@ -136,6 +141,7 @@ void default_options(options_t *options) {
 	options->max_pulse_distance = 0;
 	options->min_pulse_distance = 0;
 	options->positive_only = 0;
+	options->first_only = 0;
 
 	options->bin_width = 0;
 	options->count_all = 0;
@@ -242,6 +248,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"max-pulse-distance", required_argument, 0, 'e'},
 		{"min-pulse-distance", required_argument, 0, 'E'},
 		{"positive-only", no_argument, 0, 'P'},
+		{"first-only", no_argument, 0, 'F'},
 
 /* Intensity */ 
 		{"bin-width", required_argument, 0, 'w'},
@@ -343,6 +350,9 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'Y':
 				options->pulse_scale_string = strdup(optarg);
+				break;
+			case 'F':
+				options->first_only = 1;
 				break;
 			case '?':
 			default:
