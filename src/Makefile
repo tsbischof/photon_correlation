@@ -51,8 +51,8 @@ TARGETS += picoquant
 CORRELATE_OBJ = correlate_main.o ${UTIL} \
 		correlate.o \
 		combinations.o \
-		correlate_t2.o t2.o \
-		correlate_t3.o t3.o
+		correlate_t2.o \
+		correlate_t3.o 
 CORRELATE_LIB = 
 TARGETS += correlate
 
@@ -74,8 +74,8 @@ TARGETS += intensity
 
 BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
 		bin_intensity.o \
-		bin_intensity_t2.o t2.o \
-		bin_intensity_t3.o t3.o \
+		bin_intensity_t2.o \
+		bin_intensity_t3.o \
 		histogram_gn.o
 BIN_INTENSITY_LIB = -lm
 TARGETS += bin_intensity
