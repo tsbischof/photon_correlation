@@ -56,7 +56,7 @@ option_t all_options[] = {
 			"The number of entries to process. By default, \n"
 			"all entries are processed."},
 	{'q', "q:", "queue-size", 
-			"The size of the queue for processingi, in number of\n"
+			"The size of the queue for processing, in number of\n"
 			"photons. By default, this is 100000, and if it is\n"
 			"too small an appropriate warning message will be\n"
 			"displayed."},
@@ -77,11 +77,13 @@ option_t all_options[] = {
 			"only photons in their natural time order. This\n"
 			"is primarily useful for calculating correlations\n"
 			"on a logarithmic scale."},
-	{'F', "F", "first-only",
-			"Process each photon at most one time. This mimics\n"
-			"the behavior of the start-stop mode of the\n"
-			"physical correlator, which throws out a photon\n"
-			"once it has been used."},
+	{'S', "S", "start-stop",
+			"Gather photons from each channel, and only\n"
+			"emit a result when enough photons have been\n"
+			"collected to produce a correlation. Since\n"
+			"photons arriving on a single channel can\n"
+			"override previous photons, not all pairs\n"
+			"will be counted."},
 	{'w', "w:", "bin-width",
 			"The width of the time bin for processing \n"
 			"photons. For t2 mode, this is a number of\n"
@@ -141,7 +143,7 @@ void default_options(options_t *options) {
 	options->max_pulse_distance = 0;
 	options->min_pulse_distance = 0;
 	options->positive_only = 0;
-	options->first_only = 0;
+	options->start_stop = 0;
 
 	options->bin_width = 0;
 	options->count_all = 0;
@@ -248,7 +250,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"max-pulse-distance", required_argument, 0, 'e'},
 		{"min-pulse-distance", required_argument, 0, 'E'},
 		{"positive-only", no_argument, 0, 'P'},
-		{"first-only", no_argument, 0, 'F'},
+		{"start-stop", no_argument, 0, 'S'},
 
 /* Intensity */ 
 		{"bin-width", required_argument, 0, 'w'},
@@ -351,8 +353,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case 'Y':
 				options->pulse_scale_string = strdup(optarg);
 				break;
-			case 'F':
-				options->first_only = 1;
+			case 'S':
+				options->start_stop = 1;
 				break;
 			case '?':
 			default:
@@ -432,7 +434,7 @@ char *get_options_string(program_options_t *program_options) {
 	int i;
 	int j;
 	int position = 0;
-
+	
 	for ( i = 0; i < program_options->n_options; i++ ) {
 		option = &all_options[program_options->options[i]];
 
