@@ -62,7 +62,6 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 int next_t2_queue_correlate(FILE *in_stream, 
 		t2_queue_t *queue, options_t *options) {
-	int result;
 	long long int starting_index;
 	long long int ending_index;
 
@@ -91,11 +90,9 @@ int next_t2_queue_correlate(FILE *in_stream,
 			 */
 			queue->right_index += 1;
 			ending_index = queue->right_index % queue->length;
-			result = fscanf(in_stream, "%d,%llu\n", 
-					&(queue->queue[ending_index]).channel,
-					&(queue->queue[ending_index]).time);
 
-			if ( result != 2 && ! feof(in_stream) ) {
+			if ( next_t2(in_stream, &(queue->queue[ending_index]))
+					&& ! feof(in_stream) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
 			 * on our hands.

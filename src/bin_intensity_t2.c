@@ -15,6 +15,14 @@
 #include "bin_intensity.h"
 #include "bin_intensity_t2.h"
 
+/* The basic procedure here is as follows:
+ * 1. Determine the maximum time distance between photons as the difference
+ *    between the lowest lower limit for a bin and the highest upper limit.
+ * 2. Collect photons until this limit is exceeded or the stream ends.
+ * 3. For the first photon in the stream, determine whether its time is 
+ *    satisfactory (time + lower limit >= start time, 
+ *    time + upper limit < end time).
+ */
 int bin_intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_queue_t *queue;
 	t2_counts_t *counts;

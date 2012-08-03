@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "error.h"
 #include "t2.h"
 
 int next_t2(FILE *in_stream, t2_t *record) {
@@ -46,7 +47,45 @@ t2_queue_t *allocate_t2_queue(int queue_length) {
 int next_t2_queue(FILE *in_stream, 
 		long long int max_time_distance,
 		t2_queue_t *queue, options_t *options) {
-	return(-1);
+	long long int starting_index;
+	long long int ending_index;
+
+	queue->left_index += 1;
+	starting_index = queue->left_index % queue->length;
+	ending_index = queue->right_index % queue->length;
+
+	while ( 1 ) {
+		if ( feof(in_stream) ) {
+			/* We have reached the end of the stream, so keep moving the left
+			 * index forward until the queue is empty.
+			 */
+			return(queue->left_index < queue->right_index);
+		} else if ( ending_index > 0 && 
+				( queue->queue[ending_index].time 
+					- queue->queue[starting_index].time ) 
+				< max_time_distance ) {
+			/* Still within the distance bounds */
+		} else {
+			queue->right_index += 1;
+			ending_index = queue->right_index % queue->length;
+			
+			if ( ! next_t2(in_stream, &(queue->queue[ending_index])) 
+					&& ! feof(in_stream) ) {
+				/* Failed to read a photon. We have already checked that we
+ 				 * we are not at the end of the stream, so we have a read
+ 				 * error on our hands.
+ 				 */
+				error("Error while reading t2 stream.\n");
+				return(0);
+			} else if ( (queue->right_index - queue->left_index)
+					>= queue->length ) {
+				warn("Overflow of queue entries, increase queue size for "
+					"accurate results.\n");
+			}
+
+			/* By here, we have no error and no EOF, so move along. */
+		}
+	}
 }
 
 void free_t2_queue(t2_queue_t **queue) {

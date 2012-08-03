@@ -41,7 +41,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && next_t3_queue(in_stream, queue, options) ) {
+	while ( ! done && next_t3_queue_correlate(in_stream, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance by referencing the correct 
 		 * channel combination.
@@ -61,8 +61,8 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 }
 
 
-int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options) {
-	int result;
+int next_t3_queue_correlate(FILE *in_stream, 
+		t3_queue_t *queue, options_t *options) {
 	long long int starting_index;
 	long long int ending_index;
 
@@ -88,9 +88,9 @@ int next_t3_queue(FILE *in_stream, t3_queue_t *queue, options_t *options) {
 			/* Check for a new value. */
 			queue->right_index += 1;
 			ending_index = queue->right_index % queue->length;
-			result = next_t3(in_stream, &(queue->queue[ending_index]));
 
-			if ( result && ! feof(in_stream) ) {
+			if ( next_t3(in_stream, &(queue->queue[ending_index])) 
+					&& ! feof(in_stream) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
 			 * on our hands.
@@ -182,6 +182,7 @@ int correlate_t3_block(FILE *out_stream, long long int *record_number,
 /*					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
 							left.channel, left.pulse_number, left.time,
 							right.channel, right.pulse_number, right.time);*/
+					correlation->channels[i] = right.channel;
 					correlation->delays[i].pulse = (right.pulse_number -
 							left.pulse_number);
 					correlation->delays[i].time = (right.time - left.time);
