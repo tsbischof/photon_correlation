@@ -119,7 +119,14 @@ option_t all_options[] = {
 			"      log: logarithmic interpolation (linear\n"
 			"           on a log axis)\n"
 			" log-zero: same as log, except that the lowest\n"
-			"           bin is extended to include 0"}
+			"           bin is extended to include 0"},
+	{'O', "O:", "offsets",
+			"A commona-delimited list of time/pulse offsets\n"
+			"to apply to the channels. All channels must be\n"
+			"represented, even if the offset is 0."},
+	{'s', "s:", "suppress",
+			"A comma-delmited list of channels to remove\n"
+			"from the stream."}
 	};
 
 void default_options(options_t *options) {
@@ -165,6 +172,13 @@ void default_options(options_t *options) {
 	options->time_scale = SCALE_LINEAR;
 	options->pulse_scale_string = NULL;
 	options->pulse_scale = SCALE_LINEAR;
+
+	options->suppress_channels = 0;
+	options->suppress_string = NULL;
+	options->suppressed_channels = NULL;
+	options->offset_channels = 0;
+	options->offsets_string = NULL;
+	options->channel_offsets = NULL;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -283,6 +297,10 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"time-scale", required_argument, 0, 'X'},
 		{"pulse-scale", required_argument, 0, 'Y'},
 
+/* Channels */
+		{"offsets", required_argument, 0, 'O'},
+		{"suppress", required_argument, 0, 's'},
+
 		{0, 0, 0, 0}};
 
 	options_string = get_options_string(program_options);
@@ -385,6 +403,14 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->set_stop_time = 1;
 				options->stop_time = strtoll(optarg, NULL, 10);
 				break;
+			case 'O':
+				options->offset_channels = 1;
+				options->offsets_string = strdup(optarg);
+				break;
+			case 's':
+				options->suppress_channels = 1;
+				options->suppress_string = strdup(optarg);
+				break;
 			case '?':
 			default:
 				usage(argc, argv, program_options);
@@ -455,6 +481,10 @@ void free_options(options_t *options) {
 	free(options->pulse_string);
 	free(options->time_scale_string);
 	free(options->pulse_scale_string);
+	free(options->suppress_string);
+	free(options->suppressed_channels);
+	free(options->offsets_string);
+	free(options->channel_offsets);
 }
 
 char *get_options_string(program_options_t *program_options) {

@@ -115,12 +115,14 @@ class HistogramBin(object):
             self.from_string(string)
         else:
             self.correlation = correlation
-            self.bins = bins
+            self._bins = bins
             self._string = string
 
     def from_string(self, string):
         self._string = string.strip()
         line = string.split(",")
+
+        self._bins = list()
 
         counts = float(line[-1])
         if counts.is_integer():

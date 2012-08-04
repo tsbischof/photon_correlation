@@ -63,6 +63,15 @@ typedef struct {
 	int time_scale;
 	char *pulse_scale_string;
 	int pulse_scale;
+
+/* Channels */
+	int suppress_channels;
+	char *suppress_string;
+	int *suppressed_channels;
+
+	int offset_channels;
+	char *offsets_string;
+	int *channel_offsets;
 } options_t;
 
 typedef struct {
@@ -83,7 +92,8 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
-		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE };
+		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
+		OPT_OFFSETS, OPT_SUPPRESS };
 
 void default_options(options_t *options);
 int validate_options(program_options_t *program_options, options_t *options);

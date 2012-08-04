@@ -32,6 +32,6 @@ if __name__ == "__main__":
                 plt.plot(map(lambda x: (x[2]+x[3])/2, my_correlation),
                             map(lambda x: x[4], my_correlation))
                 plt.title(str(correlation))
-                plt.xlabel("t")
-                plt.ylabel("g2")
+                plt.xlabel(r"$\tau$")
+                plt.ylabel(r"$g^{(2)}(\tau)$")
             plt.show()

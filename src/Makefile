@@ -81,9 +81,10 @@ BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
 BIN_INTENSITY_LIB = 
 TARGETS += bin_intensity
 
-#CHANNELS_OBJ = channels_main.o ${UTIL} 
-#CHANNELS_LIB = 
-#TARGETS += channels
+CHANNELS_OBJ = channels_main.o ${UTIL} \
+		channels.o
+CHANNELS_LIB = 
+TARGETS += channels
 
 #GN_OBJ = gn_main.o ${UTIL}
 #GN_LIB = 
@@ -137,6 +138,9 @@ intensity: ${INTENSITY_OBJ}
 
 bin_intensity: ${BIN_INTENSITY_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${BIN_INTENSITY_LIB}
+
+channels: ${CHANNELS_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${CHANNELS_LIB}
 
 libpicoquant.so: ${LIBPICOQUANT_OBJ}
 	${LD} ${LIBPICOQUANT_FLAGS} -o $@ $^ ${LIBPICOQUANT_LIB}

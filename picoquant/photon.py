@@ -1,7 +1,6 @@
 import subprocess
 import csv
 import itertools
-import queue
 
 from picoquant import modes
 from picoquant import *
