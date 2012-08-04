@@ -519,7 +519,8 @@ int parse_offsets(options_t *options) {
 	int channel;
 
 	if ( options->offset_channels ) {
-		options->channel_offsets = (int *)malloc(sizeof(int)*options->channels);
+		options->channel_offsets = (long long int *)malloc(
+				sizeof(long long int)*options->channels);
 
 		if ( options->channel_offsets == NULL ) {
 			error("Could not allocate memory for channel offsets\n");

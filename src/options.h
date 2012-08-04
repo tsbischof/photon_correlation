@@ -71,7 +71,7 @@ typedef struct {
 
 	int offset_channels;
 	char *offsets_string;
-	int *channel_offsets;
+	long long int *channel_offsets;
 } options_t;
 
 typedef struct {
