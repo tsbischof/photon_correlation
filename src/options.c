@@ -243,6 +243,14 @@ int validate_options(program_options_t *program_options, options_t *options) {
 				"t2 mode, and order 2.\n");
 		result += -1;
 	}
+
+	if ( is_option(OPT_SUPPRESS, program_options) && ! result ) {
+		result += parse_suppress(options);
+	}
+
+	if ( is_option(OPT_OFFSETS, program_options) && ! result ) {
+		result += parse_offsets(options);
+	}
 		
 	return(result);
 }
@@ -504,4 +512,78 @@ char *get_options_string(program_options_t *program_options) {
 	buffer[position] = '\0';
 	
 	return(strdup(buffer));
+}
+
+int parse_offsets(options_t *options) {
+	char *c;
+	int channel;
+
+	if ( options->offset_channels ) {
+		options->channel_offsets = (int *)malloc(sizeof(int)*options->channels);
+
+		if ( options->channel_offsets == NULL ) {
+			error("Could not allocate memory for channel offsets\n");
+			return(-1);
+		}
+
+		c = strtok(options->offsets_string, ",");
+
+		for ( channel = 0; channel < options->channels; channel++ ) {
+			if ( c == NULL ) {
+				error("Not enough offsets specified (%d found)\n", channel);
+				return(-1);
+			} else {
+				options->channel_offsets[channel] = strtoll(c, NULL, 10);
+				debug("Offset for channel %d: %lld\n",
+						channel, options->channel_offsets[channel]);
+			}
+
+			c = strtok(NULL, ",");
+		}
+			
+	}
+
+	return(0);
+} 
+
+int parse_suppress(options_t *options) {
+	char *c;
+	int channel;
+	
+	if ( options->suppress_channels ) {
+		options->suppressed_channels = (int *)malloc(
+				sizeof(int)*options->channels);
+
+		if ( options->suppressed_channels == NULL ) {
+			error("Could not allocate memory for supressed channels.\n");
+			return(-1);
+		}
+
+		for ( channel = 0; channel < options->channels; channel++ ) {
+			options->suppressed_channels[channel] = 0;
+		}
+
+		c = strtok(options->suppress_string, ",");
+
+		while ( c != NULL ) {
+			channel = strtol(c, NULL, 10);
+
+			if ( channel == 0 && strcmp(c, "0") ) {
+				error("Invalid channel to suppress: %s\n", c);
+				return(-1);
+			} else if ( channel < 0 || channel >= options->channels ) {
+				error("Invalid channel to suppress: %d\n", channel);
+				return(-1);
+			} else {
+				debug("Suppressing channel %d\n", channel);
+				if ( options->suppressed_channels[channel] ) {
+					warn("Duplicate suppression of channel %d\n", channel);
+				}
+				options->suppressed_channels[channel] = 1;
+			}
+
+			c = strtok(NULL, ",");
+		}
+	}
+	return(0);
 }

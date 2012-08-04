@@ -108,4 +108,7 @@ char *make_option_string(program_options_t *program_options);
 void free_options(options_t *options);
 char *get_options_string(program_options_t *program_options);
 
+int parse_offsets(options_t *options);
+int parse_suppress(options_t *options);
+
 #endif
