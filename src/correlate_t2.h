@@ -34,4 +34,7 @@ void free_t2_correlation(t2_correlation_t **correlation);
 void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation, 
 		options_t *options);
 
+int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
+		options_t *options);
+
 #endif

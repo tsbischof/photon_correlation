@@ -60,6 +60,12 @@ option_t all_options[] = {
 			"photons. By default, this is 100000, and if it is\n"
 			"too small an appropriate warning message will be\n"
 			"displayed."},
+	{'f', "f:", "start-time",
+			"The lower limit of time for the run; do not\n"
+			"process photons which arrive before this time."},
+	{'F', "F:", "stop-time",
+			"The upper limit of time for the run; do not\n"
+			"process photons which arrive before this time."},
 	{'d', "d:", "max-time-distance", 
 			"The maximum time difference between two photons\n"
 			"to be considered for the calculation."},
@@ -147,6 +153,10 @@ void default_options(options_t *options) {
 
 	options->bin_width = 0;
 	options->count_all = 0;
+	options->set_start_time = 0;
+	options->start_time = 0;
+	options->set_stop_time = 0;
+	options->stop_time = 0;
 
 	options->time_string = NULL;
 	options->pulse_string = NULL;
@@ -210,6 +220,15 @@ int validate_options(program_options_t *program_options, options_t *options) {
 				options->bin_width);
 		result += -1;
 	}
+
+	if ( is_option(OPT_START_STOP, program_options)
+		&& ! result
+		&& (options->channels != 2 || 
+			options->order != 2 || options->mode != MODE_T2 ) ) {
+		error("Start-stop mode is only well-defined for 2 channels,"
+				"t2 mode, and order 2.\n");
+		result += -1;
+	}
 		
 	return(result);
 }
@@ -255,6 +274,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 /* Intensity */ 
 		{"bin-width", required_argument, 0, 'w'},
 		{"count-all", no_argument, 0, 'A'},
+		{"start-time", required_argument, 0, 'f'},
+		{"stop-time", required_argument, 0, 'F'},
 
 /* Histogram */ 
 		{"time", required_argument, 0, 'x'},
@@ -355,6 +376,14 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'S':
 				options->start_stop = 1;
+				break;
+			case 'f':
+				options->set_start_time = 1;
+				options->start_time = strtoll(optarg, NULL, 10);
+				break;
+			case 'F':
+				options->set_stop_time = 1;
+				options->stop_time = strtoll(optarg, NULL, 10);
 				break;
 			case '?':
 			default:

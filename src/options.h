@@ -48,6 +48,10 @@ typedef struct {
 /* Intensity */
 	long long int bin_width;
 	int count_all;
+	int set_start_time;
+	long long int start_time;
+	int set_stop_time;
+	long long int stop_time;
 
 /* Histogram */
 	char *time_string;
@@ -74,6 +78,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_BINARY_IN, OPT_BINARY_OUT,
 		OPT_PRINT_RESOLUTION, OPT_PRINT_HEADER, OPT_TO_T2, OPT_NUMBER,
 		OPT_QUEUE_SIZE, 
+		OPT_START_TIME, OPT_STOP_TIME,
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
 		OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,

@@ -254,3 +254,55 @@ void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation,
 
 	fprintf(out_stream, "\n");
 }
+
+/* The start-stop mode of correlation assumes that one channel is marked as the
+ * starting channel, and another as the stopping channel. Any photon arriving
+ * on the start channel replaces and existing photon, and any photon arriving
+ * on the stop channel either produces a correlation (if photon on start 
+ * channel) or nothing (if no photon)
+ */
+int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream, 
+		options_t *options) {
+	t2_t ref_photon;
+	t2_t record;
+	long long int record_number = 0;
+
+	t2_correlation_t *correlation;
+
+	ref_photon.channel = -1;
+	ref_photon.time = -1;
+
+	correlation = allocate_t2_correlation(options);
+
+	if ( correlation == NULL ) {
+		error("Could not allocate t2 correlation.\n");
+		return(-1);
+	}
+
+	correlation->channels[0] = 0;
+	correlation->channels[1] = 1;
+
+	while ( ! next_t2(in_stream, &record) ) {
+		if ( record.channel == 0 ) {
+			ref_photon.channel = record.channel;
+			ref_photon.time = record.time;
+		} else if ( record.channel == 1 ) {
+			if ( ref_photon.channel == 0 ) {
+				/* Correlation! */
+				record_number += 1;
+				print_status("correlate", record_number, options);
+
+				correlation->delays[1] = record.time - ref_photon.time;
+
+				print_t2_correlation(out_stream, correlation, options);
+
+				ref_photon.channel = -1;
+			}
+		} else if ( record.channel > 2 ) {
+				warn("Start-stop mode only works for 2 channels. "
+						"Channel index %d found.\n", record.channel);
+		}
+	}
+
+	return(0);
+}

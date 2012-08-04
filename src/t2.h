@@ -34,6 +34,8 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index);
 typedef struct {
 	limits_t limits;
 	long long int width;
+	int set_time_limit;
+	long long int time_limit;
 } t2_window_t;
 
 typedef struct {
@@ -43,9 +45,10 @@ typedef struct {
 	FILE *in_stream;
 } t2_windowed_stream_t;
 
-void init_t2_window(t2_window_t *window, options_t *options);
+void init_t2_window(t2_window_t *window, 
+		long long int start_time, options_t *options);
 void next_t2_window(t2_window_t *window);
-void init_t2_windowed_stream(t2_windowed_stream_t *stream,
+int init_t2_windowed_stream(t2_windowed_stream_t *stream,
 		FILE *in_stream, options_t *options);
 int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 		options_t *options);

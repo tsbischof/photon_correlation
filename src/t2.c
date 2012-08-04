@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 
 #include "error.h"
 #include "t2.h"
@@ -106,28 +107,53 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index) {
  * windows of fixed length. Thus we need to be able to receive a photon from a 
  * window, and to iterate between the windows.
  */
-void init_t2_window(t2_window_t *window, options_t *options) {
-	window->limits.lower = 0;
+void init_t2_window(t2_window_t *window, 
+		long long int start_time, options_t *options) {
+	if ( options->set_start_time ) {
+		window->limits.lower = options->start_time;
+	} else {
+		window->limits.lower = start_time;
+	}
+
 	window->limits.bins = 1;
-	window->limits.upper = options->bin_width;
+	window->limits.upper = options->bin_width*
+			((int)floor(window->limits.lower/options->bin_width)+1);
 	window->width = options->bin_width;
+
+	window->set_time_limit = options->set_stop_time;
+	window->time_limit = options->stop_time;
+
+	if ( window->set_time_limit && window->limits.upper > window->time_limit ) {
+		window->limits.upper = window->time_limit;
+	}
 }
 
 void next_t2_window(t2_window_t *window) {
-	window->limits.lower += window->width;
+	window->limits.lower = window->limits.upper;
 	window->limits.upper += window->width;
+
+	if ( window->set_time_limit && window->limits.upper > window->time_limit ) {
+		window->limits.upper = window->time_limit;
+	}
 }
 
-void init_t2_windowed_stream(t2_windowed_stream_t *stream, 
+int init_t2_windowed_stream(t2_windowed_stream_t *stream, 
 		FILE *in_stream, options_t *options) {
 	stream->yielded_photon = 0;
 	stream->in_stream = in_stream;
-	stream->current_photon.channel = -1;
-	init_t2_window(&(stream->window), options);
+
+	if ( next_t2(in_stream, &(stream->current_photon) )) {
+		return(-1);
+	} else {
+		init_t2_window(&(stream->window), stream->current_photon.time, options);
+	}
+
+	return(0);
 }
 
 int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 		options_t *options) {
+	/* Deal with the actual photon now. */
 	if ( stream->yielded_photon ) {
 		stream->current_photon.channel = -1;
 	}
@@ -138,6 +164,19 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 		}
 	}
 
+	/* Test that the photon is within the absolute limits */ 
+	if ( options->set_start_time &&
+			stream->current_photon.time < options->start_time ) {
+		stream->yielded_photon = 1;
+		return(2);
+	} 
+
+	if ( options->set_stop_time && 
+			stream->current_photon.time >= options->stop_time ) {
+		return(-1);
+	}
+
+	/* Process the photon normally. */
 	if ( (! options->count_all) 
 			&& stream->current_photon.time > stream->window.limits.upper ) {
 		stream->yielded_photon = 0;

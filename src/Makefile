@@ -30,6 +30,7 @@ CFLAGS += -DVERSION_MINOR=4
 #CFLAGS += -g -O0
 CFLAGS += -O3 
 CFLAGS += -fPIC
+CFLAGS += -lm
 
 LDFLAGS = ${CFLAGS}
 INSTALL_DIR = ${HOME}/bin/
@@ -62,7 +63,7 @@ HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
 		histogram_gn.o \
 		histogram_t2.o \
 		histogram_t3.o 
-HISTOGRAM_LIB = -lm
+HISTOGRAM_LIB =
 TARGETS += histogram
 
 INTENSITY_OBJ = intensity_main.o ${UTIL} \
@@ -77,19 +78,23 @@ BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
 		bin_intensity_t2.o \
 		bin_intensity_t3.o \
 		histogram_gn.o
-BIN_INTENSITY_LIB = -lm
+BIN_INTENSITY_LIB = 
 TARGETS += bin_intensity
 
-GN_OBJ = gn_main.o ${UTIL}
-GN_LIB = 
+#CHANNELS_OBJ = channels_main.o ${UTIL} 
+#CHANNELS_LIB = 
+#TARGETS += channels
+
+#GN_OBJ = gn_main.o ${UTIL}
+#GN_LIB = 
 #TARGETS += gn
 
-TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${UTIL}
-TIME_DEPENDENT_PL_LIB = 
+#TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${UTIL}
+#TIME_DEPENDENT_PL_LIB = 
 #TARGETS += time_dependent_pl
 
-TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${UTIL}
-TIME_DEPENDENT_GN_LIB = 
+#TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${UTIL}
+#TIME_DEPENDENT_GN_LIB = 
 #TARGETS += time_dependent_gn
 
 LIB_DIR = ${HOME}/lib
