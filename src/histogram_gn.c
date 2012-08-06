@@ -57,6 +57,8 @@ int edges_get_index(edges_t *edges, long long int value) {
 	int upper_index;;
 	int middle_index;
 
+	/* Replace this with bsearch from stdlib? */
+
 	/* Check that the value lies within the lower and upper limits of the bins.
  	 */
 	lower_index = 0;

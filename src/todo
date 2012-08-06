@@ -21,6 +21,7 @@ Correlate:
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings.
 -implement a linear search algorithm for linear scales
+-test to see if bsearch from stdlib.h is faster than the existing binary search algorithm.
 
 Intensity:
 
