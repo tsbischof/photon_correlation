@@ -98,6 +98,10 @@ TARGETS += channels
 #TIME_DEPENDENT_GN_LIB = 
 #TARGETS += time_dependent_gn
 
+T3_AS_T2_OBJ = t3_as_t2_main.o ${UTIL}
+T3_AS_T2_LIB = 
+TARGETS += t3_as_t2
+
 LIB_DIR = ${HOME}/lib
 INCLUDE_DIR = ${HOME}/include/picoquant
 LIB_TARGETS = 
@@ -144,6 +148,9 @@ channels: ${CHANNELS_OBJ}
 
 libpicoquant.so: ${LIBPICOQUANT_OBJ}
 	${LD} ${LIBPICOQUANT_FLAGS} -o $@ $^ ${LIBPICOQUANT_LIB}
+
+t3_as_t2: ${T3_AS_T2_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${T3_AS_T2_LIB}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 

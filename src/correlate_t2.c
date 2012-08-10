@@ -121,7 +121,7 @@ int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 }
 
 int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options) {
-	return( llabs(right->time - left->time) > options->min_time_distance ) ;
+	return( llabs(right->time - left->time) >= options->min_time_distance ) ;
 }
 
 int correlate_t2_block(FILE *out_stream, long long int *record_number,
