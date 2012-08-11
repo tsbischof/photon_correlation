@@ -274,6 +274,8 @@ int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 
 	correlation = allocate_t2_correlation(options);
 
+	debug("Correlating in start-stop mode.\n");
+
 	if ( correlation == NULL ) {
 		error("Could not allocate t2 correlation.\n");
 		return(-1);

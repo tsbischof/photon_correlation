@@ -15,10 +15,10 @@
 option_t all_options[] = {
 	{'h', "h", "help", 
 			"Prints this usage message."},
-	{'V', "V", "verbose", 
-			"Print debug-level information."},
 	{'v', "v", "version",
 			"Print version information."},
+	{'V', "V", "verbose", 
+			"Print debug-level information."},
 	{'p', "p:", "print-every", 
 			"Print a status message every n entries.\n"
 			"By default, nothing is printed."},
@@ -237,6 +237,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 
 	if ( is_option(OPT_START_STOP, program_options)
 		&& ! result
+		&& options->start_stop
 		&& (options->channels != 2 || 
 			options->order != 2 || options->mode != MODE_T2 ) ) {
 		error("Start-stop mode is only well-defined for 2 channels,"
