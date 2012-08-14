@@ -19,6 +19,13 @@ int str_to_limits(char *str, limits_t *limits) {
 	result = sscanf(str, "%lf,%d,%lf", &(limits->lower), &(limits->bins),
 				&(limits->upper));
 
+	if ( result != 3 ) {
+		error("Limits could not be parsed: %s.\n"
+				"The correct format is lower,bins,upper (no spaces).\n",
+				str);
+		return(-1);
+	}
+
 	if ( limits->lower >= limits->upper ) {
 		error("Lower limit must be less than upper limit "
 				"(%lf, %lf specified)\n", limits->lower, limits->upper);
@@ -27,12 +34,6 @@ int str_to_limits(char *str, limits_t *limits) {
 
 	if ( limits->bins <= 0 ) {
 		error("Must have at least one bin.\n");
-		return(-1);
-	}
-
-	if( result != 3 ) {
-		error("Limits could not be parsed: %s.\n"
-				"The correct format is lower,bins,upper (no spaces).\n");
 		return(-1);
 	}
 
