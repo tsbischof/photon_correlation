@@ -32,7 +32,7 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index);
  * to produce all photons in consecutive 50ms windows.
  */
 typedef struct {
-	limits_t limits;
+	window_t limits;
 	long long int width;
 } t3_window_t;
 

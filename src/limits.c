@@ -16,12 +16,12 @@ int str_to_limits(char *str, limits_t *limits) {
 		return(-1);
 	}
 
-	result = sscanf(str, "%lld,%d,%lld", &(limits->lower), &(limits->bins),
+	result = sscanf(str, "%lf,%d,%lf", &(limits->lower), &(limits->bins),
 				&(limits->upper));
 
 	if ( limits->lower >= limits->upper ) {
 		error("Lower limit must be less than upper limit "
-				"(%lld, %lld specified)\n", limits->lower, limits->upper);
+				"(%lf, %lf specified)\n", limits->lower, limits->upper);
 		return(-1);
 	}
 

@@ -8,8 +8,13 @@
 
 typedef struct {
 	long long int lower;
-	int bins;
 	long long int upper;
+} window_t;
+
+typedef struct {
+	double lower;
+	int bins;
+	double upper;
 } limits_t;
 
 int str_to_limits(char *str, limits_t *limits);

@@ -115,7 +115,6 @@ void init_t2_window(t2_window_t *window,
 		window->limits.lower = start_time;
 	}
 
-	window->limits.bins = 1;
 	window->limits.upper = options->bin_width*
 			((int)floor(window->limits.lower/options->bin_width)+1);
 	window->width = options->bin_width;

@@ -68,7 +68,6 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index) {
  */
 void init_t3_window(t3_window_t *window, options_t *options) {
 	window->limits.lower = 0;
-	window->limits.bins = 1;
 	window->limits.upper = options->bin_width;
 	window->width = options->bin_width;
 }

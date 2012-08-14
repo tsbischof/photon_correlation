@@ -91,11 +91,11 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 	double width;
 
 	if ( scale == SCALE_LINEAR ) {
-		lower = (double)limits->lower;
-		upper = (double)limits->upper;
+		lower = limits->lower;
+		upper = limits->upper;
 		bins = (double)limits->bins;
 		width = (upper - lower)/bins;
-		debug("Edges have linear scale: (%lld, %d, %lld).\n",
+		debug("Edges have linear scale: (%lf, %d, %lf).\n",
 				limits->lower, limits->bins, limits->upper);
 
 		for ( i = 0; i <= limits->bins; i++ ) {
@@ -112,8 +112,8 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 			error("Limits for a log scale histogram must be at least zero.\n");
 			return(-1);
 		} else {
-			lower = log((double)limits->lower);
-			upper = log((double)limits->upper);
+			lower = log(limits->lower);
+			upper = log(limits->upper);
 			bins = (double)limits->bins;
 			width = (upper - lower)/bins;
 			debug("Log-scale bin width: %lf\n", width);
@@ -127,20 +127,20 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 		}
 	} else {
 		error("Could not create edges from the limits provided: "
-				"(%lld, %d, %lld)\n", 
+				"(%lf, %d, %lf)\n", 
 				limits->lower, limits->bins, limits->upper);
 		return(-1);
 	}
 
-	if ( round(edges->bin_edges[0]) != (double)limits->lower ||
-			round(edges->bin_edges[edges->n_bins]) != (double)limits->upper ) {
+	if ( edges->bin_edges[0] != limits->lower ||
+			edges->bin_edges[edges->n_bins] != limits->upper ) {
 		if ( round(edges->bin_edges[0]) == 0
 				&& round(edges->bin_edges[edges->n_bins]) == limits->upper
 				&& scale == SCALE_LOG_ZERO ) {
 			; /* Fine, we have the correct limits. */
 		} else {
 			error("Calculated bins' limits do not match the ones specified. "
-					"Got (%.0lf, %.0lf) from (%lld, %lld).\n", 
+					"Got (%lf, %lf) from (%lf, %lf).\n", 
 					edges->bin_edges[0], edges->bin_edges[edges->n_bins],
 					limits->lower, limits->upper);
 			return(-1);
