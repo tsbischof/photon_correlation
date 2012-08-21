@@ -71,7 +71,7 @@ def time_dependent_g2(filename, channels, bin_width, time_limits):
     while not done:
         if not photons:
             if getpass.getuser() == "rcorrea":
-                histogram_name = "{0}.g1.{1:08d}".format(
+                histogram_name = "{0}.g2.{1:08d}".format(
                     filename,
                     histogram_index)
             else:

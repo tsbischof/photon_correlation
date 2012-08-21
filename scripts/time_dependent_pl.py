@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_option("-w", "--bin-width", dest="bin_width",
                       help="Set the bin width for the intensity run, "
                            "in pulses.",
-                      action="store", type=float, default=50)
+                      action="store", type=int, default=50)
     parser.add_option("-c", "--channels", dest="channels",
                       help="Number of channels in the data. The default is 2.",
                       action="store", type=int, default=2)
