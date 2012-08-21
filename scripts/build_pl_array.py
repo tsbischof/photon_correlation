@@ -64,8 +64,13 @@ def gather_histograms(name_base, strip_autocorrelations):
     dst_filename = "{0}.run".format(name)
 
     logging.debug("Writing data to {0}".format(dst_filename))
+
+    try:
+        first = filenames[0]
+    except:
+        logging.error("No files to process for {0}.".format(name_base))
+        return(False)
     
-    first = filenames[0]
     with open(dst_filename, "w") as dst_file:
         writer = csv.writer(dst_file)
         for filename in filenames:
@@ -75,7 +80,7 @@ def gather_histograms(name_base, strip_autocorrelations):
             row = list(map(operator.itemgetter(-1), data))
 
             if filename == first:
-                for i in range(len(data[0])-3):
+                for i in range(len(data[0])-1):
                     writer.writerow([""] + list(map(operator.itemgetter(i),
                                                       data)))
 
@@ -83,7 +88,7 @@ def gather_histograms(name_base, strip_autocorrelations):
         
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+##    logging.basicConfig(level=logging.DEBUG)
     
     usage = "build_pl_array.py name_base"
 
