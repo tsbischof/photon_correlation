@@ -1,39 +1,51 @@
 Thomas Bischof
 tbischof@mit.edu
 
-There are three distinct executables covered by this project. What follows is a brief outline of their purposes, and the methods used to achieve those goals.
+-------- General outline ----------
+The tools produced in this package are designed to perform a number of tasks 
+related to calculation of photon correlation functions. The rough procedure 
+is as follows:
+(1) Generate photon arrival time data.
+(2) Correlate photons to the desired order.
+(3) Group the correlation events into histogram bins related to time delays.
 
-------- General principles ----------------
-These executables all:
-- operate on file streams (FILE type)
-- take stdin and stdout by default, but can work with named files
-- assume Picoquant-type data (histogram bins, or photons tagged with time)
+(1) is achieved in one of two ways. Given binary data from a Picoquant device,
+the executable picoquant can produce the photon data in a standardized format:
+t2 mode:
+channel (int), time (int) \n
 
-------------- Picoquant -------------------
-This is a filter for processing data from Picoquant timing hardware, such as the TimeHarp, PicoHarp, and HydraHarp. Each of these has modes for histogramming correlation data or recording the arrival times of individual counts, in modes that generally fall into these formats:
-1. Interactive mode. A vector of counts, with information which allows the recreation of the bins those counts correspond to.
-2. T2 mode. The absolute arrival time of a count is recorded, along with overflows of the internal clock.
-3. T3 mode. A sync source is used, and all count arrivals are tagged with the sync number and the time relative to that sync.
+t3 mode:
+channel (int), pulse number (int), time (int) \n
 
-All modes have some binary header, and this can be output as ascii by use of the flag --header-only. This frees the standard output to be entirely comprised of data.
+The executable supports a number of Picoquant models and versions (pass --help)
+as a flag to see a list.
 
-The interactive mode needs little standard analysis, and the filter exists to turn the binary data into a csv format with: 
-curve number, left edge of bin, counts for the bin
+All further processing relies on this format for photon data, so any process
+which produces ascii photons in this format is suitable. 
 
-The t2 and t3 modes are highly related, and we often want to perform analysis to determine various correlations of the data. For this filter, we therefore output a stream of values associated with the records:
-t2:
-channel number, time since start of collection
+(2) is achieved by the correlate executable. This takes in photon data, and
+finds the appropriate number of photons for a correlation of nth order. The 
+output from this looks like:
+channel 0, channel 1, delay 1, delay 2, ... counts \n
+but the exact specification depends on the order and mode specified.
 
-t3:
-channel number, sync number, time since sync
+(3) is achieved by the histogram exectuable.
 
-As a general outline, processing of a file goes like:
-1. Read in main picoquant header and determine the board type.
-2. Read the main header for the board, and determine the measurement type.
-3. Read the measurement header.
-4. Either output the header information or the data, depending on the type of run.
 
---------------- Correlate -----------------
---------------- Histogram -----------------
---------------- Intensity -----------------
--------------- Bin Intensity --------------
+
+In addition to these basic processes, there are tools for dealing with wayward
+data:
+- picoquant t3 data can be converted to t2 data by passing --to-t2. See the 
+  executable documentation for details
+- channels can be used to suppress photons arriving on a channel, or to add
+  a time (pulse) offset to the result
+- t3_as_t2 removes the time information from t3 data, leaving just the pulse 
+  information. This makes the photon look like a t2 photon
+
+-------- Compilation ----------
+The code here is written in C99, and has no external dependencies outside the
+standard C library. It has been tested on both 32-bit and 64-bit Linux 
+(openSUSE) with GCC, and can hopefully be compiled using the provided Makefile.
+
+
+-------- Program structure --------

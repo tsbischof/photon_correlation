@@ -8,13 +8,9 @@
 
 int main(int argc, char *argv[]) {
 	/* This software is designed to read in Picoquant data files and
-	 * translate them to ascii or other useful formats. It is a filter in
-	 * the Unix sense, in that it is designed to accept a stream of raw data
-	 * and output a stream of the minimally-processed data.
-	 * 
-	 * These file processing tools can also be used to build custom tools 
-	 * for working with this data, such as gpu-enabled correlators or 
-	 * wrappers for the data to other programming languages.
+	 * translate them to well-defined ascii and binary formats. It acts
+	 * as a filter in the Unix sense, in that it is designed to accept a
+	 * stream of raw data and output a stream of processed data.
 	 */
 	options_t options;
 
