@@ -53,8 +53,9 @@ def get_data(filename, strip_autocorrelations):
                 else:
                     yield(line)
             else:
-                logging.debug("File type not recognized.")
-                break
+                # gn, so in principle we should deal with the autocorrelations,
+                # but we will not here
+                yield(line)
 
 def gather_histograms(name_base, strip_autocorrelations, as_user):
     filenames = list(get_filenames(name_base, as_user))
