@@ -126,7 +126,15 @@ option_t all_options[] = {
 			"represented, even if the offset is 0."},
 	{'s', "s:", "suppress",
 			"A comma-delmited list of channels to remove\n"
-			"from the stream."}
+			"from the stream."},
+	{'B', "B", "approximate",
+			"Approximate the true autocorrelation by \n"
+			"only sampling a fraction of the possible delays\n"
+			"associated with a histogram bin."},
+	{'C', "C", "true-correlation",
+			"Rather than calculating the autocorrelation\n"
+			"to match the photon autocorrelation, calculate\n"
+			"it for the standard signal definition."}
 	};
 
 void default_options(options_t *options) {
@@ -136,7 +144,9 @@ void default_options(options_t *options) {
 	options->mode_string = NULL;
 	options->mode = MODE_UNKNOWN;
 
-	options->channels = 2;
+	if ( options->channels != 1 ) {
+		options->channels = 2;
+	}
 
 	options->order = 2;
 	
@@ -179,6 +189,9 @@ void default_options(options_t *options) {
 	options->offset_channels = 0;
 	options->offsets_string = NULL;
 	options->channel_offsets = NULL;
+
+	options->approximate = 0;
+	options->true_autocorrelation = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {

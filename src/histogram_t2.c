@@ -70,7 +70,7 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	} else {
 		/* Loop through the data. 
 		 */
-		while ( !(result = next_t2_correlated(in_stream, record, options)) ) {
+		while ( !(next_t2_correlated(in_stream, record, options)) ) {
 			if ( verbose ) {
 				fprintf(out_stream, "Found record: %d", record->ref_channel);
 				for ( i = 0; i < options->order-1; i++ ) {
@@ -88,6 +88,8 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
 		print_t2_histograms(out_stream, histograms);
+	} else {
+		printf("%d\n", result);
 	}
 
 	/* Clean up memory. */

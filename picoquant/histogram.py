@@ -114,7 +114,7 @@ class HistogramBin(object):
         if string:
             self.from_string(string)
         else:
-            self.correlation = correlation
+            self._correlation = correlation
             self._bins = bins
             self._string = string
 
@@ -141,6 +141,7 @@ class HistogramBin(object):
         self.ref_channel = int(line[0])
         self.counts = int(line[-1])
         self._bins = tuple(get_bins(line[1:-1], self.mode))
+        self._correlation = None
         return(self)
 
     def __str__(self):

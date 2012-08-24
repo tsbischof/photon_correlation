@@ -72,6 +72,10 @@ typedef struct {
 	int offset_channels;
 	char *offsets_string;
 	long long int *channel_offsets;
+
+/* correlate_vector */
+	int approximate;
+	int true_autocorrelation;
 } options_t;
 
 typedef struct {
@@ -93,7 +97,8 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
-		OPT_OFFSETS, OPT_SUPPRESS };
+		OPT_OFFSETS, OPT_SUPPRESS,
+		OPT_APPROXIMATE, OPT_TRUE_CORRELATION };
 
 void default_options(options_t *options);
 int validate_options(program_options_t *program_options, options_t *options);
