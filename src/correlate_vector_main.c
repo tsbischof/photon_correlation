@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		10,
+		11,
 "This program performs the autocorrelation to nth order of a signal with\n"
 "float intensity. It outputs the raw correlation and the terms required to\n"
 "normalize it.\n",
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_ORDER, OPT_PRINT_EVERY,
 			OPT_TIME, OPT_TIME_SCALE, 
-			OPT_APPROXIMATE}};
+			OPT_APPROXIMATE, OPT_TRUE_CORRELATION}};
 
 	
 	result = parse_options(argc, argv, &options, &program_options);
