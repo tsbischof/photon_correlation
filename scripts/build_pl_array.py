@@ -48,7 +48,8 @@ def get_data(filename, strip_autocorrelations):
                 # g2
                 channel_0, channel_1, bin_left, bin_right, counts =\
                            line
-                if strip_autocorrelations and channel_0 == channel_1:
+                if strip_autocorrelations and not (
+                      channel_0 == "0" and channel_1 == "1"):
                     pass
                 else:
                     yield(line)
