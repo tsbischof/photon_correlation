@@ -7,6 +7,7 @@ General:
 -remove the clunkier debug messages.
 -check that all references to the channel are to _signed_ int
 -offsets: create a program to add an offset to all photons in a stream, based on their channels, while keeping the stream in tempoeral order.
+-byte alignment seems to be an issue. Would it be worthwhile to take advantage of all of the nice int32-type definitions to create properly platform-independent code? 
 
 Scripts:
 -plotting for t3 mode correlation
