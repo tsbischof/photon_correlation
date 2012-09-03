@@ -26,8 +26,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			options->suppressed_channels[record.channel]) {
 			;
 		} else {
-			print_t2(out_stream, &record);
-			printf("\n");
+			print_t2(out_stream, &record, options);
 		}
 	}
 
@@ -42,8 +41,7 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 			options->suppressed_channels[record.channel]) {
 			;
 		} else {
-			print_t3(out_stream, &record);
-			printf("\n");
+			print_t3(out_stream, &record, options);
 		}
 	}
 

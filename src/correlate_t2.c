@@ -91,7 +91,7 @@ int next_t2_queue_correlate(FILE *in_stream,
 			queue->right_index += 1;
 			ending_index = queue->right_index % queue->length;
 
-			if ( next_t2(in_stream, &(queue->queue[ending_index]))
+			if ( next_t2(in_stream, &(queue->queue[ending_index]), options)
 					&& ! feof(in_stream) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
@@ -284,7 +284,7 @@ int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 	correlation->channels[0] = 0;
 	correlation->channels[1] = 1;
 
-	while ( ! next_t2(in_stream, &record) ) {
+	while ( ! next_t2(in_stream, &record, options) ) {
 		if ( record.channel == 0 ) {
 			ref_photon.channel = record.channel;
 			ref_photon.time = record.time;
