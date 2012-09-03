@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		10,
+		11,
 "This program performs some basic manipulations of tttr data. This includes\n"
 "suppression of channel data (removal of all such photons from a stream)\n"
 "and addition of a constant offset to particular channels.\n",
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE,
 			OPT_BINARY_IN, OPT_BINARY_OUT,
-			OPT_OFFSETS, OPT_SUPPRESS
+			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, OPT_SUPPRESS
 			}};
 
 	result += parse_options(argc, argv, &options, &program_options);

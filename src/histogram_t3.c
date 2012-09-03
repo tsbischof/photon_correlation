@@ -67,7 +67,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	}
 
 	/* Follow the stream and perform the histogramming. */
-	while ( !result && !next_t3(in_stream, &record) ) {
+	while ( !result && !next_t3(in_stream, &record, options) ) {
 		debug("Record: %d,%lld,%d\n", record.channel, record.pulse_number,
 				record.time);
 		values[0] = record.time;

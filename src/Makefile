@@ -98,7 +98,7 @@ ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
 CHANNELS_OBJ = channels_main.o ${UTIL} \
-		channels.o
+		channels.o channels_t2.o channels_t3.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}

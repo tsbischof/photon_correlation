@@ -2,25 +2,44 @@
 #include <stdlib.h>
 
 #include "t3.h"
+#include "error.h"
 
-int next_t3(FILE *in_stream, t3_t *record) {
+int next_t3(FILE *in_stream, t3_t *record, options_t *options) {
 	int result;
 
-	result = fscanf(in_stream, "%d,%lld,%u",
-			&(record->channel),
-			&(record->pulse_number),
-			&(record->time));
+	if ( options->binary_in ) {
+		result = ( fread(record, sizeof(t3_t), 1, in_stream) != 1);
+	} else {
+		result = ( fscanf(in_stream, "%d,%lld,%u",
+				&(record->channel),
+				&(record->pulse_number),
+				&(record->time)) != 3 );
+	}
 	
-	return(result != 3);
+	return(result);
 }
 
-void print_t3(FILE *out_stream, t3_t *record) {
-	fprintf(out_stream, "%d,%lld,%u", 
-			record->channel,
-			record->pulse_number,
-			record->time);
+void print_t3(FILE *out_stream, t3_t *record, options_t *options) {
+	if ( options->binary_out ) {
+		fwrite(record, sizeof(t3_t), 1, out_stream);
+	} else {
+		fprintf(out_stream, "%d,%lld,%u", 
+				record->channel,
+				record->pulse_number,
+				record->time);
+	}
 }
 
+int t3_comparator(const void *a, const void *b) {
+	/* The comparator needed for sorting a list of t3 photons. Follows the 
+     * standard of qsort (-1 sorted, 0 equal, 1 unsorted)
+	 */
+	if ( ((t3_t *)a)->pulse_number == ((t3_t *)b)->pulse_number ) {
+		return( ((t3_t *)a)->time - ((t3_t *)b)->time );
+	} else {
+		return( ((t3_t *)a)->pulse_number - ((t3_t *)b)->pulse_number);
+	}
+}
 
 t3_queue_t *allocate_t3_queue(int queue_length) {
 	int result = 0;
@@ -92,7 +111,7 @@ int next_t3_windowed(t3_windowed_stream_t *stream, t3_t *record,
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t3(stream->in_stream, &(stream->current_photon)) ) {
+		if ( next_t3(stream->in_stream, &(stream->current_photon), options) ) {
 			return(-1);
 		}
 	}

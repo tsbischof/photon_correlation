@@ -72,12 +72,7 @@ void pq_print_t2(FILE *out_stream, long long int count,
 	record.channel = channel;
 	record.time = base_time + (long long int)record_time;
 
-	if ( options->binary_out ) {
-		fwrite(&record, sizeof(t2_t), 1, out_stream);
-	} else {
-		fprintf(out_stream, "%d,%lld\n", record.channel, record.time);
-	}
-
+	print_t2(out_stream, &record, options);
 	fflush(out_stream);
 
 	print_status("picoquant", count, options);
