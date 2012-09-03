@@ -11,6 +11,7 @@ ifeq (${TARGET}, linux)
 	CP = cp -p
 	CC = cc
 	LD = cc
+	CFLAGS += -fPIC
 endif
 ifeq (${TARGET}, win)
 	# Windows!
@@ -33,7 +34,6 @@ CFLAGS += -DVERSION_MINOR=5
 # For use while debugging.
 #CFLAGS += -g -O0
 CFLAGS += -O3 
-CFLAGS += -fPIC
 CFLAGS += -lm
 CFLAGS += -fopenmp
 
