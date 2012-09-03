@@ -1,22 +1,17 @@
-TARGET ?= linux
-
-ntpath = ${subst /,\,$1}
+TARGET ?= linux32
 
 # Set up the compilers and whatnot
-ifeq (${TARGET}, linux)
-	# Linux!
+ifeq (${TARGET}, linux32)
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
 	CP = cp -p
 	CC = cc
 	LD = cc
-	CFLAGS += -fPIC
 endif
-ifeq (${TARGET}, win)
-	# Windows!
+ifeq (${TARGET}, win32)
 	MKDIR = mkdir
-	RM = del /Q 
+	RM = del /Q
 	CP = copy
 	CC = mingw32-gcc
 	LD = mingw32-gcc
@@ -34,6 +29,7 @@ CFLAGS += -DVERSION_MINOR=5
 # For use while debugging.
 #CFLAGS += -g -O0
 CFLAGS += -O3 
+CFLAGS += -fPIC
 CFLAGS += -lm
 CFLAGS += -fopenmp
 
@@ -102,7 +98,7 @@ ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
 CHANNELS_OBJ = channels_main.o ${UTIL} \
-		channels.o channels_t2.o channels_t3.o
+		channels.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
@@ -202,10 +198,6 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 
 
-FILES = ${sort ${TARGETS} ${ALL_OBJ} ${LIBTARGETS}}
-ifeq (${TARGET}, win)
-	FILES := ${subst /,\,${FILES}}
-endif
-
-clean:	
-	${RM} ${FILES}
+clean:
+	${RM} ${sort \
+		${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}
