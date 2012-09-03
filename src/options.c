@@ -120,9 +120,13 @@ option_t all_options[] = {
 			"           on a log axis)\n"
 			" log-zero: same as log, except that the lowest\n"
 			"           bin is extended to include 0"},
-	{'O', "O:", "offsets",
-			"A commona-delimited list of time/pulse offsets\n"
-			"to apply to the channels. All channels must be\n"
+	{'u', "u:", "time-offsets",
+			"A common-delimited list of time offsets to\n"
+			"apply to the channels. All channels must be\n"
+			"represented, even if the offset is 0."},
+	{'U', "U:", "pulse-offsets", 
+			"A comma-delimited list of pulse offsets to \n"
+			"apply to the channels. All channels must be\n"
 			"represented, even if the offset is 0."},
 	{'s', "s:", "suppress",
 			"A comma-delmited list of channels to remove\n"
@@ -186,9 +190,14 @@ void default_options(options_t *options) {
 	options->suppress_channels = 0;
 	options->suppress_string = NULL;
 	options->suppressed_channels = NULL;
-	options->offset_channels = 0;
-	options->offsets_string = NULL;
-	options->channel_offsets = NULL;
+
+	options->offset_time = 0;
+	options->time_offsets_string = NULL;
+	options->time_offsets = NULL;
+
+	options->offset_pulse = 0;
+	options->pulse_offsets_string = NULL;
+	options->pulse_offsets = NULL;
 
 	options->approximate = 0;
 	options->true_autocorrelation = 0;
@@ -198,7 +207,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 	int result = 0;
 
 	if ( options->binary_in || options->binary_out ) {
-		warn("Binary file mode not yet supported.\n");
+		warn("Binary file mode not yet completely supported.\n");
 	}
 
 	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
@@ -262,8 +271,10 @@ int validate_options(program_options_t *program_options, options_t *options) {
 		result += parse_suppress(options);
 	}
 
-	if ( is_option(OPT_OFFSETS, program_options) && ! result ) {
-		result += parse_offsets(options);
+	if ( (is_option(OPT_TIME_OFFSETS, program_options)
+			|| is_option(OPT_PULSE_OFFSETS, program_options))
+			 && ! result ) {
+		result += read_offsets(options);
 	}
 		
 	return(result);
@@ -320,7 +331,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"pulse-scale", required_argument, 0, 'Y'},
 
 /* Channels */
-		{"offsets", required_argument, 0, 'O'},
+		{"time-offsets", required_argument, 0, 'u'},
+		{"pulse-offsets", required_argument, 0, 'U'},
 		{"suppress", required_argument, 0, 's'},
 
 		{0, 0, 0, 0}};
@@ -425,9 +437,13 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->set_stop_time = 1;
 				options->stop_time = strtoll(optarg, NULL, 10);
 				break;
-			case 'O':
-				options->offset_channels = 1;
-				options->offsets_string = strdup(optarg);
+			case 'u':
+				options->offset_time = 1;
+				options->time_offsets_string = strdup(optarg);
+				break;
+			case 'U':
+				options->offset_pulse = 1;
+				options->pulse_offsets_string = strdup(optarg);
 				break;
 			case 's':
 				options->suppress_channels = 1;
@@ -505,8 +521,10 @@ void free_options(options_t *options) {
 	free(options->pulse_scale_string);
 	free(options->suppress_string);
 	free(options->suppressed_channels);
-	free(options->offsets_string);
-	free(options->channel_offsets);
+	free(options->time_offsets_string);
+	free(options->time_offsets);
+	free(options->pulse_offsets_string);
+	free(options->pulse_offsets);
 }
 
 char *get_options_string(program_options_t *program_options) {
@@ -528,38 +546,51 @@ char *get_options_string(program_options_t *program_options) {
 	return(strdup(buffer));
 }
 
-int parse_offsets(options_t *options) {
+int read_offsets(options_t *options) {
+	int result = 0;
+
+	if ( options->offset_time ) {
+		result += parse_offsets(options->time_offsets_string, 
+				options->time_offsets, options);
+	} 
+
+	if ( options->offset_pulse ) {
+		result += parse_offsets(options->pulse_offsets_string,
+				options->pulse_offsets, options);
+	}
+
+	return(result);
+}
+
+int parse_offsets(char *offsets_string, long long int *offsets, 
+		options_t *options) {
 	char *c;
 	int channel;
 
-	if ( options->offset_channels ) {
-		options->channel_offsets = (long long int *)malloc(
-				sizeof(long long int)*options->channels);
+	offsets = (long long int *)malloc(sizeof(long long int)*options->channels);
 
-		if ( options->channel_offsets == NULL ) {
-			error("Could not allocate memory for channel offsets\n");
-			return(-1);
-		}
-
-		c = strtok(options->offsets_string, ",");
-
-		for ( channel = 0; channel < options->channels; channel++ ) {
-			if ( c == NULL ) {
-				error("Not enough offsets specified (%d found)\n", channel);
-				return(-1);
-			} else {
-				options->channel_offsets[channel] = strtoll(c, NULL, 10);
-				debug("Offset for channel %d: %lld\n",
-						channel, options->channel_offsets[channel]);
-			}
-
-			c = strtok(NULL, ",");
-		}
-			
+	if ( offsets == NULL ) {
+		error("Could not allocate memory for offsets\n");
+		return(-1);
 	}
 
+	c = strtok(offsets_string, ",");
+
+	for ( channel = 0; channel < options->channels; channel++ ) {
+		if ( c == NULL ) {
+			error("Not enough offsets specified (%d found)\n", channel);
+			return(-1);
+		} else {
+			offsets[channel] = strtoll(c, NULL, 10);
+			debug("Offset for channel %d: %lld\n",
+					channel, offsets[channel]);
+		}
+
+		c = strtok(NULL, ",");
+	}
+		
 	return(0);
-} 
+}
 
 int parse_suppress(options_t *options) {
 	char *c;
@@ -600,5 +631,7 @@ int parse_suppress(options_t *options) {
 			c = strtok(NULL, ",");
 		}
 	}
+
 	return(0);
 }
+

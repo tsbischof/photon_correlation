@@ -9,7 +9,8 @@ typedef struct {
 	unsigned int counts;
 } intensity_t;
 
-int next_intensity(FILE *in_stream, intensity_t *intensity);
+int next_intensity(FILE *in_stream, intensity_t *intensity,
+		options_t *options);
 int intensity_to_t2(FILE *in_stream, FILE *out_stream, options_t *options);
 
 #endif

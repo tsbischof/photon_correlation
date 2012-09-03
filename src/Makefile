@@ -1,7 +1,10 @@
-TARGET ?= linux32
+TARGET ?= linux
+
+ntpath = ${subst /,\,$1}
 
 # Set up the compilers and whatnot
-ifeq (${TARGET}, linux32)
+ifeq (${TARGET}, linux)
+	# Linux!
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
@@ -9,9 +12,10 @@ ifeq (${TARGET}, linux32)
 	CC = cc
 	LD = cc
 endif
-ifeq (${TARGET}, win32)
+ifeq (${TARGET}, win)
+	# Windows!
 	MKDIR = mkdir
-	RM = del /Q
+	RM = del /Q 
 	CP = copy
 	CC = mingw32-gcc
 	LD = mingw32-gcc
@@ -98,7 +102,7 @@ ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
 CHANNELS_OBJ = channels_main.o ${UTIL} \
-		channels.o
+		channels.o channels_t2.o channels_t3.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
@@ -198,6 +202,10 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 
 
-clean:
-	${RM} ${sort \
-		${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}
+FILES = ${sort ${TARGETS} ${ALL_OBJ} ${LIBTARGETS}}
+ifeq (${TARGET}, win)
+	FILES := ${subst /,\,${FILES}}
+endif
+
+clean:	
+	${RM} ${FILES}

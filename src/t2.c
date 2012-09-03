@@ -4,20 +4,35 @@
 #include "error.h"
 #include "t2.h"
 
-int next_t2(FILE *in_stream, t2_t *record) {
+int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
 	int result;
 
-	result = fscanf(in_stream, "%d,%lld",
-			&(record->channel),
-			&(record->time));
+	if ( options->binary_in ) {
+		result = ( fread(record, sizeof(t2_t), 1, in_stream) != 1);
+	} else {
+		result = ( fscanf(in_stream, "%d,%lld",
+			 	&(record->channel),
+				&(record->time)) != 2);
+	}
 	
-	return(result != 2);
+	return(result);
 }
 
-void print_t2(FILE *out_stream, t2_t *record) {
-	fprintf(out_stream, "%d,%lld", 
-			record->channel,
-			record->time);
+void print_t2(FILE *out_stream, t2_t *record, options_t *options) {
+	if ( options->binary_out ) {
+		fwrite(record, sizeof(t2_t), 1, out_stream);
+	} else {
+		fprintf(out_stream, "%d,%lld\n", 
+				record->channel,
+				record->time);
+	}
+}
+
+int t2_comparator(const void *a, const void *b) {
+	/* Comparator to be used with standard sorting algorithms to sort
+	 * t2 photons. Yields 1 for sorted, 0 for equal, and -1 for reversed.
+     */
+	return(((t2_t *)a)->time < ((t2_t *)b)->time);
 }
 
 t2_queue_t *allocate_t2_queue(int queue_length) {
@@ -70,7 +85,7 @@ int next_t2_queue(FILE *in_stream,
 			queue->right_index += 1;
 			ending_index = queue->right_index % queue->length;
 			
-			if ( ! next_t2(in_stream, &(queue->queue[ending_index])) 
+			if ( ! next_t2(in_stream, &(queue->queue[ending_index]), options) 
 					&& ! feof(in_stream) ) {
 				/* Failed to read a photon. We have already checked that we
  				 * we are not at the end of the stream, so we have a read
@@ -141,7 +156,7 @@ int init_t2_windowed_stream(t2_windowed_stream_t *stream,
 	stream->yielded_photon = 0;
 	stream->in_stream = in_stream;
 
-	if ( next_t2(in_stream, &(stream->current_photon) )) {
+	if ( next_t2(in_stream, &(stream->current_photon), options) ) {
 		return(-1);
 	} else {
 		init_t2_window(&(stream->window), stream->current_photon.time, options);
@@ -158,7 +173,7 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t2(stream->in_stream, &(stream->current_photon)) ) {
+		if ( next_t2(stream->in_stream, &(stream->current_photon), options) ) {
 			return(-1);
 		}
 	}

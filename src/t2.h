@@ -16,8 +16,9 @@ typedef struct {
 	t2_t *queue;
 } t2_queue_t;
 
-int next_t2(FILE *in_stream, t2_t *record);
-void print_t2(FILE *out_stream, t2_t *record);
+int next_t2(FILE *in_stream, t2_t *record, options_t *options);
+void print_t2(FILE *out_stream, t2_t *record, options_t *options);
+int t2_comparator(const void *a, const void *b);
 
 t2_queue_t *allocate_t2_queue(int queue_length);
 int next_t2_queue(FILE *in_stream,

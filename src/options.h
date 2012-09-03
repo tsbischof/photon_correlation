@@ -69,9 +69,13 @@ typedef struct {
 	char *suppress_string;
 	int *suppressed_channels;
 
-	int offset_channels;
-	char *offsets_string;
-	long long int *channel_offsets;
+	int offset_time;
+	char *time_offsets_string;
+	long long int *time_offsets;
+
+	int offset_pulse;
+	char *pulse_offsets_string;
+	long long int *pulse_offsets;
 
 /* correlate_vector */
 	int approximate;
@@ -85,7 +89,7 @@ typedef struct {
 } program_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
-		 OPT_VERBOSE, OPT_PRINT_EVERY,
+		OPT_VERBOSE, OPT_PRINT_EVERY,
 		OPT_FILE_IN, OPT_FILE_OUT,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 		OPT_BINARY_IN, OPT_BINARY_OUT,
@@ -97,7 +101,8 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
-		OPT_OFFSETS, OPT_SUPPRESS,
+		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
+		OPT_SUPPRESS,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION };
 
 void default_options(options_t *options);
@@ -113,7 +118,9 @@ char *make_option_string(program_options_t *program_options);
 void free_options(options_t *options);
 char *get_options_string(program_options_t *program_options);
 
-int parse_offsets(options_t *options);
+int read_offsets(options_t *options);
+int parse_offsets(char *offsets_string, long long int *offsets,
+		options_t *options);
 int parse_suppress(options_t *options);
 
 #endif
