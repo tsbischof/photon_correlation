@@ -10,7 +10,11 @@ int next_t3(FILE *in_stream, t3_t *record, options_t *options) {
 	if ( options->binary_in ) {
 		result = ( fread(record, sizeof(t3_t), 1, in_stream) != 1);
 	} else {
+<<<<<<< HEAD
 		result = ( fscanf(in_stream, "%d,%lld,%u",
+=======
+		result = ( fscanf(in_stream, "%d,%lld,%d",
+>>>>>>> 6db0155ce7cde323c46ce2e2f2f16e273f89ebc7
 				&(record->channel),
 				&(record->pulse_number),
 				&(record->time)) != 3 );

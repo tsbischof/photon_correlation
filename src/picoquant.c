@@ -20,6 +20,7 @@ int pq_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Do the actual work, if we have no errors. */
 	result = pq_header_read(in_stream, &pq_header);
+
 	if ( result ) {
 		error("Could not read string header.\n");
 	} else {

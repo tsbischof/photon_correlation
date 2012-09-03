@@ -8,6 +8,7 @@ ifeq (${TARGET}, linux32)
 	CP = cp -p
 	CC = cc
 	LD = cc
+	CFLAGS += -fPIC
 endif
 ifeq (${TARGET}, win32)
 	MKDIR = mkdir
@@ -17,7 +18,7 @@ ifeq (${TARGET}, win32)
 	LD = mingw32-gcc
 endif
 
-CFLAGS = -Wall 
+CFLAGS += -Wall 
 CFLAGS += -std=c99
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
 # errors if not adjusted, so fix it here as needed. This should not (in 
@@ -29,7 +30,6 @@ CFLAGS += -DVERSION_MINOR=5
 # For use while debugging.
 #CFLAGS += -g -O0
 CFLAGS += -O3 
-CFLAGS += -fPIC
 CFLAGS += -lm
 CFLAGS += -fopenmp
 
