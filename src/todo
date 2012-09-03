@@ -6,7 +6,12 @@ General:
 -do a better job of detecting mode mismatch 
 -remove the clunkier debug messages.
 -check that all references to the channel are to _signed_ int
+<<<<<<< HEAD
 -change t3 to pulse, from pulse_number
+=======
+-offsets: create a program to add an offset to all photons in a stream, based on their channels, while keeping the stream in tempoeral order.
+-byte alignment seems to be an issue. Would it be worthwhile to take advantage of all of the nice int32-type definitions to create properly platform-independent code? 
+>>>>>>> 733ddc59b3124f4f5aa2306ff4732d09b29b406d
 
 Scripts:
 -plotting for t3 mode correlation
