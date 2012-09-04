@@ -18,6 +18,8 @@ int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
 	return(result);
 }
 
+#include <stdint.h>
+#include <inttypes.h>
 void print_t2(FILE *out_stream, t2_t *record, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t2_t), 1, out_stream);

@@ -74,8 +74,6 @@ void pq_print_t2(FILE *out_stream, long long count,
 	record.time = base_time + (long long)record_time;
 
 	print_t2(out_stream, &record, options);
-	fflush(out_stream);
-
 	print_status("picoquant", count, options);
 }
 
@@ -90,15 +88,7 @@ void pq_print_t3(FILE *out_stream, long long count,
 	record.pulse_number = base_nsync + (long long)record_nsync;
 	record.time = record_dtime;
 
-	if ( options->binary_out ) {
-		fwrite(&record, sizeof(t3_t), 1, out_stream);
-	} else {
-		fprintf(out_stream, "%d,%lld,%u\n",
-				record.channel, record.pulse_number, record.time);
-	}
-
-	fflush(out_stream);
-	
+	print_t3(out_stream, &record, options);
 	print_status("picoquant", count, options);
 }
 

@@ -23,7 +23,7 @@ void print_t3(FILE *out_stream, t3_t *record, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%d,%lld,%u", 
+		fprintf(out_stream, "%d,%lld,%d\n", 
 				record->channel,
 				record->pulse_number,
 				record->time);
