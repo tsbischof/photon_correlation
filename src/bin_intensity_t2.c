@@ -70,8 +70,8 @@ t2_counts_t *allocate_t2_counts(int channels, options_t *options) {
 		}
 
 		for ( i = 0; !result && i < options->time_limits.bins; i++ ) {
-			counts->bin_counts[i].counts = (long long int *)malloc(
-					sizeof(long long int)*options->channels);
+			counts->bin_counts[i].counts = (long long *)malloc(
+					sizeof(long long)*options->channels);
 
 			if ( counts->bin_counts[i].counts == NULL ) {
 				result = -1;

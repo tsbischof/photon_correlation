@@ -7,8 +7,8 @@
 #define SCALE_LOG_ZERO 3
 
 typedef struct {
-	long long int lower;
-	long long int upper;
+	long long lower;
+	long long upper;
 } window_t;
 
 typedef struct {

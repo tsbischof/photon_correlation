@@ -42,7 +42,7 @@ void warn(char *message, ...) {
 	fflush(stderr);
 }
 
-void print_status(char *name, long long int count, options_t *options) {
+void print_status(char *name, long long count, options_t *options) {
 	time_t rawtime;
 	struct tm *timeinfo;
 	char fmttime[80];

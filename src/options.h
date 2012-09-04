@@ -31,27 +31,27 @@ typedef struct {
 	int binary_out;
 
 /* Picoquant */
-	long long int number;
+	long long number;
 	int print_header;
 	int print_resolution;
 	int to_t2;
 
 /* Correlate */
-	long long int queue_size;
-	long long int max_time_distance;
-	long long int min_time_distance;
-	long long int max_pulse_distance;
-	long long int min_pulse_distance;
+	long long queue_size;
+	long long max_time_distance;
+	long long min_time_distance;
+	long long max_pulse_distance;
+	long long min_pulse_distance;
 	int positive_only;
 	int start_stop;
 
 /* Intensity */
-	long long int bin_width;
+	long long bin_width;
 	int count_all;
 	int set_start_time;
-	long long int start_time;
+	long long start_time;
 	int set_stop_time;
-	long long int stop_time;
+	long long stop_time;
 
 /* Histogram */
 	char *time_string;
@@ -71,11 +71,11 @@ typedef struct {
 
 	int offset_time;
 	char *time_offsets_string;
-	long long int *time_offsets;
+	long long *time_offsets;
 
 	int offset_pulse;
 	char *pulse_offsets_string;
-	long long int *pulse_offsets;
+	long long *pulse_offsets;
 
 /* correlate_vector */
 	int approximate;
@@ -119,7 +119,7 @@ void free_options(options_t *options);
 char *get_options_string(program_options_t *program_options);
 
 int read_offsets(options_t *options);
-int parse_offsets(char *offsets_string, long long int *offsets,
+int parse_offsets(char *offsets_string, long long *offsets,
 		options_t *options);
 int parse_suppress(options_t *options);
 

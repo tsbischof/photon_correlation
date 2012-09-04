@@ -33,8 +33,8 @@ counts_t *allocate_counts(int channels) {
 		result = -1;
 	} else {
 		counts->channels = channels;
-		counts->counts = (long long int *)malloc(
-				sizeof(long long int)*channels);
+		counts->counts = (long long *)malloc(
+				sizeof(long long)*channels);
 		if ( counts->counts == NULL ) {
 			result = -1;
 		}
@@ -73,8 +73,8 @@ int increment_counts(counts_t *counts, int channel) {
 	}
 }
 
-void print_counts(FILE *out_stream, long long int lower_time,
-		long long int upper_time,  counts_t *counts) {
+void print_counts(FILE *out_stream, long long lower_time,
+		long long upper_time,  counts_t *counts) {
 	int i;
 
 	fprintf(out_stream, "%lld,%lld,", lower_time, upper_time);

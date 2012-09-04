@@ -59,36 +59,10 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
  *       exceeded sufficiently to emit photons, then yields those photons.
  */
 
-<<<<<<< HEAD
 int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		photon, photon_comparator) { 
 	int index;
-=======
-	while ( ! next_t2(in_stream, &record) ) {
-		if ( options->suppress_channels && 
-			options->suppressed_channels[record.channel]) {
-			;
-		} else {
-			print_t2(out_stream, &record, options);
-		}
-	}
-
-	return(0);
-}
-
-int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
-	t3_t record;
 	
-	while ( ! next_t3(in_stream, &record) ) {
-		if ( options->suppress_channels && 
-			options->suppressed_channels[record.channel]) {
-			;
-		} else {
-			print_t3(out_stream, &record, options);
-		}
-	}
->>>>>>> 6db0155ce7cde323c46ce2e2f2f16e273f89ebc7
-
 	index = bsearch(photon_stream->photons, photon, photon_comparator);
 	if not valid_index:
  		return(-1);

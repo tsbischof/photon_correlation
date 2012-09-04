@@ -5,7 +5,7 @@
 #include "options.h"
 
 typedef struct {
-	long long int time;
+	long long time;
 	unsigned int counts;
 } intensity_t;
 

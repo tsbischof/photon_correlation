@@ -20,7 +20,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	gn_histogram_t **histograms = NULL;
 	edges_t **edges = NULL;
 	t3_t record;
-	long long int values[1];
+	long long values[1];
 
 	debug("Allocating memory for the histograms and edges.\n");
 	histograms = (gn_histogram_t **)malloc(sizeof(gn_histogram_t *)*
@@ -230,8 +230,8 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
 
-		histograms->current_values = (long long int *)malloc(
-				sizeof(long long int)*2*(histograms->order-1));
+		histograms->current_values = (long long *)malloc(
+				sizeof(long long)*2*(histograms->order-1));
 
 		histograms->histograms = (gn_histogram_t **)malloc(
 				sizeof(gn_histogram_t *)*histograms->n_histograms);

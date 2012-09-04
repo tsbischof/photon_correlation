@@ -303,14 +303,14 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 	 */
 
 	int result;
-	long long int record_count = 0;
+	long long record_count = 0;
 	int overflows = 0;
 	ph_v20_t2_record_t record;
 
 	/* Time based on the number of overflows, such that we do not need to
 	 * multiply each time we want to print the absolute time.
 	 */
-	long long int base_time = 0; 
+	long long base_time = 0; 
 
 	unsigned int resolution_int = (unsigned int)(PH_V20_BASE_RESOLUTION*1e12);
 
@@ -364,10 +364,10 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 		ph_v20_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 	int overflows = 0;
-	long long int record_count = 0;
+	long long record_count = 0;
 	ph_v20_t3_record_t record;
-	long long int base_nsync = 0;
-	long long sync_period = (long long int)(1e12/(double)tttr_header->InpRate0);
+	long long base_nsync = 0;
+	long long sync_period = (long long)(1e12/(double)tttr_header->InpRate0);
 	debug("Sync period: %lld\n", sync_period);
 	unsigned int resolution_int = (unsigned int)(
 			ph_header->Brd[0].Resolution*1e3);

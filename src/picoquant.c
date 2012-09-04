@@ -64,14 +64,14 @@ void pq_header_print(FILE *out_stream, pq_header_t *pq_header) {
 	fprintf(out_stream, "FormatVersion = %s\n", pq_header->FormatVersion);
 }
 
-void pq_print_t2(FILE *out_stream, long long int count,
+void pq_print_t2(FILE *out_stream, long long count,
 		int channel, 
-		long long int base_time, unsigned int record_time,
+		long long base_time, unsigned int record_time,
 		options_t *options) {
 	t2_t record;
 
 	record.channel = channel;
-	record.time = base_time + (long long int)record_time;
+	record.time = base_time + (long long)record_time;
 
 	print_t2(out_stream, &record, options);
 	fflush(out_stream);
@@ -79,15 +79,15 @@ void pq_print_t2(FILE *out_stream, long long int count,
 	print_status("picoquant", count, options);
 }
 
-void pq_print_t3(FILE *out_stream, long long int count,
+void pq_print_t3(FILE *out_stream, long long count,
 		int channel, 
-		long long int base_nsync, unsigned int record_nsync,
+		long long base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
 		options_t *options) {
 	t3_t record;
 
 	record.channel = channel;
-	record.pulse_number = base_nsync + (long long int)record_nsync;
+	record.pulse_number = base_nsync + (long long)record_nsync;
 	record.time = record_dtime;
 
 	if ( options->binary_out ) {
@@ -102,9 +102,9 @@ void pq_print_t3(FILE *out_stream, long long int count,
 	print_status("picoquant", count, options);
 }
 
-void pq_print_tttr(FILE *out_stream, long long int count,
+void pq_print_tttr(FILE *out_stream, long long count,
 		unsigned int histogram_channel, int n_histogram_channels,
-		long long int base_time, unsigned int record_time,
+		long long base_time, unsigned int record_time,
 		options_t *options) {
 	/* This attempts to make the tttr record look t3-like. It is actually a
  	 * record of a 0->1 stop-start event, found in the histogram channel
@@ -115,7 +115,7 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 
 	/* Channel is really 1, but we only have one data channel */
 	record.channel = 0;
-	record.pulse_number = base_time + (long long int)record_time;
+	record.pulse_number = base_time + (long long)record_time;
 
 	/* The histogram channels seem to count backwards, with an upper limit
 	 * of n_histogram_channels.

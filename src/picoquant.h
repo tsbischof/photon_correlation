@@ -32,18 +32,18 @@ pq_dispatch_t pq_get_dispatch(options_t *options, pq_header_t *pq_header);
 int pq_header_read(FILE *in_stream, pq_header_t *pq_header);
 void pq_header_print(FILE *out_stream, pq_header_t *pq_header);
 
-void pq_print_t2(FILE *out_stream, long long int count,
+void pq_print_t2(FILE *out_stream, long long count,
 		int channel, 
-		long long int base_time, unsigned int record_time,
+		long long base_time, unsigned int record_time,
 		options_t *options);
-void pq_print_t3(FILE *out_stream, long long int count,
+void pq_print_t3(FILE *out_stream, long long count,
 		int channel,
-		long long int base_nsync, unsigned int record_nsync,
+		long long base_nsync, unsigned int record_nsync,
 		unsigned int record_dtime,
 		options_t *options);
-void pq_print_tttr(FILE *out_stream, long long int count,
+void pq_print_tttr(FILE *out_stream, long long count,
 		unsigned int histogram_channel, int n_histogram_channels,
-		long long int base_time, unsigned int record_time,
+		long long base_time, unsigned int record_time,
 		options_t *options);
 void pq_print_interactive(FILE *out_stream, int curve, double left_time, 
 		double right_time, int counts, options_t *options);

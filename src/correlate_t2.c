@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "correlate_t2.h"
 
 #include "error.h"
@@ -9,7 +11,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	 * difference.
 	 */
 	int result = 0;
-	long long int record_number = 0;
+	long long record_number = 0;
 	int done = 0;
 	t2_queue_t *queue;
 	t2_t *correlation_block;
@@ -62,8 +64,8 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 int next_t2_queue_correlate(FILE *in_stream, 
 		t2_queue_t *queue, options_t *options) {
-	long long int starting_index;
-	long long int ending_index;
+	long long starting_index;
+	long long ending_index;
 
 	queue->left_index += 1;
 	starting_index = queue->left_index % queue->length;
@@ -123,9 +125,10 @@ int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 
 int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 	return( llabs(right->time - left->time) >= options->min_time_distance ) ;
+
 }
 
-int correlate_t2_block(FILE *out_stream, long long int *record_number,
+int correlate_t2_block(FILE *out_stream, long long *record_number,
 		t2_queue_t *queue, 
 		permutations_t *permutations,
 		offsets_t *offsets, t2_t *correlation_block, 
@@ -266,7 +269,7 @@ int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 		options_t *options) {
 	t2_t ref_photon;
 	t2_t record;
-	long long int record_number = 0;
+	long long record_number = 0;
 
 	t2_correlation_t *correlation;
 

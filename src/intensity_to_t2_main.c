@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	program_options_t program_options = {
 		6,
 "This program accepts intensity data of the form:\n"
-"      time (long long int), counts (unsigned int)\n"
+"      time (long long), counts (unsigned int)\n"
 "and outputs an equivalent t2 photon stream, tagged on some number\n"
 "of channels. By default, all photons are sent to channel 0, but \n"
 "if a finite number of channels is specified the photons are \n"

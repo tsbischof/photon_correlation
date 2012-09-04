@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "correlate_t3.h"
 
 #include "error.h"
@@ -15,7 +17,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	 */
 	int result = 0;
 	int done = 0;
-	long long int record_number = 0;
+	long long record_number = 0;
 	t3_queue_t *queue;
 	t3_t *correlation_block;
 	t3_correlation_t *correlation;
@@ -63,8 +65,8 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 int next_t3_queue_correlate(FILE *in_stream, 
 		t3_queue_t *queue, options_t *options) {
-	long long int starting_index;
-	long long int ending_index;
+	long long starting_index;
+	long long ending_index;
 
 	queue->left_index += 1;
 	starting_index = queue->left_index % queue->length;
@@ -129,7 +131,7 @@ int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 
 }
 
-int correlate_t3_block(FILE *out_stream, long long int *record_number,
+int correlate_t3_block(FILE *out_stream, long long *record_number,
 		t3_queue_t *queue,
 		permutations_t *permutations,
 		offsets_t *offsets, t3_t *correlation_block, 

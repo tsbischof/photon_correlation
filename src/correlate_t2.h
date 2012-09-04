@@ -7,7 +7,7 @@
 #include "t2.h"
 #include "options.h"
 
-typedef long long int t2_delay_t;
+typedef long long t2_delay_t;
 
 typedef struct {
 	int order;
@@ -23,7 +23,7 @@ int under_max_distance_t2(t2_t *left, t2_t *right, options_t *options);
 int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options);
 
 int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options);
-int correlate_t2_block(FILE *out_stream, long long int *record_number,
+int correlate_t2_block(FILE *out_stream, long long *record_number,
 		t2_queue_t *queue,
 		permutations_t *permutations,
 		offsets_t *offsets, t2_t *correlation_block, 

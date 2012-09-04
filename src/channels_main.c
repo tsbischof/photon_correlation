@@ -24,13 +24,8 @@ int main(int argc, char *argv[]) {
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE,
 			OPT_BINARY_IN, OPT_BINARY_OUT,
-<<<<<<< HEAD
-			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, OPT_SUPPRESS
-			}};
-=======
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
-			OPT_SUPPRESS }};
->>>>>>> 6db0155ce7cde323c46ce2e2f2f16e273f89ebc7
+			OPT_SUPPRESS}};
 
 	result += parse_options(argc, argv, &options, &program_options);
 	result += open_streams(&in_stream, options.in_filename,

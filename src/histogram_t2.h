@@ -18,7 +18,7 @@ typedef struct {
 	int channels;
 	int order;
 	combination_t *combination;
-	long long int *current_values;
+	long long *current_values;
 	gn_histogram_t **histograms;
 } t2_histograms_t;
 

@@ -121,8 +121,8 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 				histograms->channels);
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
-		histograms->current_values = (long long int *)malloc(
-				sizeof(long long int)*(histograms->order-1));
+		histograms->current_values = (long long *)malloc(
+				sizeof(long long)*(histograms->order-1));
 		histograms->histograms = (gn_histogram_t **)malloc(
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
 

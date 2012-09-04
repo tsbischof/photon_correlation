@@ -15,7 +15,7 @@ void debug(char *message, ...);
 void error(char *message, ...);
 void warn(char *message, ...);
 
-void print_status(char *name, long long int record_number, options_t *options);
+void print_status(char *name, long long record_number, options_t *options);
 int parse_result(int result);
 
 #endif

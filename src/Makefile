@@ -1,5 +1,21 @@
 TARGET ?= linux32
 
+CFLAGS += -Wall -std=c99 
+# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
+# errors if not adjusted, so fix it here as needed. This should not (in 
+# principle) affect 64-bit systems adversely, though if we ever get to 
+# 128-bit filesystems we will need to switch this to 128. 
+CFLAGS += -D_FILE_OFFSET_BITS=64 
+
+# Version info for the executables.
+CFLAGS += -DVERSION_MAJOR=1
+CFLAGS += -DVERSION_MINOR
+CFLAGS += -O3
+CFLAGS += -lm
+CFLAGS += -fopenmp
+
+LDFLAGS = ${CFLAGS}
+
 # Set up the compilers and whatnot
 ifeq (${TARGET}, linux32)
 	MKDIR = mkdir -p
@@ -10,6 +26,14 @@ ifeq (${TARGET}, linux32)
 	LD = cc
 	CFLAGS += -fPIC
 endif
+ifeq (${TARGET}, cygwin)
+	MKDIR = mkdir -p
+	RM = rm -f
+	TEST = test
+	CP = cp -p 
+	CC = cc
+	LD = cc
+endif
 ifeq (${TARGET}, win32)
 	MKDIR = mkdir
 	RM = del /Q
@@ -18,27 +42,11 @@ ifeq (${TARGET}, win32)
 	LD = mingw32-gcc
 endif
 
-CFLAGS += -Wall 
-CFLAGS += -std=c99
-# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
-# errors if not adjusted, so fix it here as needed. This should not (in 
-# principle) affect 64-bit systems adversely, though if we ever get to 
-# 128-bit filesystems we will need to switch this to 128. 
-CFLAGS += -D_FILE_OFFSET_BITS=64
-CFLAGS += -DVERSION_MAJOR=1
-CFLAGS += -DVERSION_MINOR=5
-# For use while debugging.
-#CFLAGS += -g -O0
-CFLAGS += -O3 
-CFLAGS += -lm
-CFLAGS += -fopenmp
-
-LDFLAGS = ${CFLAGS}
-INSTALL_DIR = ${HOME}/bin/
-
-
 
 # Define the targets and their properties.
+INSTALL_DIR = ${HOME}/bin
+LIB_DIR = ${HOME}/lib
+INCLUDE_DIR = ${HOME}/include/picoquant
 TARGETS = 
 ALL_OBJ = 
 ALL_LIB = 
@@ -143,8 +151,6 @@ TARGETS += correlate_vector
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
-LIB_DIR = ${HOME}/lib
-INCLUDE_DIR = ${HOME}/include/picoquant
 LIB_TARGETS = 
 LIBPICOQUANT_OBJ = ${sort ${filter-out %main.o, ${ALL_OBJ}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPICOQUANT_OBJ}}
@@ -199,5 +205,4 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${CC} ${CFLAGS} -c -o $@ $< 
 
 clean:
-	${RM} ${sort \
-		${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}

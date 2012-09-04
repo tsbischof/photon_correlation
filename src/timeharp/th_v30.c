@@ -392,9 +392,9 @@ int th_v30_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 		options_t *options) {
 	int result = 0;
 	int overflows = 0;
-	long long int record_count = 0;
+	long long record_count = 0;
 	th_v30_tttr_record_t record;
-	long long int base_time = 0;
+	long long base_time = 0;
 
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);

@@ -22,7 +22,7 @@ typedef struct {
 
 edges_t *allocate_edges(int n_bins);
 void free_edges(edges_t **edges);
-int edges_get_index(edges_t *edges, long long int value);
+int edges_get_index(edges_t *edges, long long value);
 int edges_from_limits(edges_t *edges, limits_t *limits, int scale);
 void print_edges(FILE *out_stream, edges_t *edges);
 
@@ -32,11 +32,11 @@ void free_gn_histogram(gn_histogram_t **histogram);
 int gn_histogram_make_n_bins(gn_histogram_t *histogram);
 int gn_histogram_make_index_bases(gn_histogram_t *histogram);
 int gn_histogram_get_index(gn_histogram_t *histogram, 
-		long long int *values);
+		long long *values);
 int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 		int *indices);
 int gn_histogram_increment(gn_histogram_t *histogram,
-		long long int *values);
+		long long *values);
 void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram);
 int gn_histogram_next_index(gn_histogram_t *histogram, int *indices);
 

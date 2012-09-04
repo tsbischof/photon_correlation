@@ -562,12 +562,12 @@ int read_offsets(options_t *options) {
 	return(result);
 }
 
-int parse_offsets(char *offsets_string, long long int *offsets, 
+int parse_offsets(char *offsets_string, long long *offsets, 
 		options_t *options) {
 	char *c;
 	int channel;
 
-	offsets = (long long int *)malloc(sizeof(long long int)*options->channels);
+	offsets = (long long *)malloc(sizeof(long long)*options->channels);
 
 	if ( offsets == NULL ) {
 		error("Could not allocate memory for offsets\n");

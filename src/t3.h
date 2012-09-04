@@ -6,15 +6,15 @@
 
 typedef struct {
 	int channel;
-	long long int pulse_number;
+	long long pulse_number;
 	int time;
 } t3_t;
 
 
 typedef struct {
 	int length;
-	long long int left_index;
-	long long int right_index;
+	long long left_index;
+	long long right_index;
 	t3_t *queue;
 } t3_queue_t;
 
@@ -33,7 +33,7 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index);
  */
 typedef struct {
 	window_t limits;
-	long long int width;
+	long long width;
 } t3_window_t;
 
 typedef struct {

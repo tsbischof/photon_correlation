@@ -49,7 +49,7 @@ void free_edges(edges_t **edges) {
 	}
 }
 
-int edges_get_index(edges_t *edges, long long int value) {
+int edges_get_index(edges_t *edges, long long value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
@@ -279,7 +279,7 @@ int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
 
 int gn_histogram_make_n_bins(gn_histogram_t *histogram) {
 	int result = 0;
-	long long int previous = 1;
+	long long previous = 1;
 	int i;
 
 	if ( histogram->dimensions == NULL ) {
@@ -306,7 +306,7 @@ int gn_histogram_make_n_bins(gn_histogram_t *histogram) {
 }
 
 int gn_histogram_get_index(gn_histogram_t *histogram, 
-		long long int *values) {
+		long long *values) {
 	int index = 0;
 	int i;
 
@@ -373,7 +373,7 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 
 
 int gn_histogram_increment(gn_histogram_t *histogram,
-		long long int *values) {
+		long long *values) {
 	int index;
 
 	index = gn_histogram_get_index(histogram, values);
