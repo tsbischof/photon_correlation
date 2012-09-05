@@ -30,11 +30,11 @@ int main(int argc, char *argv[]) {
 				&out_stream, options.out_filename);
 
 	if ( ! result ) {
-		while ( ! next_t3(in_stream, &t3_photon) ) {
+		while ( ! next_t3(in_stream, &t3_photon, &options) ) {
 			t2_photon.channel = t3_photon.channel;
 			t2_photon.time = t3_photon.pulse_number;
 
-			print_t2(out_stream, &t2_photon);
+			print_t2(out_stream, &t2_photon, NEWLINE, &options);
 			fprintf(out_stream, "\n");
 		}
 	}

@@ -14,7 +14,7 @@ int next_intensity(FILE *in_stream, intensity_t *intensity,
 		result = ( fread(intensity, sizeof(intensity_t), 1, 
 				in_stream) != 1);
 	} else {
-		result = ( fscanf(in_stream, "%lld,%u", 
+		result = ( fscanf(in_stream, "%"PRId64",%"PRIu32, 
 				&(intensity->time), &(intensity->counts)) != 2);
 	} 
 
@@ -34,7 +34,7 @@ int intensity_to_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			record.channel = rand() % options->channels;
 			record.time = intensity.time;
 
-			print_t2(out_stream, &record, options);
+			print_t2(out_stream, &record, NEWLINE, options);
 		}
 	}
 

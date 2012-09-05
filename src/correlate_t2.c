@@ -189,10 +189,10 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 							permutations->permutations[permutation][i]];
 					right = get_queue_item_t2(queue, offset);
 
-/*					debug("(%"PRId32",%"PRId64") <-> "
+					debug("(%"PRId32",%"PRId64") <-> "
 							"(%"PRId32",%"PRId64")\n", 
 							left.channel, left.time,
-							right.channel, right.time); */
+							right.channel, right.time);
 					correlation->records[i].channel = right.channel;
 					correlation->records[i].time = (right.time - left.time);
 				}

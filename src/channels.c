@@ -58,7 +58,7 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
  * emit_photons: Takes min/max of offsets to check whether the bounds are 
  *       exceeded sufficiently to emit photons, then yields those photons.
  */
-
+/*
 int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		photon, photon_comparator) { 
 	int index;
@@ -72,4 +72,4 @@ int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		insert photon
 		update bounds
 		return(0);
-}
+} */

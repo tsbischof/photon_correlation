@@ -69,7 +69,7 @@ t2_queue_t *allocate_t2_queue(int queue_length) {
 }
 
 int next_t2_queue(FILE *in_stream, 
-		long long max_time_distance,
+		int64_t max_time_distance,
 		t2_queue_t *queue, options_t *options) {
 	int64_t starting_index;
 	int64_t ending_index;
@@ -131,7 +131,7 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index) {
  * a window, and to iterate between the windows.
  */
 void init_t2_window(t2_window_t *window, 
-		long long start_time, options_t *options) {
+		int64_t start_time, options_t *options) {
 	if ( options->set_start_time ) {
 		window->limits.lower = options->start_time;
 	} else {

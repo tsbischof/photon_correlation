@@ -2,27 +2,26 @@
 #include "channels_t3.h"
 
 #include "error.h"
-#include "t3.h"
 
 int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t3_t record;
 
-	while ( ! next_t3(in_stream, &record) ) {
+	while ( ! next_t3(in_stream, &record, options) ) {
 		if ( options->suppress_channels && 
 			options->suppressed_channels[record.channel]) {
 			;
 		} else {
 			offset_t3(&record, options);
 
-			while ( ! yield_sorted_photon(photons, &record, !EOF, options) ) {
+/*			while ( ! yield_sorted_photon(photons, &record, !EOF, options) ) {
 				print_t3(out_stream, &record, options);
-			}
+			} */
 		}
 	}
 
-	while ( ! yield_sorted_photon(photons, &record, EOF, options) ) {
+/*	while ( ! yield_sorted_photon(photons, &record, EOF, options) ) {
 		print_t3(out_stream, record, options);
-	}
+	} */
 
 	return(0);
 }

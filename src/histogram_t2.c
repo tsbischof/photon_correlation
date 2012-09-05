@@ -150,7 +150,7 @@ void free_t2_histograms(t2_histograms_t **histograms) {
 			free_gn_histogram(&((*histograms)->histograms[i]));
 		}
 		debug("Freeing histogram bin pointer.\n");
-		//free((*histograms)->histograms);
+		free((*histograms)->histograms);
 		debug("Freeing the overall histogram.\n");
 		free(*histograms);
 	}

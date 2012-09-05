@@ -77,9 +77,9 @@ void print_counts(FILE *out_stream, int64_t lower_time,
 		int64_t upper_time,  counts_t *counts) {
 	int i;
 
-	fprintf(out_stream, "%lld,%lld,", lower_time, upper_time);
+	fprintf(out_stream, "%"PRId64",%"PRId64",", lower_time, upper_time);
 	for ( i = 0; i < counts->channels; i++ ) {
-		fprintf(out_stream, "%lld", counts->counts[i]);
+		fprintf(out_stream, "%"PRId64, counts->counts[i]);
 		if ( i != counts->channels - 1 ) {
 			fprintf(out_stream, ",");
 		}

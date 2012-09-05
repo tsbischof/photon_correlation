@@ -25,7 +25,7 @@ int t2_comparator(const void *a, const void *b);
 
 t2_queue_t *allocate_t2_queue(int queue_length);
 int next_t2_queue(FILE *in_stream,
-		long long max_time_distance,
+		int64_t max_time_distance,
 		t2_queue_t *queue, options_t *options);
 void free_t2_queue(t2_queue_t **queue);
 t2_t get_queue_item_t2(t2_queue_t *queue, int index);
@@ -37,9 +37,9 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index);
  */
 typedef struct {
 	window_t limits;
-	long long width;
+	int64_t width;
 	int set_time_limit;
-	long long time_limit;
+	int64_t time_limit;
 } t2_window_t;
 
 typedef struct {
@@ -50,7 +50,7 @@ typedef struct {
 } t2_windowed_stream_t;
 
 void init_t2_window(t2_window_t *window, 
-		long long start_time, options_t *options);
+		int64_t start_time, options_t *options);
 void next_t2_window(t2_window_t *window);
 int init_t2_windowed_stream(t2_windowed_stream_t *stream,
 		FILE *in_stream, options_t *options);

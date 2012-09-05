@@ -1,4 +1,4 @@
-TARGET ?= linux32
+TARGET ?= linux
 
 CFLAGS += -Wall -std=c99 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
@@ -17,7 +17,7 @@ CFLAGS += -fopenmp
 LDFLAGS = ${CFLAGS}
 
 # Set up the compilers and whatnot
-ifeq (${TARGET}, linux32)
+ifeq (${TARGET}, linux)
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
