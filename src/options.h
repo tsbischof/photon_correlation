@@ -1,9 +1,13 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
+#define NO_NEWLINE 0
+#define NEWLINE 1
+
 #define QUEUE_SIZE 100000
 
 #include <stdio.h>
+#include "types.h"
 
 #include "limits.h"
 
@@ -31,27 +35,27 @@ typedef struct {
 	int binary_out;
 
 /* Picoquant */
-	long long number;
+	int64_t number;
 	int print_header;
 	int print_resolution;
 	int to_t2;
 
 /* Correlate */
-	long long queue_size;
-	long long max_time_distance;
-	long long min_time_distance;
-	long long max_pulse_distance;
-	long long min_pulse_distance;
+	int64_t queue_size;
+	int64_t max_time_distance;
+	int64_t min_time_distance;
+	int64_t max_pulse_distance;
+	int64_t min_pulse_distance;
 	int positive_only;
 	int start_stop;
 
 /* Intensity */
-	long long bin_width;
+	int64_t bin_width;
 	int count_all;
 	int set_start_time;
-	long long start_time;
+	int64_t start_time;
 	int set_stop_time;
-	long long stop_time;
+	int64_t stop_time;
 
 /* Histogram */
 	char *time_string;
@@ -71,11 +75,11 @@ typedef struct {
 
 	int offset_time;
 	char *time_offsets_string;
-	long long *time_offsets;
+	int64_t *time_offsets;
 
 	int offset_pulse;
 	char *pulse_offsets_string;
-	long long *pulse_offsets;
+	int64_t *pulse_offsets;
 
 /* correlate_vector */
 	int approximate;
@@ -119,7 +123,7 @@ void free_options(options_t *options);
 char *get_options_string(program_options_t *program_options);
 
 int read_offsets(options_t *options);
-int parse_offsets(char *offsets_string, long long *offsets,
+int parse_offsets(char *offsets_string, int64_t *offsets,
 		options_t *options);
 int parse_suppress(options_t *options);
 

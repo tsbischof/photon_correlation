@@ -7,12 +7,9 @@
 #include "t2.h"
 #include "options.h"
 
-typedef long long t2_delay_t;
-
 typedef struct {
 	int order;
-	int *channels;
-	t2_delay_t *delays;
+	t2_t *records;
 } t2_correlation_t;
 
 int next_t2_queue_correlate(FILE *in_stream, 
@@ -31,8 +28,10 @@ int correlate_t2_block(FILE *out_stream, long long *record_number,
 
 t2_correlation_t *allocate_t2_correlation(options_t *options);
 void free_t2_correlation(t2_correlation_t **correlation);
-void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation, 
+int next_t2_correlation(FILE *in_stream, t2_correlation_t *correlation,
 		options_t *options);
+void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation, 
+		int print_newline, options_t *options);
 
 int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 		options_t *options);

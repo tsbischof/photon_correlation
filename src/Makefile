@@ -9,7 +9,7 @@ CFLAGS += -D_FILE_OFFSET_BITS=64
 
 # Version info for the executables.
 CFLAGS += -DVERSION_MAJOR=1
-CFLAGS += -DVERSION_MINOR
+CFLAGS += -DVERSION_MINOR=5
 CFLAGS += -O3
 CFLAGS += -lm
 CFLAGS += -fopenmp
@@ -52,7 +52,7 @@ ALL_OBJ =
 ALL_LIB = 
 
 UTIL = error.o types.o strings.o files.o options.o modes.o limits.o \
-		t2.o t3.o 
+		t2.o t3.o strtoll.o
 
 PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
 		picoquant.o \
@@ -79,8 +79,8 @@ HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
 		histogram.o \
 		combinations.o \
 		histogram_gn.o \
-		histogram_t2.o \
-		histogram_t3.o 
+		histogram_t2.o correlate_t2.o \
+		histogram_t3.o correlate_t3.o
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}

@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+
+if __name__ == "__main__":
+    try:
+        args = sys.argv[1:]
+    except:
+        args = []
+
+    target = re.sub("[0-9]", "", sys.platform)
+
+    os.system("make {0} TARGET={1}".format(" ".join(args), target))

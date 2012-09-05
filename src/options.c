@@ -159,7 +159,7 @@ void default_options(options_t *options) {
 	options->binary_in = 0;
 	options->binary_out = 0;
 
-	options->number = LLONG_MAX;
+	options->number = INT64_MAX;
 	options->print_header = 0;
 	options->print_resolution = 0;
 	options->to_t2 = 0;
@@ -355,7 +355,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 				result = -1;
 				break;
 			case 'p':
-				options->print_every = strtol(optarg, NULL, 10);
+				options->print_every = strtoi32(optarg, NULL, 10);
 				break;
 			case 'i':
 				options->in_filename = strdup(optarg);
@@ -367,10 +367,10 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->mode_string = strdup(optarg);
 				break;
 			case 'c':
-				options->channels = strtol(optarg, NULL, 10);
+				options->channels = strtoi32(optarg, NULL, 10);
 				break;
 			case 'g':
-				options->order = strtol(optarg, NULL, 10);
+				options->order = strtoi32(optarg, NULL, 10);
 				break;
 			case 'a':
 				options->binary_in = 1;
@@ -388,28 +388,28 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->to_t2 = 1;
 				break;
 			case 'n':
-				options->number = strtoll(optarg, NULL, 10);
+				options->number = strtoi64(optarg, NULL, 10);
 				break;
 			case 'q':
-				options->queue_size = strtoll(optarg, NULL, 10);
+				options->queue_size = strtoi64(optarg, NULL, 10);
 				break;
 			case 'd':
-				options->max_time_distance = strtoll(optarg, NULL, 10);
+				options->max_time_distance = strtoi64(optarg, NULL, 10);
 				break;
 			case 'D':
-				options->min_time_distance = strtoll(optarg, NULL, 10);
+				options->min_time_distance = strtoi64(optarg, NULL, 10);
 				break;
 			case 'e':
-				options->max_pulse_distance = strtoll(optarg, NULL, 10);
+				options->max_pulse_distance = strtoi64(optarg, NULL, 10);
 				break;
 			case 'E':
-				options->min_time_distance = strtoll(optarg, NULL, 10);
+				options->min_time_distance = strtoi64(optarg, NULL, 10);
 				break;
 			case 'P':
 				options->positive_only = 1;
 				break;
 			case 'w':
-				options->bin_width = strtoll(optarg, NULL, 10);
+				options->bin_width = strtoi64(optarg, NULL, 10);
 				break;
 			case 'A':
 				options->count_all = 1;
@@ -431,11 +431,11 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'f':
 				options->set_start_time = 1;
-				options->start_time = strtoll(optarg, NULL, 10);
+				options->start_time = strtoi64(optarg, NULL, 10);
 				break;
 			case 'F':
 				options->set_stop_time = 1;
-				options->stop_time = strtoll(optarg, NULL, 10);
+				options->stop_time = strtoi64(optarg, NULL, 10);
 				break;
 			case 'u':
 				options->offset_time = 1;
@@ -562,12 +562,12 @@ int read_offsets(options_t *options) {
 	return(result);
 }
 
-int parse_offsets(char *offsets_string, long long *offsets, 
+int parse_offsets(char *offsets_string, int64_t *offsets, 
 		options_t *options) {
 	char *c;
 	int channel;
 
-	offsets = (long long *)malloc(sizeof(long long)*options->channels);
+	offsets = (int64_t *)malloc(sizeof(int64_t)*options->channels);
 
 	if ( offsets == NULL ) {
 		error("Could not allocate memory for offsets\n");
@@ -581,7 +581,7 @@ int parse_offsets(char *offsets_string, long long *offsets,
 			error("Not enough offsets specified (%d found)\n", channel);
 			return(-1);
 		} else {
-			offsets[channel] = strtoll(c, NULL, 10);
+			offsets[channel] = strtoi64(c, NULL, 10);
 			debug("Offset for channel %d: %lld\n",
 					channel, offsets[channel]);
 		}
@@ -612,7 +612,7 @@ int parse_suppress(options_t *options) {
 		c = strtok(options->suppress_string, ",");
 
 		while ( c != NULL ) {
-			channel = strtol(c, NULL, 10);
+			channel = strtoi32(c, NULL, 10);
 
 			if ( channel == 0 && strcmp(c, "0") ) {
 				error("Invalid channel to suppress: %s\n", c);

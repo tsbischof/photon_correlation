@@ -22,7 +22,7 @@ edges_t *allocate_edges(int n_bins) {
 		result = -1;
 	} else {
 		edges->n_bins = n_bins;
-		edges->bin_edges = (double *)malloc(sizeof(double)*
+		edges->bin_edges = (float64_t *)malloc(sizeof(float64_t)*
 				(edges->n_bins+1)); 
 		edges->print_label = 0;
 
@@ -49,7 +49,7 @@ void free_edges(edges_t **edges) {
 	}
 }
 
-int edges_get_index(edges_t *edges, long long value) {
+int edges_get_index(edges_t *edges, int64_t value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
@@ -59,7 +59,8 @@ int edges_get_index(edges_t *edges, long long value) {
 
 	/* Replace this with bsearch from stdlib? */
 
-	/* Check that the value lies within the lower and upper limits of the bins.
+	/* Check that the value lies within the lower and upper limits of 
+	 * the bins.
  	 */
 	lower_index = 0;
 	upper_index = edges->n_bins;
@@ -85,17 +86,17 @@ int edges_get_index(edges_t *edges, long long value) {
 
 int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 	int i;
-	double lower; 
-	double upper;
-	double bins;
-	double width;
+	float64_t lower; 
+	float64_t upper;
+	float64_t bins;
+	float64_t width;
 
 	if ( scale == SCALE_LINEAR ) {
 		lower = limits->lower;
 		upper = limits->upper;
-		bins = (double)limits->bins;
+		bins = (float64_t)limits->bins;
 		width = (upper - lower)/bins;
-		debug("Edges have linear scale: (%lf, %d, %lf).\n",
+		debug("Edges have linear scale: (%"PRIf64", %d, %"PRIf64").\n",
 				limits->lower, limits->bins, limits->upper);
 
 		for ( i = 0; i <= limits->bins; i++ ) {
@@ -109,14 +110,15 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 		debug("Edges have log scale.\n");
 
 		if ( limits->lower <= 0 || limits->upper <= 0 ) {
-			error("Limits for a log scale histogram must be at least zero.\n");
+			error("Limits for a log scale histogram"
+					" must be at least zero.\n");
 			return(-1);
 		} else {
 			lower = log(limits->lower);
 			upper = log(limits->upper);
-			bins = (double)limits->bins;
+			bins = (float64_t)limits->bins;
 			width = (upper - lower)/bins;
-			debug("Log-scale bin width: %lf\n", width);
+			debug("Log-scale bin width: %"PRIf64"\n", width);
 			for ( i = 0; i <= limits->bins; i++ ) {
 				edges->bin_edges[i] = exp(lower + i*width);
 			}
@@ -127,24 +129,9 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 		}
 	} else {
 		error("Could not create edges from the limits provided: "
-				"(%lf, %d, %lf)\n", 
+				"(%"PRIf64", %d, %"PRIf64")\n", 
 				limits->lower, limits->bins, limits->upper);
 		return(-1);
-	}
-
-	if ( edges->bin_edges[0] != limits->lower ||
-			edges->bin_edges[edges->n_bins] != limits->upper ) {
-		if ( round(edges->bin_edges[0]) == 0
-				&& round(edges->bin_edges[edges->n_bins]) == limits->upper
-				&& scale == SCALE_LOG_ZERO ) {
-			; /* Fine, we have the correct limits. */
-		} else {
-			error("Calculated bins' limits do not match the ones specified. "
-					"Got (%lf, %lf) from (%lf, %lf).\n", 
-					edges->bin_edges[0], edges->bin_edges[edges->n_bins],
-					limits->lower, limits->upper);
-			return(-1);
-		}
 	}
 
 	return(0);
@@ -154,7 +141,7 @@ void print_edges(FILE *out_stream, edges_t *edges) {
 	int i;
 
 	for ( i = 0; i <= edges->n_bins; i++ ) {
-		fprintf(out_stream, "%d,%lf\n", i, edges->bin_edges[i]);
+		fprintf(out_stream, "%d,%"PRIf64"\n", i, edges->bin_edges[i]);
 	}
 }
 
@@ -180,7 +167,8 @@ gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 		histogram->dimensions = (edges_t **)malloc(sizeof(edges_t *)*
 				n_dimensions);
 		
-		if ( histogram->index_bases == NULL || histogram->dimensions == NULL ) {
+		if ( histogram->index_bases == NULL 
+				|| histogram->dimensions == NULL ) {
 			result = -1;
 		} else {
 			for ( i = 0; i < n_dimensions; i++ ) {
@@ -190,7 +178,7 @@ gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions) {
 			result = gn_histogram_make_index_bases(histogram);
 			if( ! result ) {
 				result = gn_histogram_make_n_bins(histogram);
-				histogram->counts = (unsigned int *)malloc(sizeof(unsigned int)*
+				histogram->counts = (uint32_t *)malloc(sizeof(uint32_t)*
 						histogram->n_bins);
 				if ( histogram->counts == NULL ) {	
 					result = -1;
@@ -223,11 +211,11 @@ void free_gn_histogram(gn_histogram_t **histogram) {
 int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
 	/* The index of the histogram array corresponding to a tuple of
  	 * (x0, x1, x2, ...x(n-1)) can be determined by treating each dimension
- 	 * as the base of some heterogeneous-based number. This comes fromt the fact
- 	 * that the histogram itself is an n-dimensional tensor, each dimension
- 	 * of which is of finite order. So, flattening the dimensions means we are
- 	 * interating over the possible indices, with limits determined by the 
- 	 * order of a dimension:
+ 	 * as the base of some heterogeneous-based number.
+	 * This comes fromt the fact that the histogram itself is an 
+	 * n-dimensional tensor, each dimension of which is of finite order. 
+	 * So, flattening the dimensions means we are interating over the 
+	 * possible indices, with limits determined by the order of a dimension:
  	 * (0, 0, 0)
  	 * (0, 0, 1)
  	 * (0, 0, 2)
@@ -244,12 +232,12 @@ int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
  	 * or, in general:
  	 * \sum_{j=0}^{n-1}{(\product_{k=j+1}^{n-1}{order_{k}})*x_{j}}
  	 *
- 	 * In the case that all dimensions are of the same order, this just reduces
- 	 * to calcutating the value of a base-n number with digits defined by x.
- 	 *
- 	 * Since we will need to perform this calculation many times, this function
- 	 * determines the successive products, since these are common to all
- 	 * future calculations. 
+ 	 * In the case that all dimensions are of the same order, this just 
+	 * reduces to calcutating the value of a base-n number with digits
+	 * defined by x.
+ 	 * Since we will need to perform this calculation many times, this 
+	 * function determines the successive products, since these are common 
+	 * to all future calculations. 
  	 */
 	int result = 0;
 	int base = 1;
@@ -266,8 +254,8 @@ int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
 							< histogram->index_bases[i-1]) ) {
 				/* Integer overflow, so we need to return an error. */
 				error("Integer overflow while computing the index bases for "
-						"gn_histogram. Reduce the number of bins to avoid this "
-						"error.\n");
+						"gn_histogram. Reduce the number of bins to avoid "
+						"this error.\n");
 				result = -1;
 				i = histogram->n_dimensions;
 			}
@@ -279,7 +267,7 @@ int gn_histogram_make_index_bases(gn_histogram_t *histogram) {
 
 int gn_histogram_make_n_bins(gn_histogram_t *histogram) {
 	int result = 0;
-	long long previous = 1;
+	int64_t previous = 1;
 	int i;
 
 	if ( histogram->dimensions == NULL ) {
@@ -306,14 +294,14 @@ int gn_histogram_make_n_bins(gn_histogram_t *histogram) {
 }
 
 int gn_histogram_get_index(gn_histogram_t *histogram, 
-		long long *values) {
+		int64_t *values) {
 	int index = 0;
 	int i;
 
 	debug("Getting histogram index from values.\n");
 	debug("Dimensions: %d\n", histogram->n_dimensions);
 	for ( i = 0; i < histogram->n_dimensions; i++ ) {
-		debug("Value: %lld\n", values[i]);
+		debug("Value: %"PRId64"\n", values[i]);
 		debug("Index base: %i\n", histogram->index_bases[i]);
 		index += edges_get_index(histogram->dimensions[i], values[i])*
 				histogram->index_bases[i];
@@ -324,7 +312,7 @@ int gn_histogram_get_index(gn_histogram_t *histogram,
 		error("Error while computing bin index for raw value: \n");
 		fprintf(stderr, "(");
 		for ( i = 0; i < histogram->n_dimensions; i++ ) {
-			fprintf(stderr, "%lld,", values[i]);
+			fprintf(stderr, "%"PRId64",", values[i]);
 		}
 		fprintf(stderr, "\b)\n");
 	
@@ -373,7 +361,7 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 
 
 int gn_histogram_increment(gn_histogram_t *histogram,
-		long long *values) {
+		int64_t *values) {
 	int index;
 
 	index = gn_histogram_get_index(histogram, values);
@@ -438,7 +426,8 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
 
 
 			debug("Getting the index in the histogram.\n");
-			bin_index = gn_histogram_get_index_from_indices(histogram, indices);
+			bin_index = gn_histogram_get_index_from_indices(histogram,
+					indices);
 			debug("Histogram bin index: %d.\n", bin_index);
 			if ( bin_index >=  0 ) {
 				fprintf(out_stream, ",%u\n", histogram->counts[bin_index]);

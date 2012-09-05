@@ -8,25 +8,31 @@ int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
 	int result;
 
 	if ( options->binary_in ) {
-		result = ( fread(record, sizeof(t2_t), 1, in_stream) != 1);
+		result = fread(record, sizeof(t2_t), 1, in_stream);
+		result = (result != 1);
 	} else {
-		result = ( fscanf(in_stream, "%d,%lld",
+		result = fscanf(in_stream, 
+				"%"SCNd32",%"SCNd64,
 			 	&(record->channel),
-				&(record->time)) != 2);
+				&(record->time));
+		result = (result != 2);
 	}
 	
 	return(result);
 }
 
-#include <stdint.h>
-#include <inttypes.h>
-void print_t2(FILE *out_stream, t2_t *record, options_t *options) {
+void print_t2(FILE *out_stream, t2_t *record, int print_newline,
+		options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t2_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%d,%lld\n", 
+		fprintf(out_stream, "%"PRId32",%"PRId64, 
 				record->channel,
 				record->time);
+
+		if ( print_newline == NEWLINE ) {
+			fprintf(out_stream, "\n");
+		}
 	}
 }
 
@@ -65,8 +71,8 @@ t2_queue_t *allocate_t2_queue(int queue_length) {
 int next_t2_queue(FILE *in_stream, 
 		long long max_time_distance,
 		t2_queue_t *queue, options_t *options) {
-	long long starting_index;
-	long long ending_index;
+	int64_t starting_index;
+	int64_t ending_index;
 
 	queue->left_index += 1;
 	starting_index = queue->left_index % queue->length;
@@ -121,8 +127,8 @@ t2_t get_queue_item_t2(t2_queue_t *queue, int index) {
 }
 
 /* These functions break up the photons into subsets by dividing time into
- * windows of fixed length. Thus we need to be able to receive a photon from a 
- * window, and to iterate between the windows.
+ * windows of fixed length. Thus we need to be able to receive a photon from 
+ * a window, and to iterate between the windows.
  */
 void init_t2_window(t2_window_t *window, 
 		long long start_time, options_t *options) {
@@ -161,7 +167,8 @@ int init_t2_windowed_stream(t2_windowed_stream_t *stream,
 	if ( next_t2(in_stream, &(stream->current_photon), options) ) {
 		return(-1);
 	} else {
-		init_t2_window(&(stream->window), stream->current_photon.time, options);
+		init_t2_window(&(stream->window), 
+				stream->current_photon.time, options);
 	}
 
 	return(0);
@@ -175,7 +182,8 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t2(stream->in_stream, &(stream->current_photon), options) ) {
+		if ( next_t2(stream->in_stream, 
+				&(stream->current_photon), options) ) {
 			return(-1);
 		}
 	}
@@ -198,9 +206,9 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 		stream->yielded_photon = 0;
 		return(1);
 	} else if ( stream->current_photon.time < stream->window.limits.lower ) {
-		/* this helps prevent inifinite loops: imagine that we define the window
- 		 * to start after the photon, at which point we keep moving forward 
- 		 * without ever finding the correct window.
+		/* this helps prevent inifinite loops: imagine that we define the 
+		 * window to start after the photon, at which point we keep moving 
+		 * forward without ever finding the correct window.
  		 */
 		return(-2);
 	} else {

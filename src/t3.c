@@ -10,7 +10,7 @@ int next_t3(FILE *in_stream, t3_t *record, options_t *options) {
 	if ( options->binary_in ) {
 		result = ( fread(record, sizeof(t3_t), 1, in_stream) != 1);
 	} else {
-		result = ( fscanf(in_stream, "%d,%lld,%d",
+		result = ( fscanf(in_stream, "%"PRId32",%"PRId64",%"PRId32"",
 				&(record->channel),
 				&(record->pulse_number),
 				&(record->time)) != 3 );
@@ -23,7 +23,7 @@ void print_t3(FILE *out_stream, t3_t *record, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%d,%lld,%d\n", 
+		fprintf(out_stream, "%"PRId32",%"PRId64",%"PRId32"\n", 
 				record->channel,
 				record->pulse_number,
 				record->time);

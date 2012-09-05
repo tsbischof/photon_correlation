@@ -6,6 +6,7 @@ General:
 -do a better job of detecting mode mismatch 
 -remove the clunkier debug messages.
 -check that all references to the channel are to _signed_ int
+-run valgrind against histogram, make sure that the histograms are getting freed properly.
 -change t3 to pulse, from pulse_number
 
 Scripts:
@@ -18,7 +19,6 @@ Correlate:
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
 -replace the binary search algorithm with bsearch from stdlib
--merge the correlated_t2_t types with those from correlate_t2, such that only one interface remains. 
 
 Intensity:
 
@@ -37,7 +37,7 @@ Channels:
 -finish implementing offsets
 
 Correlate vector:
--figure out a way to do a general vector correlation
+-take notes from notebook and compile the vector correlation method.
 
 Intensity_to_t2:
 -put together some test data, make sure that the binary read is working

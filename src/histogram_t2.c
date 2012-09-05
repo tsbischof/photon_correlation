@@ -2,66 +2,17 @@
 
 #include "error.h"
 
-t2_correlated_t *allocate_t2_correlated(options_t *options) {
-	t2_correlated_t *record = NULL;
-
-	record = (t2_correlated_t *)malloc(sizeof(t2_correlated_t));
-	if ( record != NULL ) { 
-		record->records = (t2_t *)malloc(sizeof(t2_t)*(options->order-1));
-		if ( record->records == NULL ) {
-			free_t2_correlated(&record);
-		}
-	}
-
-	return(record);
-}
-
-void free_t2_correlated(t2_correlated_t **record) {
-	if ( *record != NULL ) {
-		if ( (*record)->records != NULL ) {
-			free((*record)->records);
-		}
-		free(*record);
-	}
-}
-
-int next_t2_correlated(FILE *in_stream, t2_correlated_t *record,
-		 options_t *options) {
-	int result;
-	int i;
-
-	result = (fscanf(in_stream, "%d", &(*record).ref_channel) != 1);
-
-	if ( result && !feof(in_stream) ) {
-		error("Could not read reference channel from stream.\n");
-	} else {
-		for ( i = 0; i < options->order - 1; i++ ) {
-			result = ( fscanf(in_stream, ",%d,%lld", 
-					&(*record).records[i].channel,
-					&(*record).records[i].time) != 2);
-			if ( result && !feof(in_stream)) {
-				error("Could not read correlated record (index %d).\n", i);
-				i = options->order;
-			}
-		}
-
-	}
-			
-	return(result);
-}
-
 int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
-	t2_correlated_t *record;
+	t2_correlation_t *record;
 	t2_histograms_t *histograms;
 	int result = 0;
-	int i;
 
 	if ( options->order == 1 ) {
 		error("Correlation of order 1 is not implemented for t2 mode.\n");
 		return(-1);
 	}
 
-	record = allocate_t2_correlated(options);
+	record = allocate_t2_correlation(options);
 	histograms = make_t2_histograms(options);
 	
 	if ( record == NULL || histograms == NULL ) {
@@ -70,15 +21,10 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	} else {
 		/* Loop through the data. 
 		 */
-		while ( !(next_t2_correlated(in_stream, record, options)) ) {
+		while ( ! next_t2_correlation(in_stream, record, options) ) {
 			if ( verbose ) {
-				fprintf(out_stream, "Found record: %d", record->ref_channel);
-				for ( i = 0; i < options->order-1; i++ ) {
-					fprintf(out_stream, ",%d,%lld", 
-							record->records[i].channel,
-							record->records[i].time);
-				}
-				fprintf(out_stream, "\n");
+				printf("Found record:\n");
+				print_t2_correlation(stderr, record, NEWLINE, options);
 			}
 
 			t2_histograms_increment(histograms, record);
@@ -94,8 +40,10 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Clean up memory. */
 	debug("Cleaning up from t2 histogramming.\n");
-	free_t2_correlated(&record);
+	free_t2_correlation(&record);
+	debug("Freeing histograms\n");
 	free_t2_histograms(&histograms);
+	debug("Memory freed.\n");
 	
 	return(result);
 }
@@ -121,8 +69,8 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 				histograms->channels);
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
-		histograms->current_values = (long long *)malloc(
-				sizeof(long long)*(histograms->order-1));
+		histograms->current_values = (int64_t *)malloc(
+				sizeof(int64_t)*(histograms->order-1));
 		histograms->histograms = (gn_histogram_t **)malloc(
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
 
@@ -164,7 +112,7 @@ t2_histograms_t *make_t2_histograms(options_t *options) {
 				histograms->histograms[i] = allocate_gn_histogram(
 						histograms->order-1, edges);
 				sprintf(histograms->histograms[i]->histogram_label,
-						"%u", histograms->combination->digits[0]);
+						"%d", histograms->combination->digits[0]);
 				next_combination(histograms->combination);  
 			}   
 		}
@@ -189,23 +137,27 @@ void free_t2_histograms(t2_histograms_t **histograms) {
 		debug("Freeing combination.\n");
 		free_combination(&(*histograms)->combination);
 
+		debug("Freeing edges.\n");
 		for ( i = 0; (*histograms)->edges != NULL 
 				&& i < (*histograms)->channels; i++ ) {
 			free_edges(&((*histograms)->edges[i]));
 		}
 		free((*histograms)->edges);
 
+		debug("Freeing histogram bins.\n");
 		for ( i = 0; (*histograms)->histograms != NULL 
 				&& i < (*histograms)->n_histograms; i++ ) {
 			free_gn_histogram(&((*histograms)->histograms[i]));
 		}
-		free((*histograms)->histograms);
+		debug("Freeing histogram bin pointer.\n");
+		//free((*histograms)->histograms);
+		debug("Freeing the overall histogram.\n");
 		free(*histograms);
 	}
 }
 
 int t2_histograms_increment(t2_histograms_t *histograms,
-		t2_correlated_t *record) {
+		t2_correlation_t *record) {
 	int result = 0;
 	int histogram_index;
 	int i;
@@ -213,13 +165,13 @@ int t2_histograms_increment(t2_histograms_t *histograms,
 	/* First, determine the index of the histogram from the channels present.
 	 */
 	debug("Getting the channels from the record.\n");
-	histograms->combination->digits[0] = record->ref_channel;
+	histograms->combination->digits[0] = record->records[0].channel;
 	for ( i = 1; i < histograms->order; i++ ) {
-		histograms->combination->digits[i] = record->records[i-1].channel;
+		histograms->combination->digits[i] = record->records[i].channel;
 	}
 
 
-	for ( i = 0; i < histograms->order-1; i++ ) {
+	for ( i = 1; i < histograms->order; i++ ) {
 		histograms->current_values[i] = record->records[i].time;
 	}
 

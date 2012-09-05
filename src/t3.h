@@ -3,18 +3,19 @@
 
 #include <stdio.h>
 #include "options.h"
+#include "types.h"
 
 typedef struct {
-	int channel;
-	long long pulse_number;
-	int time;
+	int32_t channel;
+	int64_t pulse_number;
+	int32_t time;
 } t3_t;
 
 
 typedef struct {
-	int length;
-	long long left_index;
-	long long right_index;
+	int32_t length;
+	int64_t left_index;
+	int64_t right_index;
 	t3_t *queue;
 } t3_queue_t;
 
@@ -33,7 +34,7 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index);
  */
 typedef struct {
 	window_t limits;
-	long long width;
+	int64_t width;
 } t3_window_t;
 
 typedef struct {

@@ -117,16 +117,16 @@ int valid_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 
 int under_max_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 	return( (options->max_time_distance == 0
-				|| llabs(right->time - left->time) 
+				|| i64abs(right->time - left->time) 
 							<= options->max_time_distance)
 			&& (options->max_pulse_distance == 0
-				|| llabs(right->pulse_number - left->pulse_number) 
+				|| i64abs(right->pulse_number - left->pulse_number) 
 							<= options->max_pulse_distance) );
 }
 
 int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
-	return( llabs(right->time - left->time) >= options->min_time_distance 
-			&& llabs(right->pulse_number - left->pulse_number)
+	return( i64abs(right->time - left->time) >= options->min_time_distance 
+			&& i64abs(right->pulse_number - left->pulse_number)
 					 >= options->min_pulse_distance ) ;
 
 }

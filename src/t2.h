@@ -2,22 +2,25 @@
 #define T2_H_
 
 #include <stdio.h>
+
+#include "types.h"
 #include "options.h"
 
 typedef struct {
-	int channel;
-	long long time;
+	int32_t channel;
+	int64_t time;
 } t2_t;
 
 typedef struct {
-	int length;
-	long long left_index;
-	long long right_index;
+	int32_t length;
+	int64_t left_index;
+	int64_t right_index;
 	t2_t *queue;
 } t2_queue_t;
 
 int next_t2(FILE *in_stream, t2_t *record, options_t *options);
-void print_t2(FILE *out_stream, t2_t *record, options_t *options);
+void print_t2(FILE *out_stream, t2_t *record, int print_newline,
+		options_t *options);
 int t2_comparator(const void *a, const void *b);
 
 t2_queue_t *allocate_t2_queue(int queue_length);
