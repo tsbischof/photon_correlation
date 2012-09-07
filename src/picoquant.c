@@ -85,7 +85,7 @@ void pq_print_t3(FILE *out_stream, int64_t count,
 	t3_t record;
 
 	record.channel = channel;
-	record.pulse_number = base_nsync + (int64_t)record_nsync;
+	record.pulse = base_nsync + (int64_t)record_nsync;
 	record.time = record_dtime;
 
 	print_t3(out_stream, &record, options);
@@ -105,7 +105,7 @@ void pq_print_tttr(FILE *out_stream, int64_t count,
 
 	/* Channel is really 1, but we only have one data channel */
 	record.channel = 0;
-	record.pulse_number = base_time + (int64_t)record_time;
+	record.pulse = base_time + (int64_t)record_time;
 
 	/* The histogram channels seem to count backwards, with an upper limit
 	 * of n_histogram_channels.

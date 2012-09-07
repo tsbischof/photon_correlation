@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 	if ( ! result ) {
 		while ( ! next_t3(in_stream, &t3_photon, &options) ) {
 			t2_photon.channel = t3_photon.channel;
-			t2_photon.time = t3_photon.pulse_number;
+			t2_photon.time = t3_photon.pulse;
 
 			print_t2(out_stream, &t2_photon, NEWLINE, &options);
 			fprintf(out_stream, "\n");

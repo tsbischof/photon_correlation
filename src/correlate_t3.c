@@ -120,13 +120,13 @@ int under_max_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 				|| i64abs(right->time - left->time) 
 							<= options->max_time_distance)
 			&& (options->max_pulse_distance == 0
-				|| i64abs(right->pulse_number - left->pulse_number) 
+				|| i64abs(right->pulse - left->pulse) 
 							<= options->max_pulse_distance) );
 }
 
 int over_min_distance_t3(t3_t *left, t3_t *right, options_t *options) {
 	return( i64abs(right->time - left->time) >= options->min_time_distance 
-			&& i64abs(right->pulse_number - left->pulse_number)
+			&& i64abs(right->pulse - left->pulse)
 					 >= options->min_pulse_distance ) ;
 
 }
@@ -182,11 +182,11 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 					right =	get_queue_item_t3(queue, offset);
 
 /*					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
-							left.channel, left.pulse_number, left.time,
-							right.channel, right.pulse_number, right.time);*/
+							left.channel, left.pulse, left.time,
+							right.channel, right.pulse, right.time);*/
 					correlation->channels[i] = right.channel;
-					correlation->delays[i].pulse = (right.pulse_number -
-							left.pulse_number);
+					correlation->delays[i].pulse = (right.pulse -
+							left.pulse);
 					correlation->delays[i].time = (right.time - left.time);
 				}
 

@@ -131,10 +131,11 @@ option_t all_options[] = {
 	{'s', "s:", "suppress",
 			"A comma-delmited list of channels to remove\n"
 			"from the stream."},
-	{'B', "B", "approximate",
+	{'B', "B:", "approximate",
 			"Approximate the true autocorrelation by \n"
-			"only sampling a fraction of the possible delays\n"
-			"associated with a histogram bin."},
+			"only sampling the correlation once for\n"
+			"every n time steps.. By default, the \n"
+			"correlation is sampled for every time step."},
 	{'C', "C", "true-correlation",
 			"Rather than calculating the autocorrelation\n"
 			"to match the photon autocorrelation, calculate\n"
@@ -199,7 +200,7 @@ void default_options(options_t *options) {
 	options->pulse_offsets_string = NULL;
 	options->pulse_offsets = NULL;
 
-	options->approximate = 0;
+	options->approximate = 1;
 	options->true_autocorrelation = 0;
 }
 

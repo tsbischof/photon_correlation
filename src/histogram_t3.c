@@ -68,7 +68,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Follow the stream and perform the histogramming. */
 	while ( !result && !next_t3(in_stream, &record, options) ) {
-		debug("Record: %d,%lld,%d\n", record.channel, record.pulse_number,
+		debug("Record: %d,%lld,%d\n", record.channel, record.pulse,
 				record.time);
 		values[0] = record.time;
 		if ( record.channel >= options->channels ) {
@@ -137,7 +137,7 @@ int next_t3_correlated(FILE *in_stream, t3_correlated_t *record,
 		for ( i = 0; i < options->order - 1; i++ ) {
 			result = ( fscanf(in_stream, ",%d,%lld,%d", 
 					&(*record).records[i].channel,
-					&(*record).records[i].pulse_number,
+					&(*record).records[i].pulse,
 					&(*record).records[i].time) != 3);
 			if ( result && !feof(in_stream)) {
 				error("Could not read correlated record (index %d).\n", i);
@@ -171,7 +171,7 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 				for ( i = 0; i < options->order-1; i++ ) {
 					fprintf(out_stream, ",%d,%lld,%d", 
 							record->records[i].channel,
-							record->records[i].pulse_number,
+							record->records[i].pulse,
 							record->records[i].time);
 				}
 				fprintf(out_stream, "\n");
@@ -351,7 +351,7 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 
 
 	for ( i = 0; i < histograms->order-1; i++ ) {
-		histograms->current_values[2*i] = record->records[i].pulse_number;
+		histograms->current_values[2*i] = record->records[i].pulse;
 		histograms->current_values[2*i+1] = record->records[i].time;
 	}
 

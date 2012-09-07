@@ -28,7 +28,7 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 void offset_t3(t3_t *record, options_t *options) {
 	if ( options->offset_pulse ) {
-		record->pulse_number += options->pulse_offsets[record->channel];
+		record->pulse += options->pulse_offsets[record->channel];
 	}
 
 	if ( options->offset_time ) {

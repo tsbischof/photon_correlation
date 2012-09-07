@@ -36,7 +36,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && next_t2_queue_correlate(in_stream, queue, options) ) {
+	while ( ! done && ! next_t2_queue_correlate(in_stream, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
@@ -77,32 +77,39 @@ int next_t2_queue_correlate(FILE *in_stream,
 			 * the right, until we reach it.
 			 *
 			 * Make sure we have options->order many indices to work with.
+			 * 
+			 * Return 0 if within bounds (left index is less than right index,
+			 * corrected for order), and non-zero otherwise.
 			 */
-			return(queue->left_index < 
+			return( queue->left_index >= 
 					(queue->right_index - options->order + 2));
 		} else if ( ending_index > 0 && 
 					! under_max_distance_t2(
 						&(queue->queue[starting_index]),
 						&(queue->queue[ending_index]), options) ) {
 			/* Incremented, but still outside the distance bounds. */
-			return(1);
+			return(0);
 		} else {
 			/* If we still have more file to go, and are not outside the 
  			 * distance bounds, get another entry.
 			 */
-			queue->right_index += 1;
-			ending_index = queue->right_index % queue->length;
+			ending_index = (queue->right_index % queue->length) + 1;
 
-			if ( next_t2(in_stream, &(queue->queue[ending_index]), options)
-					&& ! feof(in_stream) ) {
-
-			/* Failed to read a line. We already checked that we are not 
-			 * at the end of the stream, therefore we have a read error 
-			 * on our hands.
-			 */
+			if ( ! next_t2(in_stream, &(queue->queue[ending_index]), 
+					options) ) {
+				/* Found a photon. */
+				queue->right_index += 1;
+			} else if ( ! feof(in_stream) ) {
+				/* No photon, not at the end of the stream. */
 				error("Error while reading t2 stream.\n");
-				return(0);
-			} else if ( (queue->right_index - queue->left_index) 
+				return(-1);
+			} else {
+				/* No photon, but at the end of the stream. The main loop
+				 * will take care of this.
+				 */
+			}
+
+			if ( (queue->right_index - queue->left_index) 
 					>= queue->length ) {
 				warn("Overflow of queue entries, increase queue size for "
 					"accurate results.\n");
@@ -158,10 +165,10 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
-		left = get_queue_item_t2(queue, offsets->offsets[0]);
-		right = get_queue_item_t2(queue, offsets->offsets[options->order-1]);
+		get_queue_item_t2(&left, queue, offsets->offsets[0]);
+		get_queue_item_t2(&right, queue, offsets->offsets[options->order-1]);
 		
-		if ( valid_distance_t2(&left, &right, options) ) {
+		if ( valid_distance_t2(&left, &right, options)  ) {
 			debug("Close enough for correlation (between %"PRId64
 					" and %"PRId64" to get %"PRId64"/%"PRId64").\n",
 					left.time, right.time, right.time-left.time,
@@ -180,14 +187,14 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
-				left = get_queue_item_t2(queue, offset);
+				get_queue_item_t2(&left, queue, offset);
 
 				correlation->records[0].channel = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
-					right = get_queue_item_t2(queue, offset);
+					get_queue_item_t2(&right, queue, offset);
 
 					debug("(%"PRId32",%"PRId64") <-> "
 							"(%"PRId32",%"PRId64")\n", 
