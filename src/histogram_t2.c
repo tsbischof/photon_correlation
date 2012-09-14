@@ -7,8 +7,9 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t2_histograms_t *histograms;
 	int result = 0;
 
-	if ( options->order == 1 ) {
-		error("Correlation of order 1 is not implemented for t2 mode.\n");
+	if ( options->order < 2 ) {
+		error("Correlation of order less than 2 is not "
+				"implemented for t2 mode.\n");
 		return(-1);
 	}
 
@@ -23,7 +24,7 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		 */
 		while ( ! next_t2_correlation(in_stream, record, options) ) {
 			if ( verbose ) {
-				printf("Found record:\n");
+				fprintf(stderr, "Found record:\n");
 				print_t2_correlation(stderr, record, NEWLINE, options);
 			}
 
@@ -33,9 +34,10 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
-		print_t2_histograms(out_stream, histograms);
+		print_t2_histograms(out_stream, histograms, options);
 	} else {
-		printf("%d\n", result);
+		error("Error while processing histograms: %d\n", result);
+		//printf("%d\n", result);
 	}
 
 	/* Clean up memory. */
@@ -157,22 +159,22 @@ void free_t2_histograms(t2_histograms_t **histograms) {
 }
 
 int t2_histograms_increment(t2_histograms_t *histograms,
-		t2_correlation_t *record) {
+		t2_correlation_t *correlation) {
 	int result = 0;
 	int histogram_index;
 	int i;
 
 	/* First, determine the index of the histogram from the channels present.
 	 */
-	debug("Getting the channels from the record.\n");
-	histograms->combination->digits[0] = record->records[0].channel;
+	debug("Getting the channels from the correlation.\n");
+	histograms->combination->digits[0] = correlation->records[0].channel;
 	for ( i = 1; i < histograms->order; i++ ) {
-		histograms->combination->digits[i] = record->records[i].channel;
+		histograms->combination->digits[i] = correlation->records[i].channel;
 	}
 
 
 	for ( i = 1; i < histograms->order; i++ ) {
-		histograms->current_values[i] = record->records[i].time;
+		histograms->current_values[i-1] = correlation->records[i].time;
 	}
 
 	histogram_index = get_combination_index(histograms->combination);
@@ -189,10 +191,11 @@ int t2_histograms_increment(t2_histograms_t *histograms,
 	return(result);
 }
 
-void print_t2_histograms(FILE *out_stream, t2_histograms_t *histograms) {
+void print_t2_histograms(FILE *out_stream, t2_histograms_t *histograms,
+		options_t *options) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
-		print_gn_histogram(out_stream, histograms->histograms[i]);
+		print_gn_histogram(out_stream, histograms->histograms[i], options);
 	}
 }
 

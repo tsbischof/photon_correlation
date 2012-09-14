@@ -11,7 +11,6 @@ typedef struct {
 	int32_t time;
 } t3_t;
 
-
 typedef struct {
 	int32_t length;
 	int64_t left_index;
@@ -20,12 +19,13 @@ typedef struct {
 } t3_queue_t;
 
 int next_t3(FILE *in_stream, t3_t *record, options_t *options);
-void print_t3(FILE *out_stream, t3_t *record, options_t *options);
+void print_t3(FILE *out_stream, t3_t *record, 
+		int print_newline, options_t *options);
 int t3_comparator(const void *a, const void *b);
 
 t3_queue_t *allocate_t3_queue(int queue_length);
 void free_t3_queue(t3_queue_t **queue);
-t3_t get_queue_item_t3(t3_queue_t *queue, int index);
+void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index);
 
 /* The windowed stream represents a series of streams which are composed of
  * photons in some time window. For example, an intensity stream can be 

@@ -7,14 +7,8 @@
 #include "options.h"
 
 typedef struct {
-	long long pulse;
-	long long time;
-} t3_delay_t;
-
-typedef struct {
 	int order;
-	int *channels;
-	t3_delay_t *delays;
+	t3_t *records;
 } t3_correlation_t;
 
 int next_t3_queue_correlate(FILE *in_stream, 
@@ -33,7 +27,9 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 
 t3_correlation_t *allocate_t3_correlation(options_t *options);
 void free_t3_correlation(t3_correlation_t **correlation);
-void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+int next_t3_correlation(FILE *in_stream, t3_correlation_t *correlation,
 		options_t *options);
+void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+		int print_newline, options_t *options);
 
 #endif

@@ -88,7 +88,7 @@ void pq_print_t3(FILE *out_stream, int64_t count,
 	record.pulse = base_nsync + (int64_t)record_nsync;
 	record.time = record_dtime;
 
-	print_t3(out_stream, &record, options);
+	print_t3(out_stream, &record, NEWLINE, options);
 	print_status("picoquant", count, options);
 }
 
@@ -112,7 +112,7 @@ void pq_print_tttr(FILE *out_stream, int64_t count,
 	 */
 	record.time = /*n_histogram_channels - */ histogram_channel;
 
-	print_t3(out_stream, &record, options);
+	print_t3(out_stream, &record, NEWLINE, options);
 	print_status("picoquant", count, options);
 }
 

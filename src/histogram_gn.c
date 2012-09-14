@@ -72,7 +72,9 @@ int edges_get_index(edges_t *edges, int64_t value) {
 	}
 
 	while ( upper_index - lower_index > 1) {
-		debug("At (%d, %d)\n", lower_index, upper_index);
+		debug("At (%d, %d) (%"PRIf64", %"PRIf64")\n", 
+				lower_index, upper_index,
+				edges->bin_edges[lower_index], edges->bin_edges[upper_index]);
 		middle_index = (upper_index + lower_index)/2;
 		if ( value >= edges->bin_edges[middle_index] ) {
 			lower_index = middle_index;
@@ -80,6 +82,10 @@ int edges_get_index(edges_t *edges, int64_t value) {
 			upper_index = middle_index;
 		}
 	}
+
+	debug("Placed %"PRId64" in (%"PRIf64", %"PRIf64")\n", 
+			value, edges->bin_edges[lower_index],
+			edges->bin_edges[lower_index+1]);
 
 	return(lower_index);
 }
@@ -376,7 +382,8 @@ int gn_histogram_increment(gn_histogram_t *histogram,
 	}
 }
 
-void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
+void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram,
+		options_t *options) {
 	/* General outline:
 	 * 1. Allocate space for indices.
 	 * 2. Iterate over all possible sets of indices.
@@ -419,7 +426,7 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram) {
 				}
 				debug("Printing the edge for dimension %d and bin %d.\n",
 						i, indices[i]);
-				fprintf(out_stream, ",%.2lf,%.2lf",
+				fprintf(out_stream, ",%.2"PRIf64",%.2"PRIf64"",
 						histogram->dimensions[i]->bin_edges[indices[i]],
 						histogram->dimensions[i]->bin_edges[indices[i]+1]);
 			}

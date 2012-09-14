@@ -161,8 +161,8 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
-		left = get_queue_item_t3(queue, offsets->offsets[0]);
-		right = get_queue_item_t3(queue, offsets->offsets[options->order-1]);
+		get_queue_item_t3(&left, queue, offsets->offsets[0]);
+		get_queue_item_t3(&right, queue, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t3(&left, &right, options) ) {
 			debug("Close enough for correlation.\n");
@@ -173,24 +173,25 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
-				left =  get_queue_item_t3(queue, offset);
-				correlation->channels[0] = left.channel;
+				get_queue_item_t3(&left, queue, offset);
+
+				correlation->records[0].channel = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
-					right =	get_queue_item_t3(queue, offset);
+					get_queue_item_t3(&right, queue, offset);
 
 /*					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
 							left.channel, left.pulse, left.time,
 							right.channel, right.pulse, right.time);*/
-					correlation->channels[i] = right.channel;
-					correlation->delays[i].pulse = (right.pulse -
+					correlation->records[i].channel = right.channel;
+					correlation->records[i].pulse = (right.pulse -
 							left.pulse);
-					correlation->delays[i].time = (right.time - left.time);
+					correlation->records[i].time = (right.time - left.time);
 				}
 
-				print_t3_correlation(out_stream, correlation, options);
+				print_t3_correlation(out_stream, correlation, NEWLINE, options);
 			}
 		} else {
 			debug("Not close enough for correlation.\n");
@@ -209,12 +210,10 @@ t3_correlation_t *allocate_t3_correlation(options_t *options) {
 		result = -1;
 	} else {
 		correlation->order = options->order;
-		correlation->channels = (int *)malloc(
-				sizeof(int)*options->order);
-		correlation->delays = (t3_delay_t *)malloc(
-				sizeof(t3_delay_t)*options->order);
+		correlation->records = (t3_t *)malloc(options->order*sizeof(t3_t));
 
-		if ( correlation->channels == NULL || correlation->delays == NULL ) {				result = -1;
+		if ( correlation->records == NULL ) {
+			result = -1;
 		}
 	}
 
@@ -228,29 +227,77 @@ t3_correlation_t *allocate_t3_correlation(options_t *options) {
 
 void free_t3_correlation(t3_correlation_t **correlation) {
 	if ( (*correlation) != NULL ) {
-		free((*correlation)->channels);
-		free((*correlation)->delays);
+		free((*correlation)->records);
 	}
 
 	free(*correlation);
 }
 
-void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+int next_t3_correlation(FILE *in_stream, t3_correlation_t *correlation,
 		options_t *options) {
+	int result;
 	int i;
 
-	fprintf(out_stream, "%d,", correlation->channels[0]);
+	if ( options->binary_in ) {
+		result = (fread(&(correlation->records[0].channel),
+					sizeof(correlation->records[0].channel),
+					1,
+					in_stream) != 1);
+	} else {
+		result = (fscanf(in_stream,
+						"%"SCNd32",",
+						&(correlation->records[0].channel)) != 1);
+	} 
 
-	for ( i = 1; i < correlation->order; i++ ) {	
-		fprintf(out_stream, "%d,%lld,%lld", 
-				correlation->channels[i], 
-				correlation->delays[i].pulse, 
-				correlation->delays[i].time);
-
-		if ( i+1 != correlation->order ) {
-			fprintf(out_stream, ",");
+	if ( result && ! feof(in_stream) ) {
+		error("Could not read reference channel from stream.\n");
+	} else {
+		for ( i = 1; ! result && i < options->order; i++ ) {
+			result = next_t3(in_stream,
+					&(correlation->records[i]),
+					options);
+			if ( ! result && ! options->binary_in ) {
+				fscanf(in_stream, ",");
+			}
 		}
 	}
 
-	fprintf(out_stream, "\n");
+	if ( result < 0 ) {
+		error("Could not read correlated t3 record.\n");
+	} 
+
+	return(result);
+}
+
+void print_t3_correlation(FILE *out_stream, t3_correlation_t *correlation,
+		int print_newline, options_t *options) {
+	int i;
+
+	if ( options->binary_out ) {
+		fwrite(&(correlation->records[0].channel),
+				sizeof(correlation->records[0].channel),
+				1,
+				out_stream);
+
+		for ( i = 1; i < correlation->order; i++ ) {
+			print_t3(out_stream, &(correlation->records[i]), NO_NEWLINE,
+					options);
+		}
+	} else {
+		fprintf(out_stream, "%"PRId32",", correlation->records[0].channel);
+
+		for ( i = 1; i < correlation->order; i++ ) {
+			print_t3(out_stream, &(correlation->records[i]), NO_NEWLINE,
+					options);
+
+			/* All but the last get a comma. */
+			if ( i+1 != correlation->order ) {
+				fprintf(out_stream, ",");
+			}
+		}
+
+		if ( print_newline == NEWLINE ) {
+			fprintf(out_stream, "\n");
+		}
+	}
 }

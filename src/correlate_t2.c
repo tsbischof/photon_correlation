@@ -262,7 +262,7 @@ int next_t2_correlation(FILE *in_stream, t2_correlation_t *correlation,
 						&(correlation->records[0].channel)) != 1);
 	}
 	
-	if (result && ! feof(in_stream) ) {
+	if ( result && ! feof(in_stream) ) {
 		error("Could not read reference channel from stream\n");
 	} else { 
 		for ( i = 1; ! result && i < options->order; i++ ) {

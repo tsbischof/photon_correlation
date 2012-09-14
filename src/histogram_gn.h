@@ -2,6 +2,7 @@
 #define HISTOGRAM_GN_
 
 #include <stdio.h>
+#include "options.h"
 #include "limits.h"
 #include "types.h"
 
@@ -38,7 +39,8 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 		int *indices);
 int gn_histogram_increment(gn_histogram_t *histogram,
 		int64_t *values);
-void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram);
+void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram, 
+		options_t *options);
 int gn_histogram_next_index(gn_histogram_t *histogram, int *indices);
 
 #endif

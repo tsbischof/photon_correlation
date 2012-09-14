@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "t3.h"
 #include "error.h"
@@ -19,14 +20,18 @@ int next_t3(FILE *in_stream, t3_t *record, options_t *options) {
 	return(result);
 }
 
-void print_t3(FILE *out_stream, t3_t *record, options_t *options) {
+void print_t3(FILE *out_stream, t3_t *record, 
+		int print_newline, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%"PRId32",%"PRId64",%"PRId32"\n", 
+		fprintf(out_stream, "%"PRId32",%"PRId64",%"PRId32, 
 				record->channel,
 				record->pulse,
 				record->time);
+		if ( print_newline == NEWLINE ) {
+			fprintf(out_stream, "\n");
+		}
 	}
 }
 
@@ -75,9 +80,9 @@ void free_t3_queue(t3_queue_t **queue) {
 	}
 }
 
-t3_t get_queue_item_t3(t3_queue_t *queue, int index) {
+void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index) {
 	int true_index = (queue->left_index + index) % queue->length;
-	return(queue->queue[true_index]);
+	memcpy(record, &(queue->queue[true_index]), sizeof(t3_t));
 }
 
 

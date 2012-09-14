@@ -35,7 +35,6 @@ int main(int argc, char *argv[]) {
 			t2_photon.time = t3_photon.pulse;
 
 			print_t2(out_stream, &t2_photon, NEWLINE, &options);
-			fprintf(out_stream, "\n");
 		}
 	}
 
