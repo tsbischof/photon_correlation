@@ -55,11 +55,13 @@ def correlate_photons(filename, channels, time_limits, photons):
 
     os.remove(photons_filename)
 
-def time_dependent_g2(filename, channels, bin_width, time_limits):
+def time_dependent_g2(filename, channels, bin_width, time_limits, to_t2):
+    picoquant_cmd = [PICOQUANT, "--file-in", filename]
+    if to_t2:
+        picoquant_cmd.append("--to-t2")
+
     photon_stream = csv.reader(
-        subprocess.Popen([PICOQUANT,
-                          "--file-in", filename],
-                         stdout=subprocess.PIPE).stdout)
+        subprocess.Popen(picoquant_cmd, stdout=subprocess.PIPE).stdout)
 
     time_limit = bin_width
 
@@ -123,16 +125,20 @@ if __name__ == "__main__":
                       help="Time bounds for the histograms, as required by "
                            "histogram.",
                       action="store")
+    parser.add_option("-t", "--to-t2", dest="to_t2",
+                      help="Transform t3 data into t2 before the correlation.",
+                      action="store_true", default=False)
 
     (options, args) = parser.parse_args()
 
     channels = options.channels
+    to_t2 = options.to_t2
     bin_width = int(options.bin_width*10**12)
-
+    
     if options.time_limits:
         time_limits = Limits().from_string(options.time_limits)
     else:
         raise(ValueError("Must specify time limits."))
     
     for filename in args:
-        time_dependent_g2(filename, channels, bin_width, time_limits)
+        time_dependent_g2(filename, channels, bin_width, time_limits, to_t2)
