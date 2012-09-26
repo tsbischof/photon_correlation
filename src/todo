@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 General:
 -write interface for Python, Matlab
 -write automated test for all programs
@@ -48,4 +46,3 @@ Correlate vector:
 
 Intensity_to_t2:
 -put together some test data, make sure that the binary read is working
->>>>>>> v1.5
