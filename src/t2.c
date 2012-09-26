@@ -41,7 +41,12 @@ int t2_comparator(const void *a, const void *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t2 photons. 
      */
-	return(((t2_t *)a)->time - ((t2_t *)b)->time);
+	/* The comparison must be done explicitly to avoid issues associated with
+	 * casting int64_t to int. If we just return the difference, any value
+	 * greater than max_int would cause problems.
+	 */
+	int64_t difference = ((t2_t *)a)->time - ((t2_t *)b)->time;
+	return( difference > 0 );
 }
 
 t2_queue_t *allocate_t2_queue(int queue_length) {
@@ -83,8 +88,8 @@ int t2_queue_full(t2_queue_t *queue) {
 	return( queue->right_index - queue->left_index >= (queue->length-1) );
 }
 
-int t2_queue_pop(t2_t *record, t2_queue_t *queue) {
-	int result = t2_queue_front(record, queue);
+int t2_queue_pop(t2_queue_t *queue, t2_t *record) {
+	int result = t2_queue_front(queue, record);
 
 	if ( ! result ) {
 		queue->left_index++;
@@ -98,14 +103,14 @@ int t2_queue_pop(t2_t *record, t2_queue_t *queue) {
 }
 		
 
-int t2_queue_push(t2_t *record, t2_queue_t *queue) {
+int t2_queue_push(t2_queue_t *queue, t2_t *record) {
 	int64_t next_index = (queue->right_index + 1) % queue->length;
 	
-	debug("Appending at index %"PRId64"\n", next_index);
+	debug("Pushing at index %"PRId64"\n", next_index);
 	if ( t2_queue_full(queue) ) {
-		error("Queue overflow, with limits (%"PRId64", %"PRId64").\n"
-				"       Extend its size to continue with the calculation.\n",
-		queue->left_index, queue->right_index);
+		error("Queue overflow, with limits (%"PRId64", %"PRId64"). "
+				"Extend its size to continue with the calculation.\n",
+				queue->left_index, queue->right_index);
 		return(-1);
 	} else {
 		memcpy(&(queue->queue[next_index]), record, sizeof(t2_t));
@@ -117,31 +122,36 @@ int t2_queue_push(t2_t *record, t2_queue_t *queue) {
 	}
 }
 
-int t2_queue_front(t2_t *record, t2_queue_t *queue) {
+int t2_queue_front(t2_queue_t *queue, t2_t *record) {
+	int64_t index = queue->left_index % queue->length;
+	debug("Front of queue is at index %"PRId64"\n", index);
 	if ( queue->left_index < 0 ) {
 		return(-1);
 	} else {
-		memcpy(record, &(queue->queue[queue->left_index % queue->length]),
+		memcpy(record, 
+				&(queue->queue[index]),
 				sizeof(t2_t));
 		return(0);
 	}
 }
 
-int t2_queue_back(t2_t *record, t2_queue_t *queue) {
+int t2_queue_back(t2_queue_t *queue, t2_t *record) {
+	int64_t index = queue->right_index % queue->length;
+	debug("Back of queue is at index %"PRId64"\n", index);
 	if ( queue->right_index < 0 ) {
 		return(-1);
 	} else {
 		memcpy(record,
-				&(queue->queue[queue->right_index % queue->length]),
+				&(queue->queue[index]),
 				sizeof(t2_t));
 		return(0);
 	}
 }
 
-int t2_queue_index(t2_t *record, t2_queue_t *queue, int index) {
+int t2_queue_index(t2_queue_t *queue, t2_t *record, int index) {
 	int64_t true_index = (queue->left_index + index) % queue->length;
 
-	if ( (true_index-index) > t2_queue_size(queue) ) {
+	if ( index > t2_queue_size(queue) ) {
 		debug("Requested return of non-existent index: %"PRId64"\n", 
 				true_index);
 		return(-1);
@@ -166,38 +176,52 @@ void t2_queue_sort(t2_queue_t *queue) {
 	 */
 	int64_t right = queue->right_index % queue->length;
 	int64_t left = queue->left_index % queue->length;
-	if ( right < left ) {
-		/* The queue wraps around, so join the two together by moving the 
-		 * right-hand bit over. 
-		 * xxxxx---yyyy -> xxxxxyyyy---
-		 */
-		debug("Queue loops around, moving records to make them contiguous.\n");
-		memmove(&(queue->queue[right+1]), 
-				&(queue->queue[left]),
-				sizeof(t2_t)*(queue->length - left));
-	} else if ( left != 0 ){
-		/* There is one continuous block, so move it to the front. 
-		 * ---xxxx -> xxxx---
-		 */
-		debug("Queue is offset from beginning, moving it forward.\n");
-		memmove(queue->queue,
-				&(queue->queue[left]),
-				sizeof(t2_t)*(t2_queue_size(queue)));
+	if ( t2_queue_full(queue) ) {
+		debug("Queue is full, no action is needed to make it contiguous for "
+				"sorting.\n");
 	} else {
-		debug("Queue starts at the beginning of the array.\n");
+		warn("Sorting with a non-full queue is not thoroughly. Use these "
+				"results at your own risk.\n");
+		if ( right < left ) {
+			/* The queue wraps around, so join the two together by moving the 
+			 * right-hand bit over. 
+			 * xxxxx---yyyy -> xxxxxyyyy---
+			 */
+			debug("Queue loops around, moving records to "
+					"make them contiguous.\n");
+			memmove(&(queue->queue[right+1]), 
+					&(queue->queue[left]),
+					sizeof(t2_t)*(queue->length - left));
+		} else if ( left != 0 && ! t2_queue_full(queue) ) {
+			/* There is one continuous block, so move it to the front. 
+			 * ---xxxx -> xxxx---
+			 */
+			debug("Queue is offset from beginning, moving it forward.\n");
+			memmove(queue->queue,
+					&(queue->queue[left]),
+					sizeof(t2_t)*t2_queue_size(queue));
+		} else {
+			debug("Queue starts at the beginning of the array, "
+					"no action needed to make it contiguous.\n");
+		}
 	}
 
-	queue->right_index -= queue->left_index;
+	queue->right_index = t2_queue_size(queue) - 1;
 	queue->left_index = 0;
 
-	debug("Sorting %"PRId64" photons.\n", queue->right_index+1);
+	debug("Sorting %"PRId64" photons.\n", t2_queue_size(queue));
 
-	qsort(queue->queue, queue->right_index+1, sizeof(t2_t), t2_comparator);
+	qsort(queue->queue, 
+			t2_queue_size(queue), sizeof(t2_t), t2_comparator);
+	/*t2_queue_front(queue, &record);
+	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);
+	t2_queue_back(queue, &record);
+	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);*/
 }
 
 void yield_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
 	t2_t record;
-	while ( ! t2_queue_pop(&record, queue) ) {
+	while ( ! t2_queue_pop(queue, &record) ) {
 		print_t2(out_stream, &record, NEWLINE, options);
 	}
 }

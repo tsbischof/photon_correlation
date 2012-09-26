@@ -17,8 +17,7 @@ Scripts:
 Picoquant:
 
 Correlate:
--long time stuff seems to be having issues (with positive-only)
--check that the read/write is working correctly: right/left do not seem to work all the time
+-write thorough tests
 
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
@@ -39,6 +38,7 @@ Python:
 
 Channels:
 -finish implementing offsets
+-write some extensive tests to make sure that the sorting works in all situations. It currently is only tested for the case where the queue is full.
 
 Correlate vector:
 -take notes from notebook and compile the vector correlation method.

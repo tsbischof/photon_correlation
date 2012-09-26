@@ -69,11 +69,11 @@ int next_t2_queue_correlate(FILE *in_stream,
 	debug("Gathering next photons for correlation.\n");
 
 	/* The first entry has been used already, so eliminate it */
-	t2_queue_pop(&left, queue);
+	t2_queue_pop(queue, &left);
 
 	while ( 1 ) {
-		t2_queue_front(&left, queue);
-		t2_queue_back(&right, queue);
+		t2_queue_front(queue, &left);
+		t2_queue_back(queue, &right);
 
 		if ( feof(in_stream) ) {
 			/* If we are at the end of the file, keep moving the left index to
@@ -97,7 +97,7 @@ int next_t2_queue_correlate(FILE *in_stream,
 			 */
 			if ( ! next_t2(in_stream, &right, options) ) {
 				/* Found a photon. */
-				if ( t2_queue_push(&right, queue) ) {
+				if ( t2_queue_push(queue, &right) ) {
 					error("Could not add next photon to queue.\n");
 					return(-1);
 				}
@@ -152,7 +152,7 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 	debug("---------------------------------\n");
 	debug("Initializing the offset array.\n");
 	init_offsets(offsets);
-	offsets->limit = queue->right_index - queue->left_index;
+	offsets->limit = t2_queue_size(queue) - 1;
 
 	debug("Moving on to the correlation.\n");
 
@@ -160,8 +160,8 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
-		t2_queue_index(&left, queue, offsets->offsets[0]);
-		t2_queue_index(&right, queue, offsets->offsets[options->order-1]);
+		t2_queue_index(queue, &left, offsets->offsets[0]);
+		t2_queue_index(queue, &right, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t2(&left, &right, options)  ) {
 			if ( verbose ) {
@@ -185,14 +185,14 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
-				t2_queue_index(&left, queue, offset);
+				t2_queue_index(queue, &left, offset);
 
 				correlation->records[0].channel = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
-					t2_queue_index(&right, queue, offset);
+					t2_queue_index(queue, &right, offset);
 
 					debug("(%"PRId32",%"PRId64") <-> "
 							"(%"PRId32",%"PRId64")\n", 

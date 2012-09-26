@@ -61,7 +61,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 					 options->suppressed_channels[record.channel]) ) {
 				offset_t2(&record, options);
 				/* Insert the new photon, now that everything is cool. */
-				if ( t2_queue_push(&record, queue) ) {
+				if ( t2_queue_push(queue, &record) ) {
 					error("Could not add new photon to queue.\n");
 					result = -1;
 				} 
@@ -98,10 +98,11 @@ void yield_sorted_t2(FILE *out_stream, t2_queue_t *queue,
 	t2_t left;
 	t2_t right;
 
-	t2_queue_back(&right, queue);
-	while ( ! t2_queue_front(&left, queue) &&
+	t2_queue_back(queue, &right);
+	t2_queue_front(queue, &left);
+	while ( ! t2_queue_front(queue, &left) &&
 			right.time - left.time > max_offset_difference ) {
-		t2_queue_pop(&left, queue);
+		t2_queue_pop(queue, &left);
 		print_t2(out_stream, &left,
 				NEWLINE, options);
 		n_printed++;
