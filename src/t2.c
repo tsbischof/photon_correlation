@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "error.h"
 #include "t2.h"
@@ -8,31 +9,44 @@ int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
 	int result;
 
 	if ( options->binary_in ) {
-		result = ( fread(record, sizeof(t2_t), 1, in_stream) != 1);
+		result = fread(record, sizeof(t2_t), 1, in_stream);
+		result = (result != 1);
 	} else {
-		result = ( fscanf(in_stream, "%d,%lld",
+		result = fscanf(in_stream, 
+				"%"SCNd32",%"SCNd64,
 			 	&(record->channel),
-				&(record->time)) != 2);
+				&(record->time));
+		result = (result != 2);
 	}
 	
 	return(result);
 }
 
-void print_t2(FILE *out_stream, t2_t *record, options_t *options) {
+void print_t2(FILE *out_stream, t2_t *record, int print_newline,
+		options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t2_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%d,%lld\n", 
+		fprintf(out_stream, "%"PRId32",%"PRId64, 
 				record->channel,
 				record->time);
+
+		if ( print_newline == NEWLINE ) {
+			fprintf(out_stream, "\n");
+		}
 	}
 }
 
 int t2_comparator(const void *a, const void *b) {
-	/* Comparator to be used with standard sorting algorithms to sort
-	 * t2 photons. Yields 1 for sorted, 0 for equal, and -1 for reversed.
+	/* Comparator to be used with standard sorting algorithms (qsort) to sort
+	 * t2 photons. 
      */
-	return(((t2_t *)a)->time < ((t2_t *)b)->time);
+	/* The comparison must be done explicitly to avoid issues associated with
+	 * casting int64_t to int. If we just return the difference, any value
+	 * greater than max_int would cause problems.
+	 */
+	int64_t difference = ((t2_t *)a)->time - ((t2_t *)b)->time;
+	return( difference > 0 );
 }
 
 t2_queue_t *allocate_t2_queue(int queue_length) {
@@ -60,50 +74,6 @@ t2_queue_t *allocate_t2_queue(int queue_length) {
 	return(queue);
 }
 
-int next_t2_queue(FILE *in_stream, 
-		long long int max_time_distance,
-		t2_queue_t *queue, options_t *options) {
-	long long int starting_index;
-	long long int ending_index;
-
-	queue->left_index += 1;
-	starting_index = queue->left_index % queue->length;
-	ending_index = queue->right_index % queue->length;
-
-	while ( 1 ) {
-		if ( feof(in_stream) ) {
-			/* We have reached the end of the stream, so keep moving the left
-			 * index forward until the queue is empty.
-			 */
-			return(queue->left_index < queue->right_index);
-		} else if ( ending_index > 0 && 
-				( queue->queue[ending_index].time 
-					- queue->queue[starting_index].time ) 
-				< max_time_distance ) {
-			/* Still within the distance bounds */
-		} else {
-			queue->right_index += 1;
-			ending_index = queue->right_index % queue->length;
-			
-			if ( ! next_t2(in_stream, &(queue->queue[ending_index]), options) 
-					&& ! feof(in_stream) ) {
-				/* Failed to read a photon. We have already checked that we
- 				 * we are not at the end of the stream, so we have a read
- 				 * error on our hands.
- 				 */
-				error("Error while reading t2 stream.\n");
-				return(0);
-			} else if ( (queue->right_index - queue->left_index)
-					>= queue->length ) {
-				warn("Overflow of queue entries, increase queue size for "
-					"accurate results.\n");
-			}
-
-			/* By here, we have no error and no EOF, so move along. */
-		}
-	}
-}
-
 void free_t2_queue(t2_queue_t **queue) {
 	if ( *queue != NULL ) {
 		if ( (*queue)->queue != NULL ) {
@@ -113,17 +83,155 @@ void free_t2_queue(t2_queue_t **queue) {
 	}
 }
 
-t2_t get_queue_item_t2(t2_queue_t *queue, int index) {
-	int true_index = (queue->left_index + index) % queue->length;
-	return(queue->queue[true_index]);
+int t2_queue_full(t2_queue_t *queue) {
+	/* If the queue has no free spaces, returns true. */
+	return( queue->right_index - queue->left_index >= (queue->length-1) );
+}
+
+int t2_queue_pop(t2_queue_t *queue, t2_t *record) {
+	int result = t2_queue_front(queue, record);
+
+	if ( ! result ) {
+		queue->left_index++;
+		if ( queue->left_index > queue->right_index ) {
+			queue->left_index = -1;
+			queue->right_index = -1;
+		}
+	}
+
+	return(result);
+}
+		
+
+int t2_queue_push(t2_queue_t *queue, t2_t *record) {
+	int64_t next_index = (queue->right_index + 1) % queue->length;
+	
+	debug("Pushing at index %"PRId64"\n", next_index);
+	if ( t2_queue_full(queue) ) {
+		error("Queue overflow, with limits (%"PRId64", %"PRId64"). "
+				"Extend its size to continue with the calculation.\n",
+				queue->left_index, queue->right_index);
+		return(-1);
+	} else {
+		memcpy(&(queue->queue[next_index]), record, sizeof(t2_t));
+		queue->right_index++;
+		if ( queue->left_index < 0 ) {
+			queue->left_index = 0;
+		}
+		return(0);
+	}
+}
+
+int t2_queue_front(t2_queue_t *queue, t2_t *record) {
+	int64_t index = queue->left_index % queue->length;
+	debug("Front of queue is at index %"PRId64"\n", index);
+	if ( queue->left_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record, 
+				&(queue->queue[index]),
+				sizeof(t2_t));
+		return(0);
+	}
+}
+
+int t2_queue_back(t2_queue_t *queue, t2_t *record) {
+	int64_t index = queue->right_index % queue->length;
+	debug("Back of queue is at index %"PRId64"\n", index);
+	if ( queue->right_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record,
+				&(queue->queue[index]),
+				sizeof(t2_t));
+		return(0);
+	}
+}
+
+int t2_queue_index(t2_queue_t *queue, t2_t *record, int index) {
+	int64_t true_index = (queue->left_index + index) % queue->length;
+
+	if ( index > t2_queue_size(queue) ) {
+		debug("Requested return of non-existent index: %"PRId64"\n", 
+				true_index);
+		return(-1);
+	} else { 
+		memcpy(record, &(queue->queue[true_index]), sizeof(t2_t));
+		return(0);
+	}
+}
+
+int64_t t2_queue_size(t2_queue_t *queue) {
+	if ( queue->left_index < 0 || queue->right_index < 0 ) {
+		return(0);
+	} else {
+		return(queue->right_index - queue->left_index + 1);
+	}
+}
+
+void t2_queue_sort(t2_queue_t *queue) {
+	/* First, check if the queue wraps around. If it does, we need to move 
+	 * everything into one continous block. If it does not, it is already in 
+	 * a continuous block and is ready for sorting.
+	 */
+	int64_t right = queue->right_index % queue->length;
+	int64_t left = queue->left_index % queue->length;
+	if ( t2_queue_full(queue) ) {
+		debug("Queue is full, no action is needed to make it contiguous for "
+				"sorting.\n");
+	} else {
+		warn("Sorting with a non-full queue is not thoroughly. Use these "
+				"results at your own risk.\n");
+		if ( right < left ) {
+			/* The queue wraps around, so join the two together by moving the 
+			 * right-hand bit over. 
+			 * xxxxx---yyyy -> xxxxxyyyy---
+			 */
+			debug("Queue loops around, moving records to "
+					"make them contiguous.\n");
+			memmove(&(queue->queue[right+1]), 
+					&(queue->queue[left]),
+					sizeof(t2_t)*(queue->length - left));
+		} else if ( left != 0 && ! t2_queue_full(queue) ) {
+			/* There is one continuous block, so move it to the front. 
+			 * ---xxxx -> xxxx---
+			 */
+			debug("Queue is offset from beginning, moving it forward.\n");
+			memmove(queue->queue,
+					&(queue->queue[left]),
+					sizeof(t2_t)*t2_queue_size(queue));
+		} else {
+			debug("Queue starts at the beginning of the array, "
+					"no action needed to make it contiguous.\n");
+		}
+	}
+
+	queue->right_index = t2_queue_size(queue) - 1;
+	queue->left_index = 0;
+
+	debug("Sorting %"PRId64" photons.\n", t2_queue_size(queue));
+
+	qsort(queue->queue, 
+			t2_queue_size(queue), sizeof(t2_t), t2_comparator);
+	/*t2_queue_front(queue, &record);
+	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);
+	t2_queue_back(queue, &record);
+	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);*/
+}
+
+void yield_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
+	t2_t record;
+	while ( ! t2_queue_pop(queue, &record) ) {
+		print_t2(out_stream, &record, NEWLINE, options);
+	}
 }
 
 /* These functions break up the photons into subsets by dividing time into
- * windows of fixed length. Thus we need to be able to receive a photon from a 
- * window, and to iterate between the windows.
+ * windows of fixed length. Thus we need to be able to receive a photon from 
+ * a window, and to iterate between the windows.
  */
 void init_t2_window(t2_window_t *window, 
-		long long int start_time, options_t *options) {
+		int64_t start_time, options_t *options) {
 	if ( options->set_start_time ) {
 		window->limits.lower = options->start_time;
 	} else {
@@ -159,7 +267,8 @@ int init_t2_windowed_stream(t2_windowed_stream_t *stream,
 	if ( next_t2(in_stream, &(stream->current_photon), options) ) {
 		return(-1);
 	} else {
-		init_t2_window(&(stream->window), stream->current_photon.time, options);
+		init_t2_window(&(stream->window), 
+				stream->current_photon.time, options);
 	}
 
 	return(0);
@@ -173,7 +282,8 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t2(stream->in_stream, &(stream->current_photon), options) ) {
+		if ( next_t2(stream->in_stream, 
+				&(stream->current_photon), options) ) {
 			return(-1);
 		}
 	}
@@ -196,9 +306,9 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 		stream->yielded_photon = 0;
 		return(1);
 	} else if ( stream->current_photon.time < stream->window.limits.lower ) {
-		/* this helps prevent inifinite loops: imagine that we define the window
- 		 * to start after the photon, at which point we keep moving forward 
- 		 * without ever finding the correct window.
+		/* this helps prevent inifinite loops: imagine that we define the 
+		 * window to start after the photon, at which point we keep moving 
+		 * forward without ever finding the correct window.
  		 */
 		return(-2);
 	} else {

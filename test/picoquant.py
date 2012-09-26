@@ -102,7 +102,7 @@ if __name__ == "__main__":
     for test_file in test_files:
         print(test_file)
         tester = Picoquant(test_file)
-        tester.tests()
-##        tester.to_files()
+##        tester.tests()
+        tester.to_files()
                       
 

@@ -99,14 +99,14 @@ int th_v50_interactive_read(FILE *in_stream,
 	
 	for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
 		result = fread(&(*interactive)[i],
-				sizeof(th_v50_interactive_t) - sizeof(uint32 *), 1, 
+				sizeof(th_v50_interactive_t) - sizeof(uint32_t *), 1, 
 				in_stream);
 		if ( result != 1 ) {
 			error("Could not allocate memory for curve %"PRId32".\n", i);
 			return(PQ_READ_ERROR);
 		}
 
-		(*interactive)[i].Counts = (uint32 *)malloc(sizeof(uint32)*
+		(*interactive)[i].Counts = (uint32_t *)malloc(sizeof(uint32_t)*
 				th_header->NumberOfChannels);
 		if ( (*interactive)[i].Counts == NULL ) {
 			error("Could not allocate memory for counts of curve %"PRId32".\n", i);
@@ -114,7 +114,7 @@ int th_v50_interactive_read(FILE *in_stream,
 		}
 
 		result = fread((*interactive)[i].Counts,
-				sizeof(uint32), th_header->NumberOfChannels, 
+				sizeof(uint32_t), th_header->NumberOfChannels, 
 				in_stream);
 		if ( result != th_header->NumberOfChannels ) {
 			error("Could not read counts for curve %"PRId32".\n", i);
@@ -231,11 +231,11 @@ void th_v50_header_print(FILE *out_stream,
 	}
 
 	for ( i = 0; i < 3; i++ ) {
-		fprintf(out_stream, "Param[%d].Start = %f\n",
+		fprintf(out_stream, "Param[%d].Start = %"PRIf32"\n",
 				i, th_header->Param[i].Start);
-		fprintf(out_stream, "Param[%d].Step = %f\n",
+		fprintf(out_stream, "Param[%d].Step = %"PRIf32"\n",
 				i, th_header->Param[i].Step);
-		fprintf(out_stream, "Param[%d].Stop = %f\n",
+		fprintf(out_stream, "Param[%d].Stop = %"PRIf32"\n",
 				i, th_header->Param[i].Stop);
 	}
 
@@ -256,7 +256,7 @@ void th_v50_header_print(FILE *out_stream,
 				i, th_header->Brd[i].CFDDiscriminatorMin);
 		fprintf(out_stream, "Brd[%d].SYNCLevel = %"PRId32"\n",
 				i, th_header->Brd[i].SYNCLevel);
-		fprintf(out_stream, "Brd[%d].Resolution = %f\n",
+		fprintf(out_stream, "Brd[%d].Resolution = %"PRIf32"\n",
 				i, th_header->Brd[i].Resolution);
 	}
 }
@@ -287,11 +287,11 @@ void th_v50_interactive_header_print(FILE *out_stream,
 			i, (*interactive)[i].SubMode);
 		fprintf(out_stream, "Crv[%d].MeasMode = %"PRId32"\n",
 			i, (*interactive)[i].MeasMode);
-		fprintf(out_stream, "Crv[%d].P1 = %f\n",
+		fprintf(out_stream, "Crv[%d].P1 = %"PRIf32"\n",
 			i, (*interactive)[i].P1);
-		fprintf(out_stream, "Crv[%d].P2 = %f\n",
+		fprintf(out_stream, "Crv[%d].P2 = %"PRIf32"\n",
 			i, (*interactive)[i].P2);
-		fprintf(out_stream, "Crv[%d].P3 = %f\n",
+		fprintf(out_stream, "Crv[%d].P3 = %"PRIf32"\n",
 			i, (*interactive)[i].P3);
 		fprintf(out_stream, "Crv[%d].RangeNo = %"PRId32"\n",
 			i, (*interactive)[i].RangeNo);
@@ -311,7 +311,7 @@ void th_v50_interactive_header_print(FILE *out_stream,
 			i, (*interactive)[i].TDCCountRate);
 		fprintf(out_stream, "Crv[%d].IntegralCount = %"PRId32"\n",
 			i, (*interactive)[i].IntegralCount);
-		fprintf(out_stream, "Crv[%d].Resolution = %f\n",
+		fprintf(out_stream, "Crv[%d].Resolution = %"PRIf32"\n",
 			i, (*interactive)[i].Resolution);
 		fprintf(out_stream, "Crv[%d].ExtDevices = %"PRId32"\n",
 			i, (*interactive)[i].ExtDevices);
@@ -326,11 +326,11 @@ void th_v50_interactive_data_print(FILE *out_stream,
 		options_t *options) {
 	int i;
 	int j;
-	double left_time;
-	double time_step;
+	float64_t left_time;
+	float64_t time_step;
 
 	for ( i = 0; i < th_header->NumberOfCurves; i++ ) {
-		left_time = (double)(*interactive)[i].Offset;
+		left_time = (float64_t)(*interactive)[i].Offset;
 		time_step = (*interactive)[i].Resolution;
 		for ( j = 0; j < th_header->NumberOfChannels; j++ ) { 
 			pq_print_interactive(out_stream, i, left_time, left_time+time_step,
@@ -352,20 +352,20 @@ int th_v50_tttr_header_read(FILE *in_stream, th_v50_header_t *th_header,
 
 	fseek(in_stream, 0, SEEK_CUR);
 	result = fread(tttr_header, 
-		sizeof(th_v50_tttr_header_t)-sizeof(int32 *), 1, in_stream);
+		sizeof(th_v50_tttr_header_t)-sizeof(int32_t *), 1, in_stream);
 	if ( result != 1 ) {
 		error("Could not read tttr header.\n");
 		return(PQ_READ_ERROR);
 	}
 
-	tttr_header->SpecHeader = (int32 *)malloc(sizeof(int32)*
+	tttr_header->SpecHeader = (int32_t *)malloc(sizeof(int32_t)*
 			tttr_header->SpecHeaderLength);
 	if ( tttr_header->SpecHeader == NULL ) {
 		error("Could not allocate special header memory.\n");
 		return(PQ_MEM_ERROR);
 	} 
 
-	result = fread(tttr_header->SpecHeader, sizeof(int32), 
+	result = fread(tttr_header->SpecHeader, sizeof(int32_t), 
 			tttr_header->SpecHeaderLength, in_stream);
 	if ( result != tttr_header->SpecHeaderLength ) {
 		error("Could not read the tttr special header.\n");
@@ -414,9 +414,9 @@ int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 		options_t *options) {
 	int result = 0;
 	int overflows = 0;
-	long long int record_count = 0;
+	long long record_count = 0;
 	th_v50_tttr_record_t record;
-	long long int base_time = 0;
+	long long base_time = 0;
 
 	while ( !feof(in_stream) && record_count < options->number ) {
 		/* In the TimeHarp business, the TimeTag is the internal clock number,

@@ -1,7 +1,23 @@
-TARGET ?= linux32
+TARGET ?= linux
+
+CFLAGS += -Wall -std=c99 
+# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
+# errors if not adjusted, so fix it here as needed. This should not (in 
+# principle) affect 64-bit systems adversely, though if we ever get to 
+# 128-bit filesystems we will need to switch this to 128. 
+CFLAGS += -D_FILE_OFFSET_BITS=64 
+
+# Version info for the executables.
+CFLAGS += -DVERSION_MAJOR=1
+CFLAGS += -DVERSION_MINOR=5
+CFLAGS += -O3
+CFLAGS += -lm
+CFLAGS += -fopenmp
+
+LDFLAGS = ${CFLAGS}
 
 # Set up the compilers and whatnot
-ifeq (${TARGET}, linux32)
+ifeq (${TARGET}, linux)
 	MKDIR = mkdir -p
 	RM = rm -f
 	TEST = test
@@ -9,6 +25,14 @@ ifeq (${TARGET}, linux32)
 	CC = cc
 	LD = cc
 	CFLAGS += -fPIC
+endif
+ifeq (${TARGET}, cygwin)
+	MKDIR = mkdir -p
+	RM = rm -f
+	TEST = test
+	CP = cp -p 
+	CC = cc
+	LD = cc
 endif
 ifeq (${TARGET}, win32)
 	MKDIR = mkdir
@@ -18,33 +42,17 @@ ifeq (${TARGET}, win32)
 	LD = mingw32-gcc
 endif
 
-CFLAGS += -Wall 
-CFLAGS += -std=c99
-# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
-# errors if not adjusted, so fix it here as needed. This should not (in 
-# principle) affect 64-bit systems adversely, though if we ever get to 
-# 128-bit filesystems we will need to switch this to 128. 
-CFLAGS += -D_FILE_OFFSET_BITS=64
-CFLAGS += -DVERSION_MAJOR=1
-CFLAGS += -DVERSION_MINOR=5
-# For use while debugging.
-#CFLAGS += -g -O0
-CFLAGS += -O3 
-CFLAGS += -lm
-CFLAGS += -fopenmp
-
-LDFLAGS = ${CFLAGS}
-INSTALL_DIR = ${HOME}/bin/
-
-
 
 # Define the targets and their properties.
+INSTALL_DIR = ${HOME}/bin
+LIB_DIR = ${HOME}/lib
+INCLUDE_DIR = ${HOME}/include/picoquant
 TARGETS = 
 ALL_OBJ = 
 ALL_LIB = 
 
 UTIL = error.o types.o strings.o files.o options.o modes.o limits.o \
-		t2.o t3.o 
+		t2.o t3.o strtoll.o
 
 PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
 		picoquant.o \
@@ -71,8 +79,8 @@ HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
 		histogram.o \
 		combinations.o \
 		histogram_gn.o \
-		histogram_t2.o \
-		histogram_t3.o 
+		histogram_t2.o correlate_t2.o \
+		histogram_t3.o correlate_t3.o
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
@@ -143,8 +151,6 @@ TARGETS += correlate_vector
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
-LIB_DIR = ${HOME}/lib
-INCLUDE_DIR = ${HOME}/include/picoquant
 LIB_TARGETS = 
 LIBPICOQUANT_OBJ = ${sort ${filter-out %main.o, ${ALL_OBJ}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPICOQUANT_OBJ}}
@@ -199,5 +205,4 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${CC} ${CFLAGS} -c -o $@ $< 
 
 clean:
-	${RM} ${sort \
-		${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}

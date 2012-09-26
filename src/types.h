@@ -1,23 +1,32 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
-#include <inttypes.h>
-#include <stdint.h>
 #include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
 
-typedef int32_t int32;
-typedef uint32_t uint32;
-typedef int64_t int64;
+#include "strtoll.h"
+
 #ifdef __i386__
-typedef time_t time32;
+typedef time_t time32_t;
 #endif
 #ifdef __x86_64__
-typedef int32_t time32;
+typedef int32_t time32_t;
 #endif
 
-typedef float float32;
-typedef double float64;
+typedef float float32_t;
+typedef double float64_t;
 
-char* ctime32(time32 *mytime);
+#define PRIf32 "f"
+#define SCNf32 "f"
+#define PRIf64 "lf"
+#define SCNf64 "lf"
+
+char* ctime32(time32_t *mytime);
+
+#define strtoi32 strtol
+#define strtoi64 strtoll
+
+int64_t i64abs(int64_t val);
 
 #endif

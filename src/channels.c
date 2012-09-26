@@ -18,6 +18,23 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
 	}
 }
 
+int64_t offset_difference(int64_t *offsets, int n) {
+	int64_t min = 0;
+	int64_t max = 0;
+	int i;
+
+	for ( i = 0; i < n; i++ ) {
+		if ( offsets[i] < min ) {
+			min = offsets[i];
+		} 
+		if ( offsets[i] > max ) {
+			max = offsets[i];
+		}
+	}
+
+	return(max-min);
+}
+
 /* These routines are designed to implement a sorted list. The incoming entries
  * are already mostly sorted, so we only need to populate the list long enough
  * to have more entries than needed.
@@ -59,36 +76,10 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
  *       exceeded sufficiently to emit photons, then yields those photons.
  */
 
-<<<<<<< HEAD
-int sorted_insert(sorted_photons_t *photon_stream, photon_t,
+/*int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		photon, photon_comparator) { 
 	int index;
-=======
-	while ( ! next_t2(in_stream, &record) ) {
-		if ( options->suppress_channels && 
-			options->suppressed_channels[record.channel]) {
-			;
-		} else {
-			print_t2(out_stream, &record, options);
-		}
-	}
-
-	return(0);
-}
-
-int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
-	t3_t record;
 	
-	while ( ! next_t3(in_stream, &record) ) {
-		if ( options->suppress_channels && 
-			options->suppressed_channels[record.channel]) {
-			;
-		} else {
-			print_t3(out_stream, &record, options);
-		}
-	}
->>>>>>> 6db0155ce7cde323c46ce2e2f2f16e273f89ebc7
-
 	index = bsearch(photon_stream->photons, photon, photon_comparator);
 	if not valid_index:
  		return(-1);
@@ -98,4 +89,4 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		insert photon
 		update bounds
 		return(0);
-}
+} */

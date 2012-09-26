@@ -3,10 +3,11 @@
 
 #include <stdio.h>
 #include "options.h"
+#include "types.h"
 
 typedef struct {
-	long long int time;
-	unsigned int counts;
+	int64_t time;
+	uint32_t counts;
 } intensity_t;
 
 int next_intensity(FILE *in_stream, intensity_t *intensity,

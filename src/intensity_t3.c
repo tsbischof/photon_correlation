@@ -45,7 +45,7 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	print_counts(out_stream, 
 			stream.window.limits.lower,
-			record.pulse_number,
+			record.pulse,
 			counts);
 
 	free_counts(&counts);

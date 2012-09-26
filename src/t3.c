@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "t3.h"
 #include "error.h"
@@ -10,27 +11,27 @@ int next_t3(FILE *in_stream, t3_t *record, options_t *options) {
 	if ( options->binary_in ) {
 		result = ( fread(record, sizeof(t3_t), 1, in_stream) != 1);
 	} else {
-<<<<<<< HEAD
-		result = ( fscanf(in_stream, "%d,%lld,%u",
-=======
-		result = ( fscanf(in_stream, "%d,%lld,%d",
->>>>>>> 6db0155ce7cde323c46ce2e2f2f16e273f89ebc7
+		result = ( fscanf(in_stream, "%"PRId32",%"PRId64",%"PRId32"",
 				&(record->channel),
-				&(record->pulse_number),
+				&(record->pulse),
 				&(record->time)) != 3 );
 	}
 	
 	return(result);
 }
 
-void print_t3(FILE *out_stream, t3_t *record, options_t *options) {
+void print_t3(FILE *out_stream, t3_t *record, 
+		int print_newline, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(record, sizeof(t3_t), 1, out_stream);
 	} else {
-		fprintf(out_stream, "%d,%lld,%u", 
+		fprintf(out_stream, "%"PRId32",%"PRId64",%"PRId32, 
 				record->channel,
-				record->pulse_number,
+				record->pulse,
 				record->time);
+		if ( print_newline == NEWLINE ) {
+			fprintf(out_stream, "\n");
+		}
 	}
 }
 
@@ -38,10 +39,10 @@ int t3_comparator(const void *a, const void *b) {
 	/* The comparator needed for sorting a list of t3 photons. Follows the 
      * standard of qsort (-1 sorted, 0 equal, 1 unsorted)
 	 */
-	if ( ((t3_t *)a)->pulse_number == ((t3_t *)b)->pulse_number ) {
+	if ( ((t3_t *)a)->pulse == ((t3_t *)b)->pulse ) {
 		return( ((t3_t *)a)->time - ((t3_t *)b)->time );
 	} else {
-		return( ((t3_t *)a)->pulse_number - ((t3_t *)b)->pulse_number);
+		return( ((t3_t *)a)->pulse - ((t3_t *)b)->pulse);
 	}
 }
 
@@ -79,9 +80,9 @@ void free_t3_queue(t3_queue_t **queue) {
 	}
 }
 
-t3_t get_queue_item_t3(t3_queue_t *queue, int index) {
+void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index) {
 	int true_index = (queue->left_index + index) % queue->length;
-	return(queue->queue[true_index]);
+	memcpy(record, &(queue->queue[true_index]), sizeof(t3_t));
 }
 
 
@@ -121,11 +122,11 @@ int next_t3_windowed(t3_windowed_stream_t *stream, t3_t *record,
 	}
 
 	if ( (! options->count_all) 
-			&& stream->current_photon.pulse_number
+			&& stream->current_photon.pulse
 					 > stream->window.limits.upper ) {
 		stream->yielded_photon = 0;
 		return(1);
-	} else if ( stream->current_photon.pulse_number
+	} else if ( stream->current_photon.pulse
 					 < stream->window.limits.lower ) {
 		/* this helps prevent inifinite loops: imagine that we define the window
  		 * to start after the photon, at which point we keep moving forward 
@@ -136,7 +137,7 @@ int next_t3_windowed(t3_windowed_stream_t *stream, t3_t *record,
 		stream->yielded_photon = 1;
 		
 		record->channel = stream->current_photon.channel;
-		record->pulse_number = stream->current_photon.pulse_number;
+		record->pulse = stream->current_photon.pulse;
 		record->time = stream->current_photon.time;
 		return(0);
 	}

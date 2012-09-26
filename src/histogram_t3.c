@@ -20,8 +20,18 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	gn_histogram_t **histograms = NULL;
 	edges_t **edges = NULL;
 	t3_t record;
-	long long int values[1];
+	int64_t values[1];
 
+	/* This process represents a histogram of all of the arrival times
+ 	 * on each of the channels. It is a three-step process:
+ 	 * 1. Allocate a histogram for each channel.
+ 	 * 2. For each record, increment the corresponding bin in the corresponding
+ 	 *    histogram.
+ 	 * 3. Print all histograms.
+ 	 *
+ 	 * These could be split into subroutines, but the process is sufficiently
+ 	 * simple that they are not.
+ 	 */
 	debug("Allocating memory for the histograms and edges.\n");
 	histograms = (gn_histogram_t **)malloc(sizeof(gn_histogram_t *)*
 					options->channels);
@@ -68,7 +78,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Follow the stream and perform the histogramming. */
 	while ( !result && !next_t3(in_stream, &record, options) ) {
-		debug("Record: %d,%lld,%d\n", record.channel, record.pulse_number,
+		debug("Record: %d,%"PRIf64",%d\n", record.channel, record.pulse,
 				record.time);
 		values[0] = record.time;
 		if ( record.channel >= options->channels ) {
@@ -82,7 +92,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Print the histograms. */
 	for ( i = 0; !result && i < options->channels; i++ ) {
-		print_gn_histogram(out_stream, histograms[i]);
+		print_gn_histogram(out_stream, histograms[i], options);
 	}
 
 	/* Cleanup. */
@@ -98,98 +108,43 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	return(0);
 }
 
-/* t3_gn is sufficiently complicated that we actually should break up the 
- * functionality into subroutines.
- */
-t3_correlated_t *allocate_t3_correlated(options_t *options) {
-	t3_correlated_t *record = NULL;
-
-	record = (t3_correlated_t *)malloc(sizeof(t3_correlated_t));
-	if ( record != NULL ) { 
-		record->records = (t3_t *)malloc(sizeof(t3_t)*(options->order-1));
-		if ( record->records == NULL ) {
-			free_t3_correlated(&record);
-		}
-	}
-
-	return(record);
-}
-
-void free_t3_correlated(t3_correlated_t **record) {
-	if ( *record != NULL ) {
-		if ( (*record)->records != NULL ) {
-			free((*record)->records);
-		}
-		free(*record);
-	}
-}
-
-int next_t3_correlated(FILE *in_stream, t3_correlated_t *record,
-		 options_t *options) {
-	int result;
-	int i;
-
-	result = (fscanf(in_stream, "%d", &(*record).ref_channel) != 1);
-
-	if ( result && !feof(in_stream) ) {
-		error("Could not read reference channel from stream.\n");
-	} else {
-		for ( i = 0; i < options->order - 1; i++ ) {
-			result = ( fscanf(in_stream, ",%d,%lld,%d", 
-					&(*record).records[i].channel,
-					&(*record).records[i].pulse_number,
-					&(*record).records[i].time) != 3);
-			if ( result && !feof(in_stream)) {
-				error("Could not read correlated record (index %d).\n", i);
-				i = options->order;
-			}
-		}
-
-	}
-			
-	return(result);
-}
-
 int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
-	t3_correlated_t *record;
+	t3_correlation_t *correlation;
 	t3_histograms_t *histograms;
 	int result = 0;
-	int i;
 
-	record = allocate_t3_correlated(options);
+	correlation = allocate_t3_correlation(options);
 	histograms = make_t3_histograms(options);
 	
-	if ( record == NULL || histograms == NULL ) {
+	if ( correlation == NULL || histograms == NULL ) {
 		error("Could not allocate memory for the histogram run.\n");
 		result = -1;
 	} else { 
 		/* Loop through the data. 
 		 */
-		while ( !(next_t3_correlated(in_stream, record, options)) ) {
+		while ( !(next_t3_correlation(in_stream, correlation, options)) ) {
 			if ( verbose ) {
-				fprintf(out_stream, "Found record: %d", record->ref_channel);
-				for ( i = 0; i < options->order-1; i++ ) {
-					fprintf(out_stream, ",%d,%lld,%d", 
-							record->records[i].channel,
-							record->records[i].pulse_number,
-							record->records[i].time);
-				}
-				fprintf(out_stream, "\n");
+				fprintf(stderr, "Found record:\n");
+				print_t3_correlation(stderr, correlation, NEWLINE, options);
 			}
 
-			t3_histograms_increment(histograms, record);
+			t3_histograms_increment(histograms, correlation);
 		}
 	}
 
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
-		print_t3_histograms(out_stream, histograms);
-	} 
+		print_t3_histograms(out_stream, histograms, options);
+	} else {
+		error("Error while processing histograms: %d\n", result);
+	}
 
 	/* Clean up memory. */
 	debug("Cleaning up from t3 histogramming.\n");
-	free_t3_correlated(&record);
+	free_t3_correlation(&correlation);
+	debug("Freeing histograms.\n");
 	free_t3_histograms(&histograms); 
+	debug("Memory freed.\n");
 	
 	return(result);
 }
@@ -230,8 +185,8 @@ t3_histograms_t *make_t3_histograms(options_t *options) {
 		histograms->combination = allocate_combination(histograms->channels,
 				histograms->order);
 
-		histograms->current_values = (long long int *)malloc(
-				sizeof(long long int)*2*(histograms->order-1));
+		histograms->current_values = (int64_t *)malloc(
+				sizeof(int64_t)*2*(histograms->order-1));
 
 		histograms->histograms = (gn_histogram_t **)malloc(
 				sizeof(gn_histogram_t *)*histograms->n_histograms);
@@ -336,7 +291,7 @@ void free_t3_histograms(t3_histograms_t **histograms) {
 }
 
 int t3_histograms_increment(t3_histograms_t *histograms,
-		t3_correlated_t *record) {
+		t3_correlation_t *correlation) {
 	int result = 0;
 	int histogram_index;
 	int i;
@@ -344,15 +299,15 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 	/* First, determine the index of the histogram from the channels present.
 	 */
 	debug("Getting the channels from the record.\n");
-	histograms->combination->digits[0] = record->ref_channel;
+	histograms->combination->digits[0] = correlation->records[0].channel;
 	for ( i = 1; i < histograms->order; i++ ) {
-		histograms->combination->digits[i] = record->records[i-1].channel;
+		histograms->combination->digits[i] = correlation->records[i].channel;
 	}
 
 
-	for ( i = 0; i < histograms->order-1; i++ ) {
-		histograms->current_values[2*i] = record->records[i].pulse_number;
-		histograms->current_values[2*i+1] = record->records[i].time;
+	for ( i = 1; i < histograms->order; i++ ) {
+		histograms->current_values[2*(i-1)] = correlation->records[i].pulse;
+		histograms->current_values[2*(i-1)+1] = correlation->records[i].time;
 	}
 
 	histogram_index = get_combination_index(histograms->combination);
@@ -369,10 +324,11 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 	return(result);
 }
 
-void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms) {
+void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms,
+		options_t *options) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
-		print_gn_histogram(out_stream, histograms->histograms[i]);
+		print_gn_histogram(out_stream, histograms->histograms[i], options);
 	}
 }
 

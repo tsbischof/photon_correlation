@@ -24,7 +24,7 @@ int hh_v10_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		result = hh_v10_tttr_stream(in_stream, out_stream, pq_header,
 				&hh_header, options);
 	} else {
-		error("Picoharp measurement mode not recognized: %d.\n", 
+		error("Picoharp measurement mode not recognized: %"PRId32".\n", 
 				hh_header.MeasurementMode);
 		result = PQ_MODE_ERROR;
 	} 
@@ -50,7 +50,7 @@ int hh_v10_header_read(FILE *in_stream, hh_v10_header_t *hh_header,
 	debug("Reading static part of common header.\n");
 	result = fread(hh_header, 
 			sizeof(hh_v10_header_t)
-			- sizeof(hh_v10_input_channel_t *) - sizeof(int32 *),
+			- sizeof(hh_v10_input_channel_t *) - sizeof(int32_t *),
 			 1, in_stream);
 	if ( result != 1 ) {
 		return(PQ_READ_ERROR);
@@ -74,9 +74,9 @@ int hh_v10_header_read(FILE *in_stream, hh_v10_header_t *hh_header,
 
 	/* And the input rates. */
 	debug("Allocating input rate memory.\n");
-	hh_header->InputRate = (int32 *)malloc(
+	hh_header->InputRate = (int32_t *)malloc(
 			hh_header->InputChannelsPresent
-			*sizeof(int32));
+			*sizeof(int32_t));
 	if ( hh_header->InputRate == NULL ) {
 		return(PQ_MEM_ERROR);
 	}
@@ -91,7 +91,7 @@ int hh_v10_header_read(FILE *in_stream, hh_v10_header_t *hh_header,
 		}
 	} else {
  		debug("Reading input rates.\n");
-		result = fread(hh_header->InputRate, sizeof(int32),
+		result = fread(hh_header->InputRate, sizeof(int32_t),
 				hh_header->InputChannelsPresent, in_stream);
 		if ( result != hh_header->InputChannelsPresent ) {
 			return(PQ_READ_ERROR);
@@ -149,8 +149,8 @@ int hh_v10_interactive_data_read(FILE *in_stream,
 	int result;
 	int i;
 
-	interactive->Counts = (uint32 **)malloc(
-			hh_header->NumberOfCurves*sizeof(uint32 *));
+	interactive->Counts = (uint32_t **)malloc(
+			hh_header->NumberOfCurves*sizeof(uint32_t *));
 
 	if ( interactive->Counts == NULL ) {
 		error("Could not allocate memory for curve data.\n");
@@ -159,14 +159,14 @@ int hh_v10_interactive_data_read(FILE *in_stream,
 
 	for ( i = 0; i < hh_header->NumberOfCurves; i++ ) {
 		debug("Reading data for curve %d.\n", i);
-		interactive->Counts[i] = (uint32 *)malloc(
-				interactive->Curve[i].HistogramBins*sizeof(uint32)); 
+		interactive->Counts[i] = (uint32_t *)malloc(
+				interactive->Curve[i].HistogramBins*sizeof(uint32_t)); 
 		if ( interactive->Counts[i] == NULL ) {
 			error("Could not allocate memory for curve %d data.\n", i);
 			return(PQ_MEM_ERROR);
 		}
 
-		result = fread(interactive->Counts[i], sizeof(uint32),
+		result = fread(interactive->Counts[i], sizeof(uint32_t),
 				interactive->Curve[i].HistogramBins, in_stream);
 		if ( result != interactive->Curve[i].HistogramBins ) {
 			error("Could not read data for curve %d.\n", i);
@@ -252,20 +252,20 @@ int hh_v10_tttr_header_read(FILE *in_stream, hh_v10_tttr_header_t *tttr_header,
 	int result;
 
 	result = fread(tttr_header, 
-			sizeof(hh_v10_tttr_header_t)-sizeof(uint32 *), 1, in_stream);
+			sizeof(hh_v10_tttr_header_t)-sizeof(uint32_t *), 1, in_stream);
 	if ( result != 1 ) {
 		error("Could not read tttr header.\n");
 		return(PQ_READ_ERROR);
 	}
 
-	tttr_header->ImgHdr = (uint32 *)malloc(
-			tttr_header->ImgHdrSize*sizeof(uint32));
+	tttr_header->ImgHdr = (uint32_t *)malloc(
+			tttr_header->ImgHdrSize*sizeof(uint32_t));
 	if ( tttr_header->ImgHdr == NULL ) {
 		error("Could not allocate memory for Picoharp tttr image header.\n");
 		return(PQ_MEM_ERROR);
 	}
 
-	result = fread(tttr_header->ImgHdr, sizeof(uint32),
+	result = fread(tttr_header->ImgHdr, sizeof(uint32_t),
 			tttr_header->ImgHdrSize, in_stream);
 	if ( result != tttr_header->ImgHdrSize ) {
 		error("Could not read Picoharp tttr image header.\n");
@@ -289,9 +289,9 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 		hh_v10_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 	int overflows = 0;
-	long long int record_count = 0;
+	int64_t record_count = 0;
 	hh_v10_t2_record_t record;
-	long long int base_time = 0;
+	int64_t base_time = 0;
 
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);
@@ -320,7 +320,7 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 			} else {
 				record_count++;
 				/* See the ht2 documentation for this, but the gist is that
-				 * the counts are registered at double the rate of the reported
+				 * the counts are registered at float64_t the rate of the reported
 				 * resolution, so one count is actually 0.5ps, not 1ps. Cut
 				 * the integer values for time in half to get the correct
 				 * result.
@@ -350,12 +350,12 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 
 	int result;
 	int overflows = 0;
-	long long int record_count = 0;
+	int64_t record_count = 0;
 	hh_v10_t3_record_t record;
-	long long int base_nsync = 0;
+	int64_t base_nsync = 0;
 
-	long long int sync_period = (long long int)(1e12/
-			(double)tttr_header->SyncRate);
+	int64_t sync_period = (int64_t)(1e12/
+			(float64_t)tttr_header->SyncRate);
 	unsigned int resolution_int = (unsigned int)(hh_header->Resolution);
 	debug("Sync period: %lld\n", sync_period);
 
@@ -468,7 +468,7 @@ void hh_v10_header_print(FILE *out_stream,
 			hh_header->MeasurementMode);
 	fprintf(out_stream, "SubMode = %"PRId32"\n", hh_header->SubMode);
 	fprintf(out_stream, "Binning = %"PRId32"\n", hh_header->Binning);
-	fprintf(out_stream, "Resolution = %lf\n", hh_header->Resolution);
+	fprintf(out_stream, "Resolution = %"PRIf64"\n", hh_header->Resolution);
 	fprintf(out_stream, "Offset = %"PRId32"\n", hh_header->Offset);
 	fprintf(out_stream, "AcquisitionTime = %"PRId32"\n", 
 			hh_header->AcquisitionTime);
@@ -492,11 +492,11 @@ void hh_v10_header_print(FILE *out_stream,
 	}
 
 	for ( i = 0; i < 3; i++ ) {
-		fprintf(out_stream, "Param[%d].Start = %f\n",
+		fprintf(out_stream, "Param[%d].Start = %"PRIf32"\n",
 				i, hh_header->Param[i].Start);
-		fprintf(out_stream, "Param[%d].Step = %f\n",
+		fprintf(out_stream, "Param[%d].Step = %"PRIf32"\n",
 				i, hh_header->Param[i].Step);
-		fprintf(out_stream, "Param[%d].Stop = %f\n",
+		fprintf(out_stream, "Param[%d].Stop = %"PRIf32"\n",
 				i, hh_header->Param[i].Stop);
 	}
 
@@ -523,7 +523,7 @@ void hh_v10_header_print(FILE *out_stream,
 				i, hh_header->ModuleInfo[i].Version);
 	}
 
-	fprintf(out_stream, "BaseResolution = %lf\n", 
+	fprintf(out_stream, "BaseResolution = %"PRIf64"\n", 
 			hh_header->BaseResolution);
 	fprintf(out_stream, "InputsEnabled = %"PRId64"\n", 
 			hh_header->InputsEnabled);
@@ -568,7 +568,7 @@ void hh_v10_tttr_header_print(FILE *out_stream,
 	fprintf(out_stream, "NumRecords = %"PRId64"\n", tttr_header->NumRecords);
 
 	for ( i = 0; i < tttr_header->ImgHdrSize; i++ ) {
-		fprintf(out_stream, "ImgHdr[%d] = %u\n", i,
+		fprintf(out_stream, "ImgHdr[%d] = %"PRIu32"\n", i,
 				tttr_header->ImgHdr[i]);
 	}
 }
@@ -600,7 +600,7 @@ void hh_v10_interactive_header_print(FILE *out_stream,
 				i, j, interactive->Curve[i].Module[j].Version);
 		}
 
-		fprintf(out_stream, "Curve[%d].BaseResolution = %lf\n",
+		fprintf(out_stream, "Curve[%d].BaseResolution = %"PRIf64"\n",
 			i, interactive->Curve[i].BaseResolution);
 		fprintf(out_stream, "Curve[%d].InputsEnabled = %"PRId64"\n",
 			i, interactive->Curve[i].InputsEnabled);
@@ -636,7 +636,7 @@ void hh_v10_interactive_header_print(FILE *out_stream,
 			i, interactive->Curve[i].SubMode);
 		fprintf(out_stream, "Curve[%d].Binning = %"PRId32"\n",
 			i, interactive->Curve[i].Binning);
-		fprintf(out_stream, "Curve[%d].Resolution = %lf\n",
+		fprintf(out_stream, "Curve[%d].Resolution = %"PRIf64"\n",
 			i, interactive->Curve[i].Resolution);
 		fprintf(out_stream, "Curve[%d].Offset = %"PRId32"\n",
 			i, interactive->Curve[i].Offset);
@@ -646,11 +646,11 @@ void hh_v10_interactive_header_print(FILE *out_stream,
 			i, interactive->Curve[i].StopAfter);
 		fprintf(out_stream, "Curve[%d].StopReason = %"PRId32"\n",
 			i, interactive->Curve[i].StopReason);
-		fprintf(out_stream, "Curve[%d].P1 = %f\n",
+		fprintf(out_stream, "Curve[%d].P1 = %"PRIf32"\n",
 			i, interactive->Curve[i].P1);
-		fprintf(out_stream, "Curve[%d].P2 = %f\n",
+		fprintf(out_stream, "Curve[%d].P2 = %"PRIf32"\n",
 			i, interactive->Curve[i].P2);
-		fprintf(out_stream, "Curve[%d].P3 = %f\n",
+		fprintf(out_stream, "Curve[%d].P3 = %"PRIf32"\n",
 			i, interactive->Curve[i].P3);
 		fprintf(out_stream, "Curve[%d].SyncRate = %"PRId32"\n",
 			i, interactive->Curve[i].SyncRate);
@@ -673,11 +673,11 @@ void hh_v10_interactive_data_print(FILE *out_stream,
 		options_t *options) {
 	int i;
 	int j;
-	double left_time;
-	double time_step;
+	float64_t left_time;
+	float64_t time_step;
 
 	for ( i = 0; i < hh_header->NumberOfCurves; i++ ) {
-		left_time = (double)interactive->Curve[i].Offset;
+		left_time = (float64_t)interactive->Curve[i].Offset;
 		time_step = interactive->Curve[i].Resolution*1e-3;
 		for ( j = 0; j < interactive->Curve[i].HistogramBins; j++ ) { 
 			pq_print_interactive(out_stream, i, left_time, left_time+time_step, 

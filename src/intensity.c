@@ -33,8 +33,8 @@ counts_t *allocate_counts(int channels) {
 		result = -1;
 	} else {
 		counts->channels = channels;
-		counts->counts = (long long int *)malloc(
-				sizeof(long long int)*channels);
+		counts->counts = (int64_t *)malloc(
+				sizeof(int64_t)*channels);
 		if ( counts->counts == NULL ) {
 			result = -1;
 		}
@@ -73,13 +73,13 @@ int increment_counts(counts_t *counts, int channel) {
 	}
 }
 
-void print_counts(FILE *out_stream, long long int lower_time,
-		long long int upper_time,  counts_t *counts) {
+void print_counts(FILE *out_stream, int64_t lower_time,
+		int64_t upper_time,  counts_t *counts) {
 	int i;
 
-	fprintf(out_stream, "%lld,%lld,", lower_time, upper_time);
+	fprintf(out_stream, "%"PRId64",%"PRId64",", lower_time, upper_time);
 	for ( i = 0; i < counts->channels; i++ ) {
-		fprintf(out_stream, "%lld", counts->counts[i]);
+		fprintf(out_stream, "%"PRId64, counts->counts[i]);
 		if ( i != counts->channels - 1 ) {
 			fprintf(out_stream, ",");
 		}

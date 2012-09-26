@@ -24,7 +24,7 @@ int ph_v20_dispatch(FILE *in_stream, FILE *out_stream, pq_header_t *pq_header,
 		result = ph_v20_tttr_stream(in_stream, out_stream, pq_header,
 				&ph_header, options);
 	} else {
-		error("Picoharp measurement mode not recognized: %d.\n", 
+		error("Picoharp measurement mode not recognized: %"PRId32".\n", 
 				ph_header.MeasurementMode);
 		result = PQ_MODE_ERROR;
 	} 
@@ -160,8 +160,8 @@ int ph_v20_interactive_data_read(FILE *in_stream,
 	int result;
 	int i;
 
-	interactive->Counts = (unsigned int **)malloc(
-			ph_header->NumberOfCurves*sizeof(unsigned int *));
+	interactive->Counts = (uint32_t **)malloc(
+			ph_header->NumberOfCurves*sizeof(uint32_t *));
 
 	if ( interactive->Counts == NULL ) {
 		error("Could not allocate memory for Picoharp curve data.\n");
@@ -170,15 +170,15 @@ int ph_v20_interactive_data_read(FILE *in_stream,
 
 	for ( i = 0; i < ph_header->NumberOfCurves; i++ ) {
 		debug("Reading data for curve %d.\n", i);
-		interactive->Counts[i] = (uint32 *)malloc(
-				interactive->Curve[i].Channels*sizeof(uint32));
+		interactive->Counts[i] = (uint32_t *)malloc(
+				interactive->Curve[i].Channels*sizeof(uint32_t));
 
 		if ( interactive->Counts[i] == NULL ) {
 			error("Could not allocate memory for Picoharp curve %d data.\n", i);
 			return(PQ_MEM_ERROR);
 		}
 
-		result = fread(interactive->Counts[i], sizeof(uint32),
+		result = fread(interactive->Counts[i], sizeof(uint32_t),
 				interactive->Curve[i].Channels, in_stream);
 		if ( result != interactive->Curve[i].Channels ) {
 			error("Could not read data for Picoharp curve %d.\n", i);
@@ -263,20 +263,20 @@ int ph_v20_tttr_header_read(FILE *in_stream, ph_v20_tttr_header_t *tttr_header,
 	int result;
 
 	result = fread(tttr_header, 
-		sizeof(ph_v20_tttr_header_t)-sizeof(uint32 *), 1, in_stream);
+		sizeof(ph_v20_tttr_header_t)-sizeof(uint32_t *), 1, in_stream);
 	if ( result != 1 ) {
 		error("Could not read Picoharp tttr header.\n");
 		return(PQ_READ_ERROR);
 	}
 
-	tttr_header->ImgHdr = (unsigned int *)malloc(
-			tttr_header->ImgHdrSize*sizeof(unsigned int));
+	tttr_header->ImgHdr = (uint32_t *)malloc(
+			tttr_header->ImgHdrSize*sizeof(uint32_t));
 	if ( tttr_header->ImgHdr == NULL ) {
 		error("Could not allocate memory for Picoharp tttr image header.\n");
 		return(PQ_MEM_ERROR);
 	}
 
-	result = fread(tttr_header->ImgHdr, sizeof(unsigned int),
+	result = fread(tttr_header->ImgHdr, sizeof(uint32_t),
 			tttr_header->ImgHdrSize, in_stream);
 	if ( result != tttr_header->ImgHdrSize ) {
 		error("Could not read Picoharp tttr image header.\n");
@@ -303,16 +303,16 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 	 */
 
 	int result;
-	long long int record_count = 0;
+	int64_t record_count = 0;
 	int overflows = 0;
 	ph_v20_t2_record_t record;
 
 	/* Time based on the number of overflows, such that we do not need to
 	 * multiply each time we want to print the absolute time.
 	 */
-	long long int base_time = 0; 
+	int64_t base_time = 0; 
 
-	unsigned int resolution_int = (unsigned int)(PH_V20_BASE_RESOLUTION*1e12);
+	uint32_t resolution_int = (uint32_t)(PH_V20_BASE_RESOLUTION*1e12);
 
 	debug("Record limit:             %10d.\n", options->number);
 	debug("Listed number of records: %10d.\n", tttr_header->NumRecords);
@@ -364,12 +364,12 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 		ph_v20_tttr_header_t *tttr_header, options_t *options) {
 	int result;
 	int overflows = 0;
-	long long int record_count = 0;
+	int64_t record_count = 0;
 	ph_v20_t3_record_t record;
-	long long int base_nsync = 0;
-	long long sync_period = (long long int)(1e12/(double)tttr_header->InpRate0);
+	int64_t base_nsync = 0;
+	int64_t sync_period = (int64_t)(1e12/(float64_t)tttr_header->InpRate0);
 	debug("Sync period: %lld\n", sync_period);
-	unsigned int resolution_int = (unsigned int)(
+	uint32_t resolution_int = (uint32_t)(
 			ph_header->Brd[0].Resolution*1e3);
 
 	while ( !feof(in_stream) && record_count < options->number ) {
@@ -508,11 +508,11 @@ void ph_v20_header_print(FILE *out_stream,
 	}
 
 	for ( i = 0; i < 3; i++ ) {
-		fprintf(out_stream, "Param[%d].Start = %f\n",
+		fprintf(out_stream, "Param[%d].Start = %"PRIf32"\n",
 				i, ph_header->Param[i].Start);
-		fprintf(out_stream, "Param[%d].Step = %f\n",
+		fprintf(out_stream, "Param[%d].Step = %"PRIf32"\n",
 				i, ph_header->Param[i].Step);
-		fprintf(out_stream, "Param[%d].Stop = %f\n",
+		fprintf(out_stream, "Param[%d].Stop = %"PRIf32"\n",
 				i, ph_header->Param[i].Stop);
 	}
 
@@ -541,7 +541,7 @@ void ph_v20_header_print(FILE *out_stream,
 				i, ph_header->Brd[i].CFDZeroCross1);
 		fprintf(out_stream, "Brd[%d].CFDLevel1 = %"PRId32"\n",
 				i, ph_header->Brd[i].CFDLevel1);
-		fprintf(out_stream, "Brd[%d].Resolution = %f\n",
+		fprintf(out_stream, "Brd[%d].Resolution = %"PRIf32"\n",
 				i, ph_header->Brd[i].Resolution);
 		fprintf(out_stream, "Brd[%d].RouterModelCode = %"PRId32"\n",
 				i, ph_header->Brd[i].RouterModelCode);
@@ -595,7 +595,7 @@ void ph_v20_tttr_header_print(FILE *out_stream,
 	fprintf(out_stream, "ImgHdrSize = %"PRId32"\n", tttr_header->ImgHdrSize);
 
 	for ( i = 0; i < tttr_header->ImgHdrSize; i++ ) {
-		fprintf(out_stream, "ImgHdr[%d] = %u\n", i,
+		fprintf(out_stream, "ImgHdr[%d] = %"PRIu32"\n", i,
 				tttr_header->ImgHdr[i]);
 	}
 }
@@ -636,15 +636,15 @@ void ph_v20_interactive_header_print(FILE *out_stream,
 			i, interactive->Curve[i].MeasMode);
 		fprintf(out_stream, "Crv[%d].SubMode = %"PRId32"\n",
 			i, interactive->Curve[i].SubMode);
-		fprintf(out_stream, "Crv[%d].P1 = %f\n",
+		fprintf(out_stream, "Crv[%d].P1 = %"PRIf32"\n",
 			i, interactive->Curve[i].P1);
-		fprintf(out_stream, "Crv[%d].P2 = %f\n",
+		fprintf(out_stream, "Crv[%d].P2 = %"PRIf32"\n",
 			i, interactive->Curve[i].P2);
-		fprintf(out_stream, "Crv[%d].P3 = %f\n",
+		fprintf(out_stream, "Crv[%d].P3 = %"PRIf32"\n",
 			i, interactive->Curve[i].P3);
 		fprintf(out_stream, "Crv[%d].RangeNo = %"PRId32"\n",
 			i, interactive->Curve[i].RangeNo);
-		fprintf(out_stream, "Crv[%d].Resolution = %f\n",
+		fprintf(out_stream, "Crv[%d].Resolution = %"PRIf32"\n",
 			i, interactive->Curve[i].Resolution);
 		fprintf(out_stream, "Crv[%d].Channels = %"PRId32"\n",
 			i, interactive->Curve[i].Channels);
@@ -691,11 +691,11 @@ void ph_v20_interactive_data_print(FILE *out_stream,
 		options_t *options) {
 	int i;
 	int j;
-	double left_time;
-	double time_step;
+	float64_t left_time;
+	float64_t time_step;
 
 	for ( i = 0; i < ph_header->NumberOfCurves; i++ ) {
-		left_time = (double)interactive->Curve[i].Offset;
+		left_time = (float64_t)interactive->Curve[i].Offset;
 		time_step = interactive->Curve[i].Resolution;
 		for ( j = 0; j < interactive->Curve[i].Channels; j++ ) { 
 			pq_print_interactive(out_stream, i, left_time, left_time+time_step, 

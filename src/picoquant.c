@@ -64,47 +64,37 @@ void pq_header_print(FILE *out_stream, pq_header_t *pq_header) {
 	fprintf(out_stream, "FormatVersion = %s\n", pq_header->FormatVersion);
 }
 
-void pq_print_t2(FILE *out_stream, long long int count,
-		int channel, 
-		long long int base_time, unsigned int record_time,
+void pq_print_t2(FILE *out_stream, int64_t count,
+		int32_t channel, 
+		int64_t base_time, uint32_t record_time,
 		options_t *options) {
 	t2_t record;
 
 	record.channel = channel;
-	record.time = base_time + (long long int)record_time;
+	record.time = base_time + (int64_t)record_time;
 
-	print_t2(out_stream, &record, options);
-	fflush(out_stream);
-
+	print_t2(out_stream, &record, NEWLINE, options);
 	print_status("picoquant", count, options);
 }
 
-void pq_print_t3(FILE *out_stream, long long int count,
-		int channel, 
-		long long int base_nsync, unsigned int record_nsync,
-		unsigned int record_dtime,
+void pq_print_t3(FILE *out_stream, int64_t count,
+		int32_t channel, 
+		int64_t base_nsync, uint32_t record_nsync,
+		uint32_t record_dtime,
 		options_t *options) {
 	t3_t record;
 
 	record.channel = channel;
-	record.pulse_number = base_nsync + (long long int)record_nsync;
+	record.pulse = base_nsync + (int64_t)record_nsync;
 	record.time = record_dtime;
 
-	if ( options->binary_out ) {
-		fwrite(&record, sizeof(t3_t), 1, out_stream);
-	} else {
-		fprintf(out_stream, "%d,%lld,%u\n",
-				record.channel, record.pulse_number, record.time);
-	}
-
-	fflush(out_stream);
-	
+	print_t3(out_stream, &record, NEWLINE, options);
 	print_status("picoquant", count, options);
 }
 
-void pq_print_tttr(FILE *out_stream, long long int count,
+void pq_print_tttr(FILE *out_stream, int64_t count,
 		unsigned int histogram_channel, int n_histogram_channels,
-		long long int base_time, unsigned int record_time,
+		int64_t base_time, unsigned int record_time,
 		options_t *options) {
 	/* This attempts to make the tttr record look t3-like. It is actually a
  	 * record of a 0->1 stop-start event, found in the histogram channel
@@ -115,45 +105,41 @@ void pq_print_tttr(FILE *out_stream, long long int count,
 
 	/* Channel is really 1, but we only have one data channel */
 	record.channel = 0;
-	record.pulse_number = base_time + (long long int)record_time;
+	record.pulse = base_time + (int64_t)record_time;
 
 	/* The histogram channels seem to count backwards, with an upper limit
 	 * of n_histogram_channels.
 	 */
 	record.time = /*n_histogram_channels - */ histogram_channel;
 
-	if ( options->binary_out ) {
-		fwrite(&record, sizeof(t3_t), 1, out_stream);
-	} else {
-		fprintf(out_stream, "%d,%lld,%u\n", 
-				record.channel, record.pulse_number,
-				record.time);
-	}
-
+	print_t3(out_stream, &record, NEWLINE, options);
 	print_status("picoquant", count, options);
 }
 
-void pq_print_interactive(FILE *out_stream, int curve, double left_time,
-		double right_time, int counts, options_t *options) {
+void pq_print_interactive(FILE *out_stream, 
+		int32_t curve, float64_t left_time,
+		float64_t right_time, int32_t counts, options_t *options) {
 	if ( options->binary_out ) {
 		fwrite(&time, 1, sizeof(time), out_stream);
 		fwrite(&counts, 1, sizeof(counts), out_stream);
 	} else {
-		fprintf(out_stream, "%d,%.3lf,%.3lf,%d\n", curve, left_time,
+		fprintf(out_stream, 
+				"%"PRId32",%.3lf,%.3lf,%"PRId32"\n", 
+				curve, left_time,
 				right_time, counts);
 	}
 	fflush(out_stream);
 }
 
-void external_marker(FILE *out_stream, unsigned int marker, 
+void external_marker(FILE *out_stream, uint32_t marker, 
 		options_t *options) {
-	fprintf(stderr, "External marker: %u\n", marker);
+	fprintf(stderr, "External marker: %"PRIu32"\n", marker);
 }
 
-void print_resolution(FILE *out_stream, double resolution, 
+void print_resolution(FILE *out_stream, float64_t resolution, 
 		options_t *options) {
 	/* Given float representing the resolution in picoseconds, print the 
 	 * appropriate value.
 	 */
-	fprintf(out_stream, "%e\n", resolution);
+	fprintf(out_stream, "%le\n", resolution);
 }

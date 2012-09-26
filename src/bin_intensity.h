@@ -7,7 +7,7 @@
 
 typedef struct {
 	limits_t limits;
-	long long int *counts;
+	long long *counts;
 } bin_counts_t;
 
 int bin_intensity_dispatch(FILE *in_stream, FILE *out_stream, 

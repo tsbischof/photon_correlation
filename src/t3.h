@@ -3,28 +3,29 @@
 
 #include <stdio.h>
 #include "options.h"
+#include "types.h"
 
 typedef struct {
-	int channel;
-	long long int pulse_number;
-	int time;
+	int32_t channel;
+	int64_t pulse;
+	int32_t time;
 } t3_t;
 
-
 typedef struct {
-	int length;
-	long long int left_index;
-	long long int right_index;
+	int32_t length;
+	int64_t left_index;
+	int64_t right_index;
 	t3_t *queue;
 } t3_queue_t;
 
 int next_t3(FILE *in_stream, t3_t *record, options_t *options);
-void print_t3(FILE *out_stream, t3_t *record, options_t *options);
+void print_t3(FILE *out_stream, t3_t *record, 
+		int print_newline, options_t *options);
 int t3_comparator(const void *a, const void *b);
 
 t3_queue_t *allocate_t3_queue(int queue_length);
 void free_t3_queue(t3_queue_t **queue);
-t3_t get_queue_item_t3(t3_queue_t *queue, int index);
+void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index);
 
 /* The windowed stream represents a series of streams which are composed of
  * photons in some time window. For example, an intensity stream can be 
@@ -33,7 +34,7 @@ t3_t get_queue_item_t3(t3_queue_t *queue, int index);
  */
 typedef struct {
 	window_t limits;
-	long long int width;
+	int64_t width;
 } t3_window_t;
 
 typedef struct {
