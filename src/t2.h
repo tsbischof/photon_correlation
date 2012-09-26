@@ -33,7 +33,7 @@ int t2_queue_back(t2_t *record, t2_queue_t *queue);
 int t2_queue_index(t2_t *record, t2_queue_t *queue, int index);
 int64_t t2_queue_size(t2_queue_t *queue);
 void t2_queue_sort(t2_queue_t *queue);
-void print_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options);
+void yield_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options);
 
 /* The windowed stream represents a series of streams which are composed of
  * photons in some time window. For example, an intensity stream can be 

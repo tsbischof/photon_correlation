@@ -102,7 +102,7 @@ int t2_queue_push(t2_t *record, t2_queue_t *queue) {
 	int64_t next_index = (queue->right_index + 1) % queue->length;
 	
 	debug("Appending at index %"PRId64"\n", next_index);
-	if ( (queue->right_index - queue->left_index) >= (queue->length-1) ) {
+	if ( t2_queue_full(queue) ) {
 		error("Queue overflow, with limits (%"PRId64", %"PRId64").\n"
 				"       Extend its size to continue with the calculation.\n",
 		queue->left_index, queue->right_index);
@@ -141,16 +141,22 @@ int t2_queue_back(t2_t *record, t2_queue_t *queue) {
 int t2_queue_index(t2_t *record, t2_queue_t *queue, int index) {
 	int64_t true_index = (queue->left_index + index) % queue->length;
 
-	if ( true_index > t2_queue_size(queue) ) {
+	if ( (true_index-index) > t2_queue_size(queue) ) {
 		debug("Requested return of non-existent index: %"PRId64"\n", 
-				true_index)
+				true_index);
 		return(-1);
 	} else { 
 		memcpy(record, &(queue->queue[true_index]), sizeof(t2_t));
+		return(0);
+	}
 }
 
 int64_t t2_queue_size(t2_queue_t *queue) {
-	return(queue->right_index - queue->left_index);
+	if ( queue->left_index < 0 || queue->right_index < 0 ) {
+		return(0);
+	} else {
+		return(queue->right_index - queue->left_index + 1);
+	}
 }
 
 void t2_queue_sort(t2_queue_t *queue) {
@@ -176,7 +182,7 @@ void t2_queue_sort(t2_queue_t *queue) {
 		debug("Queue is offset from beginning, moving it forward.\n");
 		memmove(queue->queue,
 				&(queue->queue[left]),
-				sizeof(t2_t)*(right-left+1));
+				sizeof(t2_t)*(t2_queue_size(queue)));
 	} else {
 		debug("Queue starts at the beginning of the array.\n");
 	}
@@ -189,12 +195,9 @@ void t2_queue_sort(t2_queue_t *queue) {
 	qsort(queue->queue, queue->right_index+1, sizeof(t2_t), t2_comparator);
 }
 
-void print_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
+void yield_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
 	t2_t record;
-	while ( queue->left_index <= queue->right_index ) {
-		debug("Printing from indices (%"PRId64", %"PRId64")\n",
-				queue->left_index, queue->right_index);
-		pop_queue_t2(&record, queue);
+	while ( ! t2_queue_pop(&record, queue) ) {
 		print_t2(out_stream, &record, NEWLINE, options);
 	}
 }

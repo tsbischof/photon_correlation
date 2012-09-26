@@ -49,9 +49,9 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 					/* Only sort if offsets are applied. Otherwise, we just
 					 * waste some time. 
 					 */
-					sort_t2_queue(queue);
+					t2_queue_sort(queue);
 				}
-				print_sorted_t2(out_stream, queue, max_offset_difference,
+				yield_sorted_t2(out_stream, queue, max_offset_difference,
 						options);
 				debug("New queue limits: (%"PRId64", %"PRId64")\n",
 						queue->left_index, queue->right_index);
@@ -61,7 +61,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 					 options->suppressed_channels[record.channel]) ) {
 				offset_t2(&record, options);
 				/* Insert the new photon, now that everything is cool. */
-				if ( append_t2_queue(queue, &record) ) {
+				if ( t2_queue_push(&record, queue) ) {
 					error("Could not add new photon to queue.\n");
 					result = -1;
 				} 
@@ -75,8 +75,8 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	debug("Finished processing photons, with a result of %d\n", result);
 	if ( ! result ) {
 		debug("Yielding the final photons.\n");
-		sort_t2_queue(queue);
-		print_t2_queue(out_stream, queue, options);
+		t2_queue_sort(queue);
+		yield_t2_queue(out_stream, queue, options);
 	}
 	
 	debug("Freeing photon queue.\n");
@@ -91,28 +91,22 @@ void offset_t2(t2_t *record, options_t *options) {
 	}	
 }
 
-void print_sorted_t2(FILE *out_stream, t2_queue_t *queue, 
+void yield_sorted_t2(FILE *out_stream, t2_queue_t *queue, 
 		int64_t max_offset_difference, options_t *options) {
 	int n_printed = 0;
 
 	t2_t left;
 	t2_t right;
 
-	get_queue_item_t2(&left, queue, 0);
-	qet_queue_last_t2(&right, queue);
-	debug("Comparing photon times: %"PRId64" > %"PRId64"?\n",
-			queue->queue[queue->right_index].time -
-			queue->queue[queue->left_index].time,
-			max_offset_difference);
-	while ( (queue->queue[queue->right_index].time
-			 - queue->queue[queue->left_index].time) 
-			> max_offset_difference ) {
-		pop_queue_t2(&record, queue);
-		print_t2(out_stream, &record,
+	t2_queue_back(&right, queue);
+	while ( ! t2_queue_front(&left, queue) &&
+			right.time - left.time > max_offset_difference ) {
+		t2_queue_pop(&left, queue);
+		print_t2(out_stream, &left,
 				NEWLINE, options);
 		n_printed++;
 	}
 
-	debug("Printed %d photons\n", n_printed);
+	debug("Yielded %d photons\n", n_printed);
 }
 
