@@ -552,25 +552,25 @@ int read_offsets(options_t *options) {
 
 	if ( options->offset_time ) {
 		result += parse_offsets(options->time_offsets_string, 
-				options->time_offsets, options);
+				&(options->time_offsets), options);
 	} 
 
 	if ( options->offset_pulse ) {
 		result += parse_offsets(options->pulse_offsets_string,
-				options->pulse_offsets, options);
+				&(options->pulse_offsets), options);
 	}
 
 	return(result);
 }
 
-int parse_offsets(char *offsets_string, int64_t *offsets, 
+int parse_offsets(char *offsets_string, int64_t **offsets, 
 		options_t *options) {
 	char *c;
 	int channel;
 
-	offsets = (int64_t *)malloc(sizeof(int64_t)*options->channels);
+	*offsets = (int64_t *)malloc(sizeof(int64_t)*options->channels);
 
-	if ( offsets == NULL ) {
+	if ( *offsets == NULL ) {
 		error("Could not allocate memory for offsets\n");
 		return(-1);
 	}
@@ -582,9 +582,9 @@ int parse_offsets(char *offsets_string, int64_t *offsets,
 			error("Not enough offsets specified (%d found)\n", channel);
 			return(-1);
 		} else {
-			offsets[channel] = strtoi64(c, NULL, 10);
-			debug("Offset for channel %d: %lld\n",
-					channel, offsets[channel]);
+			(*offsets)[channel] = strtoi64(c, NULL, 10);
+			debug("Offset for channel %d: %"PRId64"\n",
+					channel, (*offsets)[channel]);
 		}
 
 		c = strtok(NULL, ",");

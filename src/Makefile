@@ -105,12 +105,12 @@ BIN_INTENSITY_LIB =
 ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
-#CHANNELS_OBJ = channels_main.o ${UTIL} \
-#		channels.o channels_t2.o channels_t3.o
-#ALL_OBJ += ${CHANNELS_OBJ}
-#CHANNELS_LIB =
-#ALL_LIB += ${CHANNELS_LIB}
-#TARGETS += channels
+CHANNELS_OBJ = channels_main.o ${UTIL} \
+		channels.o channels_t2.o channels_t3.o
+ALL_OBJ += ${CHANNELS_OBJ}
+CHANNELS_LIB =
+ALL_LIB += ${CHANNELS_LIB}
+TARGETS += channels
 
 #GN_OBJ = gn_main.o ${UTIL}
 #ALL_OBJ += ${GN_OBJ}

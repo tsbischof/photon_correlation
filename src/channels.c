@@ -18,6 +18,23 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
 	}
 }
 
+int64_t offset_difference(int64_t *offsets, int n) {
+	int64_t min = 0;
+	int64_t max = 0;
+	int i;
+
+	for ( i = 0; i < n; i++ ) {
+		if ( offsets[i] < min ) {
+			min = offsets[i];
+		} 
+		if ( offsets[i] > max ) {
+			max = offsets[i];
+		}
+	}
+
+	return(max-min);
+}
+
 /* These routines are designed to implement a sorted list. The incoming entries
  * are already mostly sorted, so we only need to populate the list long enough
  * to have more entries than needed.
@@ -59,7 +76,7 @@ int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
  *       exceeded sufficiently to emit photons, then yields those photons.
  */
 
-int sorted_insert(sorted_photons_t *photon_stream, photon_t,
+/*int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		photon, photon_comparator) { 
 	int index;
 	
@@ -72,4 +89,4 @@ int sorted_insert(sorted_photons_t *photon_stream, photon_t,
 		insert photon
 		update bounds
 		return(0);
-} 
+} */

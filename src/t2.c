@@ -38,10 +38,10 @@ void print_t2(FILE *out_stream, t2_t *record, int print_newline,
 }
 
 int t2_comparator(const void *a, const void *b) {
-	/* Comparator to be used with standard sorting algorithms to sort
-	 * t2 photons. Yields 1 for sorted, 0 for equal, and -1 for reversed.
+	/* Comparator to be used with standard sorting algorithms (qsort) to sort
+	 * t2 photons. 
      */
-	return(((t2_t *)a)->time < ((t2_t *)b)->time);
+	return(((t2_t *)a)->time - ((t2_t *)b)->time);
 }
 
 t2_queue_t *allocate_t2_queue(int queue_length) {
@@ -78,9 +78,125 @@ void free_t2_queue(t2_queue_t **queue) {
 	}
 }
 
-void get_queue_item_t2(t2_t *record, t2_queue_t *queue, int index) {
-	int true_index = (queue->left_index + index) % queue->length;
-	memcpy(record, &(queue->queue[true_index]), sizeof(t2_t));
+int t2_queue_full(t2_queue_t *queue) {
+	/* If the queue has no free spaces, returns true. */
+	return( queue->right_index - queue->left_index >= (queue->length-1) );
+}
+
+int t2_queue_pop(t2_t *record, t2_queue_t *queue) {
+	int result = t2_queue_front(record, queue);
+
+	if ( ! result ) {
+		queue->left_index++;
+		if ( queue->left_index > queue->right_index ) {
+			queue->left_index = -1;
+			queue->right_index = -1;
+		}
+	}
+
+	return(result);
+}
+		
+
+int t2_queue_push(t2_t *record, t2_queue_t *queue) {
+	int64_t next_index = (queue->right_index + 1) % queue->length;
+	
+	debug("Appending at index %"PRId64"\n", next_index);
+	if ( (queue->right_index - queue->left_index) >= (queue->length-1) ) {
+		error("Queue overflow, with limits (%"PRId64", %"PRId64").\n"
+				"       Extend its size to continue with the calculation.\n",
+		queue->left_index, queue->right_index);
+		return(-1);
+	} else {
+		memcpy(&(queue->queue[next_index]), record, sizeof(t2_t));
+		queue->right_index++;
+		if ( queue->left_index < 0 ) {
+			queue->left_index = 0;
+		}
+		return(0);
+	}
+}
+
+int t2_queue_front(t2_t *record, t2_queue_t *queue) {
+	if ( queue->left_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record, &(queue->queue[queue->left_index % queue->length]),
+				sizeof(t2_t));
+		return(0);
+	}
+}
+
+int t2_queue_back(t2_t *record, t2_queue_t *queue) {
+	if ( queue->right_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record,
+				&(queue->queue[queue->right_index % queue->length]),
+				sizeof(t2_t));
+		return(0);
+	}
+}
+
+int t2_queue_index(t2_t *record, t2_queue_t *queue, int index) {
+	int64_t true_index = (queue->left_index + index) % queue->length;
+
+	if ( true_index > t2_queue_size(queue) ) {
+		debug("Requested return of non-existent index: %"PRId64"\n", 
+				true_index)
+		return(-1);
+	} else { 
+		memcpy(record, &(queue->queue[true_index]), sizeof(t2_t));
+}
+
+int64_t t2_queue_size(t2_queue_t *queue) {
+	return(queue->right_index - queue->left_index);
+}
+
+void t2_queue_sort(t2_queue_t *queue) {
+	/* First, check if the queue wraps around. If it does, we need to move 
+	 * everything into one continous block. If it does not, it is already in 
+	 * a continuous block and is ready for sorting.
+	 */
+	int64_t right = queue->right_index % queue->length;
+	int64_t left = queue->left_index % queue->length;
+	if ( right < left ) {
+		/* The queue wraps around, so join the two together by moving the 
+		 * right-hand bit over. 
+		 * xxxxx---yyyy -> xxxxxyyyy---
+		 */
+		debug("Queue loops around, moving records to make them contiguous.\n");
+		memmove(&(queue->queue[right+1]), 
+				&(queue->queue[left]),
+				sizeof(t2_t)*(queue->length - left));
+	} else if ( left != 0 ){
+		/* There is one continuous block, so move it to the front. 
+		 * ---xxxx -> xxxx---
+		 */
+		debug("Queue is offset from beginning, moving it forward.\n");
+		memmove(queue->queue,
+				&(queue->queue[left]),
+				sizeof(t2_t)*(right-left+1));
+	} else {
+		debug("Queue starts at the beginning of the array.\n");
+	}
+
+	queue->right_index -= queue->left_index;
+	queue->left_index = 0;
+
+	debug("Sorting %"PRId64" photons.\n", queue->right_index+1);
+
+	qsort(queue->queue, queue->right_index+1, sizeof(t2_t), t2_comparator);
+}
+
+void print_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
+	t2_t record;
+	while ( queue->left_index <= queue->right_index ) {
+		debug("Printing from indices (%"PRId64", %"PRId64")\n",
+				queue->left_index, queue->right_index);
+		pop_queue_t2(&record, queue);
+		print_t2(out_stream, &record, NEWLINE, options);
+	}
 }
 
 /* These functions break up the photons into subsets by dividing time into

@@ -4,7 +4,7 @@
 #define NO_NEWLINE 0
 #define NEWLINE 1
 
-#define QUEUE_SIZE 100000
+#define QUEUE_SIZE 1024*1024
 
 #include <stdio.h>
 #include "types.h"
@@ -123,7 +123,7 @@ void free_options(options_t *options);
 char *get_options_string(program_options_t *program_options);
 
 int read_offsets(options_t *options);
-int parse_offsets(char *offsets_string, int64_t *offsets,
+int parse_offsets(char *offsets_string, int64_t **offsets,
 		options_t *options);
 int parse_suppress(options_t *options);
 
