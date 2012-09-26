@@ -8,7 +8,7 @@ import subprocess
 import shutil
 
 base_name = "picoquant"
-version = "v1.5"
+version = "v1.6"
 archive_dir = os.path.join("dist", version)
 source_dirs = ["doc", "scripts", "src"]
 suffixes = [".py", ".c", ".h", "Makefile", ".tex", ".pdf", "README", ".m"]

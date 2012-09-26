@@ -9,7 +9,7 @@ CFLAGS += -D_FILE_OFFSET_BITS=64
 
 # Version info for the executables.
 CFLAGS += -DVERSION_MAJOR=1
-CFLAGS += -DVERSION_MINOR=5
+CFLAGS += -DVERSION_MINOR=6
 CFLAGS += -O3
 CFLAGS += -lm
 CFLAGS += -fopenmp
