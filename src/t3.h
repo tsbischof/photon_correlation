@@ -43,6 +43,8 @@ void yield_t3_queue(FILE *out_stream, t3_queue_t *queue, options_t *options);
 typedef struct {
 	window_t limits;
 	int64_t width;
+	int set_pulse_limit;
+	int64_t pulse_limit;
 } t3_window_t;
 
 typedef struct {
@@ -52,9 +54,10 @@ typedef struct {
 	FILE *in_stream;
 } t3_windowed_stream_t;
 
-void init_t3_window(t3_window_t *window, options_t *options);
+void init_t3_window(t3_window_t *window, 
+		int64_t start_pulse, options_t *options);
 void next_t3_window(t3_window_t *window);
-void init_t3_windowed_stream(t3_windowed_stream_t *stream,
+int init_t3_windowed_stream(t3_windowed_stream_t *stream,
 		FILE *in_stream, options_t *options);
 int next_t3_windowed(t3_windowed_stream_t *stream, t3_t *record,
 		options_t *options);

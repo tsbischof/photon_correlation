@@ -277,7 +277,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 			 && ! result ) {
 		result += read_offsets(options);
 	}
-		
+	
 	return(result);
 }
 
@@ -462,7 +462,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 	}
 
 	free(options_string);
-		
+	
 	return(result);
 }
 
@@ -567,6 +567,8 @@ int parse_offsets(char *offsets_string, int64_t **offsets,
 		options_t *options) {
 	char *c;
 	int channel;
+
+	debug("Parsing offsets from %s\n", offsets_string);
 
 	*offsets = (int64_t *)malloc(sizeof(int64_t)*options->channels);
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "t3.h"
 #include "error.h"
@@ -234,47 +235,91 @@ void yield_t3_queue(FILE *out_stream, t3_queue_t *queue, options_t *options) {
  * windows of fixed length. Thus we need to be able to receive a photon from a 
  * window, and to iterate between the windows.
  */
-void init_t3_window(t3_window_t *window, options_t *options) {
-	window->limits.lower = 0;
-	window->limits.upper = options->bin_width;
+void init_t3_window(t3_window_t *window, 
+		int64_t start_pulse, options_t *options) {
+	if ( options->set_start_time ) {
+		window->limits.lower = options->start_time;
+	} else {
+		window->limits.lower = start_pulse;
+	}
+
+	if ( options->bin_width ) {
+		window->limits.upper = options->bin_width*
+				((int)floor(window->limits.lower/options->bin_width)+1);
+	} else {
+		window->limits.upper = 0;
+	}
 	window->width = options->bin_width;
+
+	window->set_pulse_limit = options->set_stop_time;
+	window->pulse_limit = options->stop_time;
+
+	if ( window->set_pulse_limit 
+			&& window->limits.upper > window->pulse_limit ) {
+		window->limits.upper = window->pulse_limit;
+	}
 }
 
 void next_t3_window(t3_window_t *window) {
-	window->limits.lower += window->width;
+	window->limits.lower = window->limits.upper;
 	window->limits.upper += window->width;
+
+	if ( window->set_pulse_limit 
+			&& window->limits.upper > window->pulse_limit ) {
+		window->limits.upper = window->pulse_limit;
+	}
 }
 
-void init_t3_windowed_stream(t3_windowed_stream_t *stream, 
+int init_t3_windowed_stream(t3_windowed_stream_t *stream, 
 		FILE *in_stream, options_t *options) {
 	stream->yielded_photon = 0;
 	stream->in_stream = in_stream;
-	stream->current_photon.channel = -1;
-	init_t3_window(&(stream->window), options);
+
+	if ( next_t3(in_stream, &(stream->current_photon), options) ) {
+		return(-1);
+	} else {
+		init_t3_window(&(stream->window), 
+				stream->current_photon.pulse, options);
+	}
+
+	return(0);
 }
 
 int next_t3_windowed(t3_windowed_stream_t *stream, t3_t *record,
 		options_t *options) {
+	/* Deal with the actual photon now. */
 	if ( stream->yielded_photon ) {
 		stream->current_photon.channel = -1;
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t3(stream->in_stream, &(stream->current_photon), options) ) {
+		if ( next_t3(stream->in_stream, 
+				&(stream->current_photon), options) ) {
 			return(-1);
 		}
 	}
 
+	/* Test that the photon is within the absolute limits */ 
+	if ( options->set_start_time &&
+			stream->current_photon.pulse < options->start_time ) {
+		stream->yielded_photon = 1;
+		return(2);
+	} 
+
+	if ( options->set_stop_time && 
+			stream->current_photon.pulse >= options->stop_time ) {
+		return(-1);
+	}
+
+	/* Process the photon normally. */
 	if ( (! options->count_all) 
-			&& stream->current_photon.pulse
-					 > stream->window.limits.upper ) {
+			&& stream->current_photon.pulse > stream->window.limits.upper ) {
 		stream->yielded_photon = 0;
 		return(1);
-	} else if ( stream->current_photon.pulse
-					 < stream->window.limits.lower ) {
-		/* this helps prevent inifinite loops: imagine that we define the window
- 		 * to start after the photon, at which point we keep moving forward 
- 		 * without ever finding the correct window.
+	} else if ( stream->current_photon.pulse < stream->window.limits.lower ) {
+		/* this helps prevent inifinite loops: imagine that we define the 
+		 * window to start after the photon, at which point we keep moving 
+		 * forward without ever finding the correct window.
  		 */
 		return(-2);
 	} else {

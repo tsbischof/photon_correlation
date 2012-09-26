@@ -238,8 +238,13 @@ void init_t2_window(t2_window_t *window,
 		window->limits.lower = start_time;
 	}
 
-	window->limits.upper = options->bin_width*
-			((int)floor(window->limits.lower/options->bin_width)+1);
+	if ( options->bin_width ) {
+		window->limits.upper = options->bin_width*
+				((int)floor(window->limits.lower/options->bin_width)+1);
+	} else {
+		window->limits.upper = 0;
+	}
+
 	window->width = options->bin_width;
 
 	window->set_time_limit = options->set_stop_time;
