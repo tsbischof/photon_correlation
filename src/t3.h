@@ -25,7 +25,15 @@ int t3_comparator(const void *a, const void *b);
 
 t3_queue_t *allocate_t3_queue(int queue_length);
 void free_t3_queue(t3_queue_t **queue);
-void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index);
+int t3_queue_full(t3_queue_t *queue);
+int t3_queue_pop(t3_queue_t *queue, t3_t *record);
+int t3_queue_push(t3_queue_t *queue, t3_t *record);
+int t3_queue_front(t3_queue_t *queue, t3_t *record);
+int t3_queue_back(t3_queue_t *queue, t3_t *record);
+int t3_queue_index(t3_queue_t *queue, t3_t *record, int index);
+int64_t t3_queue_size(t3_queue_t *queue);
+void t3_queue_sort(t3_queue_t *queue);
+void yield_t3_queue(FILE *out_stream, t3_queue_t *queue, options_t *options);
 
 /* The windowed stream represents a series of streams which are composed of
  * photons in some time window. For example, an intensity stream can be 

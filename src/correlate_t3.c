@@ -17,7 +17,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	 */
 	int result = 0;
 	int done = 0;
-	long long record_number = 0;
+	int64_t record_number = 0;
 	t3_queue_t *queue;
 	t3_t *correlation_block;
 	t3_correlation_t *correlation;
@@ -43,7 +43,7 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && next_t3_queue_correlate(in_stream, queue, options) ) {
+	while ( ! done && ! next_t3_queue_correlate(in_stream, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance by referencing the correct 
 		 * channel combination.
@@ -65,44 +65,45 @@ int correlate_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 int next_t3_queue_correlate(FILE *in_stream, 
 		t3_queue_t *queue, options_t *options) {
-	long long starting_index;
-	long long ending_index;
+	t3_t left, right;
 
-	queue->left_index += 1;
-	starting_index = queue->left_index % queue->length;
-	ending_index = queue->right_index % queue->length;
+	debug("Gathering next photons for correlation.\n");
+	
+	/* The first entry has been used already, so eliminate it. */
+	t3_queue_pop(queue, &left);
 
 	while ( 1 ) {
+		t3_queue_front(queue, &left);
+		t3_queue_back(queue, &right);
+
 		if ( feof(in_stream) ) {
 			/* If we are at the end of the file, keep moving the left index to
 			 * the right, until we reach it.
 			 *
 			 * Make sure we have options->order many indices to work with.
 			 */
-			return(queue->left_index < 
-					(queue->right_index - options->order + 2));
-		} else if ( ending_index > 0 && 
-					! under_max_distance_t3(&(queue->queue[starting_index]),
-								&(queue->queue[ending_index]), options) ) {
+			return( t3_queue_size(queue) < options->order );
+		} else if ( t3_queue_size(queue) > 0 && 
+					! under_max_distance_t3(&left, &right, options) ) {
 			/* Incremented, but still outside the bounds. */
-			return(1);
+			return(0);
 		} else {
-			/* Check for a new value. */
-			queue->right_index += 1;
-			ending_index = queue->right_index % queue->length;
-
-			if ( next_t3(in_stream, &(queue->queue[ending_index]), options) 
-					&& ! feof(in_stream) ) {
+			if ( ! next_t3(in_stream, &right, options) ) {
 			/* Failed to read a line. We already checked that we are not 
 			 * at the end of the stream, therefore we have a read error 
 			 * on our hands.
 			 */
+				if ( t3_queue_push(queue, &right) ) {
+					error("Could not add next photon to queue.\n");
+					return(-1);
+				}
+			} else if ( ! feof(in_stream) ) {
 				error("Error while reading t3 stream.\n");
-				return(0);
-			} else if ( (queue->right_index - queue->left_index) 
-				>= queue->length ) {
-				warn("Overflow of queue entries, increase queue size for "
-					"accurate results.\n");
+				return(-1);
+			} else {
+				/* No photon, but at the end of the stream. The main loop
+				 * will take care of this.
+				 */
 			}
 
 			/* By here, we have no error, no EOF, so move along. */
@@ -153,7 +154,7 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 	debug("---------------------------------\n");
 	debug("Initializing the offset array.\n");
 	init_offsets(offsets);
-	offsets->limit = queue->right_index - queue->left_index;
+	offsets->limit = t3_queue_size(queue) - 1;
 
 	debug("Moving on to the correlation.\n");
 
@@ -161,11 +162,18 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 		/* First, check that the leftmost and rightmost values are acceptable
  		 * for correlation. If not, move on to the next set.
  		 */
-		get_queue_item_t3(&left, queue, offsets->offsets[0]);
-		get_queue_item_t3(&right, queue, offsets->offsets[options->order-1]);
+		t3_queue_index(queue, &left, offsets->offsets[0]);
+		t3_queue_index(queue, &right, offsets->offsets[options->order-1]);
 		
 		if ( valid_distance_t3(&left, &right, options) ) {
-			debug("Close enough for correlation.\n");
+			if ( verbose ) {
+				debug("Close enough for correlation of: (");
+				print_t3(stderr, &left, NO_NEWLINE, options);
+				fprintf(stderr, ") and (");
+				print_t3(stderr, &right, NO_NEWLINE, options);
+				fprintf(stderr, ")\n");
+			}
+
 			for ( permutation = 0; permutation < permutations->n_permutations;
 					permutation++  ) {
 				(*record_number)++;
@@ -173,14 +181,14 @@ int correlate_t3_block(FILE *out_stream, long long *record_number,
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
-				get_queue_item_t3(&left, queue, offset);
+				t3_queue_index(queue, &left, offset);
 
 				correlation->records[0].channel = left.channel;
 
 				for ( i = 1; i < options->order; i++ ) {
 					offset = offsets->offsets[
 							permutations->permutations[permutation][i]];
-					get_queue_item_t3(&right, queue, offset);
+					t3_queue_index(queue, &right, offset);
 
 /*					debug("(%u, %lld, %d) <-> (%u, %lld, %d)\n", 
 							left.channel, left.pulse, left.time,

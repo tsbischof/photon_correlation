@@ -180,8 +180,8 @@ void t2_queue_sort(t2_queue_t *queue) {
 		debug("Queue is full, no action is needed to make it contiguous for "
 				"sorting.\n");
 	} else {
-		warn("Sorting with a non-full queue is not thoroughly. Use these "
-				"results at your own risk.\n");
+		warn("Sorting with a non-full queue is not thoroughly tested. "
+				"Use these results at your own risk.\n");
 		if ( right < left ) {
 			/* The queue wraps around, so join the two together by moving the 
 			 * right-hand bit over. 

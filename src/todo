@@ -10,6 +10,7 @@ General:
 -change t3 to pulse, from pulse_number
 -check that the t2 queue functions properly: at the end of the stream, does it handle the last value correctly?
 -would it be simple/reasonable to merge common routines with generic programs? Currently, t2 and t3 have many similar (if not identical) routines, with very small changes. If these changes can be worked it separately, it might be reasonable to use generic routines and get rid of the duplicate code.
+-implement t3 mode for channels, update t3.c
 
 Scripts:
 -plotting for t3 mode correlation

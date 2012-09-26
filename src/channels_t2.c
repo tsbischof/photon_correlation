@@ -75,7 +75,9 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	debug("Finished processing photons, with a result of %d\n", result);
 	if ( ! result ) {
 		debug("Yielding the final photons.\n");
-		t2_queue_sort(queue);
+		if ( options->offset_time ) {
+			t2_queue_sort(queue);
+		}
 		yield_t2_queue(out_stream, queue, options);
 	}
 	

@@ -36,14 +36,25 @@ void print_t3(FILE *out_stream, t3_t *record,
 }
 
 int t3_comparator(const void *a, const void *b) {
+	/* Comparator to be used with standard sorting algorithms (qsort) to sort
+	 * t3 photons. 
+     */
+	/* The comparison must be done explicitly to avoid issues associated with
+	 * casting int64_t to int. If we just return the difference, any value
+	 * greater than max_int would cause problems.
+	 */
 	/* The comparator needed for sorting a list of t3 photons. Follows the 
      * standard of qsort (-1 sorted, 0 equal, 1 unsorted)
 	 */
+	int64_t difference;
+
 	if ( ((t3_t *)a)->pulse == ((t3_t *)b)->pulse ) {
-		return( ((t3_t *)a)->time - ((t3_t *)b)->time );
+		difference = ((t3_t *)a)->time - ((t3_t *)b)->time;
 	} else {
-		return( ((t3_t *)a)->pulse - ((t3_t *)b)->pulse);
+		difference = ((t3_t *)a)->pulse - ((t3_t *)b)->pulse;
 	}
+
+	return( difference > 0 );
 }
 
 t3_queue_t *allocate_t3_queue(int queue_length) {
@@ -80,11 +91,144 @@ void free_t3_queue(t3_queue_t **queue) {
 	}
 }
 
-void get_queue_item_t3(t3_t *record, t3_queue_t *queue, int index) {
-	int true_index = (queue->left_index + index) % queue->length;
-	memcpy(record, &(queue->queue[true_index]), sizeof(t3_t));
+int t3_queue_full(t3_queue_t *queue) {
+	/* If the queue has no free spaces, returns true. */
+	return( queue->right_index - queue->left_index >= (queue->length-1) );
 }
 
+int t3_queue_pop(t3_queue_t *queue, t3_t *record) {
+	int result = t3_queue_front(queue, record);
+
+	if ( ! result ) {
+		queue->left_index++;
+		if ( queue->left_index > queue->right_index ) {
+			queue->left_index = -1;
+			queue->right_index = -1;
+		}
+	}
+
+	return(result);
+}
+		
+
+int t3_queue_push(t3_queue_t *queue, t3_t *record) {
+	int64_t next_index = (queue->right_index + 1) % queue->length;
+	
+	debug("Pushing at index %"PRId64"\n", next_index);
+	if ( t3_queue_full(queue) ) {
+		error("Queue overflow, with limits (%"PRId64", %"PRId64"). "
+				"Extend its size to continue with the calculation.\n",
+				queue->left_index, queue->right_index);
+		return(-1);
+	} else {
+		memcpy(&(queue->queue[next_index]), record, sizeof(t3_t));
+		queue->right_index++;
+		if ( queue->left_index < 0 ) {
+			queue->left_index = 0;
+		}
+		return(0);
+	}
+}
+
+int t3_queue_front(t3_queue_t *queue, t3_t *record) {
+	int64_t index = queue->left_index % queue->length;
+	debug("Front of queue is at index %"PRId64"\n", index);
+	if ( queue->left_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record, 
+				&(queue->queue[index]),
+				sizeof(t3_t));
+		return(0);
+	}
+}
+
+int t3_queue_back(t3_queue_t *queue, t3_t *record) {
+	int64_t index = queue->right_index % queue->length;
+	debug("Back of queue is at index %"PRId64"\n", index);
+	if ( queue->right_index < 0 ) {
+		return(-1);
+	} else {
+		memcpy(record,
+				&(queue->queue[index]),
+				sizeof(t3_t));
+		return(0);
+	}
+}
+
+int t3_queue_index(t3_queue_t *queue, t3_t *record, int index) {
+	int64_t true_index = (queue->left_index + index) % queue->length;
+
+	if ( index > t3_queue_size(queue) ) {
+		debug("Requested return of non-existent index: %"PRId64"\n", 
+				true_index);
+		return(-1);
+	} else { 
+		memcpy(record, &(queue->queue[true_index]), sizeof(t3_t));
+		return(0);
+	}
+}
+
+int64_t t3_queue_size(t3_queue_t *queue) {
+	if ( queue->left_index < 0 || queue->right_index < 0 ) {
+		return(0);
+	} else {
+		return(queue->right_index - queue->left_index + 1);
+	}
+}
+
+void t3_queue_sort(t3_queue_t *queue) {
+	/* First, check if the queue wraps around. If it does, we need to move 
+	 * everything into one continous block. If it does not, it is already in 
+	 * a continuous block and is ready for sorting.
+	 */
+	int64_t right = queue->right_index % queue->length;
+	int64_t left = queue->left_index % queue->length;
+	if ( t3_queue_full(queue) ) {
+		debug("Queue is full, no action is needed to make it contiguous for "
+				"sorting.\n");
+	} else {
+		warn("Sorting with a non-full queue is not thoroughly tested. "
+				"Use these results at your own risk.\n");
+		if ( right < left ) {
+			/* The queue wraps around, so join the two together by moving the 
+			 * right-hand bit over. 
+			 * xxxxx---yyyy -> xxxxxyyyy---
+			 */
+			debug("Queue loops around, moving records to "
+					"make them contiguous.\n");
+			memmove(&(queue->queue[right+1]), 
+					&(queue->queue[left]),
+					sizeof(t3_t)*(queue->length - left));
+		} else if ( left != 0 && ! t3_queue_full(queue) ) {
+			/* There is one continuous block, so move it to the front. 
+			 * ---xxxx -> xxxx---
+			 */
+			debug("Queue is offset from beginning, moving it forward.\n");
+			memmove(queue->queue,
+					&(queue->queue[left]),
+					sizeof(t3_t)*t3_queue_size(queue));
+		} else {
+			debug("Queue starts at the beginning of the array, "
+					"no action needed to make it contiguous.\n");
+		}
+	}
+
+	queue->right_index = t3_queue_size(queue) - 1;
+	queue->left_index = 0;
+
+	debug("Sorting %"PRId64" photons.\n", t3_queue_size(queue));
+
+	qsort(queue->queue, 
+			t3_queue_size(queue), sizeof(t3_t), t3_comparator);
+}
+
+void yield_t3_queue(FILE *out_stream, t3_queue_t *queue, options_t *options) {
+	t3_t record;
+	while ( ! t3_queue_pop(queue, &record) ) {
+		print_t3(out_stream, &record, NEWLINE, options);
+	}
+}
 
 /* These functions break up the photons into subsets by dividing time into
  * windows of fixed length. Thus we need to be able to receive a photon from a 
