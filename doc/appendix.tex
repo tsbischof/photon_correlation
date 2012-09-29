@@ -1,0 +1,119 @@
+\appendixpage
+\begin{appendix}
+\chapter{Mathematical notation}
+\label{sec:notation}
+In this paper, there is extensive use of mathematical notation following some union of standards from various fields of mathematics. What follows is an attempt to define as much of this jargon as possible, such that a reader with a moderate background in the field could be reminded of its meaning.
+
+%\newcommand{\braces}[1]{\ensuremath{\left\lbrace #1 \right\rbrace}}
+%\newcommand{\angles}[1]{\ensuremath{\left\langle #1 \right\rangle}}
+%\newcommand{\integers}{\ensuremath{\mathbb{Z}}}
+%\newcommand{\wholes}{\ensuremath{\mathbb{N}}}
+%\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+%\renewcommand{\vec}{\mathbf}
+%\newcommand{\abs}[1]{\ensuremath{\left|#1\right|}}
+
+\section{Glossary}
+\begin{itemize}
+\item set: A collection of things. Typically indicated by \braces{\cdot}.
+\item tuple: An ordered set of a finite number of elements, typically indicated by \parens{\cdot}. Similar in structure to a vector.
+\end{itemize}
+
+\section{Variables}
+\begin{itemize}
+\item $a$: Index of a bin in a histogram.
+\item $b$: Time bin as specified by lower and upper bounds. When subscripted, this can indicate bin bounds or reference the bin by index (made clear by context).
+\item $\channel$: Detection channel, typically represented by some whole number.
+\item $\channels$: The set of all detection channels in an experiment.
+\item $\Channel$: Function of a photon which returns the detection channel the photon arrived on.
+\item $\delta$: A change in some variable.
+\item $\resolution$: Time resolution of a detection channel.
+\item $f$: Frequency.
+\item $\gn{n}$: Correlation function of $n$th order.
+\item $\photon$: Photon, a tuple consisting of a detection channel and some number of arrival time properties.
+\item $\photons$: The set of all photons in an experiment. A subscript typically indicates some subset, such as photons on a detection channel or in some specified time window.
+\item $\Index$: Function returning the index of a histogram, given the set of channels and a tuple of elements of that set.
+%\item $\Histogram$: The histogram function, which accepts bin definitions and outputs the counts in those bins.
+%\item $\iota$: A ``real'' physical signal being sampled in an experiment.
+\item $I$: Signal, a real-valued function of time.
+\item $n$: The order of a correlation.
+%\item $N$: The number of elements in a set, the length of a stream or vector, or the number of detection channels.
+\item $p$: Pulse number.
+\item $\Pulse$: Function of a photon which returns the pulse the photon arrived after.
+\item $\rho$: Pulse delay.
+\item $t$: Time.
+\item $\Time$: Function of a photon which returns the arrival time of the photon.
+\item $\timedelay$:  Time delay.
+\item $\timewindow$: Time window, some subset of time in the experiment.
+\item $\integrationtime$: Integration time for the experiment.
+%\item $\emptyset$: The empty set, or a lack of a value.
+\end{itemize}
+
+\section{Sets}
+\begin{itemize}
+\item $\cap$ ($\bigcap$): Intersection of two (some number of) sets.
+\item $\cup$ ($\bigcup$): Union of two (some number of) sets.
+\item $\in$: Inclusion, indication that an element is a member of a set.
+\item $\abs{\cdot}$: Magnitude of a scalar or vector, or the number of elements in a set.
+\item $\max,\min$: The maximum or minimum elements of a set, given some rule for sorting made clear explicitly or by context.
+\item $\subset$: The set on the left is a proper subset of the set on the right: its members are elements of the right-hand set, but the two sets are not equal.
+\item $\subseteq$: The set on the left is a subset of the set on the right: its members are elements of the right-hand set, and the two sets may be equal.
+\end{itemize}
+
+\subsection{Named sets}
+There are a number of important sets which arise frequently in this paper:
+\begin{itemize}
+\item \reals: The set of all real numbers
+\item \integers: The set of all integers (\braces{\ldots-1,0,1,\ldots}).
+\item \wholes: The set of all positive integers, and zero (\braces{0,1,\ldots}).
+\end{itemize}
+Additionally, there are modifiers used to indicate special subsets:
+\begin{itemize}
+\item $\cdot^{*}$: As a superscript, this indicates that the set only contains non-negative numbers. For example, $\reals^{*}$ contains all elements $x$ such that $\abs{x}=x$.
+\item $\cdot^{+}$: As a superscript, this indicates that the set only contains positive numbers. 
+\item $\cdot_{n}$: As a subscript, this indicates a cyclic group of order $n$. For example, $\integers_{n}=\braces{0,1,\ldots,n-1}=\integers/n$. 
+\end{itemize}
+
+\subsection{Set builder notation}
+Frequently, this paper contains expressions in the following form:
+\begin{equation}
+\photons_{\channel}=\braces{\photon\left|\photon\in\photons;~\Channel(\photon)=\channel\right.}
+\end{equation}
+To read this notation, start left of the pipe to see what elements of the set look like. In this case, all elements are photons (\photon). To the right side of the pipe are the properties these elements must have, that the photon exists in the set \photons{} of photons, and that its arrival channel is $c$. 
+
+Other examples of this notation include:
+\begin{align}
+\reals^{*} &= \setbuilder{x}
+                        {x\in\reals; \abs{x}=x} \\
+\rationals &= \setbuilder{(p,q)}
+                        {p\in\integers;~q\in\integers^{+}} \\
+A\times B &= \setbuilder{(a,b)}
+                       {a\in A;~b\in B}                       
+\end{align}
+
+\subsection{Ranges}
+Square brackets and parentheses are used to indicate some continuous subset of values of a set. For example, the real numbers between 0 and 1, including 0 and 1, are denoted
+\begin{equation}
+\brackets{0,1} = \setbuilder{x}{x\in\reals;~x\ge 0;~x\le 1}
+\end{equation}
+To indicate that one of the endpoints is not included in the set, a parenthesis is used:
+\begin{equation}
+\left[0,1\right) = \setbuilder{x}{x\in\reals;~x\ge 0;~x<1}
+\end{equation}
+The source set is typically made clear by context.
+
+\section{Other functions and relations}
+\begin{itemize}
+\item \angles{\cdot}: Average of the bracketed quantity over some variable or number of variables.
+\item $\times$: Cartesian product of two sets.
+\item $\sum$: Sum of some number of quantities.
+\item $\prod$: Product of some number of quantities.
+\item $\leftarrow,\rightarrow$: Assignment of some value to a variable, or association in a function.
+\item $\ceil{\cdot}$: The smallest integer at least as large as the indicated quantity.
+\item $\abs{\cdot}$: Magnitude of a scalar or vector, or the number of elements in a set.
+\item $\equiv$: Indicates two quantities are equivalent. Typically used to denote a change in notation.
+\item $\propto$: Indicates proportionality; the two sides of the relation are equal upon multiplication of one side by some scalar factor, which could be unity.
+\end{itemize}
+
+\chapter{C API Documentation}
+
+\end{appendix}
