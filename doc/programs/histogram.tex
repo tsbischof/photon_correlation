@@ -2,68 +2,80 @@
 \label{sec:histogram}
 
 \subsection{Purpose}
-This program performs a multi-dimensional histogram in time and pulse dimensions for T2 and T3 correlation events produced by \program{correlate}. The output is a set of histogram bins and the number of events which fell into each. This output is \textit{not} normalized by bin width or any other factor, and represents the raw number of counts falling into each bin.
+This program performs a multi-dimensional histogram of photon correlation events. These are defined by the program \program{correlate}, though it is also possible to histogram T3 photons directly. The output is a set of histogram bins and the number of events which fall into each. This output is \textit{not} normalized by bin width or any other factor, and represents the raw number of counts falling into each bin.
 
-Additionally, \program{histogram} can be used to build a histogram of T3 events as would be done in interactive mode. To do this, set the mode to T3, and order to 1.
+For T3 photons, \program{histogram} can be used to build a histogram of events as would be done in interactive mode. To do this, set the mode to T3, and order to 1.
 
-For \gn{n>2}, all time dimensions are defined identically, and all pulse dimensions are defined identically.
-
+For \gn{n>2}, all time dimensions are defined identically, and all pulse dimensions are defined identically. If distinct time dimensions are required, the modification can be achieved at the stage where bins are defined, without any modification later in the code.
 
 \subsection{Command-line syntax}
 \begin{verbatim}
-Usage: histogram [-v] [-i file_in] [-o file_out] [-p print_every]
-                 -d <left_time_limit, time_increment, 
-                     right_time_limit> 
-                 -e <left_pulse_limit, pulse_increment, 
-                     right_pulse_limit> 
-                 -c channels -g order -m mode
+Usage: histogram [options]
 
-         -v, --verbose: Print debug-level information.
-         -i, --file-in: Input file. By default, this is stdin
-        -o, --file-out: Output file. By default, this is stdout.
-            -m, --mode: Stream type. This is either t2 or t3, 
-                        and the style of the output will be 
-                        different for each.
-     -d <time>, --time: The upper and lower bounds for the time
-                        axis in the histogram, along with the 
-                        number of bins to create. The required 
-                        format is lower,bins,upper (no spaces).
-   -e <pulse>, --pulse: Same as time, but for pulses. This is 
-                        only relevant in t3 mode.
-        -c, --channels: The number of channels in the incoming
-                        stream. By default, this is 2 (Picoharp
-                        or TimeHarp).
-           -g, --order: The order of the correlation performed.
-                        By default, this is 2 (the standard 
-                        cross-correlation.
-      -D, --time-scale: Sets whether the time scale is "linear", 
-                        "log". or "log-zero" (includes zero-time
-                        peak in the first bin. The default is a
-                        linear scale.
-     -E, --pulse-scale: Sets whether the pulse scale is "linear", 
-                        "log", or "log-zero". The default is a 
-                        linear scale.
-            -h, --help: Print this message.
+Version 1.6
 
-            This program assumes that the channels are presented
-            in order.
+                -h, --help: Prints this usage message.
+             -V, --verbose: Print debug-level information.
+             -v, --version: Print version information.
+             -i, --file-in: Input filename. By default, this is stdin.
+            -o, --file-out: Output filename. By default, this is stdout.
+                -m, --mode: TTTR mode (t2 or t3) represented by the data.
+            -c, --channels: The number of channels in the signal.
+               -g, --order: The order of the correlation or histogram.
+                -x, --time: The time limits for an axis, following the format:
+                                    lower, number of bins, upper
+                            with no spaces, and the extrema in picoseconds.
+               -y, --pulse: The pulse limits for an axis, following the format:
+                                    lower, number of bins, upper
+                            with no spaces, and the extrema in picoseconds.
+          -X, --time-scale: The scale of the time axis, one of:
+                               linear: linear interpolation between limits
+                                  log: logarithmic interpolation (linear
+                                       on a log axis)
+                             log-zero: same as log, except that the lowest
+                                       bin is extended to include 0
+         -Y, --pulse-scale: The scale of the pulse axis, one of:
+                               linear: linear interpolation between limits
+                                  log: logarithmic interpolation (linear
+                                       on a log axis)
+                             log-zero: same as log, except that the lowest
+                                       bin is extended to include 0
+
+Histogram collects a set of photon correlation events and counts them into
+bins defined by their relative time delays. The histograms are also
+separated by the identities of each channel in the correlation, such that
+all cross-correlations can be recovered. The output is similar to the
+correlation events, except that the delay limits are now given:
+   (t2, order 2)
+   channel 0, channel 1, t1-t0 lower, t1-t0 upper, counts
+Extension to higher orders creates more channel-delay pairs, and for t3 mode
+the pair becomes a channel-pulse-time tuple.
+
+An order 1 correlation of t3 data is possible, since this is already
+implicitly a correlation of a sync source and a photon stream. This is
+useful for calculating a photoluminescence lifetime, for example.
 \end{verbatim}
 
 \subsubsection{Input}
-The expected input is the ascii output of \program{correlate}, except for an order 1 of T3 data. These parameters specify a histogramming of the individual timing events, to recover the histogram which would have been obtained in interactive mode.
+\paragraph{\gn{1} of T3 data}
+The expected input is a stream of T3 photons.
 
-As for the rest of the parameters, most of these follow the same pattern as \program{correlate} and therefore will not be discussed here. The new flags involve definitions for the time and pulse dimensions: \texttt{--time}, \texttt{--time-scale}, \texttt{--pulse},  and \texttt{--pulse-scale}. The time and pulse dimensions behave identically, so we will only discuss the properties of one here.
+\paragraph{\gn{n\ge 2}}
+The expected input is the output of \program{correlate}.
+
+\paragraph{General options}
+The main options specified for \program{histogram} define the axes for pulse and time. These are treated equivalently, so we will focus on the time axes.
 
 For \texttt{--time}, the parameters specify the lower and upper bounds of the time axis, as well as the number of bins $n$ to create along that axis. For a linear spacing, the bin width $\Delta t$ is $(t_{\max}-t_{\min})/n$, such that the bins are defined by the ranges
 \begin{equation}
 \begin{aligned}
-&[t_{\min},t_{\min}+\Delta t),\\
-&[t_{\min}+\Delta t,t_{\min}+2\Delta t),\\
+&[\time_{\min},\time_{\min}+\Delta\time),\\
+&[\time_{\min}+\Delta\time,\time_{\min}+2\Delta\time),\\
 &\ldots\\
-&[t_{\min}+(n-1)\Delta t,t_{\min}+n\Delta t)
+&[\time_{\min}+(n-1)\Delta\time,\time_{\min}+n\Delta\time)
 \end{aligned}
 \end{equation}
-This linear spacing is the default behavior, but the flag \texttt{--time-scale} can produce two other scales: log, and log-zero. The log scale creates bins with fixed width over the span of $[\log(t_{\min}),\log(t_{\max}))$, as if often desired for measurements requiring long and short time correlations. The log-zero scale has identical behavior, except that any zero-time correlations ($\tau=0$) are placed into the first bin. Note that the log scale cannot handle zero-time correlations, and neither log not log-zero can handle negative-time correlations. These values will be dropped from the histogram, with an error message indicating this has happened.
+This linear spacing is the default behavior, but the flag \texttt{--time-scale} can produce two other scales: log, and log-zero. The log scale creates bins with fixed width over the span of $[\log(\time_{\min}),\log(\time_{\max}))$, as if often desired for measurements requiring long and short time correlations. The log-zero scale has identical behavior, except that any zero-time correlations ($\timedelay=0$) are placed into the first bin. Note that the log scale cannot handle zero-time correlations, and neither log not log-zero can handle negative-time correlations. These values will be dropped from the histogram, with an error message indicating this has happened.
 
 \subsubsection{Output}
 After the input stream terminates, \program{histogram} outputs the bin definitions and the number of counts associated with that bin. Generically, this format is:
@@ -178,7 +190,7 @@ Note how much larger the time window must be to catch significant numbers of hig
 The problem of populating and returning histograms for all possible correlations can be broken into a few distinct steps:
 \begin{enumerate}
 \item Construct a histogram for every permutation of channels.
-\item For a given correlation event:
+\item For each correlation event:
   \begin{enumerate}
   \item Identify the histogram corresponding to the permutation of channels.
   \item Identify the bin associated with the parameters of the correlation.
@@ -186,9 +198,9 @@ The problem of populating and returning histograms for all possible correlations
   \end{enumerate}
 \item For every bin of every histogram, print the bin definition and associated counts
 \end{enumerate}
-As such, each of these will be discussed separately.
+As such, each of these will be discussed separately. The discussion will focus on T2 data, but T3 data are handled identically for twice the order of equivalent T2 data.
 
-\subsubsection{The cross-correlations can be enumerated as a base-$\abs{\channels}$ numbers}
+\subsubsection{The cross-correlations can be enumerated as base-$\abs{\channels}$ numbers}
 Each histogram corresponds to a single cross-correlation, as identified by the tuple $\vec{\channel}\in\channels^{n}$, for $\channels$ the set of all channels and correlation order $n$. As such, if we enumerate the channels as whole numbers ($0, 1, \ldots$), it is evident that each element of the tuple can be treated as the coefficient of an $n$-digit number in base $\abs{\channels}$. Mapping these tuples onto the set of whole numbers can thus be achieved by the following formula:
 \begin{equation}
 \Index(\vec{\channel}) = \sum_{j=0}^{n-1}{\channel_{j}\abs{\channels}^{n-1-j}}

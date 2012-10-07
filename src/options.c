@@ -477,7 +477,8 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 	option_t *option;
 
 	fprintf(stderr, "Usage: %s [options]\n\n", argv[0]);
-	fprintf(stderr, "Version %d.%d\n\n", VERSION_MAJOR, VERSION_MINOR);
+	version(argc, argv);
+	fprintf(stderr, "\n");
 
 	for ( i = 0; i < program_options->n_options; i++ ) {
 		option = &all_options[program_options->options[i]];
@@ -504,7 +505,7 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 
 void version(int argc, char *argv[]) {
 	fprintf(stderr, 
-		"%s v%d.%d (%s)\n", 
+		"%s v%d.%d (built %s)\n", 
 		argv[0], 
 		VERSION_MAJOR, 
 		VERSION_MINOR,
