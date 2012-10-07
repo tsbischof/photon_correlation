@@ -1,4 +1,4 @@
-\documentclass{book}
+\documentclass{article}
 
 \usepackage[squaren]{SIunits}
 \usepackage{amsmath,amsfonts}
@@ -71,12 +71,10 @@ v1.6}
 
 \maketitle
 \tableofcontents
-
-
 \newpage
  
-\chapter{Introduction}
-\section{The layout of this document}
+\section{Introduction}
+\subsection{The layout of this document}
 This document is laid out in roughly three parts:
 \begin{enumerate}
 \item Overview of terminology and methods
@@ -91,7 +89,7 @@ In the chapters devoted to the various programs, the documentation is divided fu
 \end{enumerate}
 If you are familiar with the details of photon correlation methods, you can safely skip to the sections describing the different programs, and to the discussion of their applications. 
 
-\section{A (very) brief overview of photon-arrival timing}
+\subsection{A (very) brief overview of photon-arrival timing}
 In single-molecule spectroscopy, single-photon detectors are often used to perform time-resolved experiments. Detectors such as silicon-based avalanche photodiodes (APDs) can be used to detect the arrival time a photon with about 500\pico\second{} resolution, and can detect up to $10^{7}$ photons per second before saturation, abbreviated as 10\mega\cps{} hereafter (counts per second). Hardware capable of resolving these arrival times is of great use for revealing time-dependent structure to the photon stream, such as intensity fluctuations and bunching, so various hardware designs have been developed to permit such measurements.
 
 One line of instruments is the timing hardware produced by Picoquant GmBH, such as the Timeharp, Picoharp, and Hydraharp. These modules are capable of detecting pulse arrivals on multiple input channels with a resolution of as little as 1\pico\second, and operate in a few distinct modes:
@@ -108,9 +106,9 @@ In all cases, the times are discrete and represent some number of cycles of a cl
 
 Considering these distinct modes, it is important to spend some time discussing their uses, and how their data should be handled.
 
-\section{Data collection modes}
+\subsection{Data collection modes}
 \label{sec:modes}
-\subsection{Interactive (histogram)}
+\subsubsection{Interactive (histogram)}
 A common experiment for studying fluorophores is to measure the time dependence of their response to an excitation. For example, a pulsed laser can be used to excite a sample, and the resulting fluorescence detected by an APD. Because single-photon detectors are limited to detection of a single photon at once, to reconstruct the decay curve it is necessary to average the result over many pulses of the laser, binning the arrival times of the emitted photons relative to that of the laser. If measuring this time-averaged behavior is sufficient, then the interactive histogram mode is used to perform all of this collection and binning on the hardware without any post-processing. 
 
 Consequently, interactive data consists of $N$ unique arrival time bins with boundaries $\parens{\bin_{j}\upminus, \bin_{j}\upplus}$ and the number of counts $\counts_{j}$ associated with that bin, so the data can be represented by the set:
@@ -123,7 +121,7 @@ Consequently, interactive data consists of $N$ unique arrival time bins with bou
 \end{equation}
 The exact choice of where the boundaries lie has some effect on the resulting histogram, but this performed in the hardware and presumably represents $\time\in\closedopenrange{\bin_{j}\upminus}{\bin_{j}\upplus}$. This choice is not detailed in the manuals for the hardware, but it is of little practical importance, since all photons will be counted one way or the other.
 
-\subsection{T2}
+\subsubsection{T2}
 In T2 mode, all input channels are connected to photon detectors. At the start of the experiment, an internal clock is reset and started, providing a master timing reference. As a pulse arrives, the machine emits data encoding the channel and time of arrival, so the data follow the form:
 \begin{equation}
 \braces{\parens{\channel, \time}}
@@ -137,7 +135,7 @@ for a channel \channel{} and arrival time \time{} of a photon.
 %\end{equation}
 %The details of this calculation will laid out later in section~\ref{sec:correlate}, but one use of the $g^{(2)}(t)$ is to determine the number of emitters present in a signal. For example, a single emitter emitting one photon at any time will exhibit so-called antibunching behavior, where $g^{(2)}(t)\rightarrow 0$ for $t\approx 0$, indicating a diminished probability of seeing two successive photon emissions ($g^{(n)}(\braces{t_{j}})=1$ indicates no correlation). Correlations of higher order ($n\ge 3$) have their own uses, but quickly become computationally expensive for reasons which will become clear later.
 
-\subsection{T3}
+\subsubsection{T3}
 \label{sec:t3}
 T3 mode is closest in character to the interactive mode, except that, instead of binning the photon arrival times on the hardware, the arrivals are recorded directly for later examination, as in T2 mode. This gives a data set of the form:
 \begin{equation}
@@ -163,7 +161,7 @@ For a well-designed system these errors should not be very large, but if an appl
 %
 %Uses of this mode include the study of the time-dependent fluoresence lifetime of single molecules, which can switch between distinct states under various conditions. Correlation methods can also reveal important behavior, but again this will be discussed later.
 
-\section{Correlation techniques}
+\subsection{Correlation techniques}
 A number of techniques involving the correlation of one or more signals exist, and their use in fluorescence microscopy requires that we be able to calculate correlation functions of the following form:
 \begin{equation}
 \gn{n}(\timedelay_{1}, \ldots \timedelay_{n-1}) = 
@@ -177,7 +175,7 @@ where $\timedelay_{0}=0$ for notational simplicity. The details of calculating t
 \item Histogramming correlation events
 \end{enumerate}
 
-\section{General design principles}
+\subsection{General design principles}
 Analysis of these timing data can be roughly described as follows:
 \begin{enumerate}
 \item Produce a stream of photon events
@@ -198,7 +196,7 @@ All programs will display command-line syntax when the flag \texttt{-h} or \text
 
 The Python programs have been tested primarily with version 3.2 on the same systems described above.
 
-\section{Brief description of each program and its purpose}
+\subsection{Brief description of each program and its purpose}
 \paragraph{\program{bin\_intensity}}
 Determines the exact intensity for each time bin for a correlation. For most purposes, \program{intensity} is sufficient.
 

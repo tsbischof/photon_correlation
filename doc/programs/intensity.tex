@@ -1,40 +1,53 @@
-
-\chapter{Intensity}
-\section{Purpose}
+\section{Intensity}
+\subsection{Purpose}
 For T2 and T3 data, it is often useful to group records into fixed time bins and count the number of records in each bin. This program does just that, reporting the intensity at each channel for all data in a time-ordered stream. 
 
-\section{Command-line syntax}
-\begin{verbatim}
-Usage: intensity [-v] [-i file_in] [-o file_out] [-c channels]
-                 -w bin_width -m mode
+\subsection{Command-line syntax}
+\begin{verbatim}Usage: intensity [options]
 
-           -v, --verbose: Print debug-level information.
-           -i, --file-in: Input file. By default, this is
-                          STDIN.
-          -o, --file-out: Output file. By default, this is
-                          STDOUT.
-         -w, --bin-width: Width of the bin, in time or pulses
-                          depending on the mode.
-              -m, --mode: Stream type. This is either t2 or t3,
-                          and the style of the output will be
-                          different for each.
-          -c, --channels: Number of channels in the stream. By
-                          default, this is 2.
-         -a, --count-all: Rather than counting records in 
-                          distinct time bins, count all records 
-                          in the stream.
-              -h, --help: Print this message.
+Version 1.6
 
-       This program assumes the input stream is time-ordered.
-       
-       If counting all events or printing the last one, the time
-       written will be the time of the last event seen.
+                -h, --help: Prints this usage message.
+             -V, --verbose: Print debug-level information.
+             -v, --version: Print version information.
+             -i, --file-in: Input filename. By default, this is stdin.
+            -o, --file-out: Output filename. By default, this is stdout.
+          -f, --start-time: The lower limit of time for the run; do not
+                            process photons which arrive before this time.
+           -F, --stop-time: The upper limit of time for the run; do not
+                            process photons which arrive before this time.
+                -m, --mode: TTTR mode (t2 or t3) represented by the data.
+            -c, --channels: The number of channels in the signal.
+           -w, --bin-width: The width of the time bin for processing 
+                            photons. For t2 mode, this is a number of
+                            picoseconds, and for t3 mode this is a 
+                            number of pulses.
+           -A, --count-all: Rather than counting photons in a given time bin,
+                            count all photons in the stream.
+
+Given a stream of TTTR data formatted like the output of picoquant, this
+program calculates the number of photons arriving on any number of detection
+channels, divided into some number of subsets of integration time.
+
+For example, to calculate the intensity of a stream of t2 photons from a
+measurement on a Picoharp, collected in 50ms bins:
+    intensity --bin-width 50000000000 --mode t2 --channels 2
+
+The output format is:
+    time start, time stop, channel 0 counts, channel 1 counts, ...
+
+Because the final photon may not arrive at the end of a time bin, the final
+bin ends at the arrival time of the last photon, permitting post-processing
+to determine whether the effect of that edge is significant.
+
+As an alternative to time bins, all of the photons can be counted by passing
+the flag --count-all. This is useful for normalizing a signal.
 \end{verbatim}
 
-\subsection{Input}
+\subsubsection{Input}
 T2 and T3 modes accept data of the form produced by \program{picoquant}, as specified in section~\ref{sec:picoquant_output}.
 
-\subsection{Output}
+\subsubsection{Output}
 The output for both T2 and T3 modes is of the form:
 \begin{verbatim}
 lower time limit, upper time limit, 
@@ -44,53 +57,58 @@ For T2 mode, the time bin is defined as a number of picoseconds. For T3 mode, th
 
 Passing the flag \texttt{--count-all} will ignore the time bins, and instead count all events on each channel as belonging to one large channel. 
 
-\section{Examples of usage}
-Count into 10\milli\second{} bins.
+The bin limits for the first and last bin are set to the first and last photons seen, unless the flag \texttt{--start-time} or \texttt{--stop-time} is passed. This eliminates dead time at the beginning and end of the measurement, though for some purposes the limits may need to be extended. For such limit modifications, use external analysis code.
+
+\subsection{Examples of usage}
+\subsubsection{Bin counts into fixed-width bins}
 \begin{verbatim}
 > picoquant --file-in data.pt2 --number 100000 |  \
-  intensity --bin-width 10000000000 --mode t2 --channels 2 
-0,10000000000,555,0
-10000000000,20000000000,524,0
-20000000000,30000000000,564,0
-30000000000,40000000000,536,0
-40000000000,50000000000,495,0
-50000000000,60000000000,530,0
-60000000000,70000000000,514,0
-70000000000,80000000000,548,0
-80000000000,90000000000,558,0
-90000000000,100000000000,565,0
-100000000000,110000000000,550,0
-110000000000,120000000000,490,0
-120000000000,130000000000,559,0
-130000000000,140000000000,504,0
-140000000000,150000000000,547,0
-150000000000,160000000000,537,0
-160000000000,170000000000,535,0
-170000000000,180000000000,545,0
-180000000000,186537236212,344,0
+  intensity --mode t2 --channels 2 \
+            --bin-width 50000000000
+7128264,50000000000,2674,0
+50000000000,100000000000,2715,0
+100000000000,150000000000,2650,0
+150000000000,186537236212,1961,0
 \end{verbatim}
-Count all events:
+
+\subsubsection{Count all photons}
 \begin{verbatim}
 > picoquant --file-in data.pt2 --number 100000 |  \
-  intensity --bin-width 10000000000 --mode t2 --channels 2 \
+  intensity --mode t2 --channels 2 \
   --count-all
 0,186537236212,10000,0
 \end{verbatim}
 
-\section{Implementation details}
-\label{sec:intensity_implementation}
-Each channel can be treated independently, so we can focus on how to handle a single stream of records. 
+\subsubsection{Count photons in a subset of time}
+\begin{verbatim}
+> picoquant --file-in data.pt2 --number 100000 | \
+  intensity --mode t2 --channels 2 \
+  --bin-width 50000000000 
+  --start-time 100000000000
+100000000000,150000000000,2650,0
+150000000000,186537236212,1961,0
+> picoquant --file-in data.pt2 --number 100000 | \
+  intensity --mode t2 --channels 2 \
+  -bin-width 50000000000 
+  --start-time 100000000000
+  --stop-time 120000000000
+100000000000,120000000000,1040,0
+\end{verbatim}
 
-Given a set of photons $\photon\in\photons$, our goal is to determine the number of $\photon$ whose arrival times are in a time range $\epsilon$:
+\subsection{Implementation details}
+\label{sec:intensity_implementation}
+Each channel can be treated independently, so we will focus on how to handle a single stream of records. 
+
+Given a set of photons $\photon\in\photons$, our goal is to determine the number of $\photon$ whose arrival times are in a time range $\timewindow$:
 \begin{equation}
-I(\resolution) = \abs{\setbuilder{\photon}{\photon\in\photons;~\Time(\photon)\in\epsilon}}
+I(\timewindow) = \abs{\setbuilder{\photon}{\photon\in\photons;~\Time(\photon)\in\timewindow}}
 \end{equation}
-In our case, we will only be concerned with time intervals $\resolution$ which are consecutive and collectively span the full integration time:
+In our case, we will only be concerned with time intervals $\timewindow$ which are consecutive and collectively span the full integration time:
 \begin{align}
-\resolution_{j} &= \left[[\resolution_{j}\upminus,\resolution_{j+1}\upplus\right) \\
-\integrationtime &= \bigcup\limits_{j=0}^{m}{\resolution_{j}}
+\timewindow_{j} &= \left[[\timewindow_{j}\upminus,\timewindow_{j}\upplus\right) \\
+\integrationtime &= \bigcup\limits_{j=0}^{m}{\timewindow_{j}}
 \end{align}
-As such, any photon can belong to exactly one subset $\photons_{\resolution_{j}}$, and these $\resolution_{j}$ can each be visited exactly once by iterating through times in the experiment. This can be performed efficiently if we impose the condition that the stream of photons be time-ordered, by iterating over photons and bins alternately:
+As such, any photon can belong to exactly one subset $\photons_{\timewindow_{j}}$, and these $\timewindow_{j}$ can each be visited exactly once by iterating through times in the experiment. This can be performed efficiently if we impose the condition that the stream of photons be time-ordered, by iterating over photons and time bins alternately:
 \lstset{language=Python}
 \begin{lstlisting}
 photon = next(photons)

@@ -33,7 +33,8 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			print_counts(out_stream,
 					stream.window.limits.lower,
 					stream.window.limits.upper,
-					counts);
+					counts,
+					options);
 			next_t2_window(&(stream.window));
 			init_counts(counts);
 		} else if ( result == 2 ) {
@@ -56,12 +57,14 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			print_counts(out_stream,
 					stream.window.limits.lower,
 					stream.window.limits.upper,
-					counts);
+					counts,
+					options);
 		} else {
 			print_counts(out_stream, 
 					stream.window.limits.lower,
 					record.time,
-					counts);
+					counts,
+					options);
 		}
 	}
 

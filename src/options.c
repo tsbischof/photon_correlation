@@ -12,6 +12,12 @@
 #include "limits.h"
 #include "modes.h"
 
+/* See http://www.daniweb.com/software-development/c/threads/
+ *     348802/passing-string-as-d-compiler-option
+ */
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
 option_t all_options[] = {
 	{'h', "h", "help", 
 			"Prints this usage message."},
@@ -497,7 +503,12 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 }
 
 void version(int argc, char *argv[]) {
-	fprintf(stderr, "%s v%d.%d\n", argv[0], VERSION_MAJOR, VERSION_MINOR);
+	fprintf(stderr, 
+		"%s v%d.%d (%s)\n", 
+		argv[0], 
+		VERSION_MAJOR, 
+		VERSION_MINOR,
+		STR(VERSION_STRING));
 }
 
 int is_option(int option, program_options_t *program_options) {

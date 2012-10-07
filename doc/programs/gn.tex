@@ -1,12 +1,12 @@
-\chapter{\program{gn}}
-\section{Purpose}
+\section{GN}
+\subsection{Purpose}
 Given the $n$th-order histogram output from \program{histogram}, \GN{} assembles the cross-correlations and produces all cross-correlations and the full autocorrelation. These results are normalized by intensity and bin width by default, but this behavior be suppressed with the flag \texttt{--no-bin-normalization}.
 
-\section{Command-line syntax}
+\subsection{Command-line syntax}
 
-\section{Examples of usage}
+\subsection{Examples of usage}
 
-\section{Implementation}
+\subsection{Implementation}
 Most of the basic algorithms for this program have been laid out previously, so we will focus on the high-level tasks \GN{} must accomplish:
 \begin{enumerate}
 \item Parse the output from \program{histogram}.

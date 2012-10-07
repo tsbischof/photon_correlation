@@ -1,0 +1,118 @@
+\section{Channels}
+\subsection{Purpose}
+This program permits some conditioning of a stream of photons. The two currently-supported tasks are a time or pulse offset for each channel, and the complete suppression of signal on a channel. This can be useful for dealing with data where a channel is not useful, or which exhibits a significant time offset from another.
+
+This program retains the sortedness of the time-offset stream.
+
+\subsection{Command-line syntax}
+\begin{verbatim}
+Usage: channels [options]
+
+Version 1.6
+
+             -V, --verbose: Print debug-level information.
+                -h, --help: Prints this usage message.
+             -v, --version: Print version information.
+             -i, --file-in: Input filename. By default, this is stdin.
+            -o, --file-out: Output filename. By default, this is stdout.
+                -m, --mode: TTTR mode (t2 or t3) represented by the data.
+           -a, --binary-in: Specifies that the input file is in binary format,
+                            rather than text.
+          -b, --binary-out: Specifies that the output file is in binary format,
+                            rather than text.
+        -u, --time-offsets: A common-delimited list of time offsets to
+                            apply to the channels. All channels must be
+                            represented, even if the offset is 0.
+       -U, --pulse-offsets: A comma-delimited list of pulse offsets to 
+                            apply to the channels. All channels must be
+                            represented, even if the offset is 0.
+            -s, --suppress: A comma-delmited list of channels to remove
+                            from the stream.
+
+This program performs some basic manipulations of tttr data. This includes
+suppression of channel data (removal of all such photons from a stream)
+and addition of a constant offset to particular channels.
+\end{verbatim}
+
+\subsubsection{Input}
+The input is a stream of T2 or T3 photons.
+
+\subsubsection{Output}
+The output is a stream of T2 or T3 photons, with appropriate modifications made. The stream remains sorted.
+
+\subsection{Examples of usage}
+\subsubsection{Suppressing a channel}
+\begin{verbatim}
+> picoquant --file-in data.ht3 |
+  channels --mode t3 --channels 4 
+           --suppress 3
+0,5425,81920
+0,130044,43280
+2,165687,66856
+0,207951,6880
+1,216750,20704
+...
+\end{verbatim}
+
+\subsubsection{Offsetting a channel}
+\begin{verbatim}
+> picoquant --file-in data.ht3 |
+  channels --mode t3 --channels 4 
+           --pulse-offsets 0,0,-100000,0
+0,5425,81920
+3,18404,69612
+3,24332,55816
+2,65687,66856
+3,119890,71728
+3,120337,86164
+0,130044,43280
+...
+\end{verbatim}
+
+\subsubsection{Suppressing one channel, while offsetting another}
+\begin{verbatim}
+> picoquant --file-in data.ht3 |
+  channels --mode t3 --channels 4 
+           --pulse-offsets 0,0,-100000,0
+           --suppress 3
+0,5425,81920
+2,65687,66856
+0,130044,43280
+0,207951,6880
+1,216750,20704
+...
+\end{verbatim}
+
+\subsection{Implementation}
+The two tasks in this program are separate but closely related. The stream is processed photon-by-photon, and with each passing photon a list of channels is checked to see whether the photon is to be processed. If it is, time and pulse offsets are applied and it is added to a preallocated queue, and the process continues until the queue is full. At that point, the photons in the queue are sorted, up to the photons which could be unsorted. This is specified by the maximal difference in time (T2) or pulse (T3) between any two offset channels, so any photon which is not as distance from the final photon as this difference could still be unsorted. 
+
+For example, if channel 0 has an offset of -10 and the following photons are produced, the first two are certainly sorted:
+\begin{verbatim}
+0,-10
+1,1
+1,20
+\end{verbatim}
+All further photons from channel 1 will have a time of at least 20, but photons from channel 0 could have a time of 10 or less, once the time offset is applied. But the photon (1,1) could not be affected, because even a photon on channel 0 with initial time 20 would only have an offset time of 10, and thus the first two photons are guaranteed to be sorted.
+
+Once the valid photons are yielded, processing continues in this fashion until the end of the stream is reached, at which point the remaining photons are sorted and yielded.
+
+The algorithm goes roughly as follows:
+\lstset{language=Python}
+\begin{lstlisting}
+photon_queue = list()
+max_offset_difference = max(offsets) - min(offsets)
+
+for photon in photons:
+    if not suppress(photon):
+        photon_queue.append(photon)
+    
+    if photon_queue.full():
+        photon_queue.sort()
+        for photon in photon_queue:
+             if distance(photon_queue.back(), photon)
+                 > max_offset_difference:
+                 yield(photon)
+                 photon_queue.pop(photon)
+\end{lstlisting}
+
+The act of suppressing photons costs nearly nothing, so the sorting and yielding process is the most expensive part of this program. The current algorithm used to sort the photons is quicksort (from the standard C library), though it is possible that others exist which are more effective for dealing with nearly-sorted lists. Overall, the cost of sorting the photons in small chunks ($2^{10}$ at a time, by default) is low compared to other operations, and at worst costs O($\abs{\photons}\ln{\abs{\photons}}$).

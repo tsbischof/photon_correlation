@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -74,17 +75,23 @@ int increment_counts(counts_t *counts, int channel) {
 }
 
 void print_counts(FILE *out_stream, int64_t lower_time,
-		int64_t upper_time,  counts_t *counts) {
+		int64_t upper_time,  counts_t *counts, options_t *options) {
 	int i;
 
-	fprintf(out_stream, "%"PRId64",%"PRId64",", lower_time, upper_time);
-	for ( i = 0; i < counts->channels; i++ ) {
-		fprintf(out_stream, "%"PRId64, counts->counts[i]);
-		if ( i != counts->channels - 1 ) {
-			fprintf(out_stream, ",");
+	if ( options->binary_out ) {
+		fwrite(&lower_time, 1, sizeof(int64_t), out_stream);
+		fwrite(&upper_time, 1, sizeof(int64_t), out_stream);
+		fwrite(counts->counts, options->channels, sizeof(int64_t), out_stream);
+	} else {
+		fprintf(out_stream, "%"PRId64",%"PRId64",", lower_time, upper_time);
+		for ( i = 0; i < counts->channels; i++ ) {
+			fprintf(out_stream, "%"PRId64, counts->counts[i]);
+			if ( i != counts->channels - 1 ) {
+				fprintf(out_stream, ",");
+			}
 		}
+		fprintf(out_stream, "\n");
+	
+		fflush(out_stream);
 	}
-	fprintf(out_stream, "\n");
-
-	fflush(out_stream);
 }

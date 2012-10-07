@@ -1,5 +1,5 @@
-\chapter{Picoquant}
-\section{Purpose}
+\section{Picoquant}
+\subsection{Purpose}
 This program decodes binary data from the Picoquant software and outputs the data in human-readable format. Currently, \program{picoquant} supports most modes and versions of the Timeharp, Picoharp, and Hydraharp. The board and mode are detected automatically, and if the mode is not supported an error message will explain the details.
 
 Modes and software versions supported:
@@ -9,10 +9,10 @@ Modes and software versions supported:
 \item Hydraharp: v10 (hhd, ht2, ht3)
 \end{itemize}
 
-\section{Command-line syntax}
+\subsection{Command-line syntax}
 
 \begin{verbatim}
-Usage: ./picoquant [options]
+Usage: picoquant [options]
 
 Version 1.6
 
@@ -75,23 +75,21 @@ Data formats (csv):
         channel, pulse, time
 \end{verbatim}
 
-\subsection{Input}
-The input is either binary stream of data from the timing hardware, or the name of a file containing that data. The details of each format are too varied and verbose to be summarized here, but are laid out in detail in section~\ref{sec:formats}.
+\subsubsection{Input}
+The input is either binary stream of data from the timing hardware, or the name of a file containing that data. The details of each format are too varied and verbose to be summarized here, but are laid out in section~\ref{sec:formats}.
 
-\subsection{Output}
+\subsubsection{Output}
 \label{sec:picoquant_output}
-The output will either be written to \stdout{} or the file specified. By default, the stream will be represented as ascii text, but use of the \texttt{--binary-out} flag will skip the formatted print in favor of a raw binary stream. 
-
-All records are processed in the order they are found in the data stream. This is typically time-ordered.
+The output will either be written to \stdout{} or the file specified. The output format depends on the mode of the data (interactive, t2, t3), with details given below.
 
 \paragraph{Interactive}
 Each record is of the form:
 \begin{verbatim}
 struct {
-    unsigned int curve;
+    int curve;
     double left_edge;
     double right_edge;
-    unsigned int counts;
+    int counts;
 };
 \end{verbatim}
 printed as:
@@ -103,8 +101,8 @@ curve number, left edge of time bin, right edge of bin, counts \n
 Each record is of the form:
 \begin{verbatim}
 struct {
-    unsigned int channel;
-    long long int time;
+    int channel;
+    long long time;
 };
 \end{verbatim}
 printed as:
@@ -116,8 +114,8 @@ channel number, time \n
 Each record is of the form:
 \begin{verbatim}
 struct {
-	unsigned int channel;
-	long long int pulse_number;
+	int channel;
+	long long pulse_number;
 	int time;
 };
 \end{verbatim}
@@ -126,8 +124,8 @@ printed as:
 channel number, pulse number, time \n
 \end{verbatim}
 	
-\section{Examples of usage}
-\subsection{Reading header information}
+\subsection{Examples of usage}
+\subsubsection{Reading header information}
 \begin{verbatim}
 > picoquant --file-in data.phd --header-only
 Ident = PicoHarp 300
@@ -142,7 +140,7 @@ NumberOfCurves = 8
 
 Reading these values is often a good way to check the integrity of a file, and to make sure that the correct settings are used in later processing. The keywords used here are consistent with those used in the documentation for the file type as provided by Picoquant, so common values like measurement resolution may not be identical across versions and boards. 
 
-\subsection{Obtaining the resolution of a measurement}
+\subsubsection{Obtaining the resolution of a measurement}
 Resolution values must be multiples of 1\pico\second{} for most of the devices, but for the Timeharp they are integer divisions of 1\nano\second, leading to non-integer multiples of 1\pico\second. As such, all resolution values are presented as floats, even those which could be written as integers.
 \begin{verbatim}
 > picoquant --file-in data.phd --resolution-only
@@ -160,7 +158,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 1.280000e+02
 \end{verbatim}
 
-\subsection{Reading interactive data}
+\subsubsection{Reading interactive data}
 \begin{verbatim}
 > picoquant --file-in data.phd
 0,0.000,0
@@ -175,7 +173,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 ...
 \end{verbatim}
 
-\section{Reading T2/T3 data}
+\subsubsection{Reading T2/T3 data}
 \begin{verbatim}
 > picoquant --file-in data.pt2
 0,7128264
@@ -201,7 +199,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 1,274,58624
 \end{verbatim}
 
-\section{Translating T3 data to T2 data}
+\subsubsection{Translating T3 data to T2 data}
 \begin{verbatim}
 > picoquant --file-in data.pt3 --to-t2
 1,41248184
@@ -216,7 +214,7 @@ Interactive mode allows for a large number of curves, so the resolution report g
 1,109660816
 \end{verbatim}
 
-\section{Mode- and hardware-specific information}
+\subsection{Mode- and hardware-specific information}
 \label{sec:formats}
 
 While there are many differences between the formats of the files generated by the different boards and modes, they all follow a common structure:
@@ -244,13 +242,13 @@ In principle, the code can be collected into a nicer data-streaming object which
 
 The remainder of this section is devoted to a discussion of the details important to each board and measurement type. Most of this information can be found in the manuals included with the hardware, but there is a significant amount of information which is documented in more scattered locations, such as the sample data code. This summary includes the details vital to understanding how the raw data are actually translated into the general data streams, and how various design decisions affect the quality and precision of the result.
 
-\subsection{A word about external markers}
+\subsubsection{A word about external markers}
 Many of the timing boards have a feature which allows the insertion of an external timing pulse into the signal, for use in TTTR modes to designate a raster scan or other time-dependent behavior. These records are not handled directly by \program{picoquant}, but instead a message is passed to \stderr{} indicating that such a record exists. If different behavior is desired (perhaps assignment of the marker to a non-existent channel), modify the function \texttt{external\_marker} in \texttt{picoquant.c}. This will cause problems with the other programs, which assume every record originates from the true signal stream, so such an alteration must be accompanied by code which appropriately splices the signal stream, for example by halting collection into a histogram and initiation of a new one.
 
-\subsection{T3 timing carries units of histogram bins, not time}
+\subsubsection{T3 timing carries units of histogram bins, not time}
 In T3 modes--including T3R for the Timeharp--the pulse dimension carries units of pulse number, but the time is not strictly a time with fixed units. Instead, the specified resolution of the interactive mode is the unit of time, such that the measurement is affected directly by this choice of resolution. As a result, the T3 record more directly reflects the index of the bin the record would have fallen into in interactive mode. In \program{picoquant} this value is converted to units of \pico\second{} implicitly, but do be aware of this distinction.
 
-\subsection{Translation of T3 to T2 data}
+\subsubsection{Translation of T3 to T2 data}
 In principle, if the sync source of a T3-mode experiment arrives with perfectly uniform spacing, the pulse number can be said to represent some constant amount of time, and a T2-like record recovered. To do this, pass the flag \texttt{--to-t2} for an input of T3 data, but consider the implications of how this translation is performed (see section~\ref{sec:t3_to_t2}). 
 
 In \program{picoquant}, the average rate of sync pulses is used to determine the time unit a pulse carries.
@@ -268,7 +266,7 @@ In \program{picoquant}, the average rate of sync pulses is used to determine the
 %\left(c_{j}, p_{j}+\delta p_{j}, t_{j} + \delta t_{j}\right) \rightarrow \left(c_{j}, \frac{p_{j}+\delta p_{j}}{f+\delta f} + \left(t_{j}+\delta t_{j}\right)\right)
 %\end{equation}
 
-\subsection{Timeharp}
+\subsubsection{Timeharp}
 The Timeharp is the least sophisticated of the three boards discussed here, and is fundamentally a histogramming board. It features two input channels, and its three modes are:
 \begin{itemize}
 \item interactive (thd): Collection of a histogram, using channel 0 as the sync and channel 1 as the signal.
@@ -276,7 +274,7 @@ The Timeharp is the least sophisticated of the three boards discussed here, and 
 \item time-tagged time-resolved (t3r): TTTR mode, equivalent to T3 mode, with channel 0 as the sync and channel 1 as the signal. Instead of reporting the delay time directly, this mode reports the index of the histogram bin an event would fall into. The time delay represented by the delay can be recovered from the header information, but for homogeneity of the treatment of T3-like data this step is not performed automatically.
 \end{itemize}
 
-\subsection{Picoharp}
+\subsubsection{Picoharp}
 The Picoharp features two input channels. Its three modes are:
 \begin{itemize}
 \item interactive (phd): Standard interactive mode, using channel 0 as the sync and channel 1 as the signal.
@@ -285,7 +283,7 @@ The Picoharp features two input channels. Its three modes are:
 \end{itemize}
 In both the T2 and T3 mode, internal clocks of limited precision ($<$32 bits) are used to record the passage of time or pulses. As such, many records are devoted to recording the occurrence of an integer overflow. These records are treated by \program{picoquant} automatically, producing data streams of the form specified in section~\ref{sec:picoquant_output}.
 
-\subsection{Hydraharp}
+\subsubsection{Hydraharp}
 The Hydraharp features a dedicated sync channel and four input channels. Its three modes are:
 \begin{itemize}
 \item interactive (hhd): Standard interactive mode, with four separate histograms assigned to  the four input channels.

@@ -1,0 +1,47 @@
+\section{T3\_as\_t2}
+\subsection{Purpose}
+This program processes a stream of T3 photons and outputs a stream of T2 photons whose times are the pulse numbers of the T3 photons. This is useful if the time information of the T3 photon is not needed, as it simplifies later processing by not having to be concerned with the extra dimension.
+
+\subsection{Command-line syntax}
+\begin{verbatim}
+Usage: t3_as_t2 [options]
+
+Version 1.6
+
+                -h, --help: Prints this usage message.
+             -v, --version: Print version information.
+             -V, --verbose: Print debug-level information.
+             -i, --file-in: Input filename. By default, this is stdin.
+            -o, --file-out: Output filename. By default, this is stdout.
+           -a, --binary-in: Specifies that the input file is in binary format,
+                            rather than text.
+          -b, --binary-out: Specifies that the output file is in binary format,
+                            rather than text.
+
+This program strips time information from t3 data, leaving only the pulse
+number and yielding a t2-like photon.
+\end{verbatim}
+
+\subsubsection{Input}
+The input is a stream of T3 photons, as specified in \program{picoquant}.
+
+\subsubsection{Output}
+The output is a stream of T2 photons, as specified in \program{picoquant}. These are formed by stripping the time dimension from each T3 photon, such that the T2 ``time'' dimension is now the pulse number.
+
+\subsection{Examples of usage}
+\subsubsection{Converting T3 photons to T2 photons}
+\begin{verbatim}
+> picoquant --file-in data.ht3 
+0,5425,81920
+3,18404,69612
+3,24332,55816
+3,119890,71728
+...
+> picoquant --file-in data.ht3 |
+  t3_as_t2
+0,5425
+3,18404
+3,24332
+3,119890
+...
+\end{verbatim}

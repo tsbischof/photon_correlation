@@ -1,7 +1,7 @@
-\chapter{Correlate}
+\section{Correlate}
 \label{sec:correlate}
 The details of the mathematics required for understanding this program can be found in chapter~\ref{sec:math_background}. If you have not read that section, the discussion of the implementation here may be difficult to follow, but a brief explanation of the background will be given at each step.
-%\section{A brief mathematical background}
+%\subsection{A brief mathematical background}
 %\label{sec:correlate_math}
 %For several types of experiments, some form of a signal correlation is necessary. These follow the form:
 %\begin{equation}
@@ -27,12 +27,12 @@ The details of the mathematics required for understanding this program can be fo
 %\end{equation}
 %where the average is now over all pulse and real time. However, because both pulse and real time are integer spaces, we can just map the times onto two homogeneous dimensions, and perform the correlation \gn{2n} instead. This gives a \gn{n} for every choice of pulses, useful for comparisons of long- and short-time correlations, as in multi-excition spectroscopy.
 
-\section{Purpose}
+\subsection{Purpose}
 This program calculates the full correlation of a signal, including all autocorrelations and cross-correlations of individual channels, for arbitrary numbers of channels and order. The raw correlation events are returned as the output, \textit{not the histogrammed correlation}. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
 
 The speed of the calculation scales favorably with the order of correlation, although of course higher orders of correlation require greater numbers of events to build meaningful results. See section~\ref{sec:correlation_implementation} for details of the algorithm.
 
-\section{Command-line syntax}
+\subsection{Command-line syntax}
 \begin{verbatim}
 Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b] 
                  [-n number] [-p print_every] [-q queue_size]
@@ -75,10 +75,10 @@ Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b]
        This program assumes the input stream is time-ordered.
 \end{verbatim}
 
-\subsection{Input}
+\subsubsection{Input}
 T2 and T3 modes accept data of the form produced by \program{picoquant}, as specified in section~\ref{sec:picoquant_output}.
 
-\subsection{Output}
+\subsubsection{Output}
 The exact output will depend on the mode and order of correlation, but it always adheres the following form:
 \begin{verbatim}
 channel 0, channel 1, time 1, ..., channel 2, ... \n
@@ -104,7 +104,7 @@ By default, the program will correlate all entries in a stream. This can easily 
 
 Currently, \program{correlate} uses a fixed-length circular buffer to store entries, so if errors report that the buffer is too small try changing the length with \texttt{--queue-size}.
 
-\section{Examples of usage}
+\subsection{Examples of usage}
 Finding the correlation events for a \gn{2} of T2 data:
 \begin{verbatim}
 > picoquant --file-in data.ht2 --number 10000 | \
@@ -154,7 +154,7 @@ the same, with channels ordered:
 2,2,27,-82228,3,999,-10108
 \end{verbatim}
 
-\section{Implementation details}
+\subsection{Implementation details}
 \label{sec:correlation_implementation}
 The math and notation from section~\ref{sec:math_background} will feature heavily in this section, so you should become familiar with the results of that section before proceeding. 
 
@@ -199,7 +199,7 @@ Our task can thus be divided into three main procedures:
 %\end{align}
 %The former rule simplifies the algorithm we will devise to perform this calculation.
 
-\subsection{The set $\photons_{\timewindow}$ can be generated efficiently from a time-ordered \photons}
+\subsubsection{The set $\photons_{\timewindow}$ can be generated efficiently from a time-ordered \photons}
 Given a photon to base correlations from, the particular $\timewindow$ representing the span of possible times can be defined as:
 \begin{equation}
 \timewindow = \left[ \Time(\photon), \Time(\photon) + \abs{\timewindow} \right)
@@ -250,7 +250,7 @@ For each photon the stream the algorithm must examine enough photons to reach th
 
 To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
 
-\subsection{Generating correlation events (photon tuples) from $\photons_{\timewindow}$}
+\subsubsection{Generating correlation events (photon tuples) from $\photons_{\timewindow}$}
 Given a subset of photons $\photons_{\timewindow}$ and an original tagged photon $\photon_{0}$, we must generate all tuples of $n$ unique photons from this pool. That is, we must generate all unique combinations of $n$ photons from the set $\braces{\photon_{0}}\cup\photons_{\timewindow}$, or equivalently all unique combinations of $n$ choices of  $\abs{\braces{\photon_{0}}\cup\photons_{\timewindow}}$ items. Combination generation algorithms are well-established, and the one used here works by incrementing the trailing digits as needed:
 \begin{lstlisting}
 combination = range(1, n)
@@ -349,7 +349,7 @@ The exact scaling of this algorithm could be worked out by noting the frequency 
 %
 To see the implementation of this algorithm in \program{correlate}, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
 
-\subsection{Production of the correlation event, given a photon tuple}
+\subsubsection{Production of the correlation event, given a photon tuple}
 Given a tuple of $n$ photons, all correlation events corresponding to that tuple can be achieved by determining the displacements between all permutations of those photons. For example, two photons $\photon_{0}$ and $\photon_{1}$ will contribute both to $\gn{2}_{(0,1)}$ and $\gn{2}_{(1,0)}$, so we must consider the $\tau$ produced by treating each ordering of the two photons. Generation of permutations is an equivalent problem to generation of integers in some base, such that no two digits are identical. In the code, this is achieved by incrementing through all $n$-digit numbers in base $n$, and storing the ones with no identical digits in an array for later usage. This requires the generation of $n^{n}$ values and the storage of $n!$ values, but this should be a small number in most circumstances. 
 
 To see how the permutations are generated, see \texttt{combinations.c}. To see how these are used, see \texttt{correlate\_t*.c}, particularly the \texttt{correlate\_t*\_block} procedures.
@@ -366,7 +366,7 @@ To see how the permutations are generated, see \texttt{combinations.c}. To see h
 %
 %To perform this same step for channel-ordered (time-unordered) photons, we can pre-populate a list of all possible channel orders and combinations and the order of the indices to choose, instead of incrementing from start to finish. The details of this will be described in section~\ref{sec:histogram}, but the result is that the cost of this operation is only upfront, and there is essentially no additional cost once the list of combinations exists.
 
-%\subsection{Definition of the correlation as the order of a set}
+%\subsubsection{Definition of the correlation as the order of a set}
 %As mentioned in section~\ref{sec:correlate_math}, T3 and T2 data are closely related and can be treated similarly. To understand how this is possible, it is worth spending some time considering what information is required to compute the correlation.
 %
 %In equation~\ref{eq:g2}, the denominator is an average intensity of a signal. This can be computed simply by determining the duration of the signal and the number of counts over that interval, and can be handled by using the result of \intensity{} \texttt{--count-all}. Thus the real problem is the computation of the numerator, which is somewhat imposing at first glance:
@@ -399,7 +399,7 @@ To see how the permutations are generated, see \texttt{combinations.c}. To see h
 %\end{split}
 %\end{equation}
 %
-%\subsection{Mapping T3 data onto T2-like data}
+%\subsubsection{Mapping T3 data onto T2-like data}
 %Now that we have a general expression for calculation of \gn{n}, it is worthwhile to make an aside describing how to map T3 data onto T2-like data for correlation. Consider the basic form of a tuple of $n$ T3 records:
 %\begin{equation}
 %\left((c_{0}, p_{0}, t_{0}), \ldots (c_{n-1}, p_{n-1}, t_{n-1})\right)
@@ -414,7 +414,7 @@ To see how the permutations are generated, see \texttt{combinations.c}. To see h
 %\end{equation}
 %Ultimately, a T3 tuple of length $n$ can be mapped onto a corresponding tuple of length $2n$, such that any correlation \gn{n} of T3 data can be treated exactly as a corresponding correlation \gn{2n} of T2 data.
 %
-%\subsection{Correlation of the time-ordered stream}
+%\subsubsection{Correlation of the time-ordered stream}
 %As with \intensity, \program{correlate} expects a time-ordered stream (see section~\ref{sec:intensity_implementation}). 
 %
 %% For a correlation of order $n$, every unique combination of $n$ elements of the stream can contribute to \gn{n}, so the full correlation of stream of lengh $N$  costs O(N$^{n}$) to compute. This is reduced for a fixed window width to approximately O(Nw$^{n-1}$) for a window of width w, for reasons that will become clear shortly.

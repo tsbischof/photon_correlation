@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2012.1.10)  28 SEP 2012 15:57
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2012.9.29)  1 OCT 2012 20:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -17,7 +17,7 @@ ish, portuguese, romanian, russian, sanskrit, serbian, serbianc, slovak, sloven
 ian, spanish, swedish, turkish, turkmen, ukrainian, uppersorbian, welsh, loaded
 .
 ! Undefined control sequence.
-l.1 \chapter
+l.1 \section
             {Picoquant}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -32,7 +32,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.1 \chapter{P
+l.1 \section{P
               icoquant}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -47,8 +47,8 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no n in font nullfont!
 Missing character: There is no t in font nullfont!
 ! Undefined control sequence.
-l.2 \section
-            {Purpose}
+l.2 \subsection
+               {Purpose}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -508,8 +508,8 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no 3 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.12 \section
-             {Command-line syntax}
+l.12 \subsection
+                {Command-line syntax}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -835,8 +835,8 @@ Overfull \hbox (146.99872pt too wide) in paragraph at lines 76--76
  []
 
 ! Undefined control sequence.
-l.78 \subsection
-                {Input}
+l.78 \subsubsection
+                   {Input}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1058,8 +1058,8 @@ Overfull \hbox (10.86105pt too wide) in paragraph at lines 78--80
  []
 
 ! Undefined control sequence.
-l.81 \subsection
-                {Output}
+l.81 \subsubsection
+                   {Output}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1592,8 +1592,8 @@ Overfull \hbox (194.2483pt too wide) in paragraph at lines 127--127
  []
 
 ! Undefined control sequence.
-l.129 \section
-              {Examples of usage}
+l.129 \subsection
+                 {Examples of usage}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1616,8 +1616,8 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no g in font nullfont!
 Missing character: There is no e in font nullfont!
 ! Undefined control sequence.
-l.130 \subsection
-                 {Reading header information}
+l.130 \subsubsection
+                    {Reading header information}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2003,8 +2003,8 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 143--144
  []
 
 ! Undefined control sequence.
-l.145 \subsection
-                 {Obtaining the resolution of a measurement}
+l.145 \subsubsection
+                    {Obtaining the resolution of a measurement}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2506,8 +2506,8 @@ Overfull \hbox (62.99945pt too wide) in paragraph at lines 161--161
  []
 
 ! Undefined control sequence.
-l.163 \subsection
-                 {Reading interactive data}
+l.163 \subsubsection
+                    {Reading interactive data}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2597,8 +2597,8 @@ Overfull \hbox (15.74986pt too wide) in paragraph at lines 176--176
  []
 
 ! Undefined control sequence.
-l.178 \section
-              {Reading T2/T3 data}
+l.178 \subsection
+                 {Reading T2/T3 data}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2737,8 +2737,8 @@ Overfull \hbox (57.7495pt too wide) in paragraph at lines 202--202
  []
 
 ! Undefined control sequence.
-l.204 \section
-              {Translating T3 data to T2 data}
+l.204 \subsubsection
+                    {Translating T3 data to T2 data}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2831,8 +2831,8 @@ Overfull \hbox (57.7495pt too wide) in paragraph at lines 217--217
  []
 
 ! Undefined control sequence.
-l.219 \section
-              {Mode- and hardware-specific information}
+l.219 \subsection
+                 {Mode- and hardware-specific information}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -4962,8 +4962,8 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 245--246
  []
 
 ! Undefined control sequence.
-l.247 \subsection
-                 {A word about external markers}
+l.247 \subsubsection
+                    {A word about external markers}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -5643,8 +5643,8 @@ Overfull \hbox (57.7495pt too wide) in paragraph at lines 247--249
  []
 
 ! Undefined control sequence.
-l.250 \subsection
-                 {T3 timing carries units of histogram bins, not time}
+l.250 \subsubsection
+                    {T3 timing carries units of histogram bins, not time}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -6167,8 +6167,8 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 250--252
  []
 
 ! Undefined control sequence.
-l.253 \subsection
-                 {Translation of T3 to T2 data}
+l.253 \subsubsection
+                    {Translation of T3 to T2 data}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -6599,8 +6599,8 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 256--257
  []
 
 ! Undefined control sequence.
-l.271 \subsection
-                 {Timeharp}
+l.271 \subsubsection
+                    {Timeharp}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -7604,8 +7604,8 @@ Missing character: There is no l in font nullfont!
 Missing character: There is no y in font nullfont!
 Missing character: There is no . in font nullfont!
 ! Undefined control sequence.
-l.279 \subsection
-                 {Picoharp}
+l.279 \subsubsection
+                    {Picoharp}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -8201,8 +8201,8 @@ Overfull \hbox (10.86105pt too wide) in paragraph at lines 286--287
  []
 
 ! Undefined control sequence.
-l.288 \subsection
-                 {Hydraharp}
+l.288 \subsubsection
+                    {Hydraharp}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct

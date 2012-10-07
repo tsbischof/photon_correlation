@@ -16,6 +16,6 @@ void init_counts(counts_t *counts);
 void free_counts(counts_t **counts);
 int increment_counts(counts_t *counts, int channel);
 void print_counts(FILE *out_stream, int64_t lower_time, 
-		int64_t upper_time, counts_t *counts);
+		int64_t upper_time, counts_t *counts, options_t *options);
 
 #endif

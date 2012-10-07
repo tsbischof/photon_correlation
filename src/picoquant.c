@@ -120,11 +120,13 @@ void pq_print_interactive(FILE *out_stream,
 		int32_t curve, float64_t left_time,
 		float64_t right_time, int32_t counts, options_t *options) {
 	if ( options->binary_out ) {
-		fwrite(&time, 1, sizeof(time), out_stream);
+		fwrite(&curve, 1, sizeof(curve), out_stream);
+		fwrite(&left_time, 1, sizeof(left_time), out_stream);
+		fwrite(&right_time, 1, sizeof(right_time), out_stream);
 		fwrite(&counts, 1, sizeof(counts), out_stream);
 	} else {
 		fprintf(out_stream, 
-				"%"PRId32",%.3lf,%.3lf,%"PRId32"\n", 
+				"%"PRId32",%.3"PRIf64",%.3"PRIf64",%"PRId32"\n", 
 				curve, left_time,
 				right_time, counts);
 	}

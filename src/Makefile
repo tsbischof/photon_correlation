@@ -5,11 +5,13 @@ CFLAGS += -Wall -std=c99
 # errors if not adjusted, so fix it here as needed. This should not (in 
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
-CFLAGS += -D_FILE_OFFSET_BITS=64 
+CFLAGS += -D _FILE_OFFSET_BITS=64 
 
+DATE := ${shell date +"%Y.%m.%d %H:%M:%S"}
 # Version info for the executables.
-CFLAGS += -DVERSION_MAJOR=1
-CFLAGS += -DVERSION_MINOR=6
+CFLAGS += -D VERSION_MAJOR=1
+CFLAGS += -D VERSION_MINOR=6 
+CFLAGS += -D VERSION_STRING="${DATE}"
 CFLAGS += -O3
 CFLAGS += -lm
 CFLAGS += -fopenmp
@@ -46,7 +48,7 @@ endif
 # Define the targets and their properties.
 INSTALL_DIR = ${HOME}/bin
 LIB_DIR = ${HOME}/lib
-INCLUDE_DIR = ${HOME}/include/picoquant
+INCLUDE_DIR = ${HOME}/include/photon_correlation
 TARGETS = 
 ALL_OBJ = 
 ALL_LIB = 
@@ -152,11 +154,11 @@ TARGETS += correlate_vector
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
 LIB_TARGETS = 
-LIBPICOQUANT_OBJ = ${sort ${filter-out %main.o, ${ALL_OBJ}}}
-INCLUDES = ${patsubst %.o, %.h, ${LIBPICOQUANT_OBJ}}
-LIBPICOQUANT_FLAGS = ${LDFLAGS} -shared
-LIBPICOQUANT_LIB = ${sort ${ALL_LIB}}
-LIB_TARGETS += libpicoquant.so
+LIBPC_OBJ = ${sort ${filter-out %main.o, ${ALL_OBJ}}}
+INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
+LIBPC_FLAGS = ${LDFLAGS} -shared
+LIBPC_LIB = ${sort ${ALL_LIB}}
+LIB_TARGETS += libphoton_correlation.so
 
 all: ${TARGETS} ${LIB_TARGETS}
 
@@ -189,8 +191,8 @@ bin_intensity: ${BIN_INTENSITY_OBJ}
 channels: ${CHANNELS_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CHANNELS_LIB}
 
-libpicoquant.so: ${LIBPICOQUANT_OBJ}
-	${LD} ${LIBPICOQUANT_FLAGS} -o $@ $^ ${LIBPICOQUANT_LIB}
+libphoton_correlation.so: ${LIBPC_OBJ}
+	${LD} ${LIBPC_FLAGS} -o $@ $^ ${LIBPC_LIB}
 
 t3_as_t2: ${T3_AS_T2_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${T3_AS_T2_LIB}

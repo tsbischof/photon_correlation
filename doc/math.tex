@@ -1,4 +1,4 @@
-\chapter{The mathematics of calculating \gn{n}}
+\section{The mathematics of calculating \gn{n}}
 \label{sec:math_background}
 This section will detail the mathematics of calculating correlation functions \gn{n}. If you are familiar with the results, you can safely skip this section, but do note that the correlation of photon events is in many ways distinct from a standard signal correlation.
 
@@ -11,7 +11,7 @@ F&:\wholes\times\integers\rightarrow\reals \\
 \end{align}
 you should read appendix~\ref{sec:notation} before reading the remainder of this section.
 
-\section{Definition of the correlation function}
+\subsection{Definition of the correlation function}
 \label{sec:correlation_function}
 A signal $\intensity(\time)$ is a function of real time which returns non-negative values\footnote{Correlations can be defined for negative-valued functions, but for our purposes non-negative functions are the most physically meaningful.}:
 \begin{equation}
@@ -108,7 +108,7 @@ Now that we have generalized this definition to an arbitrary number of channels,
 \end{equation}
 The interpretation of this equation is the same as before, except that the correlation is measured as a density in $n$-dimensional space.
 
-\subsection{Examples of correlations of functions}
+\subsubsection{Examples of correlations of functions}
 To become more familiar with the behavior of these correlation functions, we should evaluate them for a few familiar functions. For example, for $I(t)=1+\sin{(t)}$:
 \begin{align}
 \label{eq:sine_correlation}
@@ -149,7 +149,7 @@ Calculation of higher-order correlations is also possible, though the results qu
                + \frac{1}{32}\sin(\tau_{1}+\tau_{2})
 \end{align}
 
-\section{Photon arrivals can be represented by $\delta$-functions}
+\subsection{Photon arrivals can be represented by $\delta$-functions}
 To begin to see how we may calculate correlations of photon arrival times, consider the essential character we must capture: any given detection channel $c$ may detect up to a single photon at any time, and that detection event occurs at some fixed times $t$. As such, we can uniquely define a photon as an element $\photon$ by its channel and arrival time:
 \begin{equation}
 \photon=(\channel,\times)\in\channels\times\reals
@@ -197,7 +197,7 @@ but the same result can be expressed much more simply by counting events:
 \end{equation}
 where $(\photon_{0},\photon_{1})$ represents a pair of photons, and the third condition indicates that the two photons are not identical. This restriction helps distinguish the contribution of distinct pairs of photons to the correlation at $\tau=0$, which would otherwise be a sum of all photons and all photon pairs arriving simultaneously. The normalization factor is not quite as straightforward to calculate as for the continuous case, so we should spend some time simplifying the problem until that calculation becomes practical.
 
-\subsection{The photon correlation at zero delay is different from the signal correlation}
+\subsubsection{The photon correlation at zero delay is different from the signal correlation}
 It is important to note that, because the photons are required to be unique, at zero time delay the correlation is not the same as the standard correlation (equation~\ref{eq:gn}). For example, in \gn{2} the two values are:
 \begin{align}
 \gn{2}_{\textnormal{signal}}(\timedelay) =& 
@@ -208,7 +208,7 @@ It is important to note that, because the photons are required to be unique, at 
 \end{align}
 where $\heaviside(x)=0$ for $x\le 0$ and $1$ for $x>0$. This extra factor signifies that negative contributions are just zero contributions. When calculating quantities related to this value, care should be taken to ensure that the correct definition is used.
 
-\section{Correlation over a finite time range}
+\subsection{Correlation over a finite time range}
 In a physical experiment, time has a well-defined beginning and end: time begins when the experiment starts, and ends when it stops. Here the term experiment can mean a complete experiment or some subset of time in a larger measurement, but ultimately the important result is that the time range of the experiment is some range of time:
 \begin{equation}
 \integrationtime = [\tstart,\tstop)\subset\reals
@@ -274,7 +274,7 @@ Now that we have a method for calculating the discrete correlation function, we 
 \end{equation} 
 One final factor we have left out is the resolution of the experiment. When converting from real to whole time we implicitly assigned each subset $\timewindow$ to some whole number index, such that the time delay $\timedelay$ really represents a range of possible delays. In the final formula, we will include this factor, but for now we will leave it out for simplicity.
 
-\section{The full \gn{n} for photon correlation}
+\subsection{The full \gn{n} for photon correlation}
 Before we extend the result of equation~\ref{eq:photon_g2} to multiple time dimensions, it is worthwhile to write the general form of the result whose terms we must calculate. Starting with the definition of the correlation function, we note that the basic form of \gn{n} is:
 \begin{equation}
 \gn{n} = \frac{\parens{\textnormal{density of correlation events}}}
@@ -433,10 +433,10 @@ And with that, we have defined all of the necessary sets to be calculated on the
 %\end{equation}
 %This formula will be the basis of all further discussion, so if the definitions of its constituent terms are not clear you should work through this section again.
 
-\subsection{Calculating \gn{n} for T3 data}
+\subsubsection{Calculating \gn{n} for T3 data}
 Equation~\ref{eq:gn_full} describes the formula for calculating the autocorrelation of a set of photons tagged with arrival channel and time. Extension of the result is a matter of introducing a second time vector $\vec{\pulsedelay}$ of pulse delays, and construction of sets with further restrictions $\Pulse(\photon_{j})-\Pulse(\photon_{0})=\pulsedelay$, where the function $\Pulse$ returns the pulse number of a photon. In many regards, this turns the \gn{n} function into one more akin to \gn{2n}, but with the restriction that $\timedelay_{j}$ and $\pulsedelay_{j}$ are associated with channel $\channel_{j}$.
 
-\subsection{Calculating a single cross-correlation}
+\subsubsection{Calculating a single cross-correlation}
 Following the logic of the preceding sections, if we wish to calculate a single cross-correlation for a given set of channels, we can use:
 \begin{equation}
 \label{eq:cross_correlation_full}
@@ -454,7 +454,7 @@ Following the logic of the preceding sections, if we wish to calculate a single 
 \end{equation}
 where the new $\channel$  subscripts indicate the addition of a $\Channel(\photon)=\channel$ condition to the set. Note that the cross-correlations cannot be added directly to recover the full autocorrelation, though knowledge of the normalization will enable such procedures.
 
-\section{Subdividing the problem of calculating \gn{n}}
+\subsection{Subdividing the problem of calculating \gn{n}}
 The efficient and accurate calculation of \gn{n} for a given set of photons \photons{} can be achieved by appropriate subdivision of the problem into its constituent terms. Each program described in this paper is designed to calculate some term in equation~\ref{eq:gn_full}:
 \begin{itemize}
 \item $\photons$: \program{picoquant}, \program{intensity}/\program{bin\_intensity}
@@ -512,7 +512,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{align}
 %
 %
-%\section{Correlation of photons over discrete time steps}
+%\subsection{Correlation of photons over discrete time steps}
 %For physical reasons it is often convenient to sample the value of a signal at some fixed time interval. As such, the value of the signal is known for some values $\tstart,\tstart+\Delta t,\ldots$, which can be index as $0,1,\ldots$. Similarly, the set of times $\integrationtime$ ceases to represent a continuous range and instead becomes some finite subset of whole numbers. Formally, we now have:
 %\begin{align}
 %I:\wholes\rightarrow\reals^{*} \\
@@ -536,7 +536,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %                              {I_{\channel}(t+\tau_{j})\,dt}}}\right)}
 %\end{equation}
 
-%\section{The true meaning of $I(t)$}
+%\subsection{The true meaning of $I(t)$}
 %\label{sec:sampling_intensity}
 %For a real measurement, the signal $I(t)$ is real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I(t)$ really is
 %\begin{equation}
@@ -551,7 +551,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %
 %This definition of a signal is useful for many measurements of some gross quantity which can be said to sample a non-trivial range of values in $\reals^{*}$ or \wholes. However, photon-counting produces a signal which is fundamentally binary (in $\integers_{2}$), indicating that either a photon has arrived in the time interval, or none has. In principle we can treat this vector in the same way as we do $\vec{I}$, but this is inefficient: there are only a few bins which will have any signal, and a great number which contain nothing. Therefore, for a binary signal which only occasionally has a non-zero value, it is worthwhile to develop different forms for the correlation expressed in equation~\ref{eq:gn}.
 %
-%\section{Defining the signal of photon arrivals}
+%\subsection{Defining the signal of photon arrivals}
 %In practice, any given single-photon detector can detect exactly one photon at a time, such that any photon arrival can be defined unique by its detection channel and arrival time. Therefore, the photon $\gamma$ can be represented as a 2-tuple:
 %\begin{equation}
 %\photon\equiv (c, t)\in C\times\wholes
@@ -579,14 +579,14 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\photons = \bigcup\limits_{c\in C}{\photons_{c}}
 %\end{equation}
 %
-%\subsection{T3 mode is akin to T2 mode, but a second time dimension}
+%\subsubsection{T3 mode is akin to T2 mode, but a second time dimension}
 %As discussed in section~\ref{sec:modes}, T3 mode has a definition distinct from that of T2 mode:
 %\begin{equation}
 %\photon\equiv(c,p,t)\in C\times\wholes\times\wholes
 %\end{equation}
 %for which $\Pulse(\photon)$ returns the pulse number for which the photon arrived. While the definitions are not perfectly clean, we will show shortly how T3 photons can be treated exactly like a pair of T2 photons, with some restrictions.
 %
-%\section{Calculating \gn{n} by counting photons}
+%\subsection{Calculating \gn{n} by counting photons}
 %As before, we will begin our discussion of correlation functions by constructing a set formulation of the autocorrelation. Fundamentally, we must consider two halves of a problem:
 %\begin{equation}
 %\gn{n}(\tau_{1},\ldots)=\frac{\textnormal{number of events which satisfy a given time delay}}
@@ -679,7 +679,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{split}
 %\end{equation}
 %
-%\subsection{The \gn{n} for T3 data can calculated like \gn{2n} for T2 data}
+%\subsubsection{The \gn{n} for T3 data can calculated like \gn{2n} for T2 data}
 %Given the notation in equation~\ref{eq:gn_set}, we see that the two timing dimensions of T3 data can be treated as separate conditions in the set, with a second unit of resolution associated with \Pulse. Calling this unit of resolution $\kappa$ and the relative pulse difference $\rho$, the full expression is:
 %\begin{equation}
 %\label{eq:gn_set_t3}
@@ -711,7 +711,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{equation}
 %This form is nearly identical to a \gn{2n} for T2 data, except that we still sample the channel combinations from $\channels^{n}$, reflecting the fact that $\tau_{j}$ and $\rho_{j}$ are associated with the same channel $\channel_{j}$. We will continue to discuss T2-type correlation functions, but do not that the machinery developed for such uses can easily be repurposed for T3 data.
 %
-%\section{Subdividing the problem of calculating \gn{n}}
+%\subsection{Subdividing the problem of calculating \gn{n}}
 %Examining equation~\ref{eq:gn_set}, it is evident that there are a few distinct factors associated with each term of the sum:
 %\begin{itemize}
 %\item $\integrationtime$: the integration time
@@ -774,7 +774,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{equation}
 %
 %
-%\section{Extending the correlation arbitrary numbers of signals}
+%\subsection{Extending the correlation arbitrary numbers of signals}
 %While the autocorrelation of a signal is often a meaningful quantity to calculate, cross-correlations are more general and have many more applications. For example, the cross-correlation of a laser pulse train and the response of a light-emitting sample can be used to measure the lifetime of the emissive state, and is the implicit measurement of the interactive mode. 
 %
 %Generalization of the correlation is fairly simple: the numerator holds an average over a product of some number of signals with time delays relative to a reference channel, normalized by the average intensity at each channel. For two channels, this can be expressed as:
@@ -792,7 +792,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{equation}
 %where the $\prod$ notation indicates a product of elements, akin to the $\sum$ notation for summation.
 
-%\subsection{Mapping T3 correlations onto T2-like correlations}
+%\subsubsection{Mapping T3 correlations onto T2-like correlations}
 %One benefit of generalizing the correlation to higher dimensions is that it provides a simple way to treat correlations of T3 data as higher-dimensional T2 data. For example, if we apply the map
 %\begin{equation}
 %\left(c_{j}, p_{j}, t_{j}\right) \rightarrow \left(\left(c_{j}, p_{j}\right), \left(c_{j}, t_{j}\right)\right)
@@ -806,7 +806,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %\end{equation}
 %For the rest of this paper, T3 data will be treated as higher-dimensional T2 data.
 %
-%\section{The true meaning of $I(t)$}
+%\subsection{The true meaning of $I(t)$}
 %For many measurements, the signals $I_{j}(t)$ are real-valued and defined by averaging some signal for a time interval $\Delta t$, such that the value $I_{j}(t)$ really is
 %\begin{equation}
 %I_{j}(t) = \left.\angles{\iota_{j}(t')}\right|_{t'\in[t,t+\Delta t)} = \frac{1}{\Delta t}\int_{t}^{t+\Delta t}{\iota_{j}(t'),dt'}
@@ -822,7 +822,7 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %
 %Do note, however, that the ``true'' photon arrival time discussed from here on is itself a binary form of this vectorial definition, because real instruments will have some finite timing resolution. In this sense, the idea of a discrete arrival time is just a simplification of the true signal, where each sampling represents the state of a photon arriving or not arriving during that interval. Many more samples will find no photon than one, so those are simply not reported. Additionally, this means that the reported photon arrival time carries some time units defined by the resolution of the measurement, so we can declare any arrival time $t$ to be a multiple of these time steps, or $t\in\wholes$, where \wholes{} is the set of all whole numbers (the positive integers and zero).  
 %
-%\section{Calculating \gn{n} by counting photons}
+%\subsection{Calculating \gn{n} by counting photons}
 %As in equation~\ref{eq:delta_train}, it is possible to define the signal representing arrivals of photons as a sum over a set of $\delta$-functions. Consider the set $T\subset\wholes$ of photon arrival times. The signal can be defined as
 %\begin{equation}
 %I(t) = \sum_{t'\in T}{\delta(t-t')}
@@ -876,5 +876,5 @@ In the case of \program{intensity}/\program{bin\_intensity}, the former is used 
 %                                {\prod_{j=0}^{n-1}{\resolution\frac{\abs{T_{j}}}{max(T_{j})-min(T_{j})}}}
 %\end{equation}
 %
-%\section{Subdividing the problem of calculating \gn{n}}
+%\subsection{Subdividing the problem of calculating \gn{n}}
 %The expression in equation~\ref{eq:gn_set} is somewhat intimidating, but we can divide its 

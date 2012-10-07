@@ -1,7 +1,7 @@
-\chapter{Applications}
+\section{Applications}
 Now that we have laid the framework for the efficient handling of photon-arrival data, we can apply the results to interesting scientific problems.
 
-\section{Fluorescence blinking}
+\subsection{Fluorescence blinking}
 In many fluorescent molecules, the emission is not steady at the single-molecule level, and it is useful to characterize this intermittency. One standard method for accomplishing this is to estimate the rate of photon arrival at fixed intervals in time, then determine the rate at which this rate fluctuates across some threshold. The procedure is as follows:
 \begin{enumerate}
 \item Define a series of fixed-width time bins for counting photons.
@@ -12,7 +12,7 @@ In many fluorescent molecules, the emission is not steady at the single-molecule
 
 For an example implementation. see \texttt{scripts/blinking.py}.
 
-\section{Time-dependent photoluminescence lifetime}
+\subsection{Time-dependent photoluminescence lifetime}
 The PL lifetime can be recovered from T3 data by calculating the order 1 histogram:
 \begin{verbatim}
 > picoquant --file-in data.pt3 | \
@@ -23,7 +23,7 @@ The PL lifetime can be recovered from T3 data by calculating the order 1 histogr
 \end{verbatim}
 In some situations it is desirable to calculate the PL lifetime for some interval of time and compare that with the lifetime at other intervals. This can be achieved by dividing the photon stream and histogramming the result accordingly. See \texttt{scripts/time\_dependent\_pl.py} for more details.
 
-\section{Photon correlation spectroscopy}
+\subsection{Photon correlation spectroscopy}
 By calculating the cross-correlation of two detection channels, we can study important properties of a signal, such as the number of fluorophores represented. This ultimately means we need to calculate \gn{2} for the signal, with the following steps:
 \begin{enumerate}
 \item Generate the stream of correlation events from the stream of photons.
@@ -32,8 +32,8 @@ By calculating the cross-correlation of two detection channels, we can study imp
 \end{enumerate}
 See \GN{} for details of the implementation.
 
-\subsection{Bunching and antibunching}
+\subsubsection{Bunching and antibunching}
 For t2 data, calculating \gn{2} with linear bin spacing should be sufficient. For t3 data, choosing a pulse bin width of 1 will enable direct comparison of the response to a single or neighboring pulses, as used in multi-exciton emission studies.
 
-\subsection{Fluorescence correlation spectroscopy}
+\subsubsection{Fluorescence correlation spectroscopy}
 The correlator is reasonably fast and can handle the long time delays required for FCS measurements. One slight modification is that we will typically want a logarithmic time axis, which can be achieved by passing the flag \texttt{--time-scale log} to \GN{} or \program{histogram}. Additionally, it is often useful to perform this measurement with the full autocorrelation, since the time delays are well beyond the dead time of the hardware, so use the full autocorrelation returned by \GN.
