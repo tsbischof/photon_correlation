@@ -3,24 +3,7 @@
 This program processes a stream of T3 photons and outputs a stream of T2 photons whose times are the pulse numbers of the T3 photons. This is useful if the time information of the T3 photon is not needed, as it simplifies later processing by not having to be concerned with the extra dimension.
 
 \subsection{Command-line syntax}
-\begin{verbatim}
-Usage: t3_as_t2 [options]
-
-Version 1.6
-
-                -h, --help: Prints this usage message.
-             -v, --version: Print version information.
-             -V, --verbose: Print debug-level information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-           -a, --binary-in: Specifies that the input file is in binary format,
-                            rather than text.
-          -b, --binary-out: Specifies that the output file is in binary format,
-                            rather than text.
-
-This program strips time information from t3 data, leaving only the pulse
-number and yielding a t2-like photon.
-\end{verbatim}
+\input{"programs/t3_as_t2.usage"}
 
 \subsubsection{Input}
 The input is a stream of T3 photons, as specified in \program{picoquant}.

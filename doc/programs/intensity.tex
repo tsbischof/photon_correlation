@@ -3,46 +3,7 @@
 For T2 and T3 data, it is often useful to group records into fixed time bins and count the number of records in each bin. This program does just that, reporting the intensity at each channel for all data in a time-ordered stream. 
 
 \subsection{Command-line syntax}
-\begin{verbatim}Usage: intensity [options]
-
-Version 1.6
-
-                -h, --help: Prints this usage message.
-             -V, --verbose: Print debug-level information.
-             -v, --version: Print version information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-          -f, --start-time: The lower limit of time for the run; do not
-                            process photons which arrive before this time.
-           -F, --stop-time: The upper limit of time for the run; do not
-                            process photons which arrive before this time.
-                -m, --mode: TTTR mode (t2 or t3) represented by the data.
-            -c, --channels: The number of channels in the signal.
-           -w, --bin-width: The width of the time bin for processing 
-                            photons. For t2 mode, this is a number of
-                            picoseconds, and for t3 mode this is a 
-                            number of pulses.
-           -A, --count-all: Rather than counting photons in a given time bin,
-                            count all photons in the stream.
-
-Given a stream of TTTR data formatted like the output of picoquant, this
-program calculates the number of photons arriving on any number of detection
-channels, divided into some number of subsets of integration time.
-
-For example, to calculate the intensity of a stream of t2 photons from a
-measurement on a Picoharp, collected in 50ms bins:
-    intensity --bin-width 50000000000 --mode t2 --channels 2
-
-The output format is:
-    time start, time stop, channel 0 counts, channel 1 counts, ...
-
-Because the final photon may not arrive at the end of a time bin, the final
-bin ends at the arrival time of the last photon, permitting post-processing
-to determine whether the effect of that edge is significant.
-
-As an alternative to time bins, all of the photons can be counted by passing
-the flag --count-all. This is useful for normalizing a signal.
-\end{verbatim}
+\input{programs/intensity.usage}
 
 \subsubsection{Input}
 T2 and T3 modes accept data of the form produced by \program{picoquant}, as specified in section~\ref{sec:picoquant_output}.

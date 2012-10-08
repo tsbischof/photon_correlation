@@ -9,52 +9,7 @@ For T3 photons, \program{histogram} can be used to build a histogram of events a
 For \gn{n>2}, all time dimensions are defined identically, and all pulse dimensions are defined identically. If distinct time dimensions are required, the modification can be achieved at the stage where bins are defined, without any modification later in the code.
 
 \subsection{Command-line syntax}
-\begin{verbatim}
-Usage: histogram [options]
-
-Version 1.6
-
-                -h, --help: Prints this usage message.
-             -V, --verbose: Print debug-level information.
-             -v, --version: Print version information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-                -m, --mode: TTTR mode (t2 or t3) represented by the data.
-            -c, --channels: The number of channels in the signal.
-               -g, --order: The order of the correlation or histogram.
-                -x, --time: The time limits for an axis, following the format:
-                                    lower, number of bins, upper
-                            with no spaces, and the extrema in picoseconds.
-               -y, --pulse: The pulse limits for an axis, following the format:
-                                    lower, number of bins, upper
-                            with no spaces, and the extrema in picoseconds.
-          -X, --time-scale: The scale of the time axis, one of:
-                               linear: linear interpolation between limits
-                                  log: logarithmic interpolation (linear
-                                       on a log axis)
-                             log-zero: same as log, except that the lowest
-                                       bin is extended to include 0
-         -Y, --pulse-scale: The scale of the pulse axis, one of:
-                               linear: linear interpolation between limits
-                                  log: logarithmic interpolation (linear
-                                       on a log axis)
-                             log-zero: same as log, except that the lowest
-                                       bin is extended to include 0
-
-Histogram collects a set of photon correlation events and counts them into
-bins defined by their relative time delays. The histograms are also
-separated by the identities of each channel in the correlation, such that
-all cross-correlations can be recovered. The output is similar to the
-correlation events, except that the delay limits are now given:
-   (t2, order 2)
-   channel 0, channel 1, t1-t0 lower, t1-t0 upper, counts
-Extension to higher orders creates more channel-delay pairs, and for t3 mode
-the pair becomes a channel-pulse-time tuple.
-
-An order 1 correlation of t3 data is possible, since this is already
-implicitly a correlation of a sync source and a photon stream. This is
-useful for calculating a photoluminescence lifetime, for example.
-\end{verbatim}
+\input{programs/histogram.usage}
 
 \subsubsection{Input}
 \paragraph{\gn{1} of T3 data}

@@ -33,47 +33,7 @@ This program calculates the full correlation of a signal, including all autocorr
 The speed of the calculation scales favorably with the order of correlation, although of course higher orders of correlation require greater numbers of events to build meaningful results. See section~\ref{sec:correlation_implementation} for details of the algorithm.
 
 \subsection{Command-line syntax}
-\begin{verbatim}
-Usage: correlate [-v] [-i file_in] [-o file_out] [-a] [-b] 
-                 [-n number] [-p print_every] [-q queue_size]
-                 [-d max_time_distance] [-e max_pulse_distance]
-                 [-r] -g order -c channels -m mode
-
-           -v, --verbose: Print debug-level information.
-           -i, --file-in: Input file. By default, this is 
-                          STDIN.
-          -o, --file-out: Output file. By default, this is 
-                          STDOUT.
-       -p, --print-every: Print the result for multiples of 
-                          this number of entries. Default is to
-                          print nothing.
-              -m, --mode: Stream type. This is either t2 or t3,
-                          and the style of the output will be
-                          different for each.
-        -q, --queue-size: Defines the maximum length of the 
-                          circular queue held in memory for
-                          processing. By default, this is 100000
- -d, --max-time-distance: Defines the maximum difference in time
-                          that two entries can have and still be
-                          considered for correlation (t2 and t3).
--e, --max-pulse-distance: Defines the maximum difference in pulse
-                          number that two entries can have and 
-                          still be considered for correlation 
-                          (t3 only).
-             -g, --order: Order (g(n)(t1...tn-1)) of the 
-             			  correlation to perform. By default this
-             			  is 2, the standard cross-correlation of
-             			  two channels.
-          -c, --channels: Number of channels in the incoming
-                          stream. By default, this is 2 
-                          (Picoharp).
-  -r, --channels-ordered: Organize the output such that the 
-                          channels are in order. By default, 
-                          this is not performed.
-              -h, --help: Print this message.
-
-       This program assumes the input stream is time-ordered.
-\end{verbatim}
+\input{programs/correlate.usage}
 
 \subsubsection{Input}
 T2 and T3 modes accept data of the form produced by \program{picoquant}, as specified in section~\ref{sec:picoquant_output}.

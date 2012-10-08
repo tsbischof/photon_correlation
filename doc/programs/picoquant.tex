@@ -10,70 +10,7 @@ Modes and software versions supported:
 \end{itemize}
 
 \subsection{Command-line syntax}
-
-\begin{verbatim}
-Usage: picoquant [options]
-
-Version 1.6
-
-                -h, --help: Prints this usage message.
-             -v, --version: Print version information.
-             -V, --verbose: Print debug-level information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-           -a, --binary-in: Specifies that the input file is in binary format,
-                            rather than text.
-          -b, --binary-out: Specifies that the output file is in binary format,
-                            rather than text.
-              -n, --number: The number of entries to process. By default, 
-                            all entries are processed.
-         -p, --print-every: Print a status message every n entries.
-                            By default, nothing is printed.
-         -r, --header-only: Rather than processing any data, print the header
-                            of the file in an ini-like format. This is useful
-                            for debugging and verifying file settings.
-     -z, --resolution-only: Rather than processing any data, print the 
-                            resolution of the measurement. For TTTR modes, 
-                            this is a single float, but for interactive data
-                            the resolution of each curve is given.
-               -t, --to-t2: For t3 data, use the sync rate to determine the
-                            time represented by the sync count and output the
-                            data in t2 mode. Note that this will only be
-                            reasonable if the sync source is perfectly regular.
-
-This program decodes data collected using Picoquant hardware. 
-The binary data is decoded to detect the hardware version and
-collection mode, and the data are output in a mode-specific
-ascii format.
-
-For the most detailed information, see the pdf documentation.
-A brief overview of features follows here.
-
-When called, the data output are either run configuration parameters 
-(obtained by passing --resolution-only or --header-only) or the data from
-the measurement. The header is output in an ini-like format, while the
-resolution is output as a float in picoseconds, though for most runs
-this is more accurately described as an integer number of picoseconds.
-
-Hardware and versions supported:
-TimeHarp: v2.0 (thd)
-          v3.0 (thd, t3r)
-          v5.0 (thd)
-          v6.0 (thd, t3r)
-Picoharp: v2.0 (phd, pt2, pt3)
-Hydraharp: v1.0 (hhd, ht2, ht3)
-
-Data formats (csv):
-(times are integers in picoseconds, bin edges are floats in nanoseconds)
-    Interactive mode:
-        curve number, left bin edge, right bin edge, counts
-
-    T2:
-        channel, time
-
-    T3:
-        channel, pulse, time
-\end{verbatim}
+\input{programs/picoquant.usage}
 
 \subsubsection{Input}
 The input is either binary stream of data from the timing hardware, or the name of a file containing that data. The details of each format are too varied and verbose to be summarized here, but are laid out in section~\ref{sec:formats}.
@@ -114,9 +51,9 @@ channel number, time \n
 Each record is of the form:
 \begin{verbatim}
 struct {
-	int channel;
-	long long pulse_number;
-	int time;
+    int channel;
+    long long pulse_number;
+    int time;
 };
 \end{verbatim}
 printed as:

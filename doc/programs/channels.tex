@@ -5,34 +5,7 @@ This program permits some conditioning of a stream of photons. The two currently
 This program retains the sortedness of the time-offset stream.
 
 \subsection{Command-line syntax}
-\begin{verbatim}
-Usage: channels [options]
-
-Version 1.6
-
-             -V, --verbose: Print debug-level information.
-                -h, --help: Prints this usage message.
-             -v, --version: Print version information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-                -m, --mode: TTTR mode (t2 or t3) represented by the data.
-           -a, --binary-in: Specifies that the input file is in binary format,
-                            rather than text.
-          -b, --binary-out: Specifies that the output file is in binary format,
-                            rather than text.
-        -u, --time-offsets: A common-delimited list of time offsets to
-                            apply to the channels. All channels must be
-                            represented, even if the offset is 0.
-       -U, --pulse-offsets: A comma-delimited list of pulse offsets to 
-                            apply to the channels. All channels must be
-                            represented, even if the offset is 0.
-            -s, --suppress: A comma-delmited list of channels to remove
-                            from the stream.
-
-This program performs some basic manipulations of tttr data. This includes
-suppression of channel data (removal of all such photons from a stream)
-and addition of a constant offset to particular channels.
-\end{verbatim}
+\input{programs/channels.usage}
 
 \subsubsection{Input}
 The input is a stream of T2 or T3 photons.

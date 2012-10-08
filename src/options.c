@@ -66,12 +66,14 @@ option_t all_options[] = {
 			"photons. By default, this is 100000, and if it is\n"
 			"too small an appropriate warning message will be\n"
 			"displayed."},
-	{'f', "f:", "start-time",
-			"The lower limit of time for the run; do not\n"
-			"process photons which arrive before this time."},
-	{'F', "F:", "stop-time",
-			"The upper limit of time for the run; do not\n"
-			"process photons which arrive before this time."},
+	{'f', "f:", "start",
+			"The lower limit of time (or pulse) for the run; \n"
+			"do not process photons which arrive before \n"
+			"this time."},
+	{'F', "F:", "stop",
+			"The upper limit of time (or pulse) for the run; \n"
+			"do not process photons which arrive before \n"
+			"this time."},
 	{'d', "d:", "max-time-distance", 
 			"The maximum time difference between two photons\n"
 			"to be considered for the calculation."},
@@ -328,8 +330,8 @@ int parse_options(int argc, char *argv[], options_t *options,
 /* Intensity */ 
 		{"bin-width", required_argument, 0, 'w'},
 		{"count-all", no_argument, 0, 'A'},
-		{"start-time", required_argument, 0, 'f'},
-		{"stop-time", required_argument, 0, 'F'},
+		{"start", required_argument, 0, 'f'},
+		{"stop", required_argument, 0, 'F'},
 
 /* Histogram */ 
 		{"time", required_argument, 0, 'x'},

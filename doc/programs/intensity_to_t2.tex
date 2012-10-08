@@ -3,25 +3,7 @@
 This program converts a stream of time-tagged intensity to T2 photons, permitting a stream of integer counts to be treated as though it were composed of individual photons.
 
 \subsection{Command-line syntax}
-\begin{verbatim}
-Usage: intensity_to_t2 [options]
-
-Version 1.6
-
-             -V, --verbose: Print debug-level information.
-                -h, --help: Prints this usage message.
-             -v, --version: Print version information.
-             -i, --file-in: Input filename. By default, this is stdin.
-            -o, --file-out: Output filename. By default, this is stdout.
-            -c, --channels: The number of channels in the signal.
-
-This program accepts intensity data of the form:
-      time (long long), counts (unsigned int)
-and outputs an equivalent t2 photon stream, tagged on some number
-of channels. By default, all photons are sent to channel 0, but 
-if a finite number of channels is specified the photons are 
-randomly distributed among the possible channels.
-\end{verbatim}
+\input{"programs/intensity_to_t2.usage"}
 
 \subsubsection{Input}
 The input is a stream of time-intensity pairs:
