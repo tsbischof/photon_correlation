@@ -5,30 +5,23 @@ General:
 -profile performance, and look to see if there are any obvious bottlenecks
 -do a better job of detecting mode mismatch 
 -remove the clunkier debug messages.
--check that all references to the channel are to _signed_ int
--run valgrind against histogram, make sure that the histograms are getting freed properly.
--change t3 to pulse, from pulse_number
--check that the t2 queue functions properly: at the end of the stream, does it handle the last value correctly?
+-run valgrind against all programs, check that nothing has been missed.
 -would it be simple/reasonable to merge common routines with generic programs? Currently, t2 and t3 have many similar (if not identical) routines, with very small changes. If these changes can be worked it separately, it might be reasonable to use generic routines and get rid of the duplicate code.
--implement t3 mode for channels, update t3.c
 
 Scripts:
 -plotting for t3 mode correlation
 
 Picoquant:
--write thorough tests
 
 Correlate:
--write thorough tests
 
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
--replace the binary search algorithm with bsearch from stdlib
+-replace the binary search algorithm with bsearch from stdlib?
 
 Intensity:
 
 Bin intensity:
--get this going and put it in with the gn calculation for fully-normalized results
 
 Time-dependent pl/gn:
 -turn the Python scripts into C programs for speed?
@@ -39,11 +32,8 @@ Python:
 -gn needs to pass all photons to correlate/histogram, intensity, bin_intensity
 
 Channels:
--finish implementing offsets
--write some extensive tests to make sure that the sorting works in all situations. It currently is only tested for the case where the queue is full.
 
 Correlate vector:
 -take notes from notebook and compile the vector correlation method.
 
 Intensity_to_t2:
--put together some test data, make sure that the binary read is working
