@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 	FILE *out_stream = NULL;
 
 	program_options_t program_options = {
-		27,
+		26,
 "This program performs the calculations needed to calculate the correlation\n"
 "of a stream of photons, including those needed to normalize the result.\n"
 "It does not perform the normalization, but instead produces the results\n"
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
 			OPT_SUPPRESS,
-			OPT_APPROXIMATE, OPT_TRUE_CORRELATION}};
+			OPT_EXACT_NORMALIZATION}};
 
 	result += parse_options(argc, argv, &options, &program_options);
 	result += open_streams(&in_stream, options.in_filename,

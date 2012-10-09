@@ -142,12 +142,17 @@ option_t all_options[] = {
 	{'B', "B:", "approximate",
 			"Approximate the true autocorrelation by \n"
 			"only sampling the correlation once for\n"
-			"every n time steps.. By default, the \n"
+			"every n time steps. By default, the \n"
 			"correlation is sampled for every time step."},
 	{'C', "C", "true-correlation",
 			"Rather than calculating the autocorrelation\n"
 			"to match the photon autocorrelation, calculate\n"
-			"it for the standard signal definition."}
+			"it for the standard signal definition."},
+	{'Z', "Z", "exact-normalization",
+			"Rather than using intensity to calculate the\n"
+			"average intensity for normalization, use\n"
+			"bin_intensity to get the exact result for each\n"
+			"histogram bin."}
 	};
 
 void default_options(options_t *options) {
@@ -210,6 +215,8 @@ void default_options(options_t *options) {
 
 	options->approximate = 1;
 	options->true_autocorrelation = 0;
+
+	options->exact_normalization = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -344,6 +351,12 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"pulse-offsets", required_argument, 0, 'U'},
 		{"suppress", required_argument, 0, 's'},
 
+/* correlate_vector */ 
+		{"approximate", required_argument, 0, 'B'},
+		{"true-correlation", no_argument, 0, 'C'},
+
+/* gn */
+		{"exact-normalization", no_argument, 0, 'Z'},
 		{0, 0, 0, 0}};
 
 	options_string = get_options_string(program_options);
@@ -457,6 +470,15 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case 's':
 				options->suppress_channels = 1;
 				options->suppress_string = strdup(optarg);
+				break;
+			case 'B':
+				options->approximate = strtol(optarg, NULL, 10);
+				break;
+			case 'C':
+				options->true_autocorrelation = 1;
+				break;
+			case 'Z':
+				options->exact_normalization = 1;
 				break;
 			case '?':
 			default:

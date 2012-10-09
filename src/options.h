@@ -84,6 +84,9 @@ typedef struct {
 /* correlate_vector */
 	int approximate;
 	int true_autocorrelation;
+
+/* gn */
+	int exact_normalization;
 } options_t;
 
 typedef struct {
@@ -107,7 +110,8 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
 		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
 		OPT_SUPPRESS,
-		OPT_APPROXIMATE, OPT_TRUE_CORRELATION };
+		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
+		OPT_EXACT_NORMALIZATION };
 
 void default_options(options_t *options);
 int validate_options(program_options_t *program_options, options_t *options);
