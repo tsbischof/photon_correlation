@@ -26,7 +26,7 @@ ifeq (${TARGET}, linux)
 	CFLAGS += -fPIC
 	DATE := ${shell date +"%Y.%m.%d %H:%M:%S"}
 	# Version info for the executables.
-	CFLAGS += -D VERSION_MAJOR=1
+	CFLAGS += -D VERSION_STRING="${DATE}"
 endif
 ifeq (${TARGET}, cygwin)
 	MKDIR = mkdir -p
@@ -114,11 +114,12 @@ CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
 TARGETS += channels
 
-#GN_OBJ = gn_main.o ${UTIL}
-#ALL_OBJ += ${GN_OBJ}
-#GN_LIB = 
-#ALL_LIB += ${GN_LIB}
-#TARGETS += gn
+GN_OBJ = gn_main.o ${UTIL} \
+		gn.o
+ALL_OBJ += ${GN_OBJ}
+GN_LIB = 
+ALL_LIB += ${GN_LIB}
+TARGETS += gn
 
 #TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${UTIL}
 #ALL_OBJ += ${TIME_DEPENDENT_PL_{OBJ}
@@ -203,8 +204,8 @@ intensity_to_t2: ${INTENSITY_TO_T2_OBJ}
 correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_VECTOR_LIB}
 
-#gn: ${GN_OBJ}
-#	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
+gn: ${GN_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 
