@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <picoquant/picoquant.h>
-#include <picoquant/correlate.h>
-#include <picoquant/histogram.h>
-#include <picoquant/files.h>
-#include <picoquant/modes.h>
-#include <picoquant/options.h>
-#include <picoquant/error.h>
+#include <photon_correlation/picoquant.h>
+#include <photon_correlation/correlate.h>
+#include <photon_correlation/histogram.h>
+#include <photon_correlation/files.h>
+#include <photon_correlation/modes.h>
+#include <photon_correlation/options.h>
+#include <photon_correlation/error.h>
 
 int main (int argc, char *argv[]) {
 	pid_t picoquant_pid = getpid();

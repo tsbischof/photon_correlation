@@ -7,11 +7,8 @@ CFLAGS += -Wall -std=c99
 # 128-bit filesystems we will need to switch this to 128. 
 CFLAGS += -D _FILE_OFFSET_BITS=64 
 
-DATE := ${shell date +"%Y.%m.%d %H:%M:%S"}
-# Version info for the executables.
 CFLAGS += -D VERSION_MAJOR=1
 CFLAGS += -D VERSION_MINOR=6 
-CFLAGS += -D VERSION_STRING="${DATE}"
 CFLAGS += -O3
 CFLAGS += -lm
 CFLAGS += -fopenmp
@@ -27,6 +24,9 @@ ifeq (${TARGET}, linux)
 	CC = cc
 	LD = cc
 	CFLAGS += -fPIC
+	DATE := ${shell date +"%Y.%m.%d %H:%M:%S"}
+	# Version info for the executables.
+	CFLAGS += -D VERSION_MAJOR=1
 endif
 ifeq (${TARGET}, cygwin)
 	MKDIR = mkdir -p
@@ -202,6 +202,9 @@ intensity_to_t2: ${INTENSITY_TO_T2_OBJ}
 
 correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_VECTOR_LIB}
+
+#gn: ${GN_OBJ}
+#	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $< 

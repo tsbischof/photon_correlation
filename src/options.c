@@ -261,7 +261,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 	if ( is_option(OPT_BIN_WIDTH, program_options)
 		&& ! result
 		&& !(options->bin_width || options->count_all) ) {
-		error("Bin width must be at least 1 (%lld specified.\n", 
+		error("Bin width must be at least 1 (%"PRId64" specified).\n", 
 				options->bin_width);
 		result += -1;
 	}

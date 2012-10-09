@@ -1,4 +1,3 @@
-#include <omp.h>
 #include <math.h>
 
 #include "error.h"
@@ -226,7 +225,6 @@ void t2_bin_counts_increment(t2_bin_counts_t *bin_counts,
 		fprintf(stderr, ")\n");
 	}
 
-//#pragma omp parallel for private(lower, upper, front_time, back_time)
 	for ( i = 0; i < bin_counts->bins; i++ ) {
 		lower = (float64_t)record->time + bin_counts->edges->bin_edges[i];
 		upper = (float64_t)record->time + bin_counts->edges->bin_edges[i+1];
@@ -235,6 +233,7 @@ void t2_bin_counts_increment(t2_bin_counts_t *bin_counts,
 
 		if ( (front_time <= lower && lower < back_time) ||
 				(front_time <= upper && upper < back_time) ) { 
+//			debug("Incrementing bin index %d\n", i);
 			bin_counts->bin_count[i][record->channel] += 1;
 		}
 	}
