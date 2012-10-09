@@ -177,6 +177,7 @@ For linearly-spaced sub-ranges, this identification can be achieved in O(1) time
 \Index(x) = \timewindow\upminus + x\parens{\frac{\timewindow\upplus-\timewindow\upminus}{N}}
 \end{equation}
 However, in the code this is not used, and instead a more general binary search algorithm (costing O($\log(N)$)) is implemented to permit arbitrary spacings of these ranges. The binary algorithm determines the placement of an element into a sorted list by iterative division of the list into upper and lower halves, until the appropriate element is define. This is implemented as:
+\lstset{language=Python}
 \begin{lstlisting}
 def binary_search(value, bins):
     upper = len(bins)

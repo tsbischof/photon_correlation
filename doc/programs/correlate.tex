@@ -1,6 +1,6 @@
 \section{Correlate}
 \label{sec:correlate}
-The details of the mathematics required for understanding this program can be found in chapter~\ref{sec:math_background}. If you have not read that section, the discussion of the implementation here may be difficult to follow, but a brief explanation of the background will be given at each step.
+%The details of the mathematics required for understanding this program can be found in chapter~\ref{sec:math_background}. If you have not read that section, the discussion of the implementation here may be difficult to follow, but a brief explanation of the background will be given at each step.
 %\subsection{A brief mathematical background}
 %\label{sec:correlate_math}
 %For several types of experiments, some form of a signal correlation is necessary. These follow the form:
@@ -28,9 +28,9 @@ The details of the mathematics required for understanding this program can be fo
 %where the average is now over all pulse and real time. However, because both pulse and real time are integer spaces, we can just map the times onto two homogeneous dimensions, and perform the correlation \gn{2n} instead. This gives a \gn{n} for every choice of pulses, useful for comparisons of long- and short-time correlations, as in multi-excition spectroscopy.
 
 \subsection{Purpose}
-This program calculates the full correlation of a signal, including all autocorrelations and cross-correlations of individual channels, for arbitrary numbers of channels and order. The raw correlation events are returned as the output, \textit{not the histogrammed correlation}. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
+This program calculates the correlation events from a stream of photons. The histogramming and normalization are left for other programs, such as \texttt{histogram}.
 
-The speed of the calculation scales favorably with the order of correlation, although of course higher orders of correlation require greater numbers of events to build meaningful results. See section~\ref{sec:correlation_implementation} for details of the algorithm.
+By default, all photon pairs are generated, but it is also possible to set bounds on the relative delays between photons, to reduce time spent generating unused results.
 
 \subsection{Command-line syntax}
 \input{programs/correlate.usage}
@@ -50,75 +50,92 @@ channel 0, channel 1, time 1-time 0 \n
 for \gn{3} of T2 data:
 \begin{verbatim}
 channel 0, channel 1, time 1-time 0, 
-  channel 2, time 2-time 0 \n
+           channel 2, time 2-time 0 \n
 \end{verbatim}
 for \gn{3} of T3 data:
 \begin{verbatim}
 channel 0, channel 1, pulse 1-pulse 0, time 1-time 0,
-   channel 2, pulse 2-pulse 0, time 2-time 0 \n
+           channel 2, pulse 2-pulse 0, time 2-time 0 \n
 \end{verbatim}
 
-By default, the ordering of the channels is that found in the stream. However, for some applications it is useful to order the channels and record both positive- and negative-time correlations on the same histogram. To account for this, pass the flag \texttt{--channels-ordered} to order the channels and apply the appropriate sign to the time differences.
+By default, all photons will be correlated with each other. To limit this behavior, use \texttt{--max-time-distance} or \texttt{--max-pulse-distance} to set a bound on the relative delay between two photons, most usefully to the bounds of the histogram.
 
-By default, the program will correlate all entries in a stream. This can easily cause memory problems, so it is recommended that a maximum time distance is specified for T2 data, or a maximum pulse distance for T3 data. A maximum time distance may also be specified for T3 data, but in principle this is unnecessary. Note that all channels are treated equally by these limits. 
+If logarithmic axes are used for histogramming, pass the flag \texttt{--positive-only} to report only positive-time correlations. This will save the trouble of finding a myriad of error messages.
+
+To mimic the start-stop mode of the Picoharp, pass \texttt{--start-stop} for two-channel data.
 
 Currently, \program{correlate} uses a fixed-length circular buffer to store entries, so if errors report that the buffer is too small try changing the length with \texttt{--queue-size}.
 
 \subsection{Examples of usage}
+\subsubsection{Finding \gn{2} pairs}
 Finding the correlation events for a \gn{2} of T2 data:
 \begin{verbatim}
-> picoquant --file-in data.ht2 --number 10000 | \
+> picoquant --file-in data.ht2 | \
   correlate --channels 4 --mode t2 \
   --max-time-distance 1000
 3,2,932
-3,0,558
-3,1,508
-\end{verbatim}
-the same, with channels ordered:
-\begin{verbatim}
-> picoquant --file-in data.ht2 --number 10000 | \
-  correlate --channels 4 --mode t2 \
-  --max-time-distance 1000 --channels-ordered
 2,3,-932
+3,0,558
 0,3,-558
-1,3,-508
+...
+\end{verbatim}
+the same, with positive events only:
+\begin{verbatim}
+> picoquant --file-in data.ht2 | \
+  correlate --channels 4 --mode t2 \
+  --max-time-distance 1000 --positive-only
+3,2,932                                                                         
+3,0,558                                                                         
+3,1,508
+...
 \end{verbatim}
 \gn{2} of T3 data:
 \begin{verbatim}
-> picoquant --file-in data.ht3 --number 100 | \
+> picoquant --file-in data.ht3  | \
   correlate --channels 4 --mode t3 \
   --max-pulse-distance 1000
 3,3,447,14436
+3,3,-447,-14436
 1,1,115,-15636
-3,2,369,-28240
-1,1,986,66088
-0,3,240,21380
+1,1,-115,15636
+...
 \end{verbatim}
+\subsubsection{Finding \gn{3} triplets}
 \gn{3} of T3 data:
 \begin{verbatim}
-> picoquant --file-in data.ht3 --number 1000 | \
-  correlate --channels 4 --mode t3 --order 2 \
-  --max-pulse-distance 1000
+> picoquant --file-in data.ht3 | \
+  correlate --channels 4 --mode t3 \
+  --max-pulse-distance 1000 --order 3
 3,3,10,-44540,0,913,8648
-3,0,155,9044,2,353,-792
-2,3,128,47316,3,144,42004
-2,2,44,-32120,3,300,1380
-2,2,44,-32120,2,359,-4924
-2,3,300,1380,2,359,-4924
-2,3,256,33500,2,315,27196
-1,3,460,72356,2,847,20448
-3,2,387,-51908,3,603,-43404
-2,1,78,-33380,2,323,-60748
-1,3,54,-39056,2,239,-60648
-3,2,139,39596,3,364,11248
-2,2,27,-82228,3,999,-10108
+3,0,913,8648,3,10,-44540
+3,3,-10,44540,0,903,53188
+3,0,903,53188,3,-10,44540
+...
+\end{verbatim}
+
+\subsubsection{Mimicking the Picoharp's histogram mode}
+The start-stop mode will only correlate a photon from channel 1 with the most recent photon from channel 0, such that many events are missed. This emulates the behavior of the histogram mode on the Picoharp, and is mostly included for pedagogical purposes.
+\begin{verbatim}
+> picoquant --file-in data.pt2 | \
+  correlate --mode t2 
+0,0,13829372
+0,0,-13829372
+0,0,26556268
+0,0,-26556268
+0,1,29448188
+1,0,-29448188
+...
+> picoquant --file-in data.pt2 | \
+  correlate --mode t2 --start-stop
+0,1,2891920
+0,1,23536300
 \end{verbatim}
 
 \subsection{Implementation details}
 \label{sec:correlation_implementation}
-The math and notation from section~\ref{sec:math_background} will feature heavily in this section, so you should become familiar with the results of that section before proceeding. 
+%The math and notation from section~\ref{sec:math_background} will feature heavily in this section, so you should become familiar with the results of that section before proceeding. 
 
-The problem \program{correlate} must address is that of generating efficiently the set of all correlation events, given a set of photons. That is, we must find all events of the form
+The problem \program{correlate} must address is that of generating efficiently the set of correlation events, given a set of photons and conditions for which a correlation is valid. That is, we must find all events of the form
 \begin{equation}
 \braces{(\photon_{0},\ldots\photon_{n-1})
         \left|
@@ -138,7 +155,7 @@ In long form, we must find all tuples of $n$ unique photons which satisfy specif
 \end{enumerate}
 From this, we see that it should be possible to start from some photon in the stream, find all possible tuples including that photon, then remove it from consideration and move on. That is, for a given photon \photon, there will be some subset of possible times \timewindow{} in which correlation tuples can exist, and once we have exhausted all photons in that window we can ignore the original photon for all future correlations. 
 
-Our task can thus be divided into three main procedures:
+Our task can be divided into three main procedures:
 \begin{enumerate}
 \item Generate each subset $\photons_{\timewindow}$.
 \item Generate all unique tuples $\vec{\photon}$ of $n$ photons in a given $\photons_{\timewindow}$.
@@ -160,11 +177,14 @@ Our task can thus be divided into three main procedures:
 %The former rule simplifies the algorithm we will devise to perform this calculation.
 
 \subsubsection{The set $\photons_{\timewindow}$ can be generated efficiently from a time-ordered \photons}
-Given a photon to base correlations from, the particular $\timewindow$ representing the span of possible times can be defined as:
+Because a we are generating $\photons_{\timewindow}$ for each photon sequentially, each valid combination of photons will have the tagged photon $\photon_{0}$ and some number of additional photons $(\photon_{1},\ldots,\photon_{n-1})$. The task here is to find the final photon which can be correlated with $\photon_{0}$ without exceeding the bounds of the correlation.
+
+Given the source photon, the particular $\timewindow$ representing the span of possible times can be defined as:
 \begin{equation}
 \timewindow = \left[ \Time(\photon), \Time(\photon) + \abs{\timewindow} \right)
 \end{equation}
 Because the photon stream is time-ordered, we can generate the set by the following algorithm:
+\lstset{language=Python}
 \begin{lstlisting}
 for index, src_photon in enumerate(photons):
     current_photons = list()
@@ -176,8 +196,11 @@ for index, src_photon in enumerate(photons):
             break
 
     correlate(src_photon, current_photons)
+    current_photons.pop()
 \end{lstlisting}
-For each photon the stream the algorithm must examine enough photons to reach the end of $\timewindow$, so each event costs an amount proportional to the average density of photons in the stream, or roughyl O($\abs{\timewindow}$). Each photon must be processed, so the whole algorithm costs O($\abs{\photons}\abs{\timewindow}$). In the limit that $\timewindow=\integrationtime$, the algorithm costs O($\abs{\photons}^2$); at worst, for each photon it is necessary to compare with all other photons in the stream.
+The true algorithm used in the software is a bit more thorough, ensuring that enough photons are collected for correlation and handling the end case where the stream is exhausted, but the basic idea presented here is correct in spirit.
+
+%For each photon the stream the algorithm must examine enough photons to reach the end of $\timewindow$, so each event costs an amount proportional to the average density of photons in the stream, or roughyl O($\abs{\timewindow}$). Each photon must be processed, so the whole algorithm costs O($\abs{\photons}\abs{\timewindow}$). In the limit that $\timewindow=\integrationtime$, the algorithm costs O($\abs{\photons}^2$); at worst, for each photon it is necessary to compare with all other photons in the stream.
 
 %Without loss of generality, we define a window window of time $\timewindow$ such that, for some bounds $a,b\in\wholes$, $a<b$:
 %\begin{equation}
@@ -208,10 +231,14 @@ For each photon the stream the algorithm must examine enough photons to reach th
 %\end{enumerate}
 %From this algorithm it is evident that the cost of building the windows scales most directly with the number of photons (we never have to perform more than $\abs{\photons}$ iterations of this algorithm), giving O(\abs{\photons}) for this step. 
 
-To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
+%To see the implementation of this algorithm, the relevant files are \texttt{correlate.c}, \texttt{correlate\_t2.c}, and \texttt{correlate\_t3.c}. In particular, the functions \texttt{*queue*} are the most relevant, as these handle the population and depopulation of \photons{} and $\photons_{\timewindow}$.
 
-\subsubsection{Generating correlation events (photon tuples) from $\photons_{\timewindow}$}
-Given a subset of photons $\photons_{\timewindow}$ and an original tagged photon $\photon_{0}$, we must generate all tuples of $n$ unique photons from this pool. That is, we must generate all unique combinations of $n$ photons from the set $\braces{\photon_{0}}\cup\photons_{\timewindow}$, or equivalently all unique combinations of $n$ choices of  $\abs{\braces{\photon_{0}}\cup\photons_{\timewindow}}$ items. Combination generation algorithms are well-established, and the one used here works by incrementing the trailing digits as needed:
+\subsubsection{Generating correlation events from $\photons_{\timewindow}$}
+Given a subset of photons $\photons_{\timewindow}$ and an original tagged photon $\photon_{0}$, we must generate all tuples of $n$ unique photons from this pool. This is a two-step process, where we first generated a unique combination of photons and then generate all permutations of those photons.
+
+The iteration over combinations is handled by an algorithm as follows:
+%That is, we must generate all unique combinations of $n$ photons from the set $\braces{\photon_{0}}\cup\photons_{\timewindow}$, or equivalently all unique combinations of $n$ choices of  $\abs{\braces{\photon_{0}}\cup\photons_{\timewindow}}$ items. Combination generation algorithms are well-established, and the one used here works by incrementing the trailing digits as needed:
+\lstset{language=Python}
 \begin{lstlisting}
 combination = range(1, n)
 limit = N
@@ -236,7 +263,7 @@ def next_combination(combination, limit):
     # If True, the combination is valid. 
     return(combination[-1] < limit) 
 \end{lstlisting}
-This is a bit obtuse, so we will work out an example. Say we have 4 photons to correlate to order 3. We only want unique photons, so the first combination will be $(0,1,2)$ where we have included the tagged photon for clarity. To get the next combination, we increment the final digit and obtain $(0,1,3)$. This is still valid (all indices are within the limit), so we use it. The next combination is a bit trickier, and we follow these steps to obtain it:
+This is a bit obtuse, so we will work out an example. Say we have 4 photons to correlate to order 3. We only want unique photons, so the first combination will be $(1,2)$ (photon 0 is implicit). To get the next combination, we increment the final digit and obtain $(1,3)$. This is still valid (all indices are within the limit), so we use it. The next combination is a bit trickier, and we follow these steps to obtain it:
 \begin{enumerate}
 \item $(1,3+1 \pmod{4}) = (1, 0)$
 \item $(1+1, 0) = (2, 0)$
@@ -244,9 +271,9 @@ This is a bit obtuse, so we will work out an example. Say we have 4 photons to c
 \item $(2, 2+1) = (2, 3)$
 \item $3 < 4$, so this is a valid combination.
 \end{enumerate}
-This process is repeated up to $(0,2,3)$, at which point $(0,3,4)$ would be generated. As this is not valid, we receive \texttt{False} as output to indicate as such, and the generation stops.
+This process is repeated up to $(2,3)$, at which point $(3,4)$ would be generated. As this is not valid because there is no photon 4, so the iteration fails.
 
-The exact scaling of this algorithm could be worked out by noting the frequency of incrementing $1, 2, \ldots$ digits, but we know it must cost something less than $n$ increments per step. Thus, this generation algorithm will process any given set $\photons_{\timewindow}$ in better than O($n\abs{\photons_{\timewindow}}$) time.
+%The exact scaling of this algorithm could be worked out by noting the frequency of incrementing $1, 2, \ldots$ digits, but we know it must cost something less than $n$ increments per step. Thus, this generation algorithm will process any given set $\photons_{\timewindow}$ in better than O($n\abs{\photons_{\timewindow}}$) time.
 
 %Given the algorithm to find all subqueues $\photons_{\timewindow}$, we turn our attention to finding the tuples $(\photon_{0},\ldots\photon_{n-1})$ in a given $\photons_{\timewindow}$. Formally, we want to generate the elements of the set
 %\begin{equation}
@@ -307,12 +334,14 @@ The exact scaling of this algorithm could be worked out by noting the frequency 
 %
 %From the algorithm, we see that an increment costs, at worst, O($n$) loops. In reality the average is somewhat lower than this, and could be calculated exactly with some effort. Additionally, this algorithm will produce some number of tuples of somewhat less than order O($nN$). This behavior is sensible: a larger window ($N=\abs{\photons_{\timewindow}}$) gives more valid tuples of photons, and the higher order $n$ gives more iterations over that window.
 %
-To see the implementation of this algorithm in \program{correlate}, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
+%To see the implementation of this algorithm in \program{correlate}, examine the functions \texttt{*offsets*} in \texttt{combinations.c}.
 
-\subsubsection{Production of the correlation event, given a photon tuple}
-Given a tuple of $n$ photons, all correlation events corresponding to that tuple can be achieved by determining the displacements between all permutations of those photons. For example, two photons $\photon_{0}$ and $\photon_{1}$ will contribute both to $\gn{2}_{(0,1)}$ and $\gn{2}_{(1,0)}$, so we must consider the $\tau$ produced by treating each ordering of the two photons. Generation of permutations is an equivalent problem to generation of integers in some base, such that no two digits are identical. In the code, this is achieved by incrementing through all $n$-digit numbers in base $n$, and storing the ones with no identical digits in an array for later usage. This requires the generation of $n^{n}$ values and the storage of $n!$ values, but this should be a small number in most circumstances. 
+\subsubsection{Production of all correlation events, given a photon tuple}
+Given a tuple of $n$ photons, all correlation events corresponding to that tuple can be achieved by determining the displacements between all permutations of those photons. For example, two photons $\photon_{0}$ and $\photon_{1}$ will contribute both to $\gn{2}_{(0,1)}$ and $\gn{2}_{(1,0)}$, so we must consider the $\timedelay$ produced by treating each ordering of the two photons. Generation of permutations is an equivalent problem to generation of integers in some base, such that no two digits are identical. In the code, this is achieved by incrementing through all $n$-digit numbers in base $n$, and storing the ones with no identical digits in an array for later usage. This requires the generation of $n^{n}$ values and the storage of $n!$ values, but this should be a small number in most circumstances. 
 
-To see how the permutations are generated, see \texttt{combinations.c}. To see how these are used, see \texttt{correlate\_t*.c}, particularly the \texttt{correlate\_t*\_block} procedures.
+Because the permutations are fixed by the order of the correlation, they are calculated at the beginning of the process and referred to thereafter. This enables simple tricks like \texttt{--positive-only}, where all permutations which are not ordered are thrown out. Additionally, it ensures that, even if the cost of producing the permutations is high, it is only done once. That being said, if the cost of producing the permutations is high relative to the cost of correlating values, not enough values are being correlated.
+
+%To see how the permutations are generated, see \texttt{combinations.c}. To see how these are used, see \texttt{correlate\_t*.c}, particularly the \texttt{correlate\_t*\_block} procedures.
 %There are two distinct modes enabled in \program{correlate} for producing the correlation events: with and without ordering of channels. We will deal with the time-ordered, channel-unordered case first. 
 %
 %Given a tuple of photons $(\photon_{0},\ldots\photon_{n-1})$ known to satisfy the conditions for including in calculating \gn{n}, we must produce the time differences $(\tau_{1}, \ldots\tau_{n-1})$. This can be done with the following algorithm:
