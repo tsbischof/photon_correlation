@@ -1,5 +1,5 @@
-from picoquant import histogram
-import picoquant
+from photon_correlation import histogram
+import photon_correlation
 
 class Interactive(object):
     def __init__(self, filename):
@@ -9,7 +9,7 @@ file, such as phd or thd."""
         self.bins = list()
         self._curves = set()
 
-        for my_bin in picoquant.Picoquant(filename):
+        for my_bin in photon_correlation.Picoquant(filename):
             self.bins.append(my_bin)
             self._curves.add(self.bins[-1].curve)
 

@@ -5,22 +5,23 @@ import csv
 import subprocess
 import logging
 
-import picoquant
+import photon_correlation
 
 def time_dependent_pl(filename, channels, bin_width, time_limits):
-    photons = picoquant.Picoquant(filename, channels=channels)
-    if photons.mode != picoquant.modes.T3:
+    photons = photon_correlation.Picoquant(filename, channels=channels)
+    if photons.mode != photon_correlation.modes.T3:
         logging.error("File {0} is not t3 mode.".format(filename))
         return(False)
 
-    photon_streams = picoquant.photon.WindowedStream(photons, pulse=bin_width)
+    photon_streams = photon_correlation.photon.WindowedStream(
+        photons, pulse=bin_width)
 
     for photon_stream in photon_streams:
         dst_filename = "{0}.g1.{1}_{2}".format(filename,
                                                stream.pulse_limits.lower,
                                                stream.pulse_limits.upper)
 
-        picoquant.lifetime.lifetime(
+        photon_correlation.lifetime.lifetime(
             photon_stream,
             time_limits=time_limits,
             filename=dst_filename)
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     bin_width = options.bin_width
 
     if options.time_limits:
-        time_limits = picoquant.histogram.Limits(options.time_limits)
+        time_limits = photon_correlation.histogram.Limits(options.time_limits)
     else:
         raise(ValueError("Must specify time limits."))
     

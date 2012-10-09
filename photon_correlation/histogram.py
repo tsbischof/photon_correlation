@@ -2,7 +2,7 @@ import subprocess
 import math
 import os
 
-from picoquant import modes, files, photon
+from photon_correlation import modes, files, photon
 
 class Limits(object):
     def __init__(self, lower=None, bins=1, upper=None,

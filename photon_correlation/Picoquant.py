@@ -5,10 +5,10 @@ import time
 import csv
 import logging
 
-from picoquant import modes
-from picoquant import files
-from picoquant import photon
-from picoquant import interactive
+from photon_correlation import modes
+from photon_correlation import files
+from photon_correlation import photon
+from photon_correlation import interactive
 
 class Picoquant(photon.PhotonStream):
     def __init__(self, filename, channels=None, mode=None, decode=True,

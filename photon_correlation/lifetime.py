@@ -1,6 +1,6 @@
 import subprocess
 
-from picoquant import histogram, modes, photon
+from photon_correlation import histogram, modes, photon
 
 def lifetime(photons, time_limits, filename=None):
 ##    if not photons.mode == modes.T3:

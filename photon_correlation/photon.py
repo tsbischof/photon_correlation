@@ -2,8 +2,8 @@ import subprocess
 import csv
 import itertools
 
-from picoquant import modes
-from picoquant import *
+from photon_correlation import modes
+from photon_correlation import *
 
 class Photon(object):
     def __init__(self, mode, channel=None, pulse=None, time=None,
