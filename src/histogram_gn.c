@@ -50,6 +50,36 @@ void free_edges(edges_t **edges) {
 }
 
 int edges_get_index(edges_t *edges, int64_t value) {
+	if ( edges->scale == SCALE_LINEAR ) {
+		return(edge_index_linear(edges, value));
+	} else if ( edges->scale == SCALE_LOG ) {
+		return(edge_index_log(edges, value));
+	} else if ( edges->scale == SCALE_LOG_ZERO ) {
+		if ( value == 0 ) {
+			return(0);
+		} else if ( value < 0 ) {
+			return(-1);
+		} else {
+			return(edge_index_log(edges, value));
+		}
+	} else {
+		return(edge_index_bsearch(edges, value));
+	}
+}
+
+int edge_index_linear(edges_t *edges, int64_t value) {
+	return(floor((value - edges->limits.lower) / 
+			(edges->limits.upper - edges->limits.lower) *
+			edges->limits.bins));
+}
+
+int edge_index_log(edges_t *edges, int64_t value) {
+	return(floor((log(value) - log(edges->limits.lower)) / 
+			(log(edges->limits.upper) - log(edges->limits.lower)) *
+			edges->limits.bins));
+}
+
+int edge_index_bsearch(edges_t *edges, int64_t value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
@@ -96,6 +126,9 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 	float64_t upper;
 	float64_t bins;
 	float64_t width;
+
+	edges->scale = scale;
+	memcpy(&(edges->limits), limits, sizeof(limits_t));
 
 	if ( scale == SCALE_LINEAR ) {
 		lower = limits->lower;

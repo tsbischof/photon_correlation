@@ -7,14 +7,17 @@ import bz2
 import subprocess
 import shutil
 
-base_name = "picoquant"
+base_name = "photon_correlation"
 version = "v1.6"
 archive_dir = os.path.join("dist", version)
-source_dirs = ["doc", "scripts", "src"]
-suffixes = [".py", ".c", ".h", "Makefile", ".tex", ".pdf", "README", ".m"]
+source_dirs = ["doc", "scripts", "src", "photon_correlation"]
+suffixes = [".py", ".c", ".h", "makefile", ".tex", ".pdf",
+            "readme", ".m", "build"]
 archive_base = "{0}-{1}".format(base_name, version)
 platforms = ["linux_x86", "linux_x86_64", "linux_i686"]
-executables = ["picoquant", "correlate", "histogram", "intensity"]
+executables = ["picoquant", "correlate", "histogram", "intensity",
+               "channels", "bin_intensity", "intensity_to_t2", "gn", 
+               "t3_as_t2", "correlate_vector"]
 
 def archive_source(source_dirs, suffixes):
     to_archive = list()

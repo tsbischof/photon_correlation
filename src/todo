@@ -18,6 +18,7 @@ Correlate:
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
 -replace the binary search algorithm with bsearch from stdlib?
+-check that the linear search is working out all right.
 
 Intensity:
 

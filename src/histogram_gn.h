@@ -10,6 +10,8 @@ typedef struct {
 	int n_bins;
 	int print_label;
 	char dimension_label[20];
+	limits_t limits;
+	int scale;
 	float64_t *bin_edges;
 } edges_t;
 
@@ -25,6 +27,9 @@ typedef struct {
 edges_t *allocate_edges(int n_bins);
 void free_edges(edges_t **edges);
 int edges_get_index(edges_t *edges, int64_t value);
+int edge_index_linear(edges_t *edges, int64_t value);
+int edge_index_log(edges_t *edges, int64_t value);
+int edge_index_bsearch(edges_t *edges, int64_t value);
 int edges_from_limits(edges_t *edges, limits_t *limits, int scale);
 void print_edges(FILE *out_stream, edges_t *edges);
 
