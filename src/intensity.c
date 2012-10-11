@@ -34,6 +34,8 @@ counts_t *allocate_counts(int channels) {
 		result = -1;
 	} else {
 		counts->channels = channels;
+		counts->window.lower = 0;
+		counts->window.upper = 0;
 		counts->counts = (int64_t *)malloc(
 				sizeof(int64_t)*channels);
 		if ( counts->counts == NULL ) {
@@ -99,13 +101,13 @@ void print_counts(FILE *out_stream, counts_t *counts, options_t *options) {
 int next_counts(FILE *in_stream, counts_t *counts, options_t *options) {
 	int i;
 	int result = 0;
-	int64_t limits[2];
 
 	if ( options->binary_in ) {
-		result = (fread(&limits[0], 2, sizeof(int64_t), in_stream) != 2);
+		result = (fread(&(counts->window), sizeof(window_t), 
+				1, in_stream) != 1);
 		if ( ! result ) {
-			result = (fread(counts->counts, options->channels, 
-					sizeof(int64_t), in_stream) != options->channels);
+			result = (fread(counts->counts, sizeof(int64_t), 
+					options->channels, in_stream) != options->channels);
 		} 
 	} else {
 		result = (fscanf(in_stream, "%"SCNd64",%"SCNd64, 
