@@ -30,11 +30,10 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 			increment_counts(counts, record.channel);
 		} else if ( result == 1 ) {
 			/* Next window */
-			print_counts(out_stream,
-					stream.window.limits.lower,
-					stream.window.limits.upper,
-					counts,
-					options);
+			counts->window.lower = stream.window.limits.lower;
+			counts->window.upper = stream.window.limits.upper;
+			print_counts(out_stream, counts, options);
+
 			next_t2_window(&(stream.window));
 			init_counts(counts);
 		} else if ( result == 2 ) {
@@ -54,17 +53,13 @@ int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
  	 */
 	if ( processed ) { 
 		if ( options->set_stop_time ) {
-			print_counts(out_stream,
-					stream.window.limits.lower,
-					stream.window.limits.upper,
-					counts,
-					options);
+			counts->window.lower = stream.window.limits.lower;
+			counts->window.upper = stream.window.limits.upper;
+			print_counts(out_stream, counts, options);
 		} else {
-			print_counts(out_stream, 
-					stream.window.limits.lower,
-					record.time,
-					counts,
-					options);
+			counts->window.lower = stream.window.limits.lower;
+			counts->window.upper = record.time;
+			print_counts(out_stream, counts, options);
 		}
 	}
 

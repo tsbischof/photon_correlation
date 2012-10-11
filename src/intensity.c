@@ -74,16 +74,16 @@ int increment_counts(counts_t *counts, int channel) {
 	}
 }
 
-void print_counts(FILE *out_stream, int64_t lower_time,
-		int64_t upper_time,  counts_t *counts, options_t *options) {
+void print_counts(FILE *out_stream, counts_t *counts, options_t *options) {
 	int i;
 
 	if ( options->binary_out ) {
-		fwrite(&lower_time, 1, sizeof(int64_t), out_stream);
-		fwrite(&upper_time, 1, sizeof(int64_t), out_stream);
+		fwrite(&(counts->window), 1, sizeof(window_t), out_stream);
 		fwrite(counts->counts, options->channels, sizeof(int64_t), out_stream);
 	} else {
-		fprintf(out_stream, "%"PRId64",%"PRId64",", lower_time, upper_time);
+		fprintf(out_stream, "%"PRId64",%"PRId64",", 
+				counts->window.lower,
+				counts->window.upper);
 		for ( i = 0; i < counts->channels; i++ ) {
 			fprintf(out_stream, "%"PRId64, counts->counts[i]);
 			if ( i != counts->channels - 1 ) {
@@ -94,4 +94,28 @@ void print_counts(FILE *out_stream, int64_t lower_time,
 	
 		fflush(out_stream);
 	}
+}
+
+int next_counts(FILE *in_stream, counts_t *counts, options_t *options) {
+	int i;
+	int result = 0;
+	int64_t limits[2];
+
+	if ( options->binary_in ) {
+		result = (fread(&limits[0], 2, sizeof(int64_t), in_stream) != 2);
+		if ( ! result ) {
+			result = (fread(counts->counts, options->channels, 
+					sizeof(int64_t), in_stream) != options->channels);
+		} 
+	} else {
+		result = (fscanf(in_stream, "%"SCNd64",%"SCNd64, 
+				&(counts->window.lower),
+				&(counts->window.upper)) != 2);
+		for ( i = 0; ! result && i < options->channels; i++) {
+			result = (fscanf(in_stream, ",%"SCNd64, &(counts->counts[i])) 
+					!= 1);
+		}
+	}
+
+	return(result);		
 }

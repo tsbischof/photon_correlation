@@ -7,6 +7,7 @@ General:
 -remove the clunkier debug messages.
 -run valgrind against all programs, check that nothing has been missed.
 -would it be simple/reasonable to merge common routines with generic programs? Currently, t2 and t3 have many similar (if not identical) routines, with very small changes. If these changes can be worked it separately, it might be reasonable to use generic routines and get rid of the duplicate code.
+-get the vector correlation written. This will be needed shortly.
 
 Scripts:
 -plotting for t3 mode correlation

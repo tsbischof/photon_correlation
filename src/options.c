@@ -222,10 +222,6 @@ void default_options(options_t *options) {
 int validate_options(program_options_t *program_options, options_t *options) {
 	int result = 0;
 
-	if ( options->binary_in || options->binary_out ) {
-		warn("Binary file mode not yet completely supported.\n");
-	}
-
 	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
 		error("Must have at least 1 channel (%d specified).\n", 
 				options->channels);
