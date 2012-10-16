@@ -11,7 +11,7 @@ CFLAGS += -D VERSION_MAJOR=1
 CFLAGS += -D VERSION_MINOR=6 
 CFLAGS += -O3
 CFLAGS += -lm
-CFLAGS += -fopenmp
+#CFLAGS += -fopenmp
 
 LDFLAGS = ${CFLAGS}
 
