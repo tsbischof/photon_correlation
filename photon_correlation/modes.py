@@ -1,9 +1,12 @@
 # Specify the collection modes
 MODE_UNKNOWN = None
 INTERACTIVE = "interactive"
+MODE_INTERACTIVE = 0
 CONTINUOUS = "continuous"
 T2 = "t2"
+MODE_T2 = 2
 T3 = "t3"
+MODE_T3 = 3
 TTTR = [T2, T3]
 
 # The three timing boxes
