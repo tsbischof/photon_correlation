@@ -59,7 +59,7 @@ UTIL = error.o types.o strings.o files.o options.o modes.o limits.o \
 PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
 		picoquant.o \
 		picoharp.o picoharp/ph_v20.o \
-		hydraharp.o hydraharp/hh_v10.o \
+		hydraharp.o hydraharp/hh_v10.o hydraharp/hh_v20.o \
 		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
 				timeharp/th_v50.o timeharp/th_v60.o 
 ALL_OBJ += ${PICOQUANT_OBJ}
