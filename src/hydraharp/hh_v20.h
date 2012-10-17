@@ -1,5 +1,5 @@
-#ifndef HH_V10_H_
-#define HH_V10_H_
+#ifndef HH_V20_H_
+#define HH_V20_H_
 
 #include <stdio.h>
 #include "../picoquant.h"

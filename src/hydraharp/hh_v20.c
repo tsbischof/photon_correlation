@@ -302,8 +302,8 @@ int hh_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 		} else {
 			if ( record.special ) {
 				if ( record.channel == 63 ) {
-					overflows++;
-					base_time += HH_T2_OVERFLOW;
+					overflows += record.time;
+					base_time += record.time*HH_T2_OVERFLOW;
 				} else if ( record.channel == 0 ) {
 					/* Sync record. */
 					record_count++;
@@ -370,8 +370,8 @@ int hh_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 			if ( record.special ) {
 				if ( record.channel == 63 ) {
 					/* Overflow */
-					overflows++;
-					base_nsync += HH_T3_OVERFLOW;
+					overflows += record.dtime;
+					base_nsync += record.dtime*HH_T3_OVERFLOW;
 				} else {
 					/* External marker.  */
 					external_marker(out_stream, record.channel, options);
