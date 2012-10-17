@@ -70,10 +70,6 @@ class ph_v20_header_t(Structure):
 
     def __init__(self):
         super(ph_v20_header_t, self).__init__()
-        
-        self.CreatorName = "Bischof microscopy".encode()
-        
-        self.BitsPerRecord = 32
 
     def set_time(self, current_time=datetime.datetime.now()):
         self.FileTime = current_time.strftime("%y.%m.%d %H.%M.%S").encode()
@@ -135,9 +131,8 @@ class ph_v20_header:
         self.ph_header.RepeatWaitTime = 0
         self.ph_header.ScriptName = "blargh!".encode()
 
-        self._Brd = (ph_v20_board_t*self.ph_header.NumberOfBoards)()
         self._RtCh = list()
-        self.ph_header.Brd = self._Brd
+        self.ph_header.Brd = (ph_v20_board_t*self.ph_header.NumberOfBoards)()
         for i in range(self.ph_header.NumberOfBoards):
             self.ph_header.Brd[i].HardwareIdent = "PicoHarp 300".encode()
             self.ph_header.Brd[i].HardwareVersion = "2.0".encode()
@@ -178,4 +173,5 @@ class ph_v20_header:
 if __name__ == "__main__":
     header = ph_v20_header()
     print(header.pq_header.Ident)
+    print(header.ph_header.Brd[0].RtCh[1].InputType)
     
