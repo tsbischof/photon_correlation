@@ -2,25 +2,18 @@ General:
 -write interface for Python, Matlab
 -write automated test for all programs
 -look into errno and related for dealing with errors.
--profile performance, and look to see if there are any obvious bottlenecks
--do a better job of detecting mode mismatch 
--remove the clunkier debug messages.
 -run valgrind against all programs, check that nothing has been missed.
--would it be simple/reasonable to merge common routines with generic programs? Currently, t2 and t3 have many similar (if not identical) routines, with very small changes. If these changes can be worked it separately, it might be reasonable to use generic routines and get rid of the duplicate code.
--get the vector correlation written. This will be needed shortly.
 
 Scripts:
 -plotting for t3 mode correlation
 
 Picoquant:
--test the new HydraHarp overflow values for t2, t3 mode. 
+-test the HydraHarp v20 overflow values for t2, t3 mode. 
 
 Correlate:
 
 Histogram:
 -should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
--replace the binary search algorithm with bsearch from stdlib?
--check that the linear search is working out all right.
 
 Intensity:
 
@@ -31,8 +24,6 @@ Time-dependent pl/gn:
 
 Python:
 -write interfaces to all types of output (photons, correlations, histograms, picoquant histograms, intensity)
--simplify histogram/correlate business: simply make tdg2 and tdpl by hard-wiring correlate and histogram, do not try to get fancy by piping those through Python objects. This just requires having a nice interface to photons through Python (already done) and a windowed stream (also already done).
--gn needs to pass all photons to correlate/histogram, intensity, bin_intensity
 
 Channels:
 

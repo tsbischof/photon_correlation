@@ -1,0 +1,19 @@
+v1.6 (18 October 2012)
+As of this version, the following programs are effectively complete:
+-correlate
+-histogram
+-intensity
+-channels
+-intensity_to_t2
+-t3_as_t2
+
+The following programs are complete except for a few possible changes:
+-picoquant: HydraHarp v20 TTTR modes have not been tested, but they have been implemented.
+-bin_intensity: t2 mode is complete and tested, but t3 mode may not be. T3 mode correctly accounts for the pulse delays, but it is not clear whether the time delays should be handled, and if so how they would be
+
+The following programs are not useable:
+-gn: It is not clear whether to do this in Python or C. The advantage of C is the speed of execution, but initial tests have not shown a clear difference between C and Python in this regard. Python is clearly more flexible and easier to implement, so at minimum it seems likely that it will be used to perform the final aspects of the calculation, such as normalization, while the C code generates the data necessary.
+-correlate_vector: This program has been planned and awaits implementation. 
+
+The following programs may be implemented:
+-g2: A faster version of gn which focuses on performing the correlation of a fixed number of channels as quickly as possible. This code would be suitable for real-time correlation as well as general-purpose work.
