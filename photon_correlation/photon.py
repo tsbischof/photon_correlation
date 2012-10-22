@@ -2,8 +2,7 @@ import subprocess
 import csv
 import itertools
 
-from photon_correlation import modes
-from photon_correlation import *
+import photon_correlation as pc
 
 class Photon(object):
     def __init__(self, mode, channel=None, pulse=None, time=None,
@@ -20,11 +19,11 @@ class Photon(object):
 
     def __str__(self):
         if not self._string:
-            if self.mode == modes.T2:
+            if self.mode == pc.modes.T2:
                 self._string = ",".join(map(str,
                                             [self.channel,
                                              self.time]))
-            elif self.mode == modes.T3:
+            elif self.mode == pc.modes.T3:
                 self._string = ",".join(map(str,
                                             [self.channel,
                                              self.pulse,
@@ -38,10 +37,10 @@ class Photon(object):
         self._string = string
         parts = string.split(",")
 
-        if self.mode == modes.T2:
+        if self.mode == pc.modes.T2:
             self.channel = int(parts[0])
             self.time = int(parts[1])
-        elif self.mode == modes.T3:
+        elif self.mode == pc.modes.T3:
             self.channel = int(parts[0])
             self.pulse = int(parts[1])
             self.time = int(parts[2])
@@ -53,7 +52,7 @@ class Photon(object):
 def windows(start, step):
     lower = start
     while True:
-        yield(histogram.Limits(lower=lower,
+        yield(pc.histogram.Limits(lower=lower,
                                upper=lower+step))
         lower += step
 
@@ -133,8 +132,7 @@ def byte_stream(photons):
         yield("\n".encode())
         
 if __name__ == "__main__":
-    import picoquant
-    p = picoquant.Picoquant("v20.pt2", decode=True)
+    p = pc.Picoquant("../sample_data/picoharp/v20.pt2", decode=True)
 
 ##    for photon in p:
 ##        print(photon)

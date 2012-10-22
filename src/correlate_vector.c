@@ -1,5 +1,6 @@
+#include <math.h>
+
 #include "correlate_vector.h"
-#include "intensity.h"
 #include "error.h"
 
 /* Tools to read in an correlate a vector of values, rather than photons. This 
@@ -21,7 +22,8 @@ int correlate_vector(FILE *in_stream, FILE *out_stream, options_t *options) {
 		result = -1;
 	} else {
 		while ( ! next_binned_signal(in_stream, signal, counts, options) ) {
-			correlate_binned_signal(correlations, signal, options);
+			print_binned_signal(out_stream, signal, options);
+//			correlate_binned_signal(correlations, signal, options);
 		}
 	}
 
@@ -60,6 +62,11 @@ void print_vector_correlations(FILE *out_stream,
 
 int next_binned_signal(FILE *in_stream, binned_signal_t *signal,
 		counts_t *counts, options_t *options) {
+	int result = 0;
+
+	if ( ! (result = next_counts(in_stream, counts, options)) ) {
+//		binned_signal_push(signal, counts);
+	}
 	return(-1);
 }
 
@@ -69,9 +76,86 @@ void correlate_binned_signal(vector_correlations_t *correlations,
 
 binned_signal_t *allocate_binned_signal(options_t *options) { 
 	binned_signal_t *signal = NULL;
+	int result;
+	int i;
+	int j;
+
+	signal = (binned_signal_t *)malloc(sizeof(binned_signal_t));
+
+	if ( signal == NULL ) {
+		result = -1;
+	} else {
+		signal->n_bins = options->time_limits.bins;
+		signal->channels = options->channels;
+		signal->edges = allocate_edges(options->time_limits.bins);
+		signal->bin = (bin_t *)malloc(sizeof(bin_t)*signal->n_bins);
+
+		if ( signal->bin == NULL ) {
+			result = -1;
+		} else {
+			result = edges_from_limits(signal->edges, &(options->time_limits),
+					options->time_scale);
+		}
+
+		for ( i = 0; ! result && i < signal->n_bins; i++ ) {
+			signal->bin[i].window.lower = (int64_t)floor(
+					signal->edges->bin_edges[i]);
+			signal->bin[i].window.upper = (int64_t)floor(
+					signal->edges->bin_edges[i+1]);
+
+			signal->bin[i].counts = (fraction_t *)malloc(
+					sizeof(fraction_t)*signal->channels);
+			if ( signal->bin[i].counts == NULL ) {
+				result = -1;
+			} else {
+				for ( j = 0; j < signal->channels; j++ ) {
+					signal->bin[i].counts[j].total = 0;
+					signal->bin[i].counts[j].number = 0;
+				}
+			}
+		}
+	}
+
+	if ( result ) {
+		free_binned_signal(&signal);
+		signal = NULL;
+	}
 
 	return(signal);
 }
 
 void free_binned_signal(binned_signal_t **signal) {
+	int i;
+
+	if ( *signal != NULL ) {
+		free_edges(&((*signal)->edges));
+		if ( (*signal)->bin != NULL ) {
+			for ( i = 0; i < (*signal)->n_bins; i++ ) {
+				free((*signal)->bin[i].counts);
+			}
+			free((*signal)->bin);
+		}
+		free(*signal);
+	}
+}
+
+void print_binned_signal(FILE *out_stream, binned_signal_t *signal, 
+		options_t *options) {
+	int i, j;
+
+	if ( options->binary_out ) {
+		error("Binary output not yet supported.\n");
+	} else {
+		for ( i = 0; i < signal->n_bins; i++ ) {
+			fprintf(out_stream, "%"PRIf64",%"PRIf64,
+					signal->edges->bin_edges[i],
+					signal->edges->bin_edges[i+1]);
+			for ( j = 0; j < signal->channels; j++ ) {
+				fprintf(out_stream, ",%"PRId64"/%"PRId64,
+						signal->bin[i].counts[j].total,
+						signal->bin[i].counts[j].number);
+			}
+			fprintf(out_stream, "\n");
+		}
+	}
 }

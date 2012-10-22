@@ -2,7 +2,7 @@ import subprocess
 import math
 import os
 
-from photon_correlation import modes, files, photon
+import photon_correlation as pc
 
 class Limits(object):
     def __init__(self, lower=None, bins=1, upper=None,
@@ -77,14 +77,14 @@ def chunks(L, n=2):
                chunk = list()
 
 def get_bins(bins, mode, time_resolution=1, pulse_resolution=1):
-     if mode == modes.T2:
+     if mode == pc.modes.T2:
           for chunk in chunks(bins, 3):
                channel = int(chunk[0])
                bounds = (float(chunk[1]), float(chunk[2]))
                yield((channel,
                       TimeBin(bounds,
                               resolution=time_resolution)))
-     elif mode == modes.T3:
+     elif mode == pc.modes.T3:
           for chunk in chunks(bins, 5):
               channel = int(chunk[0])
               pulse_bounds = (float(chunk[1]), float(chunk[2]))
@@ -191,7 +191,8 @@ class Histogram(object):
     def __init__(self, photons,
                  order=1,
                  time_limits=None, pulse_limits=None,
-                 time_scale=modes.SCALE_LINEAR, pulse_scale=modes.SCALE_LINEAR,
+                 time_scale=pc.modes.SCALE_LINEAR,
+                 pulse_scale=pc.modes.SCALE_LINEAR,
                  filename=None):
         self.photons = photons
 
@@ -206,20 +207,20 @@ class Histogram(object):
     
         self._bins = None
 
-        if self.photons.mode == modes.T3 and \
+        if self.photons.mode == pc.modes.T3 and \
            self.order > 1 and \
            not (self.time_limits and self.pulse_limits):
             raise(ValueError("T3 mode requires pulse and time limits."))
-        elif self.photons.mode == modes.T2 and \
+        elif self.photons.mode == pc.modes.T2 and \
              not self.time_limits:
             raise(ValueError("T2 mode requires time limits."))
 
-        if not self.photons.mode in modes.TTTR:
+        if not self.photons.mode in pc.modes.TTTR:
             raise(ValueError("Photon stream must be t2 or t3 type."))
 
     def bins(self):
         if not self._bins:
-            cmd = [files.HISTOGRAM,
+            cmd = [pc.files.HISTOGRAM,
                    "--mode", self.photons.mode,
                    "--channels", str(self.photons.channels),
                    "--order", str(self.order)]
@@ -242,7 +243,7 @@ class Histogram(object):
                 if not os.path.isfile(self.filename):
                     histogrammer = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
-                    for my_photon in photon.byte_stream(self.photons):
+                    for my_photon in pc.photon.byte_stream(self.photons):
                         histogrammer.stdin.write(my_photon)
 
                     histogrammer.stdin.write(b'\x04')
@@ -259,7 +260,7 @@ class Histogram(object):
                                                 stdin=subprocess.PIPE,
                                                 stdout=subprocess.PIPE)
 
-                for my_photon in photon.byte_stream(self.photons):
+                for my_photon in pc.photon.byte_stream(self.photons):
                     histogrammer.stdin.write(my_photon)
 
                 histogrammer.stdin.write(b'\x04')
@@ -273,9 +274,7 @@ class Histogram(object):
         return(self._bins)
 
 if __name__ == "__main__":
-    import picoquant
-
-    photons = picoquant.Picoquant("v20.pt3")
+    photons = pc.Picoquant("../sample_data/picoharp/v20.pt3")
 
     lifetime = Histogram(photons,
                          order=1,

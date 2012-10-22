@@ -29,5 +29,7 @@ Channels:
 
 Correlate vector:
 -take notes from notebook and compile the vector correlation method.
+-for the delays, use an array of left/right to get the origin set correctly.
 
 Intensity_to_t2:
+

@@ -1,1 +1,1 @@
-from picoquant import correlate, histogram, photon
+from photon_correlation import correlate, histogram, photon

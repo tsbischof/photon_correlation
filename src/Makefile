@@ -147,7 +147,9 @@ ALL_LIB += ${INTENSITY_TO_T2_LIB}
 TARGETS += intensity_to_t2
 
 CORRELATE_VECTOR_OBJ = correlate_vector_main.o correlate_vector.o ${UTIL} \
-		intensity.o intensity_t2.o intensity_t3.o
+		intensity.o intensity_t2.o intensity_t3.o \
+		histogram_gn.o \
+		vector_g2.o
 ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
 CORRELATE_VECTOR_LIB = 
 ALL_LIB += ${CORRELATE_VECTOR_LIB}
