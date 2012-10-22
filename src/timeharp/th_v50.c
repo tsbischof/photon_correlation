@@ -427,9 +427,11 @@ int th_v50_tttr_record_stream(FILE *in_stream, FILE *out_stream,
 		 */
 		result = fread(&record, sizeof(record), 1, in_stream);
 
-		if ( result != 1 && !feof(in_stream) ) {
-			error("Could not read tttr record.\n");
-			return(PQ_READ_ERROR);
+		if ( result != 1 ) {
+			if ( !feof(in_stream) ) {
+				error("Could not read tttr record.\n");
+				return(PQ_READ_ERROR);
+			}
 		} else {
 			debug("%u, %u, %u, %u, %u\n",
 					record.TimeTag, record.Channel, record.Route, record.Valid,

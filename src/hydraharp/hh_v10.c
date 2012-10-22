@@ -296,9 +296,11 @@ int hh_v10_t2_record_stream(FILE *in_stream, FILE *out_stream,
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);
 		
-		if ( result != 1 && !feof(in_stream) ) {
-			error("Could not read t2 record.\n");
-			return(PQ_READ_ERROR);
+		if ( result != 1 ) { 
+			if ( !feof(in_stream) ) {
+				error("Could not read t2 record.\n");
+				return(PQ_READ_ERROR);
+			}
 		} else {
 			if ( record.special ) {
 				if ( record.channel == 63 ) {
@@ -363,9 +365,11 @@ int hh_v10_t3_record_stream(FILE *in_stream, FILE *out_stream,
 		/* First, read a value from the stream. */
 		result = fread(&record, sizeof(record), 1, in_stream);
 
-		if ( result != 1 && !feof(in_stream) ) {
-			error("Could not read t3 record.\n");
-			return(PQ_READ_ERROR);
+		if ( result != 1 ) {
+			if ( !feof(in_stream) ) {
+				error("Could not read t3 record.\n");
+				return(PQ_READ_ERROR);
+			}
 		} else {
 			if ( record.special ) {
 				if ( record.channel == 63 ) {

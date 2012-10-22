@@ -321,12 +321,11 @@ int ph_v20_t2_record_stream(FILE *in_stream, FILE *out_stream,
 		/* First, read a value from the stream. */
 		result = fread(&record, sizeof(record), 1, in_stream);
 
-		if ( result != 1 && ! feof(in_stream) ) {
-			/* Looping will take care of the end of the file,
-			 * so for now just check for actual IO errors.
-			 */
-			error("Could not read Picoharp t2 record.\n");
-			return(PQ_READ_ERROR);
+		if ( result != 1 ) {
+			if ( ! feof(in_stream) ) {
+				error("Could not read Picoharp t2 record.\n");
+				return(PQ_READ_ERROR);
+			}
 		} else {
 			/* Now, interpret the record as an overflow or data. */
 			if ( record.channel == 15 ) {
@@ -375,9 +374,11 @@ int ph_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 	while ( !feof(in_stream) && record_count < options->number ) {
 		result = fread(&record, sizeof(record), 1, in_stream);
 		
-		if ( result != 1 && !feof(in_stream) ) {
-			error("Could not read t3 record.\n");
-			return(PQ_READ_ERROR);
+		if ( result != 1 ) {
+			if ( !feof(in_stream) ) {
+				error("Could not read t3 record.\n");
+				return(PQ_READ_ERROR);
+			}
 		} else {
 			if ( record.channel == 15 ) {
 				/* Special record. */

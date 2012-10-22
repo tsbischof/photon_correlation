@@ -1,8 +1,8 @@
 from ctypes import *
 import datetime
 
-from photon_correlation.picoquant import picoquant
-from photon_correlation import modes
+import photon_correlation.modes as modes
+import photon_correlation.picoquant.picoquant as picoquant
 
 class ph_v20_display_curve_t(Structure):
     _fields_ = [("MapTo", c_int32),
@@ -22,6 +22,7 @@ class ph_v20_router_channel_t(Structure):
                 ("CFDZCross", c_int32)]
 
 class ph_v20_board_t(Structure):
+    _pack_ = 1
     _fields_ = [("HardwareIdent", c_char*16),
                 ("HardwareVersion", c_char*8),
                 ("HardwareSerial", c_int32),
@@ -36,6 +37,7 @@ class ph_v20_board_t(Structure):
                 ("RtCh", POINTER(ph_v20_router_channel_t))]
 
 class ph_v20_header_t(Structure):
+    _pack_ = 1
     _fields_ = [("CreatorName", c_char*18),
                 ("CreatorVersion", c_char*12),
                 ("FileTime", c_char*18),
@@ -174,4 +176,5 @@ if __name__ == "__main__":
     header = ph_v20_header()
     print(header.pq_header.Ident)
     print(header.ph_header.Brd[0].RtCh[1].InputType)
+    print(header.ph_header.ScriptName)
     
