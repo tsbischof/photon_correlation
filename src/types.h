@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include "strtoll.h"
-
 #ifdef __i386__
 typedef time_t time32_t;
 #endif

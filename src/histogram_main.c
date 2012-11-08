@@ -3,7 +3,6 @@
 #include <getopt.h>
 
 #include "modes.h"
-#include "strings.h"
 #include "error.h"
 #include "files.h"
 #include "histogram.h"

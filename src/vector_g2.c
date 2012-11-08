@@ -14,14 +14,6 @@ void correlate_vector_g2(fraction_t *signal_0, fraction_t *signal_1, int length,
 		/* Check to see that the vectors are long enough to support the delay. 
 		 */
 		if ( abs(delay) < length ) {
-			if ( delay < 0 ) {
-				left = abs(delay);
-				right = 0;
-			} else {
-				left = 0;
-				right = delay;
-			}
-
 			/* Increment the intensity by adding the weighted product of the
 			 * signals, such that the eventual fraction takes the value
 			 * it would have, if the averaging had been done on the fly.

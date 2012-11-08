@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "options.h"
-#include "strings.h"
 #include "error.h"
 #include "files.h"
 #include "limits.h"
@@ -525,7 +524,7 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 
 void version(int argc, char *argv[]) {
 	fprintf(stderr, 
-		"%s v%d.%d (built %s)\n", 
+		"%s v%d.%d (build %s)\n", 
 		argv[0], 
 		VERSION_MAJOR, 
 		VERSION_MINOR,

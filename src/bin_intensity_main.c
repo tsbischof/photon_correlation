@@ -8,7 +8,6 @@
 #include "files.h"
 #include "modes.h"
 #include "error.h"
-#include "strings.h"
 #include "bin_intensity_t2.h"
 #include "bin_intensity_t3.h"
 #include "histogram_gn.h"

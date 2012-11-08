@@ -1,6 +1,6 @@
 TARGET ?= linux
 
-CFLAGS += -Wall -std=c99 
+CFLAGS += -Wall #-std=c99 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
 # errors if not adjusted, so fix it here as needed. This should not (in 
 # principle) affect 64-bit systems adversely, though if we ever get to 
@@ -10,10 +10,9 @@ CFLAGS += -D _FILE_OFFSET_BITS=64
 CFLAGS += -D VERSION_MAJOR=1
 CFLAGS += -D VERSION_MINOR=6 
 CFLAGS += -O3
-CFLAGS += -lm
 #CFLAGS += -fopenmp
 
-LDFLAGS = ${CFLAGS}
+LDFLAGS = ${CFLAGS} -lm
 
 # Set up the compilers and whatnot
 ifeq (${TARGET}, linux)
@@ -21,10 +20,10 @@ ifeq (${TARGET}, linux)
 	RM = rm -f
 	TEST = test
 	CP = cp -p
-	CC = cc
-	LD = cc
+	CC = clang
+	LD = clang
 	CFLAGS += -fPIC
-	DATE := ${shell date +"%Y.%m.%d %H:%M:%S"}
+	DATE := ${shell date +"%Y.%m.%d %H:%M"}
 	# Version info for the executables.
 	CFLAGS += -D VERSION_STRING="${DATE}"
 endif
@@ -53,8 +52,8 @@ TARGETS =
 ALL_OBJ = 
 ALL_LIB = 
 
-UTIL = error.o types.o strings.o files.o options.o modes.o limits.o \
-		t2.o t3.o strtoll.o
+UTIL = error.o types.o files.o options.o modes.o limits.o \
+		t2.o t3.o #strtoll.o strings.o
 
 PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
 		picoquant.o \
@@ -150,10 +149,10 @@ CORRELATE_VECTOR_OBJ = correlate_vector_main.o correlate_vector.o ${UTIL} \
 		intensity.o intensity_t2.o intensity_t3.o \
 		histogram_gn.o \
 		vector_g2.o
-ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
+#ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
 CORRELATE_VECTOR_LIB = 
 ALL_LIB += ${CORRELATE_VECTOR_LIB}
-TARGETS += correlate_vector
+#TARGETS += correlate_vector
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
