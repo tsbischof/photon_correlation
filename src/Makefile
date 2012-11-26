@@ -1,18 +1,18 @@
 TARGET ?= linux
 
-CFLAGS += -Wall #-std=c99 
+CCFLAGS += -Wall #-std=c99 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
 # errors if not adjusted, so fix it here as needed. This should not (in 
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
-CFLAGS += -D _FILE_OFFSET_BITS=64 
+CCFLAGS += -D _FILE_OFFSET_BITS=64 
 
-CFLAGS += -D VERSION_MAJOR=1
-CFLAGS += -D VERSION_MINOR=6 
-CFLAGS += -O3
-#CFLAGS += -fopenmp
+CCFLAGS += -D VERSION="1.6"
+CCFLAGS += -O3
+#CCFLAGS += -emit-llvm
+#CCFLAGS += -fopenmp
 
-LDFLAGS = ${CFLAGS} -lm
+LDFLAGS = -Wall -lm
 
 # Set up the compilers and whatnot
 ifeq (${TARGET}, linux)
@@ -20,12 +20,12 @@ ifeq (${TARGET}, linux)
 	RM = rm -f
 	TEST = test
 	CP = cp -p
-	CC = clang
+	CC = clang 
 	LD = clang
-	CFLAGS += -fPIC
+	CCFLAGS += -fPIC
 	DATE := ${shell date +"%Y.%m.%d %H:%M"}
 	# Version info for the executables.
-	CFLAGS += -D VERSION_STRING="${DATE}"
+	CCFLAGS += -D VERSION_STRING="${DATE}"
 endif
 ifeq (${TARGET}, cygwin)
 	MKDIR = mkdir -p
@@ -149,10 +149,10 @@ CORRELATE_VECTOR_OBJ = correlate_vector_main.o correlate_vector.o ${UTIL} \
 		intensity.o intensity_t2.o intensity_t3.o \
 		histogram_gn.o \
 		vector_g2.o
-#ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
+ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
 CORRELATE_VECTOR_LIB = 
 ALL_LIB += ${CORRELATE_VECTOR_LIB}
-#TARGETS += correlate_vector
+TARGETS += correlate_vector
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -210,7 +210,7 @@ gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
 %.o: %.c
-	${CC} ${CFLAGS} -c -o $@ $< 
+	${CC} ${CCFLAGS} -c -o $@ $< 
 
 clean:
 	${RM} ${sort ${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}

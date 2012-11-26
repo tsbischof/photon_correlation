@@ -524,10 +524,9 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 
 void version(int argc, char *argv[]) {
 	fprintf(stderr, 
-		"%s v%d.%d (build %s)\n", 
+		"%s v%s (build %s)\n", 
 		argv[0], 
-		VERSION_MAJOR, 
-		VERSION_MINOR,
+		STR(VERSION), 
 		STR(VERSION_STRING));
 }
 
