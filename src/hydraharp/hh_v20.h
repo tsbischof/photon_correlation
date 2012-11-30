@@ -94,10 +94,10 @@ typedef struct {
 	int32_t StopOnOvfl;
 	int32_t Restart;
 	int32_t DisplayLinLog;
-	int32_t DisplayTimeAxisFrom;
-	int32_t DisplayTimeAxisTo;
-	int32_t DisplayCountAxisFrom;
-	int32_t DisplayCountAxisTo;
+	uint32_t DisplayTimeAxisFrom;
+	uint32_t DisplayTimeAxisTo;
+	uint32_t DisplayCountAxisFrom;
+	uint32_t DisplayCountAxisTo;
 	hh_v20_display_curve_t DisplayCurve[8];
 	hh_v20_param_t Param[3];
 	int32_t RepeatMode;

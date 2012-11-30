@@ -485,6 +485,8 @@ void hh_v10_header_print(FILE *out_stream,
 			hh_header->DisplayTimeAxisFrom);
 	fprintf(out_stream, "DisplayTimeAxisTo = %"PRId32"\n", 
 			hh_header->DisplayTimeAxisTo);
+	fprintf(out_stream, "DisplayCountAxisFrom = %"PRId32"\n",
+			hh_header->DisplayTimeAxisFrom);
 	fprintf(out_stream, "DisplayCountAxisTo = %"PRId32"\n",
 			hh_header->DisplayCountAxisTo);
 

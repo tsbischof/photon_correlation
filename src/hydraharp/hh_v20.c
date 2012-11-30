@@ -375,7 +375,7 @@ int hh_v20_t3_record_stream(FILE *in_stream, FILE *out_stream,
 				if ( record.channel == 63 ) {
 					/* Overflow */
 					overflows += record.dtime;
-					base_nsync += record.dtime*HH_T3_OVERFLOW;
+					base_nsync += record.nsync*HH_T3_OVERFLOW;
 				} else {
 					/* External marker.  */
 					external_marker(out_stream, record.channel, options);
@@ -481,11 +481,13 @@ void hh_v20_header_print(FILE *out_stream,
 	fprintf(out_stream, "Restart = %"PRId32"\n", hh_header->Restart);
 	fprintf(out_stream, "DisplayLinLog = %"PRId32"\n", 
 			hh_header->DisplayLinLog);
-	fprintf(out_stream, "DisplayTimeAxisFrom = %"PRId32"\n", 
+	fprintf(out_stream, "DisplayTimeAxisFrom = %"PRIu32"\n", 
 			hh_header->DisplayTimeAxisFrom);
-	fprintf(out_stream, "DisplayTimeAxisTo = %"PRId32"\n", 
+	fprintf(out_stream, "DisplayTimeAxisTo = %"PRIu32"\n", 
 			hh_header->DisplayTimeAxisTo);
-	fprintf(out_stream, "DisplayCountAxisTo = %"PRId32"\n",
+	fprintf(out_stream, "DisplayCountAxisFrom = %"PRIu32"\n",
+			hh_header->DisplayCountAxisFrom);
+	fprintf(out_stream, "DisplayCountAxisTo = %"PRIu32"\n",
 			hh_header->DisplayCountAxisTo);
 
 	for ( i = 0; i < 8; i++ ) {

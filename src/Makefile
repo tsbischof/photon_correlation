@@ -149,10 +149,10 @@ CORRELATE_VECTOR_OBJ = correlate_vector_main.o correlate_vector.o ${UTIL} \
 		intensity.o intensity_t2.o intensity_t3.o \
 		histogram_gn.o \
 		vector_g2.o
-ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
+#ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
 CORRELATE_VECTOR_LIB = 
-ALL_LIB += ${CORRELATE_VECTOR_LIB}
-TARGETS += correlate_vector
+#ALL_LIB += ${CORRELATE_VECTOR_LIB}
+#TARGETS += correlate_vector
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
