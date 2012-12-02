@@ -43,8 +43,8 @@ Import("lib_dir")
 Import("include_dir")
 
 # Set up the main programs
-common = ["types.c", "error.c", "strings.c", "files.c", "options.c", "modes.c",
-          "limits.c", "strtoll.c", "t2.c", "t3.c"]
+common = ["types.c", "error.c", "files.c", "options.c", "modes.c",
+          "limits.c", "t2.c", "t3.c"]
 
 program_files = {
     "bin_intensity": ["bin_intensity_main.c", "bin_intensity.c",
@@ -91,19 +91,16 @@ for name, program in programs.items():
     sources.update(my_sources)
     headers.update(my_headers)
 sources = list(sources)
-headers = ["timeharp/th_v60.h"]
+headers = list(headers)
 
-lib_sources = filter(lambda x: "main" not in x, sources)
-lib_headers = headers
+lib_sources = list(filter(lambda x: "main" not in x, sources))
+lib_headers = list(filter(lambda x: "main" not in x, headers))
 
-libstatic = libphoton_correlation_static = env.Library(
-    target="photon_correlation",
-    source=lib_sources)
-
-libshared = libphoton_correlation_shared = env.SharedLibrary(
-    target="photon_correlation",
-    source=lib_sources)
+libshared = env.SharedLibrary(target="photon_correlation", source=lib_sources)
 
 env.Install(dir=bin_dir, source=programs.values())
-env.Install(dir=lib_dir, source=[libstatic, libshared])
+env.Install(dir=lib_dir, source=[libshared])
+
+# If you just do env.Install(dir=include_dir, source=lib_headers), the list
+# of headers will be flattened. Do them individually, instead.
 env.Install(dir=include_dir, source=lib_headers)
