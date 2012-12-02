@@ -39,6 +39,7 @@ SConsEnvironment.FindAllSourceFiles = FindAllSourceFiles
 
 Import("env")
 Import("bin_dir")
+Import("py_bin_dir")
 Import("lib_dir")
 Import("include_dir")
 
@@ -99,6 +100,7 @@ lib_headers = list(filter(lambda x: "main" not in x, headers))
 libshared = env.SharedLibrary(target="photon_correlation", source=lib_sources)
 
 env.Install(dir=bin_dir, source=programs.values())
+env.Install(dir=py_bin_dir, source=programs.values())
 env.Install(dir=lib_dir, source=[libshared])
 
 # If you just do env.Install(dir=include_dir, source=lib_headers), the list

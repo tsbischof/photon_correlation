@@ -20,12 +20,14 @@ env["LINKFLAGS"] = ["-lm"]
 
 build_dir = "build"
 bin_dir = os.path.join(os.path.expanduser("~"), "bin")
+py_bin_dir = os.path.join(os.getcwd(), "bin")
 lib_dir = os.path.join(os.path.expanduser("~"), "lib")
 include_dir = os.path.join(os.path.expanduser("~"),
                            "include",
                            "photon_correlation")
 
 env.Alias("install", bin_dir)
+env.Alias("install", py_bin_dir)
 env.Alias("install", lib_dir)
 env.Alias("install", include_dir)
 
@@ -33,5 +35,6 @@ SConscript(os.path.join("src", "SConscript"),
            variant_dir=build_dir,
            exports={"env": env,
                     "bin_dir": bin_dir,
+                    "py_bin_dir": py_bin_dir,
                     "lib_dir": lib_dir,
                     "include_dir": include_dir})
