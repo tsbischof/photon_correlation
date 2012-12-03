@@ -523,11 +523,15 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 }
 
 void version(int argc, char *argv[]) {
-	fprintf(stderr, 
+/*	fprintf(stderr, 
 		"%s v%s (build %s)\n", 
 		argv[0], 
-		STR(VERSION), 
-		STR(VERSION_STRING));
+		STR(VERSION),
+		STR(VERSION_STRING)); */
+	fprintf(stderr, 
+		"%s v%s\n", 
+		argv[0], 
+		STR(VERSION));
 }
 
 int is_option(int option, program_options_t *program_options) {

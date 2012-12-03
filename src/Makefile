@@ -1,6 +1,4 @@
-TARGET ?= linux
-
-CCFLAGS += -Wall #-std=c99 
+CCFLAGS := -Wall #-std=c99 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
 # errors if not adjusted, so fix it here as needed. This should not (in 
 # principle) affect 64-bit systems adversely, though if we ever get to 
@@ -14,40 +12,19 @@ CCFLAGS += -O3
 
 LDFLAGS = -Wall -lm
 
-# Set up the compilers and whatnot
-ifeq (${TARGET}, linux)
-	MKDIR = mkdir -p
-	RM = rm -f
-	TEST = test
-	CP = cp -p
-	CC = clang 
-	LD = clang
-	CCFLAGS += -fPIC
-	DATE := ${shell date +"%Y.%m.%d %H:%M"}
-	# Version info for the executables.
-	CCFLAGS += -D VERSION_STRING="${DATE}"
-endif
-ifeq (${TARGET}, cygwin)
-	MKDIR = mkdir -p
-	RM = rm -f
-	TEST = test
-	CP = cp -p 
-	CC = cc
-	LD = cc
-endif
-ifeq (${TARGET}, win32)
-	MKDIR = mkdir
-	RM = del /Q
-	CP = copy
-	CC = mingw32-gcc
-	LD = mingw32-gcc
-endif
-
+MKDIR = mkdir -p
+RM = rm -f
+TEST = test
+CP = cp -p
+CC = clang 
+LD = clang
+CCFLAGS += -fPIC
 
 # Define the targets and their properties.
-INSTALL_DIR = ${HOME}/bin
-LIB_DIR = ${HOME}/lib
-INCLUDE_DIR = ${HOME}/include/photon_correlation
+PREFIX = /usr/local
+INSTALL_DIR = ${PREFIX}/bin
+LIB_DIR = ${PREFIX}/lib
+INCLUDE_DIR = ${PREFIX}/include/photon_correlation
 TARGETS = 
 ALL_OBJ = 
 ALL_LIB = 
