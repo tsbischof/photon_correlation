@@ -209,11 +209,8 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
-%.o: %.bc
+%.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
-
-%.bc: %.c
-	${BC} ${BCFLAGS} -o $@ $<
 
 clean:
 	${RM} ${sort ${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}

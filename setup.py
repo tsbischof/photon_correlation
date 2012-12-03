@@ -23,5 +23,7 @@ setup(
     version="1.6",
     author="Thomas Bischof",
     author_email="tbischof@mit.edu",
+    url="",
     packages=find_packages(),
     data_files=[("bin", binaries)])
+    
