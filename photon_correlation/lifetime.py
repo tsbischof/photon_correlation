@@ -1,50 +1,46 @@
 import subprocess
+import os
 
 from photon_correlation import histogram, modes, photon
 
-def lifetime(photons, time_limits, filename=None):
-##    if not photons.mode == modes.T3:
-##        raise(AttributeError("Photon stream must be t3 mode."))
-##
-##    histogram_cmd = ["histogram",
-##                     "--mode", "t3",
-##                     "--order", "1",
-##                     "--time", str(time_limits)]
-##
-##    if filename:
-##        histogram_cmd.extend(["--file-out", filename])
-##        histogram = subprocess.Popen(
-##            histogram_cmd,
-##            stdin=subprocess.PIPE)
-##        for my_photon in photon.byte_stream(photons):
-##            histogram.stdin.write(my_photon)
-##    else:
-##        histogram = subprocess.Popen(
-##            histogram_cmd,
-##            stdin=subprocess.PIPE,
-##            stdout=subprocess.PIPE)
-##        for my_photon in photon.byte_stream(photons):
-##            histogram.stdin.write(my_photon)
-##
-##        return(histogram.communicate()[0])
-        
+def lifetime(photons, time_limits, filename=None):      
     return(histogram.Histogram(photons,
                                order=1,
                                time_limits=time_limits,
                                filename=filename))
 
-def time_dependent_lifetime(photons, time_limits, pulse_bin, filename=None):
+def time_dependent_lifetime(photons, time_limits, pulse_bin,
+                            run_dir=os.getcwd(), filename=None):
+    if not photons.mode == modes.T3:
+        raise(TypeError("Photons from {0} are not of t3 "
+                        "type.".format(filename)))
+    
     stream = photon.WindowedStream(photons, pulse_bin=pulse_bin)
+        
+    try:
+        os.makedirs(run_dir)
+    except Exception as error:
+        if os.path.isdir(run_dir):
+            pass
+        else:
+            raise(error)
 
     for index, window in enumerate(stream):
-        limits, my_photons = window
-        my_lifetime = lifetime(my_photons,
+        limits, photons = window
+        if filename:
+            my_filename = os.path.join(
+                run_dir,
+                "{0}.g1.{1:020d}_{2:020d}".format(
+                    filename,
+                    limits.lower,
+                    limits.upper))
+        else:
+            my_filename = None
+            
+        my_lifetime = lifetime(photons,
                                time_limits=time_limits,
-                               filename="{0}.g1.{1:020d}_{2:020d}".format(
-                                   filename,
-                                   limits.lower,
-                                   limits.upper))
-
+                               filename=my_filename)
+        
         yield(limits, my_lifetime.bins())
 
 if __name__ == "__main__":

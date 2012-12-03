@@ -240,7 +240,7 @@ class Histogram(object):
             if self.filename:
                 # Writing to file, we must process the whole thing then pick
                 # the data up from that file:
-                if not os.path.isfile(self.filename):
+                if True or not os.path.isfile(self.filename):
                     histogrammer = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
                     for my_photon in pc.photon.byte_stream(self.photons):

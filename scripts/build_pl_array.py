@@ -5,7 +5,6 @@ import re
 import optparse
 import logging 
 import os
-import getpass
 import operator
 
 #from picoquant import histogram
@@ -14,29 +13,20 @@ def rot90(LoL):
     for i in range(len(LoL[0])):
         yield(map(operator.itemgetter(i), LoL))
 
-def get_filenames(name_base, as_user=getpass.getuser()):
-    root_dir, name = os.path.split(name_base)
+def get_filenames(run_dir):
+    logging.debug("Searching directory: {0}".format(run_dir))
 
-    if not root_dir:
-        root_dir = os.getcwd()
-
-    logging.debug("Searching directory: {0}".format(root_dir))
-
-    if as_user == "rcorrea":
-        key = "number"
-        gn_parser = re.compile("(?P<name>.+)\.g[0-9]{1}\.(?P<number>[0-9]{8})$")
-    else:
-        key = "time_start"
-        gn_parser = re.compile("(?P<name>.+)\.g[0-9]{1}\."
-                               "(?P<time_start>[0-9]{20})_"
-                               "(?P<time_end>[0-9]{20})$")
+    key = "time_start"
+    gn_parser = re.compile("(?P<name>.+)\.g[0-9]{1}\."
+                           "(?P<time_start>[0-9]{20})_"
+                           "(?P<time_end>[0-9]{20})$")
 
     return(
-        sorted(
-            filter(lambda x: gn_parser.search(x),
-                   filter(lambda y: name in y,
-                          os.listdir(root_dir))),
-            key=lambda x: gn_parser.search(x).group(key)))
+        map(lambda y: os.path.join(run_dir,
+                                   y),
+            sorted(
+                filter(lambda x: gn_parser.search(x), os.listdir(run_dir)),
+                key=lambda x: gn_parser.search(x).group(key))))
 
 def get_data(filename, strip_autocorrelations):
     with open(filename) as stream:
@@ -58,17 +48,17 @@ def get_data(filename, strip_autocorrelations):
                 # but we will not here
                 yield(line)
 
-def gather_histograms(name_base, strip_autocorrelations, as_user):
-    filenames = list(get_filenames(name_base, as_user))
+def gather_histograms(root_dir, strip_autocorrelations):
+    filenames = list(get_filenames(root_dir))
 
     try:
         first = filenames[0]
         logging.debug("Found {0} files to process.".format(len(filenames)))
     except:
-        logging.error("No files to process for {0}.".format(name_base))
+        logging.error("No files to process for {0}.".format(root_dir))
         return(False)
     
-    dst_filename = "{0}.run".format(name_base)
+    dst_filename = "{0}.run".format(root_dir)
     logging.debug("Writing data to {0}".format(dst_filename))
     with open(dst_filename, "w") as dst_file:
         writer = csv.writer(dst_file)
@@ -94,10 +84,6 @@ if __name__ == "__main__":
     parser.add_option("-a", "--auto", dest="strip_autocorrelations",
                       help="Keep the autocorrelations in the histograms.",
                       action="store_false", default=True)
-    parser.add_option("-u", "--as-user", dest="as_user",
-                      help="Run the program as though it is as the specified"
-                           "user.",
-                      action="store", type=str, default=getpass.getuser())
     parser.add_option("-V", "--verbose", dest="verbose",
                       help="Debug-level messages.",
                       action="store_true", default=False)
@@ -110,6 +96,5 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.ERROR)
 
     for root_dir in args:
-        gather_histograms(root_dir, options.strip_autocorrelations,
-                          options.as_user)
+        gather_histograms(root_dir, options.strip_autocorrelations)
  

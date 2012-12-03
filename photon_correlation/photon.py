@@ -53,7 +53,7 @@ def windows(start, step):
     lower = start
     while True:
         yield(pc.histogram.Limits(lower=lower,
-                               upper=lower+step))
+                                  upper=lower+step))
         lower += step
 
 class PhotonStream(object):
@@ -122,7 +122,6 @@ window sequentially."""
             raise(StopIteration)
 
 def byte_stream(photons):
-    
     for photon in photons:
         if isinstance(photon, bytes):
             yield(photon)
