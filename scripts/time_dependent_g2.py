@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import optparse
 import csv
@@ -33,7 +33,7 @@ def correlate_photons(filename, channels, time_limits, photons):
     with open(photons_filename, "w") as photon_file:
         writer = csv.writer(photon_file)
         for photon in photons:
-            writer.writerow(map(str, photon))
+            writer.writerow(list(map(str, photon)))
 
     with open(photons_filename, "r") as photon_file:
         correlator = subprocess.Popen(
@@ -55,10 +55,11 @@ def correlate_photons(filename, channels, time_limits, photons):
     os.remove(photons_filename)
 
 def time_dependent_g2(filename, channels, bin_width, time_limits):
-    photon_stream = csv.reader(
-        subprocess.Popen([PICOQUANT,
-                          "--file-in", filename],
-                         stdout=subprocess.PIPE).stdout)
+    photon_stream = map(lambda x: x.decode().strip().split(","),
+                        subprocess.Popen(
+                            [PICOQUANT,
+                             "--file-in", filename],
+                            stdout=subprocess.PIPE).stdout)
 
     time_limit = bin_width
 
