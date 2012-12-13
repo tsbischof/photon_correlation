@@ -1,0 +1,9 @@
+*.pyc
+__pycache__
+*.o
+*.so
+build
+dist
+sample_data
+manuals
+doc/photon_correlation.pdf
