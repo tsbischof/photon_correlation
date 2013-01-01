@@ -9,9 +9,9 @@ int main(int argc, char *argv[]) {
 	options_t options;
 
 	int result = 0;
-	FILE *in_stream = NULL;
-	FILE *t3_in_stream = NULL;
-	FILE *out_stream = NULL;
+	FILE *stream_in = NULL;
+	FILE *t3_stream_in = NULL;
+	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
 		11,
@@ -68,15 +68,15 @@ int main(int argc, char *argv[]) {
 
 		if ( getpid() == picoquant_pid ) {
 			/* Create the raw photon stream. */
-			if ( stream_open(&in_stream, ...); ) {
+			if ( stream_open(&stream_in, ...); ) {
 			
-			out_stream = fdopen(picoquant_correlate_pipe[1]);
+			stream_out = fdopen(picoquant_correlate_pipe[1]);
 			close(picoquant_correlate_pipe[0]);
 
-			picoquant_dispatch(in_stream, out_stream, &options);
+			picoquant_dispatch(stream_in, stream_out, &options);
 
-			fclose(out_stream);
-			stream_close(in_stream, stdin);
+			fclose(stream_out);
+			stream_close(stream_in, stdin);
 		} else {
 			/* Create the correlate/histogram pair and start doing things. */
 			pipe(correlate_histogram_pipe);

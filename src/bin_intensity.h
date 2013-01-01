@@ -5,7 +5,7 @@
 #include "limits.h"
 #include "options.h"
 
-int bin_intensity_dispatch(FILE *in_stream, FILE *out_stream, 
+int bin_intensity_dispatch(FILE *stream_in, FILE *stream_out, 
 		options_t *options);
 
 #endif

@@ -4,7 +4,7 @@
 
 #include "error.h"
 
-int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
+int correlate_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
 	/* A t2 correlation is a direct correlation of absolute times. Therefore,
 	 * we want to take the difference between times on the channels and output
 	 * the channels (in order, so we can later track sign) and the time 
@@ -36,12 +36,12 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Start the correlation process. */
 	debug("Starting the correlation process.\n");
-	while ( ! done && ! next_t2_queue_correlate(in_stream, queue, options) ) {
+	while ( ! done && ! next_t2_queue_correlate(stream_in, queue, options) ) {
 		/* For each entry in the queue from the left to right index, 
 		 * determine the distance and sign by referencing the correct 
 		 * channel combination.
 		 */	
-		correlate_t2_block(out_stream, &record_number, queue, permutations,
+		correlate_t2_block(stream_out, &record_number, queue, permutations,
 					offsets, correlation_block, correlation, options); 
 	}
 
@@ -62,7 +62,7 @@ int correlate_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	return(result);
 }
 
-int next_t2_queue_correlate(FILE *in_stream, 
+int next_t2_queue_correlate(FILE *stream_in, 
 		t2_queue_t *queue, options_t *options) {
 	t2_t left, right;
 
@@ -75,7 +75,7 @@ int next_t2_queue_correlate(FILE *in_stream,
 		t2_queue_front(queue, &left);
 		t2_queue_back(queue, &right);
 
-		if ( feof(in_stream) ) {
+		if ( feof(stream_in) ) {
 			/* If we are at the end of the file, keep moving the left index to
 			 * the right, until we reach it.
 			 *
@@ -95,13 +95,13 @@ int next_t2_queue_correlate(FILE *in_stream,
 			/* If we still have more file to go, and are not outside the 
  			 * distance bounds, get another entry.
 			 */
-			if ( ! next_t2(in_stream, &right, options) ) {
+			if ( ! next_t2(stream_in, &right, options) ) {
 				/* Found a photon. */
 				if ( t2_queue_push(queue, &right) ) {
 					error("Could not add next photon to queue.\n");
 					return(-1);
 				}
-			} else if ( ! feof(in_stream) ) {
+			} else if ( ! feof(stream_in) ) {
 				/* No photon, not at the end of the stream. */
 				error("Error while reading t2 stream.\n");
 				return(-1);
@@ -130,7 +130,7 @@ int over_min_distance_t2(t2_t *left, t2_t *right, options_t *options) {
 	return( i64abs(right->time - left->time) >= options->min_time_distance ) ;
 }
 
-int correlate_t2_block(FILE *out_stream, int64_t *record_number,
+int correlate_t2_block(FILE *stream_out, int64_t *record_number,
 		t2_queue_t *queue, 
 		permutations_t *permutations,
 		offsets_t *offsets, t2_t *correlation_block, 
@@ -202,7 +202,7 @@ int correlate_t2_block(FILE *out_stream, int64_t *record_number,
 					correlation->records[i].time = (right.time - left.time);
 				}
 
-				print_t2_correlation(out_stream, correlation, NEWLINE, options);
+				print_t2_correlation(stream_out, correlation, NEWLINE, options);
 			}
 		} else {
 			debug("Not close enough for correlation.\n");
@@ -244,7 +244,7 @@ void free_t2_correlation(t2_correlation_t **correlation) {
 	free(*correlation);
 }
 
-int next_t2_correlation(FILE *in_stream, t2_correlation_t *correlation,
+int next_t2_correlation(FILE *stream_in, t2_correlation_t *correlation,
 			options_t *options) {
 	int result;
 	int i;
@@ -253,22 +253,22 @@ int next_t2_correlation(FILE *in_stream, t2_correlation_t *correlation,
 		result = (fread(&(correlation->records[0].channel), 
 					sizeof(correlation->records[0].channel),
 					1,
-					in_stream) != 1);
+					stream_in) != 1);
 	} else {
-		result = (fscanf(in_stream, 
+		result = (fscanf(stream_in, 
 						"%"SCNd32",", 
 						&(correlation->records[0].channel)) != 1);
 	}
 	
-	if ( result && ! feof(in_stream) ) {
+	if ( result && ! feof(stream_in) ) {
 		error("Could not read reference channel from stream\n");
 	} else { 
 		for ( i = 1; ! result && i < options->order; i++ ) {
-			result = next_t2(in_stream, 
+			result = next_t2(stream_in, 
 					&(correlation->records[i]),
 					options);
 			if ( ! result && ! options->binary_in ) {
-				fscanf(in_stream, ",");
+				fscanf(stream_in, ",");
 			}
 		}
 	}
@@ -280,7 +280,7 @@ int next_t2_correlation(FILE *in_stream, t2_correlation_t *correlation,
 	return(result);
 }
 
-void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation,
+void print_t2_correlation(FILE *stream_out, t2_correlation_t *correlation,
 		int print_newline, options_t *options) {
 	int i;
 
@@ -288,28 +288,28 @@ void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation,
 		fwrite(&(correlation->records[0].channel), 
 				sizeof(correlation->records[0].channel),
 				1,
-				out_stream);
+				stream_out);
 
 		for ( i = 1; i < correlation->order; i++ ) {
-			print_t2(out_stream, &(correlation->records[i]), NO_NEWLINE, 
+			print_t2(stream_out, &(correlation->records[i]), NO_NEWLINE, 
 					options);
 		}
 	} else {
-		fprintf(out_stream, "%"PRId32",", correlation->records[0].channel);
+		fprintf(stream_out, "%"PRId32",", correlation->records[0].channel);
 		
 		for ( i = 1; i < correlation->order; i++ ) {
-			print_t2(out_stream, &(correlation->records[i]), NO_NEWLINE,
+			print_t2(stream_out, &(correlation->records[i]), NO_NEWLINE,
 					options);
 			
 			/* All but the last get a comma. */
 			if ( i+1 != correlation->order ) {
-				fprintf(out_stream, ",");
+				fprintf(stream_out, ",");
 			}
 	
 		}
 
 		if ( print_newline == NEWLINE ) {
-			fprintf(out_stream, "\n");
+			fprintf(stream_out, "\n");
 		}
 	}
 }
@@ -320,7 +320,7 @@ void print_t2_correlation(FILE *out_stream, t2_correlation_t *correlation,
  * on the stop channel either produces a correlation (if photon on start 
  * channel) or nothing (if no photon)
  */
-int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream, 
+int correlate_t2_start_stop(FILE *stream_in, FILE *stream_out, 
 		options_t *options) {
 	t2_t ref_photon;
 	t2_t record;
@@ -343,7 +343,7 @@ int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 	correlation->records[0].channel = 0;
 	correlation->records[1].channel = 1;
 
-	while ( ! next_t2(in_stream, &record, options) ) {
+	while ( ! next_t2(stream_in, &record, options) ) {
 		if ( record.channel == 0 ) {
 			ref_photon.channel = record.channel;
 			ref_photon.time = record.time;
@@ -355,7 +355,7 @@ int correlate_t2_start_stop(FILE *in_stream, FILE *out_stream,
 
 				correlation->records[1].time = record.time - ref_photon.time;
 
-				print_t2_correlation(out_stream, correlation, NEWLINE, options);
+				print_t2_correlation(stream_out, correlation, NEWLINE, options);
 
 				ref_photon.channel = -1;
 			}

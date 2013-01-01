@@ -31,7 +31,7 @@ int edge_index_linear(edges_t *edges, int64_t value);
 int edge_index_log(edges_t *edges, int64_t value);
 int edge_index_bsearch(edges_t *edges, int64_t value);
 int edges_from_limits(edges_t *edges, limits_t *limits, int scale);
-void print_edges(FILE *out_stream, edges_t *edges);
+void print_edges(FILE *stream_out, edges_t *edges);
 
 gn_histogram_t *allocate_gn_histogram(int n_dimensions, edges_t **dimensions);
 void free_gn_histogram(gn_histogram_t **histogram);
@@ -44,7 +44,7 @@ int gn_histogram_get_index_from_indices(gn_histogram_t *histogram,
 		int *indices);
 int gn_histogram_increment(gn_histogram_t *histogram,
 		int64_t *values);
-void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram, 
+void print_gn_histogram(FILE *stream_out, gn_histogram_t *histogram, 
 		options_t *options);
 int gn_histogram_next_index(gn_histogram_t *histogram, int *indices);
 

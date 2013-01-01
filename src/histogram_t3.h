@@ -23,11 +23,11 @@ t3_histograms_t *make_t3_histograms(options_t *options);
 void free_t3_histograms(t3_histograms_t **histograms);
 int t3_histograms_increment(t3_histograms_t *histograms, 
 		t3_correlation_t *record);
-void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms,
+void print_t3_histograms(FILE *stream_out, t3_histograms_t *histograms,
 		options_t *options);
 
-int histogram_t3(FILE *in_stream, FILE *out_stream, options_t *options);
-int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options);
-int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options);
+int histogram_t3(FILE *stream_in, FILE *stream_out, options_t *options);
+int histogram_t3_g1(FILE *stream_in, FILE *stream_out, options_t *options);
+int histogram_t3_gn(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

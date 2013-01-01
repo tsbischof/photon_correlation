@@ -10,8 +10,8 @@ typedef struct {
 	uint32_t counts;
 } intensity_t;
 
-int next_intensity(FILE *in_stream, intensity_t *intensity,
+int next_intensity(FILE *stream_in, intensity_t *intensity,
 		options_t *options);
-int intensity_to_t2(FILE *in_stream, FILE *out_stream, options_t *options);
+int intensity_to_t2(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

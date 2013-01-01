@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "options.h"
 
-int histogram_dispatch(FILE *in_stream, FILE *out_stream, options_t *options);
+int histogram_dispatch(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

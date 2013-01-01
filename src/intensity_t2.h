@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "options.h"
 
-int intensity_t2(FILE *in_stream, FILE *out_stream, options_t *options);
+int intensity_t2(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
 
 	int result = 0;
 
-	FILE *in_stream = NULL;
-	FILE *out_stream = NULL;
+	FILE *stream_in = NULL;
+	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
 		7,
@@ -26,20 +26,20 @@ int main(int argc, char *argv[]) {
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&in_stream, options.in_filename,
-				&out_stream, options.out_filename);
+	result += open_streams(&stream_in, options.in_filename,
+				&stream_out, options.out_filename);
 
 	if ( ! result ) {
-		while ( ! next_t3(in_stream, &t3_photon, &options) ) {
+		while ( ! next_t3(stream_in, &t3_photon, &options) ) {
 			t2_photon.channel = t3_photon.channel;
 			t2_photon.time = t3_photon.pulse;
 
-			print_t2(out_stream, &t2_photon, NEWLINE, &options);
+			print_t2(stream_out, &t2_photon, NEWLINE, &options);
 		}
 	}
 
 	free_options(&options);
-	free_streams(in_stream, out_stream);
+	free_streams(stream_in, stream_out);
 
 	return(parse_result(result));
 }

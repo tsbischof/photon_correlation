@@ -2,7 +2,7 @@
 
 #include "error.h"
 
-int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
+int histogram_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
 	t2_correlation_t *record;
 	t2_histograms_t *histograms;
 	int result = 0;
@@ -22,7 +22,7 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 	} else {
 		/* Loop through the data. 
 		 */
-		while ( ! next_t2_correlation(in_stream, record, options) ) {
+		while ( ! next_t2_correlation(stream_in, record, options) ) {
 			if ( verbose ) {
 				fprintf(stderr, "Found record:\n");
 				print_t2_correlation(stderr, record, NEWLINE, options);
@@ -34,7 +34,7 @@ int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
-		print_t2_histograms(out_stream, histograms, options);
+		print_t2_histograms(stream_out, histograms, options);
 	} else {
 		error("Error while processing histograms: %d\n", result);
 		//printf("%d\n", result);
@@ -191,11 +191,11 @@ int t2_histograms_increment(t2_histograms_t *histograms,
 	return(result);
 }
 
-void print_t2_histograms(FILE *out_stream, t2_histograms_t *histograms,
+void print_t2_histograms(FILE *stream_out, t2_histograms_t *histograms,
 		options_t *options) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
-		print_gn_histogram(out_stream, histograms->histograms[i], options);
+		print_gn_histogram(stream_out, histograms->histograms[i], options);
 	}
 }
 

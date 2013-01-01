@@ -5,14 +5,14 @@
 #include "error.h"
 #include "t2.h"
 
-int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
+int next_t2(FILE *stream_in, t2_t *record, options_t *options) {
 	int result;
 
 	if ( options->binary_in ) {
-		result = fread(record, sizeof(t2_t), 1, in_stream);
+		result = fread(record, sizeof(t2_t), 1, stream_in);
 		result = (result != 1);
 	} else {
-		result = fscanf(in_stream, 
+		result = fscanf(stream_in, 
 				"%"SCNd32",%"SCNd64,
 			 	&(record->channel),
 				&(record->time));
@@ -22,17 +22,17 @@ int next_t2(FILE *in_stream, t2_t *record, options_t *options) {
 	return(result);
 }
 
-void print_t2(FILE *out_stream, t2_t *record, int print_newline,
+void print_t2(FILE *stream_out, t2_t *record, int print_newline,
 		options_t *options) {
 	if ( options->binary_out ) {
-		fwrite(record, sizeof(t2_t), 1, out_stream);
+		fwrite(record, sizeof(t2_t), 1, stream_out);
 	} else {
-		fprintf(out_stream, "%"PRId32",%"PRId64, 
+		fprintf(stream_out, "%"PRId32",%"PRId64, 
 				record->channel,
 				record->time);
 
 		if ( print_newline == NEWLINE ) {
-			fprintf(out_stream, "\n");
+			fprintf(stream_out, "\n");
 		}
 	}
 }
@@ -219,10 +219,10 @@ void t2_queue_sort(t2_queue_t *queue) {
 	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);*/
 }
 
-void yield_t2_queue(FILE *out_stream, t2_queue_t *queue, options_t *options) {
+void yield_t2_queue(FILE *stream_out, t2_queue_t *queue, options_t *options) {
 	t2_t record;
 	while ( ! t2_queue_pop(queue, &record) ) {
-		print_t2(out_stream, &record, NEWLINE, options);
+		print_t2(stream_out, &record, NEWLINE, options);
 	}
 }
 
@@ -265,11 +265,11 @@ void next_t2_window(t2_window_t *window) {
 }
 
 int init_t2_windowed_stream(t2_windowed_stream_t *stream, 
-		FILE *in_stream, options_t *options) {
+		FILE *stream_in, options_t *options) {
 	stream->yielded_photon = 0;
-	stream->in_stream = in_stream;
+	stream->stream_in = stream_in;
 
-	if ( next_t2(in_stream, &(stream->current_photon), options) ) {
+	if ( next_t2(stream_in, &(stream->current_photon), options) ) {
 		return(-1);
 	} else {
 		init_t2_window(&(stream->window), 
@@ -287,7 +287,7 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 	}
 		
 	if ( stream->current_photon.channel == -1 ) {
-		if ( next_t2(stream->in_stream, 
+		if ( next_t2(stream->stream_in, 
 				&(stream->current_photon), options) ) {
 			return(-1);
 		}

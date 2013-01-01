@@ -5,13 +5,13 @@
 #include "t2.h"
 #include "t3.h"
 
-int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
+int channels_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 	debug("Channels!\n");
 
 	if ( options->mode == MODE_T2 ) {
-		return(channels_t2(in_stream, out_stream, options));
+		return(channels_t2(stream_in, stream_out, options));
 	} else if ( options->mode == MODE_T3 ) {
-		return(channels_t3(in_stream, out_stream, options));
+		return(channels_t3(stream_in, stream_out, options));
 	} else {
 		error("Mode not supported: %s\n", options->mode_string);
 		return(-1);

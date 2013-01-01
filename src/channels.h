@@ -7,7 +7,7 @@
 #include "channels_t2.h"
 #include "channels_t3.h"
 
-int channels_dispatch(FILE *in_stream, FILE *out_stream, options_t *options);
+int channels_dispatch(FILE *stream_in, FILE *stream_out, options_t *options);
 int64_t offset_difference(int64_t *offsets, int n);
 
 #endif

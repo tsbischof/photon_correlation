@@ -3,7 +3,7 @@
 #include "error.h"
 #include "bin_intensity_t3.h"
 
-int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
+int bin_intensity_t3(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result = 0;
 	t3_queue_t *queue;
 	t3_bin_counts_t *bin_counts;
@@ -21,9 +21,9 @@ int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	if ( queue == NULL || bin_counts == NULL ) {
 		result = -1;
 	} else {
-		while ( !feof(in_stream) ) {
+		while ( !feof(stream_in) ) {
 			/* Populate the first photon in the stream. */
-			next_t3(in_stream, &record, options);
+			next_t3(stream_in, &record, options);
 			if ( options->set_start_time ) {
 				if ( record.pulse >= options->start_time ) {
 					result = t3_queue_push(queue, &record);
@@ -59,7 +59,7 @@ int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		}
 
 		/* Start the real processing. */
-		while ( ! result && ! feof(in_stream) ) {
+		while ( ! result && ! feof(stream_in) ) {
 			t3_queue_front(queue, &record);
 
 			debug("Current distance: %"PRId64"\n", record.pulse);
@@ -70,9 +70,9 @@ int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 				t3_queue_pop(queue, &record);
 			} else {
 				/* Get a new photon. */
-				if ( next_t3(in_stream, &record, options) ||
+				if ( next_t3(stream_in, &record, options) ||
 						t3_queue_push(queue, &record) ) {
-					if ( ! feof(in_stream) ) {	
+					if ( ! feof(stream_in) ) {	
 						error("Error while reading photon from t3 stream.\n");
 						result = -1;
 					}
@@ -95,7 +95,7 @@ int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	}
 
 	if ( ! result ) {
-		print_t3_bin_counts(out_stream, bin_counts, options);
+		print_t3_bin_counts(stream_out, bin_counts, options);
 	} else {
 		error("Error while processing counts.\n");
 	}
@@ -172,7 +172,7 @@ void free_t3_bin_counts(t3_bin_counts_t **bin_counts) {
 	}
 }
 
-void print_t3_bin_counts(FILE *out_stream, t3_bin_counts_t *bin_counts, 
+void print_t3_bin_counts(FILE *stream_out, t3_bin_counts_t *bin_counts, 
 		options_t *options) {
 	int i, j;
 
@@ -180,24 +180,24 @@ void print_t3_bin_counts(FILE *out_stream, t3_bin_counts_t *bin_counts,
 	if ( options->binary_out ) {
 		for ( i = 0; i < bin_counts->bins; i++ ) {
 			fwrite(&(bin_counts->edges->bin_edges[i]),
-					1, sizeof(float64_t), out_stream);
+					1, sizeof(float64_t), stream_out);
 			fwrite(&(bin_counts->edges->bin_edges[i+1]),
-					1, sizeof(float64_t), out_stream);
+					1, sizeof(float64_t), stream_out);
 			fwrite(bin_counts->bin_count[i], 
-					bin_counts->channels, sizeof(int64_t), out_stream);
+					bin_counts->channels, sizeof(int64_t), stream_out);
 		}
 	} else { 	
 		for ( i = 0; i < bin_counts->bins; i++ ) {
-			fprintf(out_stream, "%"PRIf64",%"PRIf64",",
+			fprintf(stream_out, "%"PRIf64",%"PRIf64",",
 					bin_counts->edges->bin_edges[i], 
 					bin_counts->edges->bin_edges[i+1]);
 			for ( j = 0; j < bin_counts->channels; j++ ) {
-				fprintf(out_stream, "%"PRId64, 
+				fprintf(stream_out, "%"PRId64, 
 						bin_counts->bin_count[i][j]);
 				if ( j+1 < bin_counts->channels ) {
-					fprintf(out_stream, ",");
+					fprintf(stream_out, ",");
 				} else {
-					fprintf(out_stream, "\n");
+					fprintf(stream_out, "\n");
 				}
 			}
 		}

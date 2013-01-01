@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "options.h"
-#include "picoquant.h"
 #include "correlate.h"
 #include "intensity.h"
 #include "bin_intensity.h"
@@ -15,8 +14,8 @@ int main(int argc, char *argv[]) {
 
 	options_t options;
 
-	FILE *in_stream = NULL;
-	FILE *out_stream = NULL;
+	FILE *stream_in = NULL;
+	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
 		26,
@@ -60,15 +59,15 @@ int main(int argc, char *argv[]) {
 			OPT_EXACT_NORMALIZATION}};
 
 	result += parse_options(argc, argv, &options, &program_options);
-	result += open_streams(&in_stream, options.in_filename,
-			&out_stream, options.out_filename);
+	result += open_streams(&stream_in, options.in_filename,
+			&stream_out, options.out_filename);
 
 	if ( ! result ) {
-		gn_raw(in_stream, out_stream, &options);
+		gn_raw(stream_in, stream_out, &options);
 	}
 
 	free_options(&options);
-	free_streams(in_stream, out_stream);
+	free_streams(stream_in, stream_out);
 
 	return(parse_result(result));
 }

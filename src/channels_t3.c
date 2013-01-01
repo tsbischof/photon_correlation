@@ -6,7 +6,7 @@
 #include "error.h"
 #include "t3.h"
 
-int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
+int channels_t3(FILE *stream_in, FILE *stream_out, options_t *options) {
 	/* This needs to do two things:
 	 * 1. Suppress photons arriving on particular channels.
 	 * 2. Retain those photons on the other channels, and apply any time 
@@ -41,7 +41,7 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		error("Could not allocate photon queue.\n");
 		result = -1;
 	} else {
-		while ( ! result && ! next_t3(in_stream, &record, options) ) {
+		while ( ! result && ! next_t3(stream_in, &record, options) ) {
 			if ( t3_queue_full(queue) ) {
 				/* Queue is full, time to deal with it. */
 				debug("Full queue, yielding photons as appropriate.\n");
@@ -51,7 +51,7 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 					 */
 					t3_queue_sort(queue);
 				}
-				yield_sorted_t3(out_stream, queue, max_offset_difference,
+				yield_sorted_t3(stream_out, queue, max_offset_difference,
 						options);
 				debug("New queue limits: (%"PRId64", %"PRId64")\n",
 						queue->left_index, queue->right_index);
@@ -78,7 +78,7 @@ int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		if ( options->offset_pulse ) {
 			t3_queue_sort(queue);
 		}
-		yield_t3_queue(out_stream, queue, options);
+		yield_t3_queue(stream_out, queue, options);
 	}
 	
 	debug("Freeing photon queue.\n");
@@ -96,7 +96,7 @@ void offset_t3(t3_t *record, options_t *options) {
 	}
 }
 
-void yield_sorted_t3(FILE *out_stream, t3_queue_t *queue, 
+void yield_sorted_t3(FILE *stream_out, t3_queue_t *queue, 
 		int64_t max_offset_difference, options_t *options) {
 	int n_printed = 0;
 
@@ -108,7 +108,7 @@ void yield_sorted_t3(FILE *out_stream, t3_queue_t *queue,
 	while ( ! t3_queue_front(queue, &left) &&
 			right.pulse - left.pulse > max_offset_difference ) {
 		t3_queue_pop(queue, &left);
-		print_t3(out_stream, &left,
+		print_t3(stream_out, &left,
 				NEWLINE, options);
 		n_printed++;
 	}

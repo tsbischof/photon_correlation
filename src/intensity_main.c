@@ -9,8 +9,8 @@ int main(int argc, char *argv[]) {
 	options_t options;
 	int result = 0;
 
-	FILE *in_stream = NULL;
-	FILE *out_stream = NULL;
+	FILE *stream_in = NULL;
+	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
 		11,
@@ -39,15 +39,15 @@ int main(int argc, char *argv[]) {
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&in_stream, options.in_filename,
-			&out_stream, options.out_filename);
+	result += open_streams(&stream_in, options.in_filename,
+			&stream_out, options.out_filename);
 
 	if ( ! result ) {
-		result = intensity_dispatch(in_stream, out_stream, &options);
+		result = intensity_dispatch(stream_in, stream_out, &options);
 	}
 
 	free_options(&options);
-	free_streams(in_stream, out_stream);
+	free_streams(stream_in, stream_out);
 
 	return(parse_result(result));	
 }

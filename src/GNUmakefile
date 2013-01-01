@@ -1,59 +1,36 @@
-CCFLAGS := -Wall #-std=c99 
+CC = clang
+LD = clang
+
+INCLUDES = 
+LIBS = -lm
+
+CCFLAGS := -Wall 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
 # errors if not adjusted, so fix it here as needed. This should not (in 
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
-
 CCFLAGS += -D VERSION="1.6"
 CCFLAGS += -O3
-#CCFLAGS += -emit-llvm
-#CCFLAGS += -fopenmp
+CCFLAGS += ${INCLUDES}
 
-LDFLAGS = -Wall -lm
+LDFLAGS = -Wall ${LIBS}
 
-MKDIR = mkdir -p
-RM = rm -f
-TEST = test
-CP = cp -p
-CC = clang 
-LD = clang
-CCFLAGS += -fPIC
-
-# Define the targets and their properties.
-PREFIX = /usr/local
-INSTALL_DIR = ${PREFIX}/bin
-LIB_DIR = ${PREFIX}/lib
-INCLUDE_DIR = ${PREFIX}/include/photon_correlation
-TARGETS = 
 ALL_OBJ = 
 ALL_LIB = 
 
-UTIL = error.o types.o files.o options.o modes.o limits.o \
-		t2.o t3.o #strtoll.o strings.o
+COMMON_OBJ = error.o types.o files.o options.o modes.o limits.o t2.o t3.o
 
-PICOQUANT_OBJ = picoquant_main.o ${UTIL} \
-		picoquant.o \
-		picoharp.o picoharp/ph_v20.o \
-		hydraharp.o hydraharp/hh_v10.o hydraharp/hh_v20.o \
-		timeharp.o timeharp/th_v20.o timeharp/th_v30.o \
-				timeharp/th_v50.o timeharp/th_v60.o 
-ALL_OBJ += ${PICOQUANT_OBJ}
-PICOQUANT_LIB = 
-ALL_LIB += ${PICOQUANT_LIB}
-TARGETS += picoquant
-
-CORRELATE_OBJ = correlate_main.o ${UTIL} \
+CORRELATE_OBJ = correlate_main.o ${COMMON_OBJ} \
 		correlate.o \
 		combinations.o \
-		correlate_t2.o \
-		correlate_t3.o 
+		correlate_t2.o correlate_t3.o 
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
 TARGETS += correlate
 
-HISTOGRAM_OBJ = histogram_main.o ${UTIL} \
+HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 		histogram.o \
 		combinations.o \
 		histogram_gn.o \
@@ -64,7 +41,7 @@ HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += histogram
 
-INTENSITY_OBJ = intensity_main.o ${UTIL} \
+INTENSITY_OBJ = intensity_main.o ${COMMON_OBJ} \
 		intensity.o \
 		intensity_t2.o \
 		intensity_t3.o
@@ -73,7 +50,7 @@ INTENSITY_LIB =
 ALL_LIB += ${INTENSITY_LIB}
 TARGETS += intensity
 
-BIN_INTENSITY_OBJ = bin_intensity_main.o ${UTIL} \
+BIN_INTENSITY_OBJ = bin_intensity_main.o ${COMMON_OBJ} \
 		bin_intensity.o \
 		bin_intensity_t2.o \
 		bin_intensity_t3.o \
@@ -83,46 +60,47 @@ BIN_INTENSITY_LIB =
 ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
-CHANNELS_OBJ = channels_main.o ${UTIL} \
+CHANNELS_OBJ = channels_main.o ${COMMON_OBJ} \
 		channels.o channels_t2.o channels_t3.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
 TARGETS += channels
 
-GN_OBJ = gn_main.o ${UTIL} \
+GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o
-ALL_OBJ += ${GN_OBJ}
+#ALL_OBJ += ${GN_OBJ}
 GN_LIB = 
-ALL_LIB += ${GN_LIB}
+#ALL_LIB += ${GN_LIB}
 TARGETS += gn
 
-#TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${UTIL}
+#TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${COMMON_OBJ}
 #ALL_OBJ += ${TIME_DEPENDENT_PL_{OBJ}
 #TIME_DEPENDENT_PL_LIB = 
 #ALL_LIB += ${TIME_DEPENDENT_PL_{LIB}
 #TARGETS += time_dependent_pl
 
-#TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${UTIL}
+#TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${COMMON_OBJ}
 #ALL_OBJ += ${TIME_DEPENDENT_GN_OBJ}
 #TIME_DEPENDENT_GN_LIB = 
 #ALL_LIB += ${TIME_DEPENDENT_GN_LIB}
 #TARGETS += time_dependent_gn
 
-T3_AS_T2_OBJ = t3_as_t2_main.o ${UTIL}
+T3_AS_T2_OBJ = t3_as_t2_main.o ${COMMON_OBJ}
 ALL_OBJ += ${T3_AS_T2_OBJ}
 T3_AS_T2_LIB = 
 ALL_LIB += ${T3_AS_T2_LIB}
 T3_AS_T2_LIB = 
 TARGETS += t3_as_t2
 
-INTENSITY_TO_T2_OBJ = intensity_to_t2_main.o intensity_to_t2.o  ${UTIL}
+INTENSITY_TO_T2_OBJ = intensity_to_t2_main.o intensity_to_t2.o  ${COMMON_OBJ}
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
 INTENSITY_TO_T2_LIB = 
 ALL_LIB += ${INTENSITY_TO_T2_LIB}
 TARGETS += intensity_to_t2
 
-CORRELATE_VECTOR_OBJ = correlate_vector_main.o correlate_vector.o ${UTIL} \
+CORRELATE_VECTOR_OBJ = correlate_vector_main.o ${COMMON_OBJ} \
+		correlate_vector.o \
 		intensity.o intensity_t2.o intensity_t3.o \
 		histogram_gn.o \
 		vector_g2.o
@@ -134,9 +112,9 @@ CORRELATE_VECTOR_LIB =
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
 LIB_TARGETS = 
-LIBPC_OBJ = ${sort ${filter-out %main.o, ${ALL_OBJ}}}
+LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
-LIBPC_FLAGS = ${LDFLAGS} -shared
+LIBPC_LDFLAGS = ${LDFLAGS} -shared
 LIBPC_LIB = ${sort ${ALL_LIB}}
 LIB_TARGETS += libphoton_correlation.so
 
@@ -152,9 +130,6 @@ install: ${TARGETS} ${LIB_TARGETS}
 
 uninstall: 
 	${RM} ${addprefix ${INSTALL_DIR}, ${TARGETS}}
-
-picoquant: ${PICOQUANT_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${PICOQUANT_LIB}
 
 correlate: ${CORRELATE_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_LIB}
@@ -172,7 +147,7 @@ channels: ${CHANNELS_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CHANNELS_LIB}
 
 libphoton_correlation.so: ${LIBPC_OBJ}
-	${LD} ${LIBPC_FLAGS} -o $@ $^ ${LIBPC_LIB}
+	${LD} ${LIBPC_LDFLAGS} -o $@ $^ ${LIBPC_LIB}
 
 t3_as_t2: ${T3_AS_T2_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${T3_AS_T2_LIB}
@@ -186,8 +161,14 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
+photons: ${PHOTONS_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${PHOTONS_LI}
+
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
 
+%.os: %.c
+	${CC} ${CCFLAGS} -fpic -c -o $@ $<
+
 clean:
-	${RM} ${sort ${TARGETS} ${ALL_OBJ} $ ${LIB_TARGETS}}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}}

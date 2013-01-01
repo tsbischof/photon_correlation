@@ -13,11 +13,11 @@ typedef struct {
 	int64_t **bin_count;
 } t3_bin_counts_t;
 
-int bin_intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options);
+int bin_intensity_t3(FILE *stream_in, FILE *stream_out, options_t *options);
 
 t3_bin_counts_t *allocate_t3_bin_counts(options_t *options);
 void free_t3_bin_counts(t3_bin_counts_t **bin_counts);
-void print_t3_bin_counts(FILE *out_stream, t3_bin_counts_t *bin_counts,
+void print_t3_bin_counts(FILE *stream_out, t3_bin_counts_t *bin_counts,
 		options_t *options);
 
 void t3_bin_counts_increment(t3_bin_counts_t *bin_counts,

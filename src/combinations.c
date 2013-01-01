@@ -130,13 +130,13 @@ int get_combination_index(combination_t *combination) {
 	return(result);
 }
 
-void print_combination(FILE *out_stream, combination_t *combination) {
+void print_combination(FILE *stream_out, combination_t *combination) {
 	int i;
 
 	for ( i = 0; i < combination->order; i++ ) {
-		fprintf(out_stream, "%d,", combination->digits[i]);
+		fprintf(stream_out, "%d,", combination->digits[i]);
 	}
-	fprintf(out_stream, "\b\n");
+	fprintf(stream_out, "\b\n");
 }
 
 /*

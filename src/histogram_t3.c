@@ -2,19 +2,19 @@
 
 #include "error.h"
 
-int histogram_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
+int histogram_t3(FILE *stream_in, FILE *stream_out, options_t *options) {
 	if ( options->order == 1 ) {
 		debug("Doing first-order correlation.\n");
-		histogram_t3_g1(in_stream, out_stream, options);
+		histogram_t3_g1(stream_in, stream_out, options);
 	} else {
 		debug("Doing high-order t3 correlation.\n");
-		histogram_t3_gn(in_stream, out_stream, options);
+		histogram_t3_gn(stream_in, stream_out, options);
 	}
 
 	return(0);
 }
 
-int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
+int histogram_t3_g1(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result = 0;
 	int i;
 	gn_histogram_t **histograms = NULL;
@@ -77,7 +77,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	}
 
 	/* Follow the stream and perform the histogramming. */
-	while ( !result && !next_t3(in_stream, &record, options) ) {
+	while ( !result && !next_t3(stream_in, &record, options) ) {
 		debug("Record: %d,%"PRIf64",%d\n", record.channel, record.pulse,
 				record.time);
 		values[0] = record.time;
@@ -92,7 +92,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* Print the histograms. */
 	for ( i = 0; !result && i < options->channels; i++ ) {
-		print_gn_histogram(out_stream, histograms[i], options);
+		print_gn_histogram(stream_out, histograms[i], options);
 	}
 
 	/* Cleanup. */
@@ -108,7 +108,7 @@ int histogram_t3_g1(FILE *in_stream, FILE *out_stream, options_t *options) {
 	return(0);
 }
 
-int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
+int histogram_t3_gn(FILE *stream_in, FILE *stream_out, options_t *options) {
 	t3_correlation_t *correlation;
 	t3_histograms_t *histograms;
 	int result = 0;
@@ -122,7 +122,7 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 	} else { 
 		/* Loop through the data. 
 		 */
-		while ( !(next_t3_correlation(in_stream, correlation, options)) ) {
+		while ( !(next_t3_correlation(stream_in, correlation, options)) ) {
 			if ( verbose ) {
 				fprintf(stderr, "Found record:\n");
 				print_t3_correlation(stderr, correlation, NEWLINE, options);
@@ -134,7 +134,7 @@ int histogram_t3_gn(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	/* We are finished histogramming, print the result. */
 	if ( ! result ) {
-		print_t3_histograms(out_stream, histograms, options);
+		print_t3_histograms(stream_out, histograms, options);
 	} else {
 		error("Error while processing histograms: %d\n", result);
 	}
@@ -324,11 +324,11 @@ int t3_histograms_increment(t3_histograms_t *histograms,
 	return(result);
 }
 
-void print_t3_histograms(FILE *out_stream, t3_histograms_t *histograms,
+void print_t3_histograms(FILE *stream_out, t3_histograms_t *histograms,
 		options_t *options) {
 	int i;
 	for ( i = 0; i < histograms->n_histograms; i++ ) {
-		print_gn_histogram(out_stream, histograms->histograms[i], options);
+		print_gn_histogram(stream_out, histograms->histograms[i], options);
 	}
 }
 

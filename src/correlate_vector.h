@@ -36,18 +36,18 @@ typedef struct {
 	vector_correlation_t **correlations;
 } vector_correlations_t;
 
-int correlate_vector(FILE *in_stream, FILE *out_stream, options_t *options);
+int correlate_vector(FILE *stream_in, FILE *stream_out, options_t *options);
 
 vector_correlations_t *allocate_vector_correlations(options_t *options);
 void free_vector_correlations(vector_correlations_t **correlations);
-void print_vector_correlations(FILE *out_stream, 
+void print_vector_correlations(FILE *stream_out, 
 		vector_correlations_t *correlations, options_t *options);
 
 binned_signal_t *allocate_binned_signal(options_t *options);
 void free_binned_signal(binned_signal_t **signal);
-void print_binned_signal(FILE *out_stream, binned_signal_t *signal,
+void print_binned_signal(FILE *stream_out, binned_signal_t *signal,
 		options_t *options);
-int next_binned_signal(FILE *in_stream, binned_signal_t *signal,
+int next_binned_signal(FILE *stream_in, binned_signal_t *signal,
 		counts_t *counts, options_t *options);
 /*void binned_signal_push(binned_signal_t *signal, counts_t *counts);
 void binned_signal_pop(binned_signal_t *signal); */

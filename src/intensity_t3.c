@@ -5,7 +5,7 @@
 
 #include "error.h"
 
-int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
+int intensity_t3(FILE *stream_in, FILE *stream_out, options_t *options) {
 	t3_t record;
 	counts_t *counts;
 	int result = 0;
@@ -14,7 +14,7 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 	t3_windowed_stream_t stream;
 
 	debug("Initializing windowed stream.\n");
-	result = init_t3_windowed_stream(&stream, in_stream, options);
+	result = init_t3_windowed_stream(&stream, stream_in, options);
 
 	debug("Initializing counts.\n");
 	counts = allocate_counts(options->channels);
@@ -25,7 +25,7 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 
 	init_counts(counts);
 
-	while ( ! feof(in_stream) && result >= 0 ) {
+	while ( ! feof(stream_in) && result >= 0 ) {
 		result = next_t3_windowed(&stream, &record, options);
 		if ( result == 0 ) {
 			/* Photon in window. */
@@ -35,7 +35,7 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 			/* Next window */
 			counts->window.lower = stream.window.limits.lower;
 			counts->window.upper = stream.window.limits.upper;
-			print_counts(out_stream, counts, options);
+			print_counts(stream_out, counts, options);
 
 			next_t3_window(&(stream.window));
 			init_counts(counts);
@@ -58,11 +58,11 @@ int intensity_t3(FILE *in_stream, FILE *out_stream, options_t *options) {
 		if ( options->set_stop_time ) {
 			counts->window.lower = stream.window.limits.lower;
 			counts->window.upper = stream.window.limits.upper;
-			print_counts(out_stream, counts, options);
+			print_counts(stream_out, counts, options);
 		} else {
 			counts->window.lower = stream.window.limits.lower;
 			counts->window.upper = record.pulse;
-			print_counts(out_stream, counts, options);
+			print_counts(stream_out, counts, options);
 		}
 	}
 

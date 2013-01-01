@@ -25,7 +25,7 @@ void correlate_vector_g2(fraction_t *signal_0, fraction_t *signal_1, int length,
 	}
 }
 
-void print_vector_g2(FILE *out_stream, vector_g2_t *g2, options_t *options) {
+void print_vector_g2(FILE *stream_out, vector_g2_t *g2, options_t *options) {
 	int i;
 	float64_t intensity;
 
@@ -40,11 +40,11 @@ void print_vector_g2(FILE *out_stream, vector_g2_t *g2, options_t *options) {
 						(float64_t)g2->g2[i].number;
 			}
 
-			fprintf(out_stream, "%s", g2->name);
-			fprintf(out_stream, ",%"PRIf64",%"PRIf64,
+			fprintf(stream_out, "%s", g2->name);
+			fprintf(stream_out, ",%"PRIf64",%"PRIf64,
 					g2->edges.bin_edges[i],
 					g2->edges.bin_edges[i+1]);
-			fprintf(out_stream, "%"PRId64"/%"PRId64","PRIf64"\n",
+			fprintf(stream_out, "%"PRId64"/%"PRId64","PRIf64"\n",
 					g2->g2[i].sum, g2->g2[i].number, intensity);
 	}
 }

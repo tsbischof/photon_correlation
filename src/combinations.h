@@ -37,7 +37,7 @@ combination_t *allocate_combination(int channels, int order);
 void free_combination(combination_t **combination);
 int next_combination(combination_t *combination);
 int get_combination_index(combination_t *combination);
-void print_combination(FILE *out_stream, combination_t *combination);
+void print_combination(FILE *stream_out, combination_t *combination);
 
 offsets_t *allocate_offsets(int order);
 void free_offsets(offsets_t **offsets);

@@ -6,10 +6,10 @@
 #include "options.h"
 #include "t3.h"
 
-int channels_t3(FILE *in_stream, FILE *out_stream, options_t *options);
+int channels_t3(FILE *stream_in, FILE *stream_out, options_t *options);
 void offset_t3(t3_t *record, options_t *options);
 
-void yield_sorted_t3(FILE *out_stream, t3_queue_t *queue,
+void yield_sorted_t3(FILE *stream_out, t3_queue_t *queue,
 		int64_t max_offset_difference, options_t *options);
 
 #endif

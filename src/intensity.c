@@ -8,16 +8,16 @@
 #include "modes.h"
 #include "error.h"
 
-int intensity_dispatch(FILE *in_stream, FILE *out_stream, options_t *options) {
+int intensity_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result;
 
 	debug("Checking the mode.\n");
 	if ( options->mode == MODE_T2 ) {
 		debug("Mode t2.\n");
-		result = intensity_t2(in_stream, out_stream, options);
+		result = intensity_t2(stream_in, stream_out, options);
 	} else if ( options->mode == MODE_T3 ) {
 		debug("Mode t3.\n");
-		result = intensity_t3(in_stream, out_stream, options);
+		result = intensity_t3(stream_in, stream_out, options);
 	} else {
 		result = -1;
 	}
@@ -76,45 +76,45 @@ int increment_counts(counts_t *counts, int channel) {
 	}
 }
 
-void print_counts(FILE *out_stream, counts_t *counts, options_t *options) {
+void print_counts(FILE *stream_out, counts_t *counts, options_t *options) {
 	int i;
 
 	if ( options->binary_out ) {
-		fwrite(&(counts->window), 1, sizeof(window_t), out_stream);
-		fwrite(counts->counts, options->channels, sizeof(int64_t), out_stream);
+		fwrite(&(counts->window), 1, sizeof(window_t), stream_out);
+		fwrite(counts->counts, options->channels, sizeof(int64_t), stream_out);
 	} else {
-		fprintf(out_stream, "%"PRId64",%"PRId64",", 
+		fprintf(stream_out, "%"PRId64",%"PRId64",", 
 				counts->window.lower,
 				counts->window.upper);
 		for ( i = 0; i < counts->channels; i++ ) {
-			fprintf(out_stream, "%"PRId64, counts->counts[i]);
+			fprintf(stream_out, "%"PRId64, counts->counts[i]);
 			if ( i != counts->channels - 1 ) {
-				fprintf(out_stream, ",");
+				fprintf(stream_out, ",");
 			}
 		}
-		fprintf(out_stream, "\n");
+		fprintf(stream_out, "\n");
 	
-		fflush(out_stream);
+		fflush(stream_out);
 	}
 }
 
-int next_counts(FILE *in_stream, counts_t *counts, options_t *options) {
+int next_counts(FILE *stream_in, counts_t *counts, options_t *options) {
 	int i;
 	int result = 0;
 
 	if ( options->binary_in ) {
 		result = (fread(&(counts->window), sizeof(window_t), 
-				1, in_stream) != 1);
+				1, stream_in) != 1);
 		if ( ! result ) {
 			result = (fread(counts->counts, sizeof(int64_t), 
-					options->channels, in_stream) != options->channels);
+					options->channels, stream_in) != options->channels);
 		} 
 	} else {
-		result = (fscanf(in_stream, "%"SCNd64",%"SCNd64, 
+		result = (fscanf(stream_in, "%"SCNd64",%"SCNd64, 
 				&(counts->window.lower),
 				&(counts->window.upper)) != 2);
 		for ( i = 0; ! result && i < options->channels; i++) {
-			result = (fscanf(in_stream, ",%"SCNd64, &(counts->counts[i])) 
+			result = (fscanf(stream_in, ",%"SCNd64, &(counts->counts[i])) 
 					!= 1);
 		}
 	}

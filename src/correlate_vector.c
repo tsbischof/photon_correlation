@@ -8,7 +8,7 @@
  * simple implementation here.
  */
 
-int correlate_vector(FILE *in_stream, FILE *out_stream, options_t *options) {
+int correlate_vector(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result = 0;
 	counts_t *counts;
 	vector_correlations_t *correlations;
@@ -21,14 +21,14 @@ int correlate_vector(FILE *in_stream, FILE *out_stream, options_t *options) {
 	if ( counts == NULL || correlations == NULL || signal == NULL ) {
 		result = -1;
 	} else {
-		while ( ! next_binned_signal(in_stream, signal, counts, options) ) {
-			print_binned_signal(out_stream, signal, options);
+		while ( ! next_binned_signal(stream_in, signal, counts, options) ) {
+			print_binned_signal(stream_out, signal, options);
 //			correlate_binned_signal(correlations, signal, options);
 		}
 	}
 
 	if ( ! result ) {
-		print_vector_correlations(out_stream, correlations, options);
+		print_vector_correlations(stream_out, correlations, options);
 	}
 
 	debug("Freeing counts.\n");
@@ -56,15 +56,15 @@ vector_correlations_t *allocate_vector_correlations(options_t *options) {
 void free_vector_correlations(vector_correlations_t **correlations) {
 }
 
-void print_vector_correlations(FILE *out_stream, 
+void print_vector_correlations(FILE *stream_out, 
 		vector_correlations_t *correlations, options_t *options) {
 }
 
-int next_binned_signal(FILE *in_stream, binned_signal_t *signal,
+int next_binned_signal(FILE *stream_in, binned_signal_t *signal,
 		counts_t *counts, options_t *options) {
 	int result = 0;
 
-	if ( ! (result = next_counts(in_stream, counts, options)) ) {
+	if ( ! (result = next_counts(stream_in, counts, options)) ) {
 //		binned_signal_push(signal, counts);
 	}
 	return(-1);
@@ -139,7 +139,7 @@ void free_binned_signal(binned_signal_t **signal) {
 	}
 }
 
-void print_binned_signal(FILE *out_stream, binned_signal_t *signal, 
+void print_binned_signal(FILE *stream_out, binned_signal_t *signal, 
 		options_t *options) {
 	int i, j;
 
@@ -147,15 +147,15 @@ void print_binned_signal(FILE *out_stream, binned_signal_t *signal,
 		error("Binary output not yet supported.\n");
 	} else {
 		for ( i = 0; i < signal->n_bins; i++ ) {
-			fprintf(out_stream, "%"PRIf64",%"PRIf64,
+			fprintf(stream_out, "%"PRIf64",%"PRIf64,
 					signal->edges->bin_edges[i],
 					signal->edges->bin_edges[i+1]);
 			for ( j = 0; j < signal->channels; j++ ) {
-				fprintf(out_stream, ",%"PRId64"/%"PRId64,
+				fprintf(stream_out, ",%"PRId64"/%"PRId64,
 						signal->bin[i].counts[j].total,
 						signal->bin[i].counts[j].number);
 			}
-			fprintf(out_stream, "\n");
+			fprintf(stream_out, "\n");
 		}
 	}
 }

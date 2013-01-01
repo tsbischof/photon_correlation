@@ -10,8 +10,8 @@ int main(int argc, char *argv[]) {
 
 	options_t options;
 
-	FILE *in_stream = NULL;
-	FILE *out_stream = NULL;
+	FILE *stream_in = NULL;
+	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
 		6,
@@ -27,17 +27,17 @@ int main(int argc, char *argv[]) {
 	options.channels = 1;
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&in_stream, options.in_filename,
-			&out_stream, options.out_filename);
+	result += open_streams(&stream_in, options.in_filename,
+			&stream_out, options.out_filename);
 
 	/* Begin the calculation. */
 	if ( ! result ) {
-		result = intensity_to_t2(in_stream, out_stream, &options);
+		result = intensity_to_t2(stream_in, stream_out, &options);
 	}
 
 	/* Free memory. */
 	free_options(&options);
-	free_streams(in_stream, out_stream);
+	free_streams(stream_in, stream_out);
 	
 	return(parse_result(result));
 }

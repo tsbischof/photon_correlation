@@ -24,7 +24,7 @@ typedef struct {
 
 void correlate_vector_g2(fraction_t *signal_0, fraction_t *signal_1, int length,
 		vector_g2_t *g2);
-void print_vector_g2(FILE *out_stream, vector_g2_t *g2, options_t *options);
+void print_vector_g2(FILE *stream_out, vector_g2_t *g2, options_t *options);
 vector_g2_t *allocate_vector_g2(limits_t *limits, int scale);
 void free_vector_g2(vector_g2_t **g2);
 

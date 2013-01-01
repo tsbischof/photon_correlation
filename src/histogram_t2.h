@@ -23,9 +23,9 @@ t2_histograms_t *make_t2_histograms(options_t *options);
 void free_t2_histograms(t2_histograms_t **histograms);
 int t2_histograms_increment(t2_histograms_t *histograms, 
 		t2_correlation_t *record);
-void print_t2_histograms(FILE *out_stream, t2_histograms_t *histograms,
+void print_t2_histograms(FILE *stream_out, t2_histograms_t *histograms,
 		options_t *options);
 
-int histogram_t2(FILE *in_stream, FILE *out_stream, options_t *options);
+int histogram_t2(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

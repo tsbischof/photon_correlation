@@ -11,13 +11,13 @@ typedef struct {
 	int64_t *counts;
 } counts_t;
 
-int intensity_dispatch(FILE *in_stream, FILE *out_stream, options_t *options);
+int intensity_dispatch(FILE *stream_in, FILE *stream_out, options_t *options);
 
 counts_t *allocate_counts(int channels);
 void init_counts(counts_t *counts);
 void free_counts(counts_t **counts);
 int increment_counts(counts_t *counts, int channel);
-void print_counts(FILE *out_stream, counts_t *counts, options_t *options);
-int next_counts(FILE *in_stream, counts_t *counts, options_t *options);
+void print_counts(FILE *stream_out, counts_t *counts, options_t *options);
+int next_counts(FILE *stream_in, counts_t *counts, options_t *options);
 
 #endif

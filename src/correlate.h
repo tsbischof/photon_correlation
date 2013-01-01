@@ -6,7 +6,7 @@
 #include "correlate_t2.h"
 #include "correlate_t3.h"
 
-int correlate_dispatch(FILE *in_stream, FILE *out_stream, options_t *options);
+int correlate_dispatch(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif
 

@@ -6,7 +6,7 @@
 #include "error.h"
 #include "t2.h"
 
-int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
+int channels_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
 	/* This needs to do two things:
 	 * 1. Suppress photons arriving on particular channels.
 	 * 2. Retain those photons on the other channels, and apply any time 
@@ -41,7 +41,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		error("Could not allocate photon queue.\n");
 		result = -1;
 	} else {
-		while ( ! result && ! next_t2(in_stream, &record, options) ) {
+		while ( ! result && ! next_t2(stream_in, &record, options) ) {
 			if ( t2_queue_full(queue) ) {
 				/* Queue is full, time to deal with it. */
 				debug("Full queue, yielding photons as appropriate.\n");
@@ -51,7 +51,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 					 */
 					t2_queue_sort(queue);
 				}
-				yield_sorted_t2(out_stream, queue, max_offset_difference,
+				yield_sorted_t2(stream_out, queue, max_offset_difference,
 						options);
 				debug("New queue limits: (%"PRId64", %"PRId64")\n",
 						queue->left_index, queue->right_index);
@@ -78,7 +78,7 @@ int channels_t2(FILE *in_stream, FILE *out_stream, options_t *options) {
 		if ( options->offset_time ) {
 			t2_queue_sort(queue);
 		}
-		yield_t2_queue(out_stream, queue, options);
+		yield_t2_queue(stream_out, queue, options);
 	}
 	
 	debug("Freeing photon queue.\n");
@@ -93,7 +93,7 @@ void offset_t2(t2_t *record, options_t *options) {
 	}	
 }
 
-void yield_sorted_t2(FILE *out_stream, t2_queue_t *queue, 
+void yield_sorted_t2(FILE *stream_out, t2_queue_t *queue, 
 		int64_t max_offset_difference, options_t *options) {
 	int n_printed = 0;
 
@@ -105,7 +105,7 @@ void yield_sorted_t2(FILE *out_stream, t2_queue_t *queue,
 	while ( ! t2_queue_front(queue, &left) &&
 			right.time - left.time > max_offset_difference ) {
 		t2_queue_pop(queue, &left);
-		print_t2(out_stream, &left,
+		print_t2(stream_out, &left,
 				NEWLINE, options);
 		n_printed++;
 	}

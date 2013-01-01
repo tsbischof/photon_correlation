@@ -176,11 +176,11 @@ int edges_from_limits(edges_t *edges, limits_t *limits, int scale) {
 	return(0);
 }
 
-void print_edges(FILE *out_stream, edges_t *edges) {
+void print_edges(FILE *stream_out, edges_t *edges) {
 	int i;
 
 	for ( i = 0; i <= edges->n_bins; i++ ) {
-		fprintf(out_stream, "%d,%"PRIf64"\n", i, edges->bin_edges[i]);
+		fprintf(stream_out, "%d,%"PRIf64"\n", i, edges->bin_edges[i]);
 	}
 }
 
@@ -415,7 +415,7 @@ int gn_histogram_increment(gn_histogram_t *histogram,
 	}
 }
 
-void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram,
+void print_gn_histogram(FILE *stream_out, gn_histogram_t *histogram,
 		options_t *options) {
 	/* General outline:
 	 * 1. Allocate space for indices.
@@ -450,16 +450,16 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram,
 
 		while ( ! done ) {
 			debug("New indices.\n");
-			fprintf(out_stream, "%s", histogram->histogram_label);
+			fprintf(stream_out, "%s", histogram->histogram_label);
 			for ( i = 0; i < histogram->n_dimensions; i++ ) {
 				if ( histogram->dimensions[i]->print_label ) {
 					debug("Printing the label.\n");
-					fprintf(out_stream, ",%s", 
+					fprintf(stream_out, ",%s", 
 							histogram->dimensions[i]->dimension_label);
 				}
 				debug("Printing the edge for dimension %d and bin %d.\n",
 						i, indices[i]);
-				fprintf(out_stream, ",%.2"PRIf64",%.2"PRIf64"",
+				fprintf(stream_out, ",%.2"PRIf64",%.2"PRIf64"",
 						histogram->dimensions[i]->bin_edges[indices[i]],
 						histogram->dimensions[i]->bin_edges[indices[i]+1]);
 			}
@@ -470,7 +470,7 @@ void print_gn_histogram(FILE *out_stream, gn_histogram_t *histogram,
 					indices);
 			debug("Histogram bin index: %d.\n", bin_index);
 			if ( bin_index >=  0 ) {
-				fprintf(out_stream, ",%u\n", histogram->counts[bin_index]);
+				fprintf(stream_out, ",%u\n", histogram->counts[bin_index]);
 				done = gn_histogram_next_index(histogram, indices);
 			} else {
 				error("Invalid bin index encountered while printing a "	
