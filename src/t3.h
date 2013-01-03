@@ -8,7 +8,7 @@
 typedef struct {
 	int32_t channel;
 	int64_t pulse;
-	int32_t time;
+	int64_t time;
 } t3_t;
 
 typedef struct {
