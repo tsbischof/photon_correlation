@@ -3,6 +3,7 @@ General:
 -write automated test for all programs
 -look into errno and related for dealing with errors.
 -run valgrind against all programs, check that nothing has been missed.
+-try putting together a t2/t3 void interface, for generic programming. Keep the strongly-typed interfaces for general utility, but use the void pointers where it makes sense to reduce code duplication
 
 Scripts:
 -plotting for t3 mode correlation

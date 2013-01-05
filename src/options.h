@@ -19,14 +19,13 @@ typedef struct {
 } option_t;
 
 typedef struct {
-	char *in_filename;
-	char *out_filename;
+	char *filename_in;
+	char *filename_out;
 
 	char *mode_string;
 	int mode;
 
 	int channels;
-
 	int order;
 
 	int print_every;
@@ -34,28 +33,24 @@ typedef struct {
 	int binary_in;
 	int binary_out;
 
-/* Picoquant */
-	int64_t number;
-	int print_header;
-	int print_resolution;
-	int to_t2;
+	int use_void;
 
 /* Correlate */
-	int64_t queue_size;
-	int64_t max_time_distance;
-	int64_t min_time_distance;
-	int64_t max_pulse_distance;
-	int64_t min_pulse_distance;
+	uint64_t queue_size;
+	uint64_t max_time_distance;
+	uint64_t min_time_distance;
+	uint64_t max_pulse_distance;
+	uint64_t min_pulse_distance;
 	int positive_only;
 	int start_stop;
 
 /* Intensity */
-	int64_t bin_width;
+	uint64_t bin_width;
 	int count_all;
 	int set_start_time;
-	int64_t start_time;
+	uint64_t start_time;
 	int set_stop_time;
-	int64_t stop_time;
+	uint64_t stop_time;
 
 /* Histogram */
 	char *time_string;
@@ -100,7 +95,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_FILE_IN, OPT_FILE_OUT,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 		OPT_BINARY_IN, OPT_BINARY_OUT,
-		OPT_PRINT_RESOLUTION, OPT_PRINT_HEADER, OPT_TO_T2, OPT_NUMBER,
+		OPT_USE_VOID,
 		OPT_QUEUE_SIZE, 
 		OPT_START_TIME, OPT_STOP_TIME,
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,

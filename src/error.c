@@ -6,7 +6,7 @@
 
 int verbose = 0;
 
-void debug(char *message, ...) {
+void debug(char const *message, ...) {
 	/* If in debug mode, we want to print a message. Otherwise, we want
 	 * to ignore it.
 	 */
@@ -20,7 +20,7 @@ void debug(char *message, ...) {
 	fflush(stderr);
 }
 
-void error(char *message, ...) {
+void error(char const *message, ...) {
 	/* Handle error messages. This is here in case we ever want to do 
 	 * something more than just print them.
 	 */
@@ -32,7 +32,7 @@ void error(char *message, ...) {
 	fflush(stderr);
 }
 
-void warn(char *message, ...) {
+void warn(char const *message, ...) {
 	/* Warnings about untested features, etc. */
 	va_list args;
 	va_start(args, message);
@@ -42,7 +42,8 @@ void warn(char *message, ...) {
 	fflush(stderr);
 }
 
-void print_status(char *name, long long count, options_t *options) {
+int pc_status_print(char const *name, long long count, options_t *options) {
+	size_t n_write;
 	time_t rawtime;
 	struct tm *timeinfo;
 	char fmttime[80];
@@ -52,14 +53,22 @@ void print_status(char *name, long long count, options_t *options) {
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
-		fprintf(stderr, "%s: (%s) Record %20lld\n", fmttime, name, count);
+		n_write = fprintf(stderr, 
+				"%s: (%s) Record %20lld\n", 
+				fmttime, 
+				name, 
+				count);
+
+		return(BYTES_CHECK(n_write, 3));
+	} else {
+		return(PC_SUCCESS);
 	}
 }
 
-int parse_result(int result) {
-	if ( ! result || result == USAGE ) {
-		return(0);
+int pc_check(int error_code) {
+	if ( error_code < PC_SUCCESS ) {
+		return(error_code);
 	} else {
-		return(result);
+		return(PC_SUCCESS);
 	}
 }

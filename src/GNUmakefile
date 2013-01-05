@@ -19,7 +19,15 @@ LDFLAGS = -Wall ${LIBS}
 ALL_OBJ = 
 ALL_LIB = 
 
-COMMON_OBJ = error.o types.o files.o options.o modes.o limits.o t2.o t3.o
+COMMON_OBJ = error.o files.o options.o modes.o limits.o  \
+		t2.o t3.o \
+		photon.o t2_void.o t3_void.o
+
+PHOTONS_OBJ = ${COMMON_OBJ} photons_main.o photons.o
+ALL_OBJ += ${PHOTONS_OBJ}
+PHOTONS_LIB = 
+ALL_LIB += ${PHOTONS_LIB}
+TARGETS += photons
 
 CORRELATE_OBJ = correlate_main.o ${COMMON_OBJ} \
 		correlate.o \
@@ -28,7 +36,7 @@ CORRELATE_OBJ = correlate_main.o ${COMMON_OBJ} \
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
-TARGETS += correlate
+#TARGETS += correlate
 
 HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 		histogram.o \
@@ -39,7 +47,7 @@ HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
-TARGETS += histogram
+#TARGETS += histogram
 
 INTENSITY_OBJ = intensity_main.o ${COMMON_OBJ} \
 		intensity.o \
@@ -58,21 +66,21 @@ BIN_INTENSITY_OBJ = bin_intensity_main.o ${COMMON_OBJ} \
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = 
 ALL_LIB += ${BIN_INTENSITY_LIB}
-TARGETS += bin_intensity
+#TARGETS += bin_intensity
 
 CHANNELS_OBJ = channels_main.o ${COMMON_OBJ} \
 		channels.o channels_t2.o channels_t3.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
-TARGETS += channels
+#TARGETS += channels
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o
-#ALL_OBJ += ${GN_OBJ}
+ALL_OBJ += ${GN_OBJ}
 GN_LIB = 
-#ALL_LIB += ${GN_LIB}
-TARGETS += gn
+ALL_LIB += ${GN_LIB}
+#TARGETS += gn
 
 #TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${COMMON_OBJ}
 #ALL_OBJ += ${TIME_DEPENDENT_PL_{OBJ}
@@ -91,13 +99,13 @@ ALL_OBJ += ${T3_AS_T2_OBJ}
 T3_AS_T2_LIB = 
 ALL_LIB += ${T3_AS_T2_LIB}
 T3_AS_T2_LIB = 
-TARGETS += t3_as_t2
+#TARGETS += t3_as_t2
 
 INTENSITY_TO_T2_OBJ = intensity_to_t2_main.o intensity_to_t2.o  ${COMMON_OBJ}
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
 INTENSITY_TO_T2_LIB = 
 ALL_LIB += ${INTENSITY_TO_T2_LIB}
-TARGETS += intensity_to_t2
+#TARGETS += intensity_to_t2
 
 CORRELATE_VECTOR_OBJ = correlate_vector_main.o ${COMMON_OBJ} \
 		correlate_vector.o \
@@ -116,7 +124,7 @@ LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
 LIBPC_LDFLAGS = ${LDFLAGS} -shared
 LIBPC_LIB = ${sort ${ALL_LIB}}
-LIB_TARGETS += libphoton_correlation.so
+#LIB_TARGETS += libphoton_correlation.so
 
 all: ${TARGETS} ${LIB_TARGETS}
 
@@ -130,6 +138,9 @@ install: ${TARGETS} ${LIB_TARGETS}
 
 uninstall: 
 	${RM} ${addprefix ${INSTALL_DIR}, ${TARGETS}}
+
+photons: ${PHOTONS_OBJ}
+	${LD} ${LDFLAGS} ${PHOTONS_LIB} -o $@ $^
 
 correlate: ${CORRELATE_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_LIB}
@@ -161,9 +172,6 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
 
-photons: ${PHOTONS_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${PHOTONS_LI}
-
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
 
@@ -171,4 +179,4 @@ photons: ${PHOTONS_OBJ}
 	${CC} ${CCFLAGS} -fpic -c -o $@ $<
 
 clean:
-	${RM} ${sort ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}}
+	${RM} ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}

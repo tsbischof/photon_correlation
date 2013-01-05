@@ -6,7 +6,7 @@
 #include "error.h"
 #include "limits.h"
 
-int str_to_limits(char *str, limits_t *limits) {
+int limits_parse(const char *str, limits_t *limits) {
 	int result;
 
 	debug("Parsing limits: %s.\n", str);
@@ -16,7 +16,7 @@ int str_to_limits(char *str, limits_t *limits) {
 		return(-1);
 	}
 
-	result = sscanf(str, "%"PRIf64",%"PRId32",%"PRIf64"", 
+	result = sscanf(str, "%lf,%zu,%lf", 
 				&(limits->lower), 
 				&(limits->bins),
 				&(limits->upper));
@@ -30,7 +30,7 @@ int str_to_limits(char *str, limits_t *limits) {
 
 	if ( limits->lower >= limits->upper ) {
 		error("Lower limit must be less than upper limit "
-				"(%"PRIf64", %"PRIf64" specified)\n", 
+				"(%lf, %lf specified)\n", 
 				limits->lower, limits->upper);
 		return(-1);
 	}
@@ -43,7 +43,7 @@ int str_to_limits(char *str, limits_t *limits) {
 	return(0);
 }
 
-int scale_parse(char *str, int *scale) {
+int scale_parse(const char *str, int *scale) {
 	if ( str == NULL ) {
 		*scale = SCALE_LINEAR;
 	} else {

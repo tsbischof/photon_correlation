@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.in_filename,
-			&stream_out, options.out_filename);
+	result += open_streams(&stream_in, options.filename_in,
+			&stream_out, options.filename_out);
 
 	if ( ! result ) {
 		result = intensity_dispatch(stream_in, stream_out, &options);
@@ -49,5 +49,5 @@ int main(int argc, char *argv[]) {
 	free_options(&options);
 	free_streams(stream_in, stream_out);
 
-	return(parse_result(result));	
+	return(pc_check(result));	
 }

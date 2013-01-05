@@ -3,12 +3,13 @@
 
 #include <stdio.h>
 #include "options.h"
+#include "photon.h"
 #include "types.h"
 
 typedef struct {
 	int32_t channel;
 	int64_t pulse;
-	int64_t time;
+	int32_t time;
 } t3_t;
 
 typedef struct {

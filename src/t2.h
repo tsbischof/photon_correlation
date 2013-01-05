@@ -4,13 +4,26 @@
 #include <stdio.h>
 
 #include "types.h"
+#include "photon.h"
 #include "options.h"
 
 typedef struct {
-	int32_t channel;
+	uint32_t channel;
 	int64_t time;
 } t2_t;
 
+typedef int (*t2_next_t)(FILE *, t2_t *);
+typedef int (*t2_print_t)(FILE *, t2_t const *);
+
+int t2_fread(FILE *stream_in, t2_t *t2);
+int t2_fscanf(FILE *stream_in, t2_t *t2);
+int t2_fprintf(FILE *stream_out, t2_t const *t2);
+int t2_fwrite(FILE *stream_out, t2_t const *t2);
+
+int t2_compare(void const *a, void const *b);
+int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out);
+
+/* Here be legacy code, which will be going away/being modified soon. */
 typedef struct {
 	int32_t length;
 	int64_t left_index;
@@ -21,7 +34,6 @@ typedef struct {
 int next_t2(FILE *stream_in, t2_t *record, options_t *options);
 void print_t2(FILE *stream_out, t2_t *record, int print_newline,
 		options_t *options);
-int t2_comparator(const void *a, const void *b);
 
 t2_queue_t *allocate_t2_queue(int queue_length);
 void free_t2_queue(t2_queue_t **queue);

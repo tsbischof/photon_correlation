@@ -43,23 +43,11 @@ option_t all_options[] = {
 	{'b', "b", "binary-out",
 			"Specifies that the output file is in binary format,\n"
 			"rather than text."},
-	{'z', "z", "resolution-only",
-			"Rather than processing any data, print the \n"
-			"resolution of the measurement. For TTTR modes, \n"
-			"this is a single float, but for interactive data\n"
-			"the resolution of each curve is given."},
-	{'r', "r", "header-only",
-			"Rather than processing any data, print the header\n"
-			"of the file in an ini-like format. This is useful\n"
-			"for debugging and verifying file settings."},
-	{'t', "t", "to-t2", 
-			"For t3 data, use the sync rate to determine the\n"
-			"time represented by the sync count and output the\n"
-			"data in t2 mode. Note that this will only be\n"
-			"reasonable if the sync source is perfectly regular."},
-	{'n', "n:", "number", 
-			"The number of entries to process. By default, \n"
-			"all entries are processed."},
+	{'G', "G", "use-void",
+			"Experimental. Use void pointer arithmetic instead\n"
+			"of strong types. This makes for more generic code\n"
+			"but runs the risk of introducing strange errors.\n"
+			"Use this option at your own risk."},
 	{'q', "q:", "queue-size", 
 			"The size of the queue for processing, in number of\n"
 			"photons. By default, this is 100000, and if it is\n"
@@ -155,8 +143,8 @@ option_t all_options[] = {
 	};
 
 void default_options(options_t *options) {
-	options->in_filename = NULL;
-	options->out_filename = NULL;
+	options->filename_in = NULL;
+	options->filename_out = NULL;
 
 	options->mode_string = NULL;
 	options->mode = MODE_UNKNOWN;
@@ -171,11 +159,6 @@ void default_options(options_t *options) {
 
 	options->binary_in = 0;
 	options->binary_out = 0;
-
-	options->number = INT64_MAX;
-	options->print_header = 0;
-	options->print_resolution = 0;
-	options->to_t2 = 0;
 
 	options->queue_size = QUEUE_SIZE;
 	options->max_time_distance = 0;
@@ -216,6 +199,8 @@ void default_options(options_t *options) {
 	options->true_autocorrelation = 0;
 
 	options->exact_normalization = 0;
+
+	options->use_void = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -248,7 +233,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 	}
 
 	if ( is_option(OPT_TIME, program_options) ) {
-		result += str_to_limits(options->time_string,
+		result += limits_parse(options->time_string,
 								&(options->time_limits));
 	}
 
@@ -256,7 +241,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 		&& ! result
 		&& options->mode == MODE_T3 
 		&& options->order > 1 ) {
-		result += str_to_limits(options->pulse_string,
+		result += limits_parse(options->pulse_string,
 								&(options->pulse_limits));
 	}
 		
@@ -314,11 +299,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"binary-in", no_argument, 0, 'a'},
 		{"binary-out", no_argument, 0, 'b'},
 
-/* Picoquant */
-		{"resolution-only", no_argument, 0, 'z'},
-		{"header-only", no_argument, 0, 'r'},
-		{"to-t2", no_argument, 0, 't'},
-		{"number", required_argument, 0, 'n'},
+		{"use-void", no_argument, 0, 'G'},
 
 /* Correlate */
 		{"queue-size", required_argument, 0, 'q'},
@@ -362,8 +343,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		switch (c) {
 			case 'h':
 				usage(argc, argv, program_options);
-				result = USAGE;
-				break;
+				return(PC_USAGE);
 			case 'V':
 				verbose = 1;
 				break;
@@ -372,22 +352,22 @@ int parse_options(int argc, char *argv[], options_t *options,
 				result = -1;
 				break;
 			case 'p':
-				options->print_every = strtoi32(optarg, NULL, 10);
+				options->print_every = strtol(optarg, NULL, 10);
 				break;
 			case 'i':
-				options->in_filename = strdup(optarg);
+				options->filename_in = strdup(optarg);
 				break;
 			case 'o':
-				options->out_filename = strdup(optarg);
+				options->filename_out = strdup(optarg);
 				break;
 			case 'm':
 				options->mode_string = strdup(optarg);
 				break;
 			case 'c':
-				options->channels = strtoi32(optarg, NULL, 10);
+				options->channels = strtol(optarg, NULL, 10);
 				break;
 			case 'g':
-				options->order = strtoi32(optarg, NULL, 10);
+				options->order = strtol(optarg, NULL, 10);
 				break;
 			case 'a':
 				options->binary_in = 1;
@@ -395,38 +375,29 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case 'b':
 				options->binary_out = 1;
 				break;
-			case 'z':
-				options->print_resolution = 1;
-				break;
-			case 'r':
-				options->print_header = 1;
-				break;
-			case 't':
-				options->to_t2 = 1;
-				break;
-			case 'n':
-				options->number = strtoi64(optarg, NULL, 10);
+			case 'G':
+				options->use_void = 1;
 				break;
 			case 'q':
-				options->queue_size = strtoi64(optarg, NULL, 10);
+				options->queue_size = strtou64(optarg, NULL, 10);
 				break;
 			case 'd':
-				options->max_time_distance = strtoi64(optarg, NULL, 10);
+				options->max_time_distance = strtou64(optarg, NULL, 10);
 				break;
 			case 'D':
-				options->min_time_distance = strtoi64(optarg, NULL, 10);
+				options->min_time_distance = strtou64(optarg, NULL, 10);
 				break;
 			case 'e':
-				options->max_pulse_distance = strtoi64(optarg, NULL, 10);
+				options->max_pulse_distance = strtou64(optarg, NULL, 10);
 				break;
 			case 'E':
-				options->min_time_distance = strtoi64(optarg, NULL, 10);
+				options->min_time_distance = strtou64(optarg, NULL, 10);
 				break;
 			case 'P':
 				options->positive_only = 1;
 				break;
 			case 'w':
-				options->bin_width = strtoi64(optarg, NULL, 10);
+				options->bin_width = strtou64(optarg, NULL, 10);
 				break;
 			case 'A':
 				options->count_all = 1;
@@ -448,11 +419,11 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'f':
 				options->set_start_time = 1;
-				options->start_time = strtoi64(optarg, NULL, 10);
+				options->start_time = strtou64(optarg, NULL, 10);
 				break;
 			case 'F':
 				options->set_stop_time = 1;
-				options->stop_time = strtoi64(optarg, NULL, 10);
+				options->stop_time = strtou64(optarg, NULL, 10);
 				break;
 			case 'u':
 				options->offset_time = 1;
@@ -478,7 +449,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case '?':
 			default:
 				usage(argc, argv, program_options);
-				result = -1;
+				return(PC_ERROR_OPTIONS);
 		}
 	}
 
@@ -547,8 +518,8 @@ int is_option(int option, program_options_t *program_options) {
 }
 
 void free_options(options_t *options) {
-	free(options->in_filename);
-	free(options->out_filename);
+	free(options->filename_in);
+	free(options->filename_out);
 	free(options->mode_string);
 	free(options->time_string);
 	free(options->pulse_string);
@@ -597,7 +568,7 @@ int read_offsets(options_t *options) {
 	return(result);
 }
 
-int parse_offsets(char *offsets_string, int64_t **offsets, 
+int parse_offsets(char *offsets_string, long long int **offsets, 
 		options_t *options) {
 	char *c;
 	int channel;
@@ -618,7 +589,7 @@ int parse_offsets(char *offsets_string, int64_t **offsets,
 			error("Not enough offsets specified (%d found)\n", channel);
 			return(-1);
 		} else {
-			(*offsets)[channel] = strtoi64(c, NULL, 10);
+			(*offsets)[channel] = strtou64(c, NULL, 10);
 			debug("Offset for channel %d: %"PRId64"\n",
 					channel, (*offsets)[channel]);
 		}
@@ -649,7 +620,7 @@ int parse_suppress(options_t *options) {
 		c = strtok(options->suppress_string, ",");
 
 		while ( c != NULL ) {
-			channel = strtoi32(c, NULL, 10);
+			channel = strtol(c, NULL, 10);
 
 			if ( channel == 0 && strcmp(c, "0") ) {
 				error("Invalid channel to suppress: %s\n", c);

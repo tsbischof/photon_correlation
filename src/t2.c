@@ -2,51 +2,102 @@
 #include <math.h>
 #include <string.h>
 
+#include "files.h"
 #include "error.h"
 #include "t2.h"
+#include "photon.h"
 
-int next_t2(FILE *stream_in, t2_t *record, options_t *options) {
+/* 
+ * Functions to implement t2 photon read/write.
+ */
+int t2_fread(FILE *stream_in, t2_t *t2) {
+	size_t n_read = fread(t2, sizeof(t2_t), 1, stream_in);
+
+	return(BYTES_CHECK(n_read, 1));
+}
+
+int t2_fscanf(FILE *stream_in, t2_t *t2) {
+	int result = fscanf(stream_in,
+			"%"SCNu32",%"SCNd64,
+			&(t2->channel),
+			&(t2->time));
+
+	return(BYTES_CHECK(result, 2));
+}
+
+int t2_fprintf(FILE *stream_out, t2_t const *t2) {
 	int result;
+	result = fprintf(stream_out,
+			"%"PRIu32",%"PRId64"\n",
+			t2->channel,
+			t2->time);
 
-	if ( options->binary_in ) {
-		result = fread(record, sizeof(t2_t), 1, stream_in);
-		result = (result != 1);
-	} else {
-		result = fscanf(stream_in, 
-				"%"SCNd32",%"SCNd64,
-			 	&(record->channel),
-				&(record->time));
-		result = (result != 2);
-	}
-	
-	return(result);
+	return(BYTES_CHECK(result, 2));
 }
 
-void print_t2(FILE *stream_out, t2_t *record, int print_newline,
-		options_t *options) {
-	if ( options->binary_out ) {
-		fwrite(record, sizeof(t2_t), 1, stream_out);
-	} else {
-		fprintf(stream_out, "%"PRId32",%"PRId64, 
-				record->channel,
-				record->time);
+int t2_fwrite(FILE *stream_out, t2_t const *t2) {
+	size_t n_write;
+	n_write = fwrite(t2,
+			sizeof(t2_t),
+			1,
+			stream_out);
 
-		if ( print_newline == NEWLINE ) {
-			fprintf(stream_out, "\n");
-		}
-	}
+	return(BYTES_CHECK(n_write, 1));
 }
 
-int t2_comparator(const void *a, const void *b) {
+int t2_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t2 photons. 
-     */
-	/* The comparison must be done explicitly to avoid issues associated with
+	 * The comparison must be done explicitly to avoid issues associated with
 	 * casting int64_t to int. If we just return the difference, any value
 	 * greater than max_int would cause problems.
 	 */
 	int64_t difference = ((t2_t *)a)->time - ((t2_t *)b)->time;
 	return( difference > 0 );
+}
+
+int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {
+	t2_t t2;
+	t2_next_t next;
+	t2_print_t print;
+
+	if ( binary_in ) {
+		next = t2_fread;
+	} else {
+		next = t2_fscanf;
+	} 
+
+	if ( binary_out ) {
+		print = t2_fwrite;
+	} else {
+		print = t2_fprintf;
+	}
+
+	while ( next(stream_in, &t2) == PC_SUCCESS ) {
+		print(stream_out, &t2);
+	}
+
+	return(PC_SUCCESS);
+}
+
+/*
+ * Implementation of the t2 queue.
+ */
+
+int next_t2(FILE *stream_in, t2_t *t2, options_t *options) {
+	if ( options->binary_in ) {
+		return(t2_fread(stream_in, t2));
+	} else {
+		return(t2_fscanf(stream_in, t2));
+	}
+}
+
+void print_t2(FILE *stream_out, t2_t *t2, int newline, options_t *options) {
+	if ( options->binary_out ) {
+		t2_fwrite(stream_out, t2);
+	} else {
+		t2_fprintf(stream_out, t2);
+	}
 }
 
 t2_queue_t *allocate_t2_queue(int queue_length) {
@@ -212,7 +263,7 @@ void t2_queue_sort(t2_queue_t *queue) {
 	debug("Sorting %"PRId64" photons.\n", t2_queue_size(queue));
 
 	qsort(queue->queue, 
-			t2_queue_size(queue), sizeof(t2_t), t2_comparator);
+			t2_queue_size(queue), sizeof(t2_t), t2_compare);
 	/*t2_queue_front(queue, &record);
 	fprintf(stderr, "%"PRId32",%"PRId64"\n", record.channel, record.time);
 	t2_queue_back(queue, &record);
