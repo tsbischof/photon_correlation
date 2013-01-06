@@ -58,7 +58,7 @@ int intensity_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
 			print_counts(stream_out, counts, options);
 		} else {
 			counts->window.lower = stream.window.limits.lower;
-			counts->window.upper = record.time;
+			counts->window.upper = record.time + 1;
 			print_counts(stream_out, counts, options);
 		}
 	}

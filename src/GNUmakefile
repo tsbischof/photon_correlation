@@ -49,26 +49,23 @@ HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
 #TARGETS += histogram
 
-INTENSITY_OBJ = intensity_main.o ${COMMON_OBJ} \
-		intensity.o \
-		intensity_t2.o \
-		intensity_t3.o
+INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
+		intensity.o intensity_t2.o intensity_t3.o intensity_void.o
 ALL_OBJ += ${INTENSITY_OBJ}
 INTENSITY_LIB = 
 ALL_LIB += ${INTENSITY_LIB}
 TARGETS += intensity
 
-BIN_INTENSITY_OBJ = bin_intensity_main.o ${COMMON_OBJ} \
+BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 		bin_intensity.o \
-		bin_intensity_t2.o \
-		bin_intensity_t3.o \
+		bin_intensity_t2.o bin_intensity_t3.o bin_intensity_void.o \
 		histogram_gn.o
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = 
 ALL_LIB += ${BIN_INTENSITY_LIB}
 #TARGETS += bin_intensity
 
-CHANNELS_OBJ = channels_main.o ${COMMON_OBJ} \
+CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \
 		channels.o channels_t2.o channels_t3.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
@@ -94,18 +91,18 @@ ALL_LIB += ${GN_LIB}
 #ALL_LIB += ${TIME_DEPENDENT_GN_LIB}
 #TARGETS += time_dependent_gn
 
-T3_AS_T2_OBJ = t3_as_t2_main.o ${COMMON_OBJ}
+T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o
 ALL_OBJ += ${T3_AS_T2_OBJ}
 T3_AS_T2_LIB = 
 ALL_LIB += ${T3_AS_T2_LIB}
 T3_AS_T2_LIB = 
-#TARGETS += t3_as_t2
+TARGETS += t3_as_t2
 
 INTENSITY_TO_T2_OBJ = intensity_to_t2_main.o intensity_to_t2.o  ${COMMON_OBJ}
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
 INTENSITY_TO_T2_LIB = 
 ALL_LIB += ${INTENSITY_TO_T2_LIB}
-#TARGETS += intensity_to_t2
+TARGETS += intensity_to_t2
 
 CORRELATE_VECTOR_OBJ = correlate_vector_main.o ${COMMON_OBJ} \
 		correlate_vector.o \

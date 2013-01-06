@@ -34,6 +34,7 @@ typedef struct {
 	int binary_out;
 
 	int use_void;
+	int seed;
 
 /* Correlate */
 	uint64_t queue_size;
@@ -85,7 +86,6 @@ typedef struct {
 } options_t;
 
 typedef struct {
-	int n_options;
 	char message[10000];
 	int options[100];
 } program_options_t;
@@ -95,7 +95,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_FILE_IN, OPT_FILE_OUT,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 		OPT_BINARY_IN, OPT_BINARY_OUT,
-		OPT_USE_VOID,
+		OPT_USE_VOID, OPT_SEED,
 		OPT_QUEUE_SIZE, 
 		OPT_START_TIME, OPT_STOP_TIME,
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
@@ -106,7 +106,8 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
 		OPT_SUPPRESS,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
-		OPT_EXACT_NORMALIZATION };
+		OPT_EXACT_NORMALIZATION,
+		OPT_EOF };
 
 void default_options(options_t *options);
 int validate_options(program_options_t *program_options, options_t *options);

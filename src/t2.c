@@ -13,36 +13,50 @@
 int t2_fread(FILE *stream_in, t2_t *t2) {
 	size_t n_read = fread(t2, sizeof(t2_t), 1, stream_in);
 
-	return(BYTES_CHECK(n_read, 1));
+	if ( n_read == 1 ) {
+		return(PC_SUCCESS);
+	} else {
+		if ( feof(stream_in) ) {
+			return(EOF);
+		} else {
+			return(PC_ERROR_IO);
+		}
+	}	
 }
 
 int t2_fscanf(FILE *stream_in, t2_t *t2) {
-	int result = fscanf(stream_in,
+	int n_read = fscanf(stream_in,
 			"%"SCNu32",%"SCNd64,
 			&(t2->channel),
 			&(t2->time));
 
-	return(BYTES_CHECK(result, 2));
+	if ( n_read == 2 ) {
+		return(PC_SUCCESS);
+	} else {
+		if ( feof(stream_in) ) { 
+			return(EOF);
+		} else {
+			return(PC_ERROR_IO);
+		}
+	} 
 }
 
 int t2_fprintf(FILE *stream_out, t2_t const *t2) {
-	int result;
-	result = fprintf(stream_out,
+	fprintf(stream_out,
 			"%"PRIu32",%"PRId64"\n",
 			t2->channel,
 			t2->time);
 
-	return(BYTES_CHECK(result, 2));
+	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
 int t2_fwrite(FILE *stream_out, t2_t const *t2) {
-	size_t n_write;
-	n_write = fwrite(t2,
+	size_t n_write = fwrite(t2,
 			sizeof(t2_t),
 			1,
 			stream_out);
 
-	return(BYTES_CHECK(n_write, 1));
+	return( n_write == 1 ? PC_SUCCESS : PC_ERROR_IO );
 }
 
 int t2_compare(void const *a, void const *b) {
@@ -58,20 +72,8 @@ int t2_compare(void const *a, void const *b) {
 
 int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {
 	t2_t t2;
-	t2_next_t next;
-	t2_print_t print;
-
-	if ( binary_in ) {
-		next = t2_fread;
-	} else {
-		next = t2_fscanf;
-	} 
-
-	if ( binary_out ) {
-		print = t2_fwrite;
-	} else {
-		print = t2_fprintf;
-	}
+	t2_next_t next = T2_NEXT(binary_in);
+	t2_print_t print = T2_PRINT(binary_out);
 
 	while ( next(stream_in, &t2) == PC_SUCCESS ) {
 		print(stream_out, &t2);
@@ -358,7 +360,7 @@ int next_t2_windowed(t2_windowed_stream_t *stream, t2_t *record,
 
 	/* Process the photon normally. */
 	if ( (! options->count_all) 
-			&& stream->current_photon.time > stream->window.limits.upper ) {
+			&& stream->current_photon.time >= stream->window.limits.upper ) {
 		stream->yielded_photon = 0;
 		return(1);
 	} else if ( stream->current_photon.time < stream->window.limits.lower ) {

@@ -16,7 +16,7 @@ int photons_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 			return(t2_echo(stream_in, stream_out, 
 					options->binary_in, options->binary_out));
 		} 
-	} /* else if ( options->mode == MODE_T3 ) {
+	} else if ( options->mode == MODE_T3 ) {
 		if ( options->use_void ) {
 			return(t3v_echo(stream_in, stream_out,
 					options->binary_in, options->binary_out));
@@ -24,7 +24,7 @@ int photons_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 			return(t3_echo(stream_in, stream_out,
 					options->binary_in, options->binary_out));
 		} 
-	} */ else { 
+	} else { 
 		error("Unsupported echo mode: %d\n", options->mode);
 		return(PC_ERROR_MODE);
 	}

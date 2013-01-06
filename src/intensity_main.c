@@ -13,7 +13,6 @@ int main(int argc, char *argv[]) {
 	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
-		11,
 "Given a stream of TTTR data formatted like the output of picoquant, this\n"
 "program calculates the number of photons arriving on any number of detection\n"
 "channels, divided into some number of subsets of integration time.\n"
@@ -32,17 +31,22 @@ int main(int argc, char *argv[]) {
 "As an alternative to time bins, all of the photons can be counted by passing\n"
 "the flag --count-all. This is useful for normalizing a signal.\n",
 		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
+			OPT_BINARY_OUT, OPT_BINARY_IN,
+			OPT_USE_VOID, OPT_PRINT_EVERY,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_START_TIME, OPT_STOP_TIME,
 			OPT_MODE, OPT_CHANNELS,
-			OPT_BIN_WIDTH, OPT_COUNT_ALL}};
+			OPT_BIN_WIDTH, OPT_COUNT_ALL,
+			OPT_EOF}};
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.filename_in,
-			&stream_out, options.filename_out);
+	if ( result == PC_SUCCESS ) { 
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	}
 
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
 		result = intensity_dispatch(stream_in, stream_out, &options);
 	}
 

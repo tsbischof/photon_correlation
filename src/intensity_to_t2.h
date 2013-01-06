@@ -10,8 +10,11 @@ typedef struct {
 	uint32_t counts;
 } intensity_t;
 
-int next_intensity(FILE *stream_in, intensity_t *intensity,
-		options_t *options);
+int intensity_fread(FILE *stream_in, intensity_t *intensity);
+int intensity_fscanf(FILE *stream_in, intensity_t *intensity);
+#define INTENSITY_NEXT(x) ( x ? intensity_fread : intensity_fscanf );
+
+typedef int (*intensity_next_t)(FILE *stream_in, intensity_t *intensity);
 int intensity_to_t2(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

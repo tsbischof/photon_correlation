@@ -6,9 +6,6 @@
 #include "error.h"
 #include "t2.h"
 
-#define T2V_NEXT(x) (x ? t2v_fread : t2v_fscanf);
-#define T2V_PRINT(x) (x ? t2v_fwrite : t2v_fprintf);
-
 /* 
  * Functions to implement t2 photon read/write.
  */
@@ -30,6 +27,10 @@ int t2v_fwrite(FILE *stream_out, void const *photon) {
 
 int64_t t2v_window_dimension(void const *photon) {
 	return(((t2_t *)photon)->time);
+}
+
+int64_t t2v_channel_dimension(void const *photon) {
+	return(((t2_t *)photon)->channel);
 }
 
 int t2v_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {

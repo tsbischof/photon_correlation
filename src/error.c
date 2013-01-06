@@ -42,7 +42,7 @@ void warn(char const *message, ...) {
 	fflush(stderr);
 }
 
-int pc_status_print(char const *name, long long count, options_t *options) {
+int pc_status_print(char const *name, uint64_t count, options_t *options) {
 	size_t n_write;
 	time_t rawtime;
 	struct tm *timeinfo;
@@ -54,12 +54,16 @@ int pc_status_print(char const *name, long long count, options_t *options) {
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
 		n_write = fprintf(stderr, 
-				"%s: (%s) Record %20lld\n", 
+				"%s: (%s) Record %20"PRIu64"\n", 
 				fmttime, 
 				name, 
 				count);
 
-		return(BYTES_CHECK(n_write, 3));
+		if ( ferror(stderr) ) {
+			return(PC_ERROR_IO);
+		} else {
+			return(PC_SUCCESS);
+		}
 	} else {
 		return(PC_SUCCESS);
 	}

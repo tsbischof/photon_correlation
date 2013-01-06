@@ -222,11 +222,13 @@ void photon_queue_sort(photon_queue_t *queue) {
  * Implementation of the photon stream (cases 2 and 3)
  */
 void photon_window_init(photon_window_t *window, 
-		int64_t lower_bound, uint64_t width,
+		int set_lower_bound, int64_t lower_bound, 
+		uint64_t width,
 		int set_upper_bound, int64_t upper_bound) {
 	window->limits.lower = lower_bound;
 	window->limits.upper = window->limits.lower + width;
 	window->width = width;
+	window->set_lower_bound = set_lower_bound;
 	window->set_upper_bound = set_upper_bound;
 	window->upper_bound = upper_bound;
 }
@@ -237,7 +239,15 @@ int photon_window_next(photon_window_t *window) {
 
 	if ( window->set_upper_bound && 
 			window->limits.upper > window->upper_bound ) {
-		return(PC_WINDOW_EXCEEDED);
+		if ( window->limits.lower < window->upper_bound ) {
+			window->limits.upper = window->upper_bound;
+			/* Still within the bound, just trim it down a bit. */
+			return(PC_SUCCESS);
+		} else {
+			/* Outside the upper bound. */
+			printf("here\n");
+			return(PC_WINDOW_EXCEEDED);
+		}
 	} else {
 		return(PC_SUCCESS);
 	}
@@ -248,8 +258,8 @@ int photon_stream_init(photon_stream_t *photons,
 		photon_window_dimension_t dim,
 		photon_next_t photon_next,
 		size_t photon_size, FILE *stream_in,
-		int is_windowed,
-		int64_t lower_bound, uint64_t width,
+		int set_lower_bound, int64_t lower_bound, 
+		uint64_t width,
 		int set_upper_bound, int64_t upper_bound) {	
 	photons->dim = dim;
 	photons->photon_size = photon_size;
@@ -260,16 +270,21 @@ int photon_stream_init(photon_stream_t *photons,
 	}
 
 	photon_window_init(&(photons->window),
-			lower_bound, width, set_upper_bound, upper_bound);
+			set_lower_bound, lower_bound, 
+			width, 
+			set_upper_bound, upper_bound);
 
-	if ( is_windowed ) {
+	if ( set_upper_bound || width != 0 ) {
 		*stream_next = photon_stream_next_windowed;
 	} else {
 		*stream_next = photon_stream_next_unbounded;
 	}
 
 	photons->photon_next = photon_next;
-	photons->yielded_photon = 0;
+	photons->yielded_photon = 1; 
+/* If the photon has been yielded, the stream is reset and ready to 
+ * acquire a new one.
+ */
 	photons->stream_in = stream_in;
 
 	return(PC_SUCCESS);
@@ -299,21 +314,30 @@ int photon_stream_next_windowed(photon_stream_t *photons, void *photon) {
 				/* Have photon, but window is ahead of it. Catch this to avoid
 				 * an infinite loop.
 				 */
-				return(PC_ERROR_WINDOW_AHEAD);
+				return(PC_WINDOW_AHEAD);
 			} else {
-				/* Advance the window. */
-				photon_window_next(&(photons->window));
-				return(PC_WINDOW_NEXT);
+				/* Past the upper bound. */
+				if ( photons->window.set_upper_bound && 
+						dim >= photons->window.upper_bound ) {
+					return(EOF);
+				} else {
+					/* Tell the caller to advance the window. */
+					return(PC_WINDOW_NEXT);
+				}
 			}
 		} else {
 			result = photons->photon_next(photons->stream_in, 
 					photons->current_photon);
 
 			if ( result == PC_SUCCESS ) {
-				/* Found one, loop back to yield. */
+				/* Found one, loop back to see where it falls. */
 				photons->yielded_photon = 0;
+			} else if ( result == EOF ) {
+				return(EOF);
 			} else {
 				/* An error of some nature. */
+				error("Unhandled error while processing photon stream: %d.\n",
+						result);
 				return(result);
 			}
 		}
@@ -326,4 +350,8 @@ int photon_stream_next_unbounded(photon_stream_t *photons, void *photon) {
 	result = photons->photon_next(photons->stream_in, photon);
 
 	return(result);
+}
+
+int photon_stream_next_window(photon_stream_t *photons) {
+	return(photon_window_next(&(photons->window)));
 }

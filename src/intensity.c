@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "intensity.h"
+#include "intensity_void.h"
 #include "intensity_t2.h"
 #include "intensity_t3.h"
 #include "modes.h"
@@ -11,7 +12,9 @@
 int intensity_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result;
 
-	if ( options->mode == MODE_T2 ) {
+	if ( options->use_void ) {
+		result = intensity_void(stream_in, stream_out, options);
+	} else if ( options->mode == MODE_T2 ) {
 		result = intensity_t2(stream_in, stream_out, options);
 	} else if ( options->mode == MODE_T3 ) {
 		result = intensity_t3(stream_in, stream_out, options);
@@ -33,8 +36,7 @@ counts_t *counts_alloc(int channels) {
 		counts->channels = channels;
 		counts->window.lower = 0;
 		counts->window.upper = 0;
-		counts->counts = (uint64_t *)malloc(
-				sizeof(uint64_t)*channels);
+		counts->counts = (uint64_t *)malloc(sizeof(uint64_t)*channels);
 		if ( counts->counts == NULL ) {
 			counts_free(&counts);
 			return(counts);
@@ -61,7 +63,7 @@ void counts_free(counts_t **counts) {
 
 int counts_increment(counts_t *counts, int channel) {
 	if ( channel >= 0 && channel < counts->channels ) {
-		counts->counts[channel] += 1;
+		counts->counts[channel]++;
 		return(PC_SUCCESS);
 	} else {
 		error("Invalid channel %d requested for increment.\n", channel);
@@ -81,7 +83,15 @@ int counts_fread(FILE *stream_in, counts_t *counts) {
 			counts->channels, 
 			stream_in);
 
-	return(BYTES_CHECK(n_read, counts->channels));
+	if ( n_read == counts->channels ) {
+		return(PC_SUCCESS);
+	} else {
+		if ( feof(stream_in) ) {
+			return(EOF);
+		} else {
+			return(PC_ERROR_IO);
+		}
+	}
 }
 
 int counts_fscanf(FILE *stream_in, counts_t *counts) {
@@ -94,7 +104,7 @@ int counts_fscanf(FILE *stream_in, counts_t *counts) {
 				&(counts->window.upper));
 
 	if ( n_read != 2) {
-		return(PC_ERROR_IO);
+		return( feof(stream_in) ? PC_SUCCESS : PC_ERROR_IO );
 	}
 
 	for ( i = 0; i < counts->channels; i++ ) {
@@ -103,7 +113,7 @@ int counts_fscanf(FILE *stream_in, counts_t *counts) {
 				&(counts->counts[i]));
 
 		if ( n_read != 1 ) {
-			return(PC_ERROR_IO);
+			return( feof(stream_in) ? PC_SUCCESS : PC_ERROR_IO );
 		}
 	}
 
@@ -127,7 +137,7 @@ int counts_fwrite(FILE *stream_out, counts_t const *counts) {
 			counts->channels,
 			stream_out);
 
-	return(BYTES_CHECK(n_write, counts->channels));
+	return( n_write == counts->channels ? PC_SUCCESS : PC_ERROR_IO );
 }
 
 int counts_fprintf(FILE *stream_out, counts_t const *counts) {
@@ -139,19 +149,21 @@ int counts_fprintf(FILE *stream_out, counts_t const *counts) {
 			counts->window.lower,
 			counts->window.upper);
 
-	if ( n_write != 2 ) {
+	if ( ferror(stream_out) ) {
 		return(PC_ERROR_IO);
 	}
 
 	for ( i = 0; i < counts->channels; i++ ) {
 		n_write = fprintf(stream_out,
-				"%"PRIu64,
+				",%"PRIu64,
 				counts->counts[i]);
 	
-		if ( n_write != 1 ) {
+		if ( ferror(stream_out) ) {
 			return(PC_ERROR_IO);
 		}
 	}
+
+	fprintf(stream_out, "\n");
 
 	return(PC_SUCCESS);
 }
@@ -242,8 +254,6 @@ void print_counts(FILE *stream_out, counts_t *counts, options_t *options) {
 			}
 		}
 		fprintf(stream_out, "\n");
-	
-		fflush(stream_out);
 	}
 }
 

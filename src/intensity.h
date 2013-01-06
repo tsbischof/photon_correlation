@@ -14,7 +14,7 @@ typedef struct {
 
 int intensity_dispatch(FILE *stream_in, FILE *stream_out, options_t *options);
 
-counts_t *count_alloc(int channels);
+counts_t *counts_alloc(int channels);
 void counts_init(counts_t *counts);
 void counts_free(counts_t **counts);
 int counts_increment(counts_t *counts, int channel);

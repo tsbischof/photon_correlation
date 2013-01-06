@@ -48,6 +48,8 @@ option_t all_options[] = {
 			"of strong types. This makes for more generic code\n"
 			"but runs the risk of introducing strange errors.\n"
 			"Use this option at your own risk."},
+	{'K', "K:", "seed",
+			"Specify the seed for the random number generator."},
 	{'q', "q:", "queue-size", 
 			"The size of the queue for processing, in number of\n"
 			"photons. By default, this is 100000, and if it is\n"
@@ -143,6 +145,8 @@ option_t all_options[] = {
 	};
 
 void default_options(options_t *options) {
+	verbose = 0;
+
 	options->filename_in = NULL;
 	options->filename_out = NULL;
 
@@ -159,6 +163,9 @@ void default_options(options_t *options) {
 
 	options->binary_in = 0;
 	options->binary_out = 0;
+
+	options->use_void = 0;
+	options->seed = 0xDEADBEEF;
 
 	options->queue_size = QUEUE_SIZE;
 	options->max_time_distance = 0;
@@ -199,8 +206,6 @@ void default_options(options_t *options) {
 	options->true_autocorrelation = 0;
 
 	options->exact_normalization = 0;
-
-	options->use_void = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -300,6 +305,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"binary-out", no_argument, 0, 'b'},
 
 		{"use-void", no_argument, 0, 'G'},
+		{"seed", no_argument, 0, 'K'},
 
 /* Correlate */
 		{"queue-size", required_argument, 0, 'q'},
@@ -377,6 +383,9 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'G':
 				options->use_void = 1;
+				break;
+			case 'K':
+				options->seed = strtol(optarg, NULL, 10);
 				break;
 			case 'q':
 				options->queue_size = strtou64(optarg, NULL, 10);
@@ -470,7 +479,7 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 	version(argc, argv);
 	fprintf(stderr, "\n");
 
-	for ( i = 0; i < program_options->n_options; i++ ) {
+	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
 		option = &all_options[program_options->options[i]];
 
 		fprintf(stderr, "%*s-%c, --%s: ", 
@@ -508,7 +517,7 @@ void version(int argc, char *argv[]) {
 int is_option(int option, program_options_t *program_options) {
 	int i;
 
-	for ( i = 0; i < program_options->n_options; i++ ) {
+	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
 		if ( option == program_options->options[i] ) {
 			return(1);
 		}
@@ -540,7 +549,7 @@ char *get_options_string(program_options_t *program_options) {
 	int j;
 	int position = 0;
 	
-	for ( i = 0; i < program_options->n_options; i++ ) {
+	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
 		option = &all_options[program_options->options[i]];
 
 		for ( j = 0; j < strlen(option->long_char); j++ ) {
@@ -568,7 +577,7 @@ int read_offsets(options_t *options) {
 	return(result);
 }
 
-int parse_offsets(char *offsets_string, long long int **offsets, 
+int parse_offsets(char *offsets_string, int64_t **offsets, 
 		options_t *options) {
 	char *c;
 	int channel;

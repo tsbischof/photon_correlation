@@ -9,8 +9,10 @@
 int main(int argc, char *argv[]) {
 	options_t options;
 
-	t2_t t2_photon;
-	t3_t t3_photon;
+	t2_t t2;
+	t2_print_t t2_print;
+	t3_t t3;
+	t3_next_t t3_next;
 
 	int result = 0;
 
@@ -18,29 +20,39 @@ int main(int argc, char *argv[]) {
 	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
-		7,
 "This program strips time information from t3 data, leaving only the pulse\n"
 "number and yielding a t2-like photon.\n",
-		{OPT_HELP, OPT_VERSION, OPT_VERBOSE, OPT_FILE_IN, OPT_FILE_OUT,
-				OPT_BINARY_IN, OPT_BINARY_OUT}};
+		{OPT_HELP, OPT_VERSION, OPT_VERBOSE, 
+				OPT_FILE_IN, OPT_FILE_OUT,
+				OPT_BINARY_IN, OPT_BINARY_OUT,
+				OPT_EOF}};
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.in_filename,
-				&stream_out, options.out_filename);
+	if ( result == PC_SUCCESS ) {
+		result += open_streams(&stream_in, options.filename_in,
+					&stream_out, options.filename_out);
+	} 
 
-	if ( ! result ) {
-		while ( ! next_t3(stream_in, &t3_photon, &options) ) {
-			t2_photon.channel = t3_photon.channel;
-			t2_photon.time = t3_photon.pulse;
+	if ( result == PC_SUCCESS ) {
+		t2_print = T2_PRINT(options.binary_out);
+		t3_next = T3_NEXT(options.binary_in);
 
-			print_t2(stream_out, &t2_photon, NEWLINE, &options);
+		while ( t3_next(stream_in, &t3) == PC_SUCCESS ) {
+			t2.channel = t3.channel;
+			t2.time = t3.pulse;
+
+			t2_print(stream_out, &t2);
 		}
+	}
+
+	if ( result == EOF ) {
+		result = PC_SUCCESS;
 	}
 
 	free_options(&options);
 	free_streams(stream_in, stream_out);
 
-	return(parse_result(result));
+	return(pc_check(result));
 }
 				

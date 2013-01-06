@@ -33,12 +33,15 @@ typedef struct {
 typedef struct {
 	window_t limits;
 	uint64_t width;
+	int set_lower_bound;
 	int set_upper_bound;
+	uint64_t lower_bound;
 	uint64_t upper_bound;
 } photon_window_t;
 
 typedef int (*photon_next_t)(FILE *, void *);
 typedef int64_t (*photon_window_dimension_t)(const void *);
+typedef int64_t (*photon_channel_dimension_t)(const void *);
 
 typedef struct {
 	size_t photon_size;
@@ -51,7 +54,8 @@ typedef struct {
 } photon_stream_t;
 
 void photon_window_init(photon_window_t *window, 
-		int64_t lower_bound, uint64_t width,
+		int set_lower_bound, int64_t lower_bound, 
+		uint64_t width,
 		int set_upper_bound, int64_t upper_bound);
 int photon_window_next(photon_window_t *window);
 
@@ -64,9 +68,10 @@ int photon_stream_init(photon_stream_t *photons,
 		photon_window_dimension_t dim,
 		photon_next_t photon_next,
 		size_t photon_size, FILE *stream_in,
-		int is_windowed,
-		int64_t lower_bound, uint64_t width,
+		int set_lower_bound, int64_t lower_bound, 
+		uint64_t width,
 		int set_upper_bound, int64_t upper_bound);
 void photon_stream_free(photon_stream_t *photons);
+int photon_stream_next_window(photon_stream_t *photons);
 
 #endif
