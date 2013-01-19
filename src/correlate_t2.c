@@ -181,7 +181,7 @@ int correlate_t2_block(FILE *stream_out, int64_t *record_number,
  				 * track of it separately as we iterate over the others.
  				 */
 				(*record_number)++;
-				print_status("correlate", *record_number, options);
+				pc_status_print("correlate", *record_number, options);
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];
@@ -295,22 +295,15 @@ void print_t2_correlation(FILE *stream_out, t2_correlation_t *correlation,
 					options);
 		}
 	} else {
-		fprintf(stream_out, "%"PRId32",", correlation->records[0].channel);
+		fprintf(stream_out, "%"PRId32, correlation->records[0].channel);
 		
 		for ( i = 1; i < correlation->order; i++ ) {
-			print_t2(stream_out, &(correlation->records[i]), NO_NEWLINE,
-					options);
-			
-			/* All but the last get a comma. */
-			if ( i+1 != correlation->order ) {
-				fprintf(stream_out, ",");
-			}
-	
+			fprintf(stream_out, ",%"PRId32",%"PRId64,
+					correlation->records[i].channel,
+					correlation->records[i].time);
 		}
 
-		if ( print_newline == NEWLINE ) {
-			fprintf(stream_out, "\n");
-		}
+		fprintf(stream_out, "\n");
 	}
 }
 
@@ -351,7 +344,7 @@ int correlate_t2_start_stop(FILE *stream_in, FILE *stream_out,
 			if ( ref_photon.channel == 0 ) {
 				/* Correlation! */
 				record_number += 1;
-				print_status("correlate", record_number, options);
+				pc_status_print("correlate", record_number, options);
 
 				correlation->records[1].time = record.time - ref_photon.time;
 

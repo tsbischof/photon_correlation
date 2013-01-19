@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
 	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
-		15,
 "This program accepts TTTR photon data and outputs a stream of correlation \n"
 "events. For example, a correlation order 2 of t2 data will put out events of\n"
 "the form:\n"
@@ -54,16 +53,17 @@ int main(int argc, char *argv[]) {
 			OPT_PRINT_EVERY, OPT_POSITIVE_ONLY, OPT_START_STOP,
 			OPT_QUEUE_SIZE,
 			OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
-			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE}};
+			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE, OPT_EOF}};
 
 	
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.in_filename,
-			&stream_out, options.out_filename);
+	if ( result == PC_SUCCESS ) {
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	} 
 
-	/* Begin the calculation. */
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
 		result = correlate_dispatch(stream_in, stream_out, &options);
 	}
 
@@ -71,5 +71,5 @@ int main(int argc, char *argv[]) {
 	free_options(&options);
 	free_streams(stream_in, stream_out);
 	
-	return(parse_result(result));
+	return(pc_check(result));
 }

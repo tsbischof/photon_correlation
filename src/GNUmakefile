@@ -19,7 +19,7 @@ LDFLAGS = -Wall ${LIBS}
 ALL_OBJ = 
 ALL_LIB = 
 
-COMMON_OBJ = error.o files.o options.o modes.o limits.o  \
+COMMON_OBJ = error.o files.o options.o modes.o limits.o  types.o \
 		t2.o t3.o \
 		photon.o t2_void.o t3_void.o
 
@@ -36,7 +36,7 @@ CORRELATE_OBJ = correlate_main.o ${COMMON_OBJ} \
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
-#TARGETS += correlate
+TARGETS += correlate
 
 HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 		histogram.o \
@@ -47,7 +47,7 @@ HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
-#TARGETS += histogram
+TARGETS += histogram
 
 INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
 		intensity.o intensity_t2.o intensity_t3.o intensity_photon.o
@@ -66,7 +66,7 @@ ALL_LIB += ${BIN_INTENSITY_LIB}
 TARGETS += bin_intensity
 
 CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \
-		channels.o channels_t2.o channels_t3.o channels_photon.o
+		channels.o channels_t2.o channels_t3.o # channels_photon.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}

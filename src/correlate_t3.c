@@ -177,7 +177,7 @@ int correlate_t3_block(FILE *stream_out, int64_t *record_number,
 			for ( permutation = 0; permutation < permutations->n_permutations;
 					permutation++  ) {
 				(*record_number)++;
-				print_status("correlate", *record_number, options);
+				pc_status_print("correlate", *record_number, options);
 
 				offset = offsets->offsets[
 						permutations->permutations[permutation][0]];

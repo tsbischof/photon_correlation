@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
 	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
-		12,
 "Histogram collects a set of photon correlation events and counts them into\n"
 "bins defined by their relative time delays. The histograms are also\n"
 "separated by the identities of each channel in the correlation, such that\n"
@@ -37,19 +36,21 @@ int main(int argc, char *argv[]) {
 		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
-			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE}};
+			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE, OPT_EOF}};
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.in_filename,
-			&stream_out, options.out_filename);
+	if ( result == PC_SUCCESS ) {
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	}
 
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
 		result = histogram_dispatch(stream_in, stream_out, &options);
 	}
 			
 	free_options(&options);
 	free_streams(stream_in, stream_out);
 
-	return(parse_result(result));
+	return(pc_check(result));
 }

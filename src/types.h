@@ -12,4 +12,6 @@
 typedef double float64_t;
 typedef float float32_t;
 
+int64_t i64abs(int64_t i);
+
 #endif
