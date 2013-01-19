@@ -2,19 +2,20 @@
 
 #include "error.h"
 #include "modes.h"
-#include "t2.h"
-#include "t3.h"
+#include "channels_t2.h"
+#include "channels_t3.h"
+#include "channels_photon.h"
 
 int channels_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
-	debug("Channels!\n");
-
-	if ( options->mode == MODE_T2 ) {
+	if ( options->use_void ) {
+		return(channels_photon(stream_in, stream_out, options));
+	} else if ( options->mode == MODE_T2 ) {
 		return(channels_t2(stream_in, stream_out, options));
 	} else if ( options->mode == MODE_T3 ) {
 		return(channels_t3(stream_in, stream_out, options));
 	} else {
 		error("Mode not supported: %s\n", options->mode_string);
-		return(-1);
+		return(PC_ERROR_MODE);
 	}
 }
 

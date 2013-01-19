@@ -50,7 +50,7 @@ ALL_LIB += ${HISTOGRAM_LIB}
 #TARGETS += histogram
 
 INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
-		intensity.o intensity_t2.o intensity_t3.o intensity_void.o
+		intensity.o intensity_t2.o intensity_t3.o intensity_photon.o
 ALL_OBJ += ${INTENSITY_OBJ}
 INTENSITY_LIB = 
 ALL_LIB += ${INTENSITY_LIB}
@@ -58,19 +58,19 @@ TARGETS += intensity
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 		bin_intensity.o \
-		bin_intensity_t2.o bin_intensity_t3.o bin_intensity_void.o \
+		bin_intensity_t2.o bin_intensity_t3.o bin_intensity_photon.o \
 		histogram_gn.o
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = 
 ALL_LIB += ${BIN_INTENSITY_LIB}
-#TARGETS += bin_intensity
+TARGETS += bin_intensity
 
 CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \
-		channels.o channels_t2.o channels_t3.o
+		channels.o channels_t2.o channels_t3.o channels_photon.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}
-#TARGETS += channels
+TARGETS += channels
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o
@@ -98,7 +98,7 @@ ALL_LIB += ${T3_AS_T2_LIB}
 T3_AS_T2_LIB = 
 TARGETS += t3_as_t2
 
-INTENSITY_TO_T2_OBJ = intensity_to_t2_main.o intensity_to_t2.o  ${COMMON_OBJ}
+INTENSITY_TO_T2_OBJ = ${COMMON_OBJ} intensity_to_t2_main.o intensity_to_t2.o
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
 INTENSITY_TO_T2_LIB = 
 ALL_LIB += ${INTENSITY_TO_T2_LIB}
@@ -140,31 +140,31 @@ photons: ${PHOTONS_OBJ}
 	${LD} ${LDFLAGS} ${PHOTONS_LIB} -o $@ $^
 
 correlate: ${CORRELATE_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_LIB}
+	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^
 
 histogram: ${HISTOGRAM_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${HISTOGRAM_LIB}
+	${LD} ${LDFLAGS} ${HISTOGRAM_LIB} -o $@ $^
 
 intensity: ${INTENSITY_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${INTENSITY_LIB}
+	${LD} ${LDFLAGS} ${INTENSITY_LIB} -o $@ $^ 
 
 bin_intensity: ${BIN_INTENSITY_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${BIN_INTENSITY_LIB}
+	${LD} ${LDFLAGS} ${BIN_INTENSITY_LIB} -o $@ $^
 
 channels: ${CHANNELS_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${CHANNELS_LIB}
+	${LD} ${LDFLAGS} ${CHANNELS_LIB} -o $@ $^ 
 
 libphoton_correlation.so: ${LIBPC_OBJ}
-	${LD} ${LIBPC_LDFLAGS} -o $@ $^ ${LIBPC_LIB}
+	${LD} ${LIBPC_LDFLAGS} ${LIBPC_LIB} -o $@ $^
 
 t3_as_t2: ${T3_AS_T2_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${T3_AS_T2_LIB}
+	${LD} ${LDFLAGS} ${T3_AS_T2_LIB} -o $@ $^
 
 intensity_to_t2: ${INTENSITY_TO_T2_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${INTENSITY_TO_T2_LIB}
+	${LD} ${LDFLAGS} ${INTENSITY_TO_T2_LIB} -o $@ $^
 
 correlate_vector: ${CORRELATE_VECTOR_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${CORRELATE_VECTOR_LIB}
+	${LD} ${LDFLAGS} ${CORRELATE_VECTOR_LIB} -o $@ $^
 
 gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}

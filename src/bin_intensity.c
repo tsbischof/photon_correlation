@@ -1,4 +1,5 @@
 #include "bin_intensity.h"
+#include "bin_intensity_photon.h"
 #include "bin_intensity_t2.h"
 #include "bin_intensity_t3.h"
 #include "modes.h"
@@ -86,19 +87,14 @@
 
 int bin_intensity_dispatch(FILE *stream_in, FILE *stream_out, 
 		options_t *options) {
-	int result;
-
-	debug("Checking the mode.\n");
-	if ( options->mode == MODE_T2 ) {
-		debug("Mode t2.\n");
-		result = bin_intensity_t2(stream_in, stream_out, options);
+	if ( options->use_void ) {
+		return(bin_intensity_photon(stream_in, stream_out, options));
+	} else if ( options->mode == MODE_T2 ) {
+		return(bin_intensity_t2(stream_in, stream_out, options));
 	} else if ( options->mode == MODE_T3 ) {
-		debug("Mode t3.\n");
-		result = bin_intensity_t3(stream_in, stream_out, options);
+		return(bin_intensity_t3(stream_in, stream_out, options));
 	} else {
-		result = -1;
+		return(PC_ERROR_MODE);
 	}
-
-	return(result);
 }
 

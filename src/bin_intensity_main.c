@@ -22,7 +22,6 @@ int main(int argc, char *argv[]) {
 	FILE *stream_out = NULL;
 
 	program_options_t program_options = {
-		13,
 "This program calculates the intensities in each bin of a correlation, as \n"
 "required for exact normalization of the correlation. The input is either t2\n"
 "or t3 data, and the output roughly follows that of the histogram:\n"
@@ -32,22 +31,30 @@ int main(int argc, char *argv[]) {
 "definitions as for histogram.\n",
 		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
+			OPT_BINARY_IN, OPT_BINARY_OUT,
+			OPT_USE_VOID,
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
 			OPT_QUEUE_SIZE,
 			OPT_TIME, OPT_PULSE,
-			OPT_TIME_SCALE, OPT_PULSE_SCALE}};
+			OPT_TIME_SCALE, OPT_PULSE_SCALE, OPT_EOF}};
 
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.in_filename,
-			&stream_out, options.out_filename);
+	if ( result == PC_SUCCESS ) {
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	}
 
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
 		result = bin_intensity_dispatch(stream_in, stream_out, &options);
+	}
+
+	if ( result == EOF ) {
+		result = PC_SUCCESS;
 	}
 
 	free_options(&options);
 	free_streams(stream_in, stream_out);
-	
-	return(parse_result(result));
+
+	return(pc_check(result));
 }

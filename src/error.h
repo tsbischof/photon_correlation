@@ -12,6 +12,7 @@
 #define PC_ERROR_MODE                -9
 #define PC_ERROR_CHANNEL            -10
 #define PC_ERROR_INDEX              -11
+#define PC_ERROR_MISMATCH           -12
 
 #define PC_USAGE                      1
 #define PC_WINDOW_NEXT                2

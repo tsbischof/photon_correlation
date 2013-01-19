@@ -1,4 +1,4 @@
-#include "intensity_void.h"
+#include "intensity_photon.h"
 #include "intensity.h"
 
 #include "modes.h"
@@ -9,7 +9,7 @@
 
 #define MAX(x,y) (x < y ? y : x);
 
-int intensity_void(FILE *stream_in, FILE *stream_out, options_t *options) {
+int intensity_photon(FILE *stream_in, FILE *stream_out, options_t *options) {
 	counts_t *counts;
 	int result = 0;
 	photon_stream_t photons;
@@ -25,16 +25,16 @@ int intensity_void(FILE *stream_in, FILE *stream_out, options_t *options) {
 	void *photon;
 
 	if ( options->mode == MODE_T2 ) {
-		debug("void mode t2.\n");
 		window_dim = t2v_window_dimension;
 		photon_size = sizeof(t2_t);
 		photon_next = T2V_NEXT(options->binary_in);
 		channel_dim = t2v_channel_dimension;
-	} /*else if ( options->mode == MODE_T3 ) {
-		dim = t3v_window_dim;
+	} else if ( options->mode == MODE_T3 ) {
+		window_dim = t3v_window_dimension;
 		photon_size = sizeof(t3_t);
 		photon_next = T3V_NEXT(options->binary_in);
-	} */else {
+		channel_dim = t3v_channel_dimension;
+	} else {
 		error("Unsupported mode: %d\n", options->mode);
 		return(PC_ERROR_MODE);
 	}
@@ -86,12 +86,6 @@ int intensity_void(FILE *stream_in, FILE *stream_out, options_t *options) {
 			}
 
 			counts_increment(counts, channel_dim(photon));
-		} else if ( result == PC_WINDOW_AHEAD ) {
-			/* Window is ahead of the photon. Ignore this photon, since we can
-			 * advance the photon stream until we reach the window.
-			 */ 
-			debug("Window is ahead of the current photon, ignoring it.\n");
-			photons.yielded_photon = 1;
 		} else if ( result == PC_WINDOW_NEXT ) {
 			/* Go to the next window. */
 			debug("Next window.\n");

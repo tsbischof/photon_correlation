@@ -305,7 +305,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"binary-out", no_argument, 0, 'b'},
 
 		{"use-void", no_argument, 0, 'G'},
-		{"seed", no_argument, 0, 'K'},
+		{"seed", required_argument, 0, 'K'},
 
 /* Correlate */
 		{"queue-size", required_argument, 0, 'q'},

@@ -31,6 +31,11 @@ typedef struct {
 } window_t;
 
 typedef struct {
+	float64_t lower;
+	float64_t upper;
+} fwindow_t;
+
+typedef struct {
 	window_t limits;
 	uint64_t width;
 	int set_lower_bound;

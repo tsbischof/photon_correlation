@@ -231,6 +231,10 @@ void photon_window_init(photon_window_t *window,
 	window->set_lower_bound = set_lower_bound;
 	window->set_upper_bound = set_upper_bound;
 	window->upper_bound = upper_bound;
+
+	if ( set_upper_bound && window->limits.upper > upper_bound ) {
+		window->limits.upper = upper_bound;
+	}
 }
 
 int photon_window_next(photon_window_t *window) {
@@ -282,9 +286,9 @@ int photon_stream_init(photon_stream_t *photons,
 
 	photons->photon_next = photon_next;
 	photons->yielded_photon = 1; 
-/* If the photon has been yielded, the stream is reset and ready to 
- * acquire a new one.
- */
+	/* If the photon has been yielded, the stream is reset and ready to 
+	 * acquire a new one. Start in this state to pick up a new photon.
+	 */
 	photons->stream_in = stream_in;
 
 	return(PC_SUCCESS);
@@ -311,10 +315,12 @@ int photon_stream_next_windowed(photon_stream_t *photons, void *photon) {
 				photons->yielded_photon = 1;
 				return(PC_SUCCESS);
 			} else if ( photons->window.limits.lower > dim ) {	
-				/* Have photon, but window is ahead of it. Catch this to avoid
-				 * an infinite loop.
+				/* Have photon, but window is ahead of it. Ignore this photon
+				 * and loop until we find another.
+				 * Status would be PC_WINDOW_AHEAD
 				 */
-				return(PC_WINDOW_AHEAD);
+				debug("Found a photon, but it was before the window.\n");
+				photons->yielded_photon = 1;
 			} else {
 				/* Past the upper bound. */
 				if ( photons->window.set_upper_bound && 
@@ -345,11 +351,7 @@ int photon_stream_next_windowed(photon_stream_t *photons, void *photon) {
 }
 
 int photon_stream_next_unbounded(photon_stream_t *photons, void *photon) {
-	int result;
-
-	result = photons->photon_next(photons->stream_in, photon);
-
-	return(result);
+	return(photons->photon_next(photons->stream_in, photon));
 }
 
 int photon_stream_next_window(photon_stream_t *photons) {

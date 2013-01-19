@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "intensity.h"
-#include "intensity_void.h"
+#include "intensity_photon.h"
 #include "intensity_t2.h"
 #include "intensity_t3.h"
 #include "modes.h"
@@ -13,7 +13,7 @@ int intensity_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result;
 
 	if ( options->use_void ) {
-		result = intensity_void(stream_in, stream_out, options);
+		result = intensity_photon(stream_in, stream_out, options);
 	} else if ( options->mode == MODE_T2 ) {
 		result = intensity_t2(stream_in, stream_out, options);
 	} else if ( options->mode == MODE_T3 ) {
