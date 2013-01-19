@@ -11,10 +11,12 @@ typedef struct {
 	size_t photon_size;
 	void *queue;
 	int empty;
+	int mode;
 	int (*compare)(const void *, const void *);
 } photon_queue_t;
 
-photon_queue_t *photon_queue_alloc(size_t length, size_t photon_size);
+photon_queue_t *photon_queue_alloc(size_t length, int mode);
+void photon_queue_init(photon_queue_t *queue);
 void photon_queue_free(photon_queue_t **queue);
 int photon_queue_full(photon_queue_t *queue);
 int photon_queue_pop(photon_queue_t *queue, void *photon);

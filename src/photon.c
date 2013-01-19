@@ -3,7 +3,11 @@
 
 #include "photon.h"
 #include "error.h"
-
+#include "t2.h"
+#include "t2_void.h"
+#include "t3.h"
+#include "t3_void.h"
+#include "modes.h"
 /* 
  * There are three main use cases for a photon stream:
  * (1) Bulk transfer. In channels, this is used to read and sort large numbers
@@ -50,8 +54,17 @@
  * while photons is not empty:
  *     yield(next(photons))
  */
-photon_queue_t *photon_queue_alloc (size_t length, size_t photon_size) {
-	photon_queue_t *queue;
+photon_queue_t *photon_queue_alloc (size_t length, int mode) {
+	size_t photon_size;
+	photon_queue_t *queue = NULL;
+
+	if ( mode == MODE_T2 ) {
+		photon_size = sizeof(t2_t);
+	} else if ( mode == MODE_T3 ) {
+		photon_size = sizeof(t3_t);
+	} else {
+		return(queue);
+	}
 
 	queue = (photon_queue_t *)malloc(sizeof(photon_queue_t));
 	if ( queue != NULL ) {
@@ -60,6 +73,7 @@ photon_queue_t *photon_queue_alloc (size_t length, size_t photon_size) {
 		queue->right_index = 0;
 		queue->empty = 1;
 		queue->photon_size = photon_size;
+		queue->mode = mode;
 	
 		queue->queue = (void *)malloc(photon_size*length);
 		if ( queue->queue == NULL ) {
@@ -70,7 +84,15 @@ photon_queue_t *photon_queue_alloc (size_t length, size_t photon_size) {
 	return(queue);
 }
 
-void photon_queue_free (photon_queue_t **queue) {
+void photon_queue_init(photon_queue_t *queue) {
+	if ( queue->mode == MODE_T2 ) {
+		queue->compare = t2_compare;
+	} else if ( queue->mode == MODE_T3 ) {
+		queue->compare = t3_compare;
+	}
+}
+
+void photon_queue_free(photon_queue_t **queue) {
 	if ( *queue != NULL ) {
 		free((*queue)->queue);
 		free(*queue);

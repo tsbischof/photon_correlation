@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "error.h"
 #include "channels.h"
 #include "channels_photon.h"
 #include "photon.h"
@@ -20,50 +21,89 @@ int channels_photon(FILE *stream_in, FILE *stream_out, options_t *options) {
 	 *    array (queue) size is not large enough.
 	 * 5. At the end of the stream, sort and emit all photons.
 	 */
-	int result = 0;
-	photon_t record;
+	void *photon;
 	photon_queue_t *queue;
+	photon_stream_t photons;
+	photon_stream_next_t stream_next;
+	photon_next_t photon_next;
+	photon_window_dimension_t photon_window_dimension;
+	void *photon;
 	int64_t max_offset_difference = 0;
+	size_t photon_size;
 
-	if ( options->offset_time ) {
-		debug("Calculating maximum difference between offsets\n");
+	offsets_t *offsets = offsets_alloc(options->channels);
+
+	if ( offsets == NULL ) {
+		return(PC_ERROR_MEM);
+	} 
+
+	offsets_init(options);
+
+	if ( offsets->offset_time ) {
 		max_offset_difference = offset_difference(
-				options->time_offsets, options->channels);
-		debug("Maximum difference: %"PRId64"\n", max_offset_difference);
+				offsets->time_offsets, options->channels);
 	}
 
-	debug("Allocating photon queue.\n");
-	queue = allocate_photon_queue(options->queue_size);
+	queue = photon_queue_alloc(options->queue_size, options->mode);
 
 	if ( queue == NULL ) {
-		error("Could not allocate photon queue.\n");
-		result = -1;
+		offsets_free(&offsets);
+		return(PC_ERROR_MEM);
+	}
+
+	photon_queue_init(queue);
+
+	if ( options->mode == MODE_T2 ) {
+		window_dim = t2v_window_dimension;
+		photon_size = sizeof(t2_t);
+		photon_next = T2V_NEXT(options->binary_in);
+		channel_dim = t2v_channel_dimension;
+		photon_print = T2V_PRINT(options->binary_out);
+	} else if ( options->mode == MODE_T3 ) {
+		window_dim = t3v_window_dimension;
+		photon_size = sizeof(t3_t);
+		photon_next = T3V_NEXT(options->binary_out);
+		channel_dim = t3v_channel_dimension;
+		photon_print = T3V_PRINT(options->binary_out);
 	} else {
-		while ( ! result && ! next_photon(stream_in, &record, options) ) {
-			if ( photon_queue_full(queue) ) {
-				/* Queue is full, time to deal with it. */
-				debug("Full queue, yielding photons as appropriate.\n");
-				if ( options->offset_time ) { 
-					/* Only sort if offsets are applied. Otherwise, we just
-					 * waste some time. 
-					 */
-					photon_queue_sort(queue);
-				}
-				yield_sorted_photon(stream_out, queue, max_offset_difference,
-						options);
-				debug("New queue limits: (%"PRId64", %"PRId64")\n",
-						queue->left_index, queue->right_index);
+		error("Mode not supported: %d\n", options->mode);
+		return(PC_ERROR_MODE);
+	}
+
+	result = photon_stream_init(&photons, &stream_next, 
+			window_dim, photon_next,
+			photon_size, stream_in,
+			options->set_lower_bound, options->lower_bound,
+			options->width,
+			options->set_upper_bound, options->upper_bound);
+
+	photon = malloc(photon_size);
+
+	if ( result != PC_SUCCESS || photon == NULL ) {
+		error("Could not initialize photon stream.\n");
+		offsets_free(&offsets);
+		photon_queue_free(&queue);
+		return(PC_ERROR_MEM);
+	}
+
+	while ( pc_check(stream_next(&photons, photon)) == PC_SUCCESS ) {
+		if ( photon_queue_full(queue) ) {
+			if ( options->offset_time || options->offset_pulse ) { 
+				photon_queue_sort(queue);
 			}
 
-			if ( ! (options->suppress_channels &&
-					 options->suppressed_channels[record.channel]) ) {
-				offset_photon(&record, options);
-				/* Insert the new photon, now that everything is cool. */
-				if ( photon_queue_push(queue, &record) ) {
-					error("Could not add new photon to queue.\n");
-					result = -1;
-				} 
-			}
+			photon_queue_yield_sorted(stream_out, queue, 
+					max_offset_difference, photon_print);
+		}
+
+		if ( ! (options->suppress_channels &&
+				 options->suppressed_channels[channel_dim(photon)]) ) {
+			offset_photon(photon, offsets);
+
+			if ( photon_queue_push(queue, photon) ) {
+				error("Could not add new photon to queue.\n");
+				return(PC_ERROR_UNKNOWN);
+			} 
 		}
 	}
 
@@ -79,36 +119,15 @@ int channels_photon(FILE *stream_in, FILE *stream_out, options_t *options) {
 		yield_photon_queue(stream_out, queue, options);
 	}
 	
-	debug("Freeing photon queue.\n");
-	free_photon_queue(&queue);
+	free(photon);
+	photon_queue_free(&photons);
+	offsets_free(&offsets);
 
 	return(result);
 }
 
-void t3v_offset(photon_t *record, options_t *options) {
-	if ( options->offset_time ) {
-		((t3_t *)record)->time += 
-				options->time_offsets[((t3_t *)record)->channel];
-	}	
-	
-	if ( options->offset_pulse ) {
-		((t3_t *)record)->pulse +=
-				optoins->pulse_offsets[((t3_t *)record)->channel];
-	}
-}
-
-void t2v_offset(photon_t *record, options_t *options) {
-	if ( options->offset_time ) {
-		((t2_t *)record)->time +=
-				options->time_offsets[((t2_t *)record)->channel];
-	
-	} 
-}
-
 void photon_sorted_yield(FILE *stream_out, photon_queue_t *queue, 
-		int64_t max_offset_difference, options_t *options) {
-	int n_printed = 0;
-
+		int64_t max_offset_difference, photon_print_t photon_print) {
 	photon_t left;
 	photon_t right;
 
@@ -117,11 +136,7 @@ void photon_sorted_yield(FILE *stream_out, photon_queue_t *queue,
 	while ( ! photon_queue_front(queue, &left) &&
 			right.time - left.time > max_offset_difference ) {
 		photon_queue_pop(queue, &left);
-		print_photon(stream_out, &left,
-				NEWLINE, options);
-		n_printed++;
+		print_photon(stream_out, &left);
 	}
-
-	debug("Yielded %d photons\n", n_printed);
 }
 

@@ -1,6 +1,6 @@
 CC = clang
-CXX = g++
-LD = g++
+CXX = clang++
+LD = clang++
 
 CXXFLAGS = -Wall -std=c++0x -O3
 LDFLAGS = -Wall
