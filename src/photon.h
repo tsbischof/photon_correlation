@@ -51,6 +51,7 @@ typedef int64_t (*photon_window_dimension_t)(const void *);
 typedef int64_t (*photon_channel_dimension_t)(const void *);
 
 typedef struct {
+	int mode;
 	size_t photon_size;
 	void *current_photon;
 	int yielded_photon;

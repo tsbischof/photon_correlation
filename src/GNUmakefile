@@ -50,7 +50,7 @@ ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += histogram
 
 INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
-		intensity.o intensity_t2.o intensity_t3.o intensity_photon.o
+		intensity.o intensity_photon.o
 ALL_OBJ += ${INTENSITY_OBJ}
 INTENSITY_LIB = 
 ALL_LIB += ${INTENSITY_LIB}
@@ -78,18 +78,6 @@ ALL_OBJ += ${GN_OBJ}
 GN_LIB = 
 ALL_LIB += ${GN_LIB}
 #TARGETS += gn
-
-#TIME_DEPENDENT_PL_OBJ = time_dependent_pl.o ${COMMON_OBJ}
-#ALL_OBJ += ${TIME_DEPENDENT_PL_{OBJ}
-#TIME_DEPENDENT_PL_LIB = 
-#ALL_LIB += ${TIME_DEPENDENT_PL_{LIB}
-#TARGETS += time_dependent_pl
-
-#TIME_DEPENDENT_GN_OBJ = time_dependent_gn.o ${COMMON_OBJ}
-#ALL_OBJ += ${TIME_DEPENDENT_GN_OBJ}
-#TIME_DEPENDENT_GN_LIB = 
-#ALL_LIB += ${TIME_DEPENDENT_GN_LIB}
-#TARGETS += time_dependent_gn
 
 T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o
 ALL_OBJ += ${T3_AS_T2_OBJ}

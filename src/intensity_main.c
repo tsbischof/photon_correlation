@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 "the flag --count-all. This is useful for normalizing a signal.\n",
 		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_BINARY_OUT, OPT_BINARY_IN,
-			OPT_USE_VOID, OPT_PRINT_EVERY,
+			OPT_PRINT_EVERY,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_START_TIME, OPT_STOP_TIME,
 			OPT_MODE, OPT_CHANNELS,
