@@ -1,10 +1,13 @@
 #include <fstream>
 
+#include "options.hpp"
 #include "photon.hpp"
 #include "t2.hpp"
 
 int main(int argc, char *argv[]) {
-	std::ifstream stream_in;
+	Options options(argc, argv);
+
+	/*std::ifstream stream_in;
 	std::ostream& stream_out = std::cout;
 	T2 t2;
 
@@ -17,7 +20,8 @@ int main(int argc, char *argv[]) {
 
 	} 
 
-	stream_in.close();
+	stream_in.close(); */
+	std::cout << options << std::endl;
 
 	return(0);
 }
