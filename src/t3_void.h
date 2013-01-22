@@ -13,7 +13,6 @@ int t3v_fwrite(FILE *stream_out, void const *photon);
 
 int64_t t3v_window_dimension(void const *photon);
 int64_t t3v_channel_dimension(void const *photon);
-int t3v_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out);
 
 #define T3V_NEXT(x) (x ? t3v_fread : t3v_fscanf);
 #define T3V_PRINT(x) (x ? t3v_fwrite : t3v_fprintf);

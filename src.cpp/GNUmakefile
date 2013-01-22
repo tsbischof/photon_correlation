@@ -8,7 +8,7 @@ RM = rm -f
 
 LIB = -lboost_program_options
 
-COMMON_OBJ = t2.o t3.o photon.o error.o options.o
+COMMON_OBJ = t2.o t3.o photon.o error.o options.o limits.o
 
 PHOTONS_OBJ = ${COMMON_OBJ} photons_main.o
 PHOTONS_LIB = 

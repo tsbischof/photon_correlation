@@ -141,7 +141,7 @@ option_t all_options[] = {
 			"Rather than using intensity to calculate the\n"
 			"average intensity for normalization, use\n"
 			"bin_intensity to get the exact result for each\n"
-			"histogram bin."}
+			"histogram bin."},
 	};
 
 void default_options(options_t *options) {

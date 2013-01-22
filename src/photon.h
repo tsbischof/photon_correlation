@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "types.h"
+#include "options.h"
 
 typedef struct {
 	size_t length;
@@ -46,40 +47,45 @@ typedef struct {
 	uint64_t upper_bound;
 } photon_window_t;
 
+void photon_window_init(photon_window_t *window, options_t *options);
+int photon_window_next(photon_window_t *window);
+int photon_window_contains(photon_window_t *window, int64_t value);
+
+
 typedef int (*photon_next_t)(FILE *, void *);
-typedef int64_t (*photon_window_dimension_t)(const void *);
-typedef int64_t (*photon_channel_dimension_t)(const void *);
+typedef int (*photon_print_t)(FILE *, void const *);
+
+typedef int64_t (*photon_window_dimension_t)(void const *);
+typedef int64_t (*photon_channel_dimension_t)(void const *);
 
 typedef struct {
+	FILE *stream_in;
+
 	int mode;
 	size_t photon_size;
 	void *current_photon;
 	int yielded_photon;
-	FILE *stream_in;
+
 	photon_next_t photon_next;
-	photon_window_dimension_t dim;
+	photon_print_t photon_print;
+
+	photon_window_dimension_t window_dim;
+	photon_channel_dimension_t channel_dim;
 	photon_window_t window;
+
+	int (*photon_stream_next)(void *photon_stream);
 } photon_stream_t;
 
-void photon_window_init(photon_window_t *window, 
-		int set_lower_bound, int64_t lower_bound, 
-		uint64_t width,
-		int set_upper_bound, int64_t upper_bound);
-int photon_window_next(photon_window_t *window);
-
-typedef int (*photon_stream_next_t)(photon_stream_t *, void *);
-int photon_stream_next_windowed(photon_stream_t *photons, void *photon);
-int photon_stream_next_unbounded(photon_stream_t *photons, void *photon);
-
-int photon_stream_init(photon_stream_t *photons, 
-		photon_stream_next_t *stream_next,
-		photon_window_dimension_t dim,
-		photon_next_t photon_next,
-		size_t photon_size, FILE *stream_in,
-		int set_lower_bound, int64_t lower_bound, 
-		uint64_t width,
-		int set_upper_bound, int64_t upper_bound);
-void photon_stream_free(photon_stream_t *photons);
+photon_stream_t *photon_stream_alloc(options_t *options);
+int photon_stream_init(photon_stream_t *photon_stream,
+		FILE *stream_in, options_t *options);
+void photon_stream_free(photon_stream_t **photons);
+int photon_stream_next_photon(photon_stream_t *photons);
 int photon_stream_next_window(photon_stream_t *photons);
+
+int photon_stream_next_windowed(void *photon_stream);
+int photon_stream_next_unbounded(void *photon_stream);
+
+int photon_echo(FILE *stream_in, FILE *stream_out, options_t *options);
 
 #endif

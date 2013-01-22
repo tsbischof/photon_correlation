@@ -243,19 +243,17 @@ void photon_queue_sort(photon_queue_t *queue) {
 /* 
  * Implementation of the photon stream (cases 2 and 3)
  */
-void photon_window_init(photon_window_t *window, 
-		int set_lower_bound, int64_t lower_bound, 
-		uint64_t width,
-		int set_upper_bound, int64_t upper_bound) {
-	window->limits.lower = lower_bound;
-	window->limits.upper = window->limits.lower + width;
-	window->width = width;
-	window->set_lower_bound = set_lower_bound;
-	window->set_upper_bound = set_upper_bound;
-	window->upper_bound = upper_bound;
+void photon_window_init(photon_window_t *window, options_t *options) {
+	window->limits.lower = options->start_time;
+	window->limits.upper = window->limits.lower + options->bin_width;
+	window->width = options->bin_width;
+	window->set_lower_bound = options->set_start_time;
+	window->set_upper_bound = options->set_stop_time;
+	window->upper_bound = options->stop_time;
 
-	if ( set_upper_bound && window->limits.upper > upper_bound ) {
-		window->limits.upper = upper_bound;
+	if ( options->set_stop_time && 
+		window->limits.upper > options->stop_time ) {
+		window->limits.upper = options->stop_time;
 	}
 }
 
@@ -271,7 +269,6 @@ int photon_window_next(photon_window_t *window) {
 			return(PC_SUCCESS);
 		} else {
 			/* Outside the upper bound. */
-			printf("here\n");
 			return(PC_WINDOW_EXCEEDED);
 		}
 	} else {
@@ -279,34 +276,59 @@ int photon_window_next(photon_window_t *window) {
 	}
 }
 
-int photon_stream_init(photon_stream_t *photons, 
-		photon_stream_next_t *stream_next,
-		photon_window_dimension_t dim,
-		photon_next_t photon_next,
-		size_t photon_size, FILE *stream_in,
-		int set_lower_bound, int64_t lower_bound, 
-		uint64_t width,
-		int set_upper_bound, int64_t upper_bound) {	
-	photons->dim = dim;
-	photons->photon_size = photon_size;
-	photons->current_photon = malloc(photon_size);
+int photon_window_contains(photon_window_t *window, int64_t value) {
+	return( window->limits.lower <= value &&
+			window->limits.upper > value );
+}
+
+photon_stream_t *photon_stream_alloc(options_t *options) {
+	photon_stream_t *photons = NULL;
+
+	photons = (photon_stream_t *)malloc(sizeof(photon_stream_t));
+
+	if ( photons == NULL ) {
+		return(photons);
+	}
+
+	/* Leave space here to allocate a photon queue. */
+	return(photons);	
+}
+
+int photon_stream_init(photon_stream_t *photons, FILE *stream_in, 
+		options_t *options) {
+	photons->mode = options->mode;
+
+	if ( options->mode == MODE_T2 ) {
+		photons->photon_size = sizeof(t2_t);
+		photons->photon_next = T2V_NEXT(options->binary_in);
+		photons->photon_print = T2V_PRINT(options->binary_out);
+		photons->window_dim = t2v_window_dimension;
+		photons->channel_dim = t2v_channel_dimension;
+	} else if ( options->mode == MODE_T3 ) {
+		photons->photon_size = sizeof(t3_t);
+		photons->photon_next = T3V_NEXT(options->binary_in);
+		photons->photon_print = T3V_PRINT(options->binary_out);
+		photons->window_dim = t3v_window_dimension;
+		photons->channel_dim = t3v_channel_dimension;
+	} else {
+		return(PC_ERROR_MODE);
+	}
+
+	photons->current_photon = malloc(photons->photon_size);
 
 	if ( photons->current_photon == NULL ) {
 		return(PC_ERROR_MEM);
 	}
 
-	photon_window_init(&(photons->window),
-			set_lower_bound, lower_bound, 
-			width, 
-			set_upper_bound, upper_bound);
+	photon_window_init(&(photons->window), options);
 
-	if ( set_upper_bound || width != 0 ) {
-		*stream_next = photon_stream_next_windowed;
+	if ( options->set_start_time || options->set_stop_time ||
+			options->bin_width != 0 ) {
+		photons->photon_stream_next = photon_stream_next_windowed;
 	} else {
-		*stream_next = photon_stream_next_unbounded;
+		photons->photon_stream_next = photon_stream_next_unbounded;
 	}
 
-	photons->photon_next = photon_next;
 	photons->yielded_photon = 1; 
 	/* If the photon has been yielded, the stream is reset and ready to 
 	 * acquire a new one. Start in this state to pick up a new photon.
@@ -316,24 +338,24 @@ int photon_stream_init(photon_stream_t *photons,
 	return(PC_SUCCESS);
 }
 
-void photon_stream_free(photon_stream_t *photons) {
-	free(photons->current_photon);
+void photon_stream_free(photon_stream_t **photons) {
+	if ( *photons != NULL ) {
+		free((*photons)->current_photon);
+		free(*photons);
+	}
 }
 
-int photon_stream_next_windowed(photon_stream_t *photons, void *photon) {
+int photon_stream_next_windowed(void *photon_stream) {
+	photon_stream_t *photons = (photon_stream_t *)photon_stream;
 	int64_t dim;
 	int result;
 
 	while ( 1 ) {
 		if ( ! photons->yielded_photon ) {
 			/* Photon available, check if it is in the window. */
-			dim =  photons->dim(photons->current_photon);
-			if ( photons->window.limits.lower <= dim 
-					&& dim < photons->window.limits.upper ) {
+			dim =  photons->window_dim(photons->current_photon);
+			if ( photon_window_contains(&(photons->window), dim) ) {
 				/* Found a photon, and in the window. */
-				memcpy(photon,
-						photons->current_photon,
-						photons->photon_size);
 				photons->yielded_photon = 1;
 				return(PC_SUCCESS);
 			} else if ( photons->window.limits.lower > dim ) {	
@@ -372,10 +394,37 @@ int photon_stream_next_windowed(photon_stream_t *photons, void *photon) {
 	}
 }
 
-int photon_stream_next_unbounded(photon_stream_t *photons, void *photon) {
-	return(photons->photon_next(photons->stream_in, photon));
+int photon_stream_next_unbounded(void *photon_stream) {
+	photon_stream_t *photons = (photon_stream_t *)photon_stream;
+	return(photons->photon_next(photons->stream_in, photons->current_photon));
 }
 
 int photon_stream_next_window(photon_stream_t *photons) {
 	return(photon_window_next(&(photons->window)));
+}
+
+int photon_stream_next_photon(photon_stream_t *photon_stream) {
+	return(photon_stream->photon_stream_next(photon_stream));
+}
+
+int photon_echo(FILE *stream_in, FILE *stream_out, options_t *options) {
+	int result;
+	photon_stream_t *photon_stream = photon_stream_alloc(options);
+
+	if ( photon_stream == NULL ) {
+		return(PC_ERROR_MEM);
+	}
+
+	result = photon_stream_init(photon_stream, stream_in, options);
+
+	if ( result != PC_SUCCESS ) {
+		return(result);
+	}
+
+	while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS) {
+		photon_stream->photon_print(stream_out, photon_stream->current_photon);
+	}
+
+	photon_stream_free(&photon_stream);
+	return(PC_SUCCESS);
 }

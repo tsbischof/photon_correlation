@@ -1,9 +1,6 @@
 #ifndef OPTIONS_H_
 #define OPTIONS_H_
 
-#define NO_NEWLINE 0
-#define NEWLINE 1
-
 #define QUEUE_SIZE 1024*1024
 
 #include <stdio.h>
@@ -106,7 +103,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
 		OPT_SUPPRESS,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
-		OPT_EXACT_NORMALIZATION,
+		OPT_EXACT_NORMALIZATION, 
 		OPT_EOF };
 
 void default_options(options_t *options);

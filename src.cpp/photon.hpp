@@ -27,7 +27,7 @@ class Photon
 };
 
 template <class PhotonT>
-class Window : public std::iterator<std::output_iterator_tag, PhotonT>
+class Window : std::iterator<output_iterator_tag, PhotonT>
 {
 	private:
 		PhotonT lower;
@@ -45,8 +45,8 @@ class Window : public std::iterator<std::output_iterator_tag, PhotonT>
 		friend std::istream& operator>>(std::istream& in,
 				Window& window);
 
-		bool contains(PhotonT const& photon);
-		bool ahead_of(PhotonT const& photon);
+		bool contains(PhotonT const& value);
+		bool ahead_of(PhotonT const& value);
 };
 
 /* The PhotonStream class has a number of tasks to perform:
