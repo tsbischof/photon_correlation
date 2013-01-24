@@ -16,16 +16,18 @@ typedef struct {
 	int (*compare)(const void *, const void *);
 } photon_queue_t;
 
-photon_queue_t *photon_queue_alloc(size_t length, int mode);
+photon_queue_t *photon_queue_alloc(size_t const length, int const mode);
 void photon_queue_init(photon_queue_t *queue);
 void photon_queue_free(photon_queue_t **queue);
-int photon_queue_full(photon_queue_t *queue);
+int photon_queue_full(photon_queue_t const *queue);
+int photon_queue_empty(photon_queue_t const *queue);
 int photon_queue_pop(photon_queue_t *queue, void *photon);
 int photon_queue_push(photon_queue_t *queue, void *photon);
-int photon_queue_front(photon_queue_t *queue, void *photon);
-int photon_queue_back(photon_queue_t *queue, void *photon);
-size_t photon_queue_index(photon_queue_t *queue, void *photon, int index);
-size_t photon_queue_size(photon_queue_t *queue);
+int photon_queue_front(photon_queue_t const *queue, void *photon);
+int photon_queue_back(photon_queue_t const *queue, void *photon);
+size_t photon_queue_index(photon_queue_t const *queue, void *photon, 
+		int const index);
+size_t photon_queue_size(photon_queue_t const *queue);
 void photon_queue_sort(photon_queue_t *queue);
 
 typedef struct {
@@ -47,9 +49,9 @@ typedef struct {
 	uint64_t upper_bound;
 } photon_window_t;
 
-void photon_window_init(photon_window_t *window, options_t *options);
+void photon_window_init(photon_window_t *window, options_t const *options);
 int photon_window_next(photon_window_t *window);
-int photon_window_contains(photon_window_t *window, int64_t value);
+int photon_window_contains(photon_window_t const *window, int64_t const value);
 
 
 typedef int (*photon_next_t)(FILE *, void *);
@@ -76,9 +78,9 @@ typedef struct {
 	int (*photon_stream_next)(void *photon_stream);
 } photon_stream_t;
 
-photon_stream_t *photon_stream_alloc(options_t *options);
+photon_stream_t *photon_stream_alloc(options_t const *options);
 int photon_stream_init(photon_stream_t *photon_stream,
-		FILE *stream_in, options_t *options);
+		FILE *stream_in, options_t const *options);
 void photon_stream_free(photon_stream_t **photons);
 int photon_stream_next_photon(photon_stream_t *photons);
 int photon_stream_next_window(photon_stream_t *photons);
@@ -86,6 +88,6 @@ int photon_stream_next_window(photon_stream_t *photons);
 int photon_stream_next_windowed(void *photon_stream);
 int photon_stream_next_unbounded(void *photon_stream);
 
-int photon_echo(FILE *stream_in, FILE *stream_out, options_t *options);
+int photon_echo(FILE *stream_in, FILE *stream_out, options_t const *options);
 
 #endif

@@ -3,52 +3,48 @@
 
 #include <stdio.h>
 
-typedef struct {
-	int channel;
-	int index;
-} channel_t;
+unsigned int pow_int(unsigned int const base, unsigned int const exponent);
+unsigned int n_combinations(unsigned int const n, unsigned int const m);
+unsigned int n_permutations(unsigned int const n);
+unsigned int factorial(unsigned int const n);
 
 typedef struct {
-	int n_permutations;
-	int length;
-	int latter_only;
-	int **permutations;
-} permutations_t;
-
-
-typedef struct {
-	int channels;
-	int order;
-	int *digits;
+	unsigned int length;
+	unsigned int *values;
 } combination_t;
 
 typedef struct {
-	int limit;
-	int order;
-	int *offsets;
-} offsets_t;
+	unsigned int length;
+	unsigned int limit;
+	int yielded;
 
-int pow_int(int channels, int order);
-int n_combinations(int channels, int order);
-int n_permutations(int order);
-int factorial(int order);
+	combination_t *current_combination;
+} combinations_t;
 
-combination_t *allocate_combination(int channels, int order);
-void free_combination(combination_t **combination);
-int next_combination(combination_t *combination);
-int get_combination_index(combination_t *combination);
-void print_combination(FILE *stream_out, combination_t *combination);
+combination_t *combination_alloc(unsigned int const length);
+void combination_init(combination_t *combination);
+void combination_free(combination_t **combination);
+unsigned int combination_index(combination_t const *combination);
+int combination_fprintf(FILE *stream_out, combination_t const *combination);
 
-offsets_t *allocate_offsets(int order);
-void free_offsets(offsets_t **offsets);
-int next_offsets(offsets_t *offsets);
-void init_offsets(offsets_t *offsets);
-void print_offsets(offsets_t *offsets);
+combinations_t *combinations_alloc(unsigned int const length, 
+		unsigned int const limit);
+void combinations_init(combinations_t *combinations);
+int combinations_next(combinations_t *combinations);
+void combinations_free(combinations_t **combinations);
 
-permutations_t *make_permutations(int order, int latter_only);
-permutations_t *allocate_permutations(int order, int latter_only);
-void free_permutations(permutations_t **permutations);
-int next_permutation(combination_t *permutation);
-int is_permutation(combination_t *permutation);
+typedef struct {
+	unsigned int length;
+	unsigned int limit;
+	int yielded;
+
+	combination_t *current_index_offsets;
+} index_offsets_t;
+
+index_offsets_t *index_offsets_alloc(unsigned int const length);
+void index_offsets_init(index_offsets_t *index_offsets, 
+		unsigned int const limit);
+int index_offsets_next(index_offsets_t *index_offsets);
+void index_offsets_free(index_offsets_t **index_offsets);
 
 #endif 

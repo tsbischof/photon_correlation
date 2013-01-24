@@ -16,29 +16,21 @@ int t2_fread(FILE *stream_in, t2_t *t2) {
 	if ( n_read == 1 ) {
 		return(PC_SUCCESS);
 	} else {
-		if ( feof(stream_in) ) {
-			return(EOF);
-		} else {
-			return(PC_ERROR_IO);
-		}
-	}	
+		return( feof(stream_in) ? EOF : PC_ERROR_IO );
+	}
 }
 
 int t2_fscanf(FILE *stream_in, t2_t *t2) {
 	int n_read = fscanf(stream_in,
 			"%"SCNu32",%"SCNd64,
 			&(t2->channel),
-			&(t2->time));
+			&(t2->time)); 
 
 	if ( n_read == 2 ) {
 		return(PC_SUCCESS);
 	} else {
-		if ( feof(stream_in) ) { 
-			return(EOF);
-		} else {
-			return(PC_ERROR_IO);
-		}
-	} 
+		return( feof(stream_in) ? EOF : PC_ERROR_IO );
+	}
 }
 
 int t2_fprintf(FILE *stream_out, t2_t const *t2) {

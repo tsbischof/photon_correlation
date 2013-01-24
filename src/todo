@@ -11,6 +11,7 @@ photon_stream_t *photons = photon_stream_alloc(options);
 while ( (photons)->good() ) {
 	/* do stuff */
 }
+-clean up photon_stream_init to make it void. Do allocation in alloc
 
 At the end of windows or feed, the stream indicates as such. Internally, the stream keeps a queue of values ready to go, and performs all processing of channel suppression and offsets on the fly. Additional photon queues can be built as needed, for correlation and whatnot, but this should make the process of actually instantiating and using the stream simpler.
 

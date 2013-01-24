@@ -54,31 +54,38 @@
  * while photons is not empty:
  *     yield(next(photons))
  */
-photon_queue_t *photon_queue_alloc (size_t length, int mode) {
-	size_t photon_size;
+photon_queue_t *photon_queue_alloc (size_t const length, int const mode) {
 	photon_queue_t *queue = NULL;
 
-	if ( mode == MODE_T2 ) {
-		photon_size = sizeof(t2_t);
-	} else if ( mode == MODE_T3 ) {
-		photon_size = sizeof(t3_t);
-	} else {
+	queue = (photon_queue_t *)malloc(sizeof(photon_queue_t));
+
+	if ( queue == NULL ) {
 		return(queue);
 	}
 
-	queue = (photon_queue_t *)malloc(sizeof(photon_queue_t));
-	if ( queue != NULL ) {
-		queue->length = length;
-		queue->left_index = 0;
-		queue->right_index = 0;
-		queue->empty = 1;
-		queue->photon_size = photon_size;
-		queue->mode = mode;
+	queue->length = length;
+	queue->left_index = 0;
+	queue->right_index = 0;
+	queue->empty = 1;
+
+	queue->mode = mode;
+
+	if ( queue->mode == MODE_T2 ) {
+		queue->photon_size = sizeof(t2_t);
+		queue->compare = t2_compare;
+	} else if ( queue->mode == MODE_T3 ) {
+		queue->photon_size = sizeof(t3_t);
+		queue->compare = t3_compare;
+	} else {
+		photon_queue_free(&queue);
+		return(queue);
+	}
 	
-		queue->queue = (void *)malloc(photon_size*length);
-		if ( queue->queue == NULL ) {
-			photon_queue_free(&queue);
-		}
+	queue->queue = malloc(queue->photon_size*length);
+
+	if ( queue->queue == NULL ) {
+		photon_queue_free(&queue);
+		return(queue);
 	}
 
 	return(queue);
@@ -100,8 +107,12 @@ void photon_queue_free(photon_queue_t **queue) {
 	}
 }
 
-int photon_queue_full(photon_queue_t *queue) {
+int photon_queue_full(photon_queue_t const *queue) {
 	return( photon_queue_size(queue) >=  queue->length );
+}
+
+int photon_queue_empty(photon_queue_t const *queue) {
+	return( photon_queue_size(queue) == 0 );
 }
 
 int photon_queue_pop(photon_queue_t *queue, void *photon) {
@@ -145,7 +156,7 @@ int photon_queue_push(photon_queue_t *queue, void *photon) {
 	return(PC_SUCCESS);
 }
 
-int photon_queue_front(photon_queue_t *queue, void *photon) {
+int photon_queue_front(photon_queue_t const *queue, void *photon) {
 	size_t index;
 
 	if ( queue->empty ) {
@@ -159,7 +170,7 @@ int photon_queue_front(photon_queue_t *queue, void *photon) {
 	}
 }
 
-int photon_queue_back(photon_queue_t *queue, void *photon) {
+int photon_queue_back(photon_queue_t const *queue, void *photon) {
 	size_t index;
 
 	if ( queue->empty ) {
@@ -173,7 +184,8 @@ int photon_queue_back(photon_queue_t *queue, void *photon) {
 	}
 }
 
-size_t photon_queue_index(photon_queue_t *queue, void *photon, int index) {
+size_t photon_queue_index(photon_queue_t const *queue, void *photon, 
+		int const index) {
 	size_t true_index = (queue->left_index + index) % queue->length;
 
 	if ( index > photon_queue_size(queue) ) {
@@ -186,7 +198,7 @@ size_t photon_queue_index(photon_queue_t *queue, void *photon, int index) {
 	}
 }
 
-size_t photon_queue_size(photon_queue_t *queue) {
+size_t photon_queue_size(photon_queue_t const *queue) {
 	if ( queue->empty ) {
 		return(0);
 	} else {
@@ -205,8 +217,8 @@ void photon_queue_sort(photon_queue_t *queue) {
 		debug("Queue is full, no action is needed to make it contiguous for "
 				"sorting.\n");
 	} else {
-		warn("Sorting with a non-full queue is not thoroughly tested. "
-				"Use these results at your own risk.\n");
+/*		warn("Sorting with a non-full queue is not thoroughly tested. "
+				"Use these results at your own risk.\n"); */
 		if ( right < left ) {
 			/* The queue wraps around, so join the two together by moving the 
 			 * right-hand bit over. 
@@ -237,13 +249,13 @@ void photon_queue_sort(photon_queue_t *queue) {
 	qsort(queue->queue, 
 			photon_queue_size(queue), 
 			queue->photon_size, 
-			queue->compare);
+			queue->compare); 
 }
 
 /* 
  * Implementation of the photon stream (cases 2 and 3)
  */
-void photon_window_init(photon_window_t *window, options_t *options) {
+void photon_window_init(photon_window_t *window, options_t const *options) {
 	window->limits.lower = options->start_time;
 	window->limits.upper = window->limits.lower + options->bin_width;
 	window->width = options->bin_width;
@@ -276,12 +288,12 @@ int photon_window_next(photon_window_t *window) {
 	}
 }
 
-int photon_window_contains(photon_window_t *window, int64_t value) {
+int photon_window_contains(photon_window_t const *window, int64_t const value) {
 	return( window->limits.lower <= value &&
 			window->limits.upper > value );
 }
 
-photon_stream_t *photon_stream_alloc(options_t *options) {
+photon_stream_t *photon_stream_alloc(options_t const *options) {
 	photon_stream_t *photons = NULL;
 
 	photons = (photon_stream_t *)malloc(sizeof(photon_stream_t));
@@ -295,7 +307,7 @@ photon_stream_t *photon_stream_alloc(options_t *options) {
 }
 
 int photon_stream_init(photon_stream_t *photons, FILE *stream_in, 
-		options_t *options) {
+		options_t const *options) {
 	photons->mode = options->mode;
 
 	if ( options->mode == MODE_T2 ) {
@@ -407,7 +419,7 @@ int photon_stream_next_photon(photon_stream_t *photon_stream) {
 	return(photon_stream->photon_stream_next(photon_stream));
 }
 
-int photon_echo(FILE *stream_in, FILE *stream_out, options_t *options) {
+int photon_echo(FILE *stream_in, FILE *stream_out, options_t const *options) {
 	int result;
 	photon_stream_t *photon_stream = photon_stream_alloc(options);
 

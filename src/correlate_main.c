@@ -8,8 +8,6 @@
 #include <time.h>
 
 #include "correlate.h"
-#include "correlate_t2.h"
-#include "correlate_t3.h"
 #include "error.h"
 #include "files.h"
 #include "modes.h"

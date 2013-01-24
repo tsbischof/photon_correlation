@@ -29,14 +29,12 @@ PHOTONS_LIB =
 ALL_LIB += ${PHOTONS_LIB}
 TARGETS += photons
 
-CORRELATE_OBJ = correlate_main.o ${COMMON_OBJ} \
-		correlate.o \
-		combinations.o \
-		correlate_t2.o correlate_t3.o 
+CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
+		correlate.o combinations.o permutations.o 
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
-#TARGETS += correlate
+TARGETS += correlate
 
 HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 		histogram.o \
@@ -66,7 +64,7 @@ ALL_LIB += ${BIN_INTENSITY_LIB}
 #TARGETS += bin_intensity
 
 CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \
-		channels.o channels_t2.o channels_t3.o # channels_photon.o
+		channels.o channels_photon.o
 ALL_OBJ += ${CHANNELS_OBJ}
 CHANNELS_LIB =
 ALL_LIB += ${CHANNELS_LIB}

@@ -8,7 +8,7 @@ int stream_open(FILE **stream, FILE *default_stream,
 	if ( filename == NULL ) {
 		*stream = default_stream;
 	} else {
-		debug("Opening %s for with mode %s.\n", filename, mode);
+		debug("Opening %s with mode %s.\n", filename, mode);
 		*stream = fopen(filename, mode);
 
 		if ( *stream == NULL ) {

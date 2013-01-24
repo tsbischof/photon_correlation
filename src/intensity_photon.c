@@ -88,7 +88,11 @@ int intensity_photon(FILE *stream_in, FILE *stream_out, options_t *options) {
 
 	/* Print the remaining counts. */
 	if ( photons_seen > 0 ) {
-		counts->window.lower = photon_stream->window.limits.lower;
+		if ( windows_seen == 0 && ! photon_stream->window.set_lower_bound ) {
+			counts->window.lower = absolute_lower;
+		} else {
+			counts->window.lower = photon_stream->window.limits.lower;
+		}
 		
 		if ( options->set_stop_time ) {
 			counts->window.upper = photon_stream->window.limits.upper;

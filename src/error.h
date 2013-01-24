@@ -18,6 +18,7 @@
 #define PC_WINDOW_NEXT                2
 #define PC_WINDOW_EXCEEDED            3
 #define PC_WINDOW_AHEAD               4
+#define PC_COMBINATION_OVERFLOW       5
 
 #include <stdio.h>
 #include <stdlib.h>

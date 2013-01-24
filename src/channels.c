@@ -2,32 +2,21 @@
 
 #include "options.h"
 #include "error.h"
-#include "modes.h"
+#include "channels_photon.h"
 #include "t2.h"
 #include "t3.h"
-#include "channels_t2.h"
-#include "channels_t3.h"
-#include "channels_photon.h"
 
-int channels_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
-	/*if ( options->use_void ) {
-		return(channels_photon(stream_in, stream_out, options));
-	} else */ if ( options->mode == MODE_T2 ) {
-		return(channels_t2(stream_in, stream_out, options));
-	} else if ( options->mode == MODE_T3 ) {
-		return(channels_t3(stream_in, stream_out, options));
-	} else {
-		error("Mode not supported: %s\n", options->mode_string);
-		return(PC_ERROR_MODE);
-	}
+int channels_dispatch(FILE *stream_in, FILE *stream_out, 
+		options_t const *options) {
+	return(channels_photon(stream_in, stream_out, options));
 }
 
-int64_t offset_difference(int64_t *offsets, int n) {
+int64_t offset_difference(int64_t const *offsets, int const channels) {
 	int64_t min = 0;
 	int64_t max = 0;
 	int i;
 
-	for ( i = 0; i < n; i++ ) {
+	for ( i = 0; i < channels; i++ ) {
 		if ( offsets[i] < min ) {
 			min = offsets[i];
 		} 
@@ -59,9 +48,16 @@ void t2v_offset(void *record, offsets_t const *offsets) {
 	} 
 }
 
-offsets_t *offsets_alloc(int channels) {
+offsets_t *offsets_alloc(int const channels) {
 	offsets_t *offsets = NULL;
 
+	offsets = (offsets_t *)malloc(sizeof(offsets_t));
+
+	if ( offsets == NULL ) {
+		return(offsets);
+	}
+
+	offsets->channels = channels;
 	offsets->time_offsets = (int64_t *)malloc(sizeof(int64_t)*channels);
 	offsets->pulse_offsets = (int64_t *)malloc(sizeof(int64_t)*channels);
 
@@ -73,14 +69,17 @@ offsets_t *offsets_alloc(int channels) {
 	}
 }
 
-void offsets_init(offsets_t *offsets, options_t *options) {
+void offsets_init(offsets_t *offsets, options_t const *options) {
 	int i;
 
 	offsets->offset_time = options->offset_time;
-	options->offset_pulse = options->offset_pulse;
+	offsets->offset_pulse = options->offset_pulse;
 
-	for ( i = 0; i < options->channels; i++ ) {
+	for ( i = 0; offsets->offset_time && i < offsets->channels; i++ ) {
 		offsets->time_offsets[i] = options->time_offsets[i];
+	} 
+
+	for ( i = 0; offsets->offset_pulse && i < offsets->channels; i++ ) {
 		offsets->pulse_offsets[i] = options->pulse_offsets[i];
 	}
 }

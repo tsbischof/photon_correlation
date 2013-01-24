@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include "types.h"
-#include "photon.h"
 #include "options.h"
+#include "correlate.h"
 
 typedef struct {
 	uint32_t channel;
@@ -24,5 +24,14 @@ int t2_fwrite(FILE *stream_out, t2_t const *t2);
 
 int t2_compare(void const *a, void const *b);
 int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out);
+
+void t2_correlate(correlation_t *correlation);
+int t2_correlation_fread(FILE *stream_out, correlation_t *correlation);
+int t2_correlation_fscanf(FILE *stream_out, correlation_t *correlation);
+int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation);
+int t2_correlation_fwrite(FILE *stream_out, correlation_t const *correlation);
+#define T2_CORRELATION_NEXT(x) ( x ? t2_correlation_fread : t2_correlation_fscanf );
+#define T2_CORRELATION_PRINT(x) ( x ? t2_correlation_fwrite : t2_correlation_fscanf );
+
 
 #endif
