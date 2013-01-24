@@ -75,7 +75,7 @@ int t3_compare(void const *a, void const *b) {
 	int64_t difference;
 
 	if ( ((t3_t *)a)->pulse == ((t3_t *)b)->pulse ) {
-		difference = ((t3_t *)a)->time - ((t3_t *)b)->time;
+		difference = (int64_t)((t3_t *)a)->time - (int64_t)((t3_t *)b)->time;
 	} else {
 		difference = ((t3_t *)a)->pulse - ((t3_t *)b)->pulse;
 	}
