@@ -5,12 +5,12 @@
 #include "options.h"
 #include "photon.h"
 #include "types.h"
-
+#include "correlate_photon.h"
 
 typedef struct {
 	uint32_t channel;
-	uint32_t time;
 	int64_t pulse;
+	int64_t time;
 } t3_t;
 
 typedef int (*t3_next_t)(FILE *, t3_t *);
@@ -25,5 +25,17 @@ int t3_fwrite(FILE *stream_out, t3_t const *t3);
 
 int t3_compare(void const *a, void const *b);
 int t3_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out);
+
+void t3_correlate(correlation_t *correlation);
+int t3_correlation_fread(FILE *stream_in, correlation_t *correlation);
+int t3_correlation_fscanf(FILE *stream_in, correlation_t *correlation);
+int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation);
+int t3_correlation_fwrite(FILE *stream_out, correlation_t const *correlation);
+#define T3_CORRELATION_NEXT(x) ( x ? t3_correlation_fread : t3_correlation_fscanf );
+#define T3_CORRELATION_PRINT(x) ( x ? t3_correlation_fwrite : t3_correlation_fprintf );
+
+int t3_under_max_distance(void *correlator);
+int t3_over_min_distance(void *correlator);
+
 
 #endif

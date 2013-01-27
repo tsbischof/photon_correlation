@@ -17,4 +17,8 @@ int64_t t2v_channel_dimension(void const *photon);
 #define T2V_NEXT(x) (x ? t2v_fread : t2v_fscanf);
 #define T2V_PRINT(x) (x ? t2v_fwrite : t2v_fprintf);
 
+#include "channels.h"
+
+void t2v_offset(void *photon, offsets_t const *offsets);
+
 #endif

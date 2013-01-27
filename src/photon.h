@@ -31,8 +31,8 @@ size_t photon_queue_size(photon_queue_t const *queue);
 void photon_queue_sort(photon_queue_t *queue);
 
 typedef struct {
-	uint64_t lower;
-	uint64_t upper;
+	int64_t lower;
+	int64_t upper;
 } window_t;
 
 typedef struct {
@@ -42,11 +42,11 @@ typedef struct {
 
 typedef struct {
 	window_t limits;
-	uint64_t width;
+	int64_t width;
 	int set_lower_bound;
 	int set_upper_bound;
-	uint64_t lower_bound;
-	uint64_t upper_bound;
+	int64_t lower_bound;
+	int64_t upper_bound;
 } photon_window_t;
 
 void photon_window_init(photon_window_t *window, options_t const *options);
@@ -87,6 +87,8 @@ int photon_stream_next_window(photon_stream_t *photons);
 
 int photon_stream_next_windowed(void *photon_stream);
 int photon_stream_next_unbounded(void *photon_stream);
+
+int photon_stream_eof(photon_stream_t *photons);
 
 int photon_echo(FILE *stream_in, FILE *stream_out, options_t const *options);
 

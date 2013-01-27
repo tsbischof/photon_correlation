@@ -11,10 +11,10 @@ CCFLAGS := -Wall
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
 CCFLAGS += -D VERSION="1.6"
-CCFLAGS += -O3
+CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
-LDFLAGS = -Wall ${LIBS}
+LDFLAGS = -Wall ${LIBS} 
 
 ALL_OBJ = 
 ALL_LIB = 
@@ -30,11 +30,20 @@ ALL_LIB += ${PHOTONS_LIB}
 TARGETS += photons
 
 CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
-		correlate.o combinations.o permutations.o 
+		correlate.o correlate_photon.o \
+		combinations.o permutations.o 
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
 TARGETS += correlate
+
+CORRELATIONS_OBJ = ${COMMON_OBJ} correlations_main.o \
+		correlate_photon.o \
+		combinations.o permutations.o
+ALL_OBJ += ${CORRELATIONS_OBJ}
+CORRELATIONS_LIB = 
+ALL_LIB += ${CORRELATIONS_LIB}
+TARGETS += correlations
 
 HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
 		histogram.o \
@@ -71,11 +80,13 @@ ALL_LIB += ${CHANNELS_LIB}
 TARGETS += channels
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
-		gn.o
+		gn.o \
+		correlate.o correlate_photon.o combinations.o permutations.o # \
+#		histogram.o
 ALL_OBJ += ${GN_OBJ}
 GN_LIB = 
 ALL_LIB += ${GN_LIB}
-#TARGETS += gn
+TARGETS += gn
 
 T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o
 ALL_OBJ += ${T3_AS_T2_OBJ}
@@ -128,6 +139,9 @@ photons: ${PHOTONS_OBJ}
 correlate: ${CORRELATE_OBJ}
 	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^
 
+correlations: ${CORRELATIONS_OBJ}
+	${LD} ${LDFLAGS} ${CORRELATIONS_LIB} -o $@ $^
+
 histogram: ${HISTOGRAM_OBJ}
 	${LD} ${LDFLAGS} ${HISTOGRAM_LIB} -o $@ $^
 
@@ -162,4 +176,4 @@ gn: ${GN_OBJ}
 	${CC} ${CCFLAGS} -fpic -c -o $@ $<
 
 clean:
-	${RM} ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}}

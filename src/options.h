@@ -46,9 +46,9 @@ typedef struct {
 	uint64_t bin_width;
 	int count_all;
 	int set_start_time;
-	uint64_t start_time;
+	int64_t start_time;
 	int set_stop_time;
-	uint64_t stop_time;
+	int64_t stop_time;
 
 /* Histogram */
 	char *time_string;

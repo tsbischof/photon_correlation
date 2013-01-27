@@ -419,6 +419,10 @@ int photon_stream_next_photon(photon_stream_t *photon_stream) {
 	return(photon_stream->photon_stream_next(photon_stream));
 }
 
+int photon_stream_eof(photon_stream_t *photons) {
+	return(feof(photons->stream_in));
+}
+
 int photon_echo(FILE *stream_in, FILE *stream_out, options_t const *options) {
 	int result;
 	photon_stream_t *photon_stream = photon_stream_alloc(options);

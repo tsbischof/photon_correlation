@@ -5,6 +5,7 @@
 #include "files.h"
 #include "error.h"
 #include "t3.h"
+#include "t3_void.h"
 #include "photon.h"
 
 /* 
@@ -26,7 +27,7 @@ int t3_fread(FILE *stream_in, t3_t *t3) {
 
 int t3_fscanf(FILE *stream_in, t3_t *t3) {
 	int n_read = fscanf(stream_in,
-			"%"SCNu32",%"SCNd64",%"SCNu32"\n",
+			"%"SCNu32",%"SCNd64",%"SCNd64"\n",
 			&(t3->channel),
 			&(t3->pulse),
 			&(t3->time));
@@ -44,7 +45,7 @@ int t3_fscanf(FILE *stream_in, t3_t *t3) {
 
 int t3_fprintf(FILE *stream_out, t3_t const *t3) {
 	fprintf(stream_out,
-			"%"PRIu32",%"PRId64",%"PRIu32"\n",
+			"%"PRIu32",%"PRId64",%"PRId64"\n",
 			t3->channel,
 			t3->pulse,
 			t3->time);
@@ -75,7 +76,7 @@ int t3_compare(void const *a, void const *b) {
 	int64_t difference;
 
 	if ( ((t3_t *)a)->pulse == ((t3_t *)b)->pulse ) {
-		difference = (int64_t)((t3_t *)a)->time - (int64_t)((t3_t *)b)->time;
+		difference = ((t3_t *)a)->time - ((t3_t *)b)->time;
 	} else {
 		difference = ((t3_t *)a)->pulse - ((t3_t *)b)->pulse;
 	}
@@ -93,5 +94,122 @@ int t3_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {
 	}
 
 	return(PC_SUCCESS);
+}
+
+
+void t3_correlate(correlation_t *correlation) {
+	int i;
+
+	for ( i = 1; i < correlation->order; i++ ) {
+		((t3_t *)(&correlation->photons)[i])->pulse -=
+				((t3_t *)(&correlation->photons)[0])->pulse;
+		((t3_t *)(&correlation->photons)[i])->time -=
+				((t3_t *)(&correlation->photons)[0])->time; 
+	}
+
+	((t3_t *)(&correlation->photons)[0])->pulse = 0;
+	((t3_t *)(&correlation->photons)[0])->time = 0;
+}
+
+int t3_correlation_fread(FILE *stream_in, correlation_t *correlation) {
+	size_t n_read;
+
+	n_read = fread(correlation->photons,
+			sizeof(t3_t),
+			correlation->order,
+			stream_in);
+
+	if ( n_read == correlation->order ) {
+		return(PC_SUCCESS);
+	} else {
+		return( feof(stream_in) ? EOF : PC_ERROR_IO );
+	}
+}
+
+int t3_correlation_fscanf(FILE *stream_in, correlation_t *correlation) {
+	int i;
+	int result;
+
+	result = fscanf(stream_in,
+			"%"PRIu32,
+			&(((t3_t *)(correlation->photons))[0].channel));
+
+	result = (result == 1);
+
+	((t3_t *)(correlation->photons))[0].pulse = 0;
+	((t3_t *)(correlation->photons))[0].time = 0;
+
+	for ( i = 1; result && i < correlation->order; i++ ) {
+		result = fscanf(stream_in,
+				",%"PRIu32",%"PRId64",%"PRId64,
+				&(((t3_t *)(correlation->photons))[i].channel),
+				&(((t3_t *)(correlation->photons))[i].pulse),
+				&(((t3_t *)(correlation->photons))[i].time));
+
+		result = (result == 3);
+	}
+
+	fscanf(stream_in, "\n");
+
+	if ( ! result ) {
+		return( feof(stream_in) ? EOF : PC_ERROR_IO );
+	} else {
+		return(PC_SUCCESS);
+	}
+}
+
+int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
+	int i;
+
+	if ( correlation->order == 1 ) {
+		t3v_fprintf(stream_out, correlation->photons);
+	} else {
+		fprintf(stream_out, 
+				"%"PRIu32, 
+				((t3_t *)(correlation->photons))[0].channel);
+
+		for ( i = 1; i < correlation->order; i++ ) {
+			fprintf(stream_out, 
+					",%"PRIu32",%"PRId64",%"PRId64,
+					((t3_t *)(correlation->photons))[i].channel,
+					((t3_t *)(correlation->photons))[i].pulse,
+					((t3_t *)(correlation->photons))[i].time);
+		}
+
+		fprintf(stream_out, "\n");
+	}
+
+	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
+}
+
+int t3_correlation_fwrite(FILE *stream_out, correlation_t const *correlation) {
+	fwrite(correlation->photons,
+			sizeof(t3_t),
+			correlation->order,
+			stream_out);
+	
+	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
+}
+
+int t3_under_max_distance(void *correlator) {
+	int64_t max_time = ((correlator_t *)correlator)->max_time_distance;
+	int64_t max_pulse = ((correlator_t *)correlator)->max_pulse_distance;
+	t3_t *left = ((correlator_t *)correlator)->left;
+	t3_t *right = ((correlator_t *)correlator)->right;
+
+	return( (max_time == 0 
+				|| i64abs(right->time - left->time) < max_time)
+			&& (max_pulse == 0 
+				|| i64abs(right->pulse - left->pulse) < max_pulse) );
+}
+
+int t3_over_min_distance(void *correlator) {
+	int64_t min_time = ((correlator_t *)correlator)->min_time_distance;
+	int64_t min_pulse = ((correlator_t *)correlator)->min_pulse_distance;
+	t3_t *left = (t3_t *)((correlator_t *)correlator)->left;
+	t3_t *right = (t3_t *)((correlator_t *)correlator)->right;
+
+	return( i64abs(right->time - left->time) >= min_time
+			&& i64abs(right->pulse - left->pulse) >= min_pulse );
 }
 

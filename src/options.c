@@ -428,11 +428,11 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'f':
 				options->set_start_time = 1;
-				options->start_time = strtou64(optarg, NULL, 10);
+				options->start_time = strtoi64(optarg, NULL, 10);
 				break;
 			case 'F':
 				options->set_stop_time = 1;
-				options->stop_time = strtou64(optarg, NULL, 10);
+				options->stop_time = strtoi64(optarg, NULL, 10);
 				break;
 			case 'u':
 				options->offset_time = 1;

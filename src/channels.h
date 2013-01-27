@@ -18,8 +18,6 @@ int channels_dispatch(FILE *stream_in, FILE *stream_out,
 		options_t const *options);
 
 typedef void (*photon_offset_t)(void *photon, offsets_t const *offsets);
-void t3v_offset(void *photon, offsets_t const *offsets);
-void t2v_offset(void *photon, offsets_t const *offsets);
 
 offsets_t *offsets_alloc(int const channels);
 void offsets_init(offsets_t *offsets, options_t const *options);

@@ -33,3 +33,14 @@ int64_t t3v_channel_dimension(void const *photon) {
 	return(((t3_t *)photon)->channel);
 }
 
+void t3v_offset(void *record, offsets_t const *offsets) {
+	if ( offsets->offset_time ) {
+		((t3_t *)record)->time += 
+				offsets->time_offsets[((t3_t *)record)->channel];
+	}	
+	
+	if ( offsets->offset_pulse ) {
+		((t3_t *)record)->pulse +=
+				offsets->pulse_offsets[((t3_t *)record)->channel];
+	}
+}

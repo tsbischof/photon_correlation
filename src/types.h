@@ -5,6 +5,7 @@
 #include <inttypes.h>
 
 #define strtou64 strtoull
+#define strtoi64 strtoll
 #define strtou32 strtoul
 
 #define PRIf64 "lf"

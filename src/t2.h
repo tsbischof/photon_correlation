@@ -5,7 +5,7 @@
 
 #include "types.h"
 #include "options.h"
-#include "correlate.h"
+#include "correlate_photon.h"
 
 typedef struct {
 	uint32_t channel;
@@ -26,12 +26,15 @@ int t2_compare(void const *a, void const *b);
 int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out);
 
 void t2_correlate(correlation_t *correlation);
-int t2_correlation_fread(FILE *stream_out, correlation_t *correlation);
-int t2_correlation_fscanf(FILE *stream_out, correlation_t *correlation);
+int t2_correlation_fread(FILE *stream_in, correlation_t *correlation);
+int t2_correlation_fscanf(FILE *stream_in, correlation_t *correlation);
 int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation);
 int t2_correlation_fwrite(FILE *stream_out, correlation_t const *correlation);
 #define T2_CORRELATION_NEXT(x) ( x ? t2_correlation_fread : t2_correlation_fscanf );
-#define T2_CORRELATION_PRINT(x) ( x ? t2_correlation_fwrite : t2_correlation_fscanf );
+#define T2_CORRELATION_PRINT(x) ( x ? t2_correlation_fwrite : t2_correlation_fprintf );
+
+int t2_under_max_distance(void *correlator);
+int t2_over_min_distance(void *correlator);
 
 
 #endif

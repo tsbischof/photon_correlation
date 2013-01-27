@@ -17,4 +17,7 @@ int64_t t3v_channel_dimension(void const *photon);
 #define T3V_NEXT(x) (x ? t3v_fread : t3v_fscanf);
 #define T3V_PRINT(x) (x ? t3v_fwrite : t3v_fprintf);
 
+#include "channels.h"
+void t3v_offset(void *photon, offsets_t const *offsets);
+
 #endif
