@@ -9,6 +9,7 @@ typedef struct {
 	unsigned int n_permutations;
 	unsigned int length;
 	int yielded;
+	int populated;
 	unsigned int current_index;
 
 	combinations_t *scratch;

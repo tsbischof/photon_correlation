@@ -79,11 +79,11 @@ void t2_correlate(correlation_t *correlation) {
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
-		((t2_t *)(&correlation->photons)[i])->time -=
-				((t2_t *)(&correlation->photons)[0])->time; 
+		((t2_t *)(correlation->photons))[i].time -=
+				((t2_t *)(correlation->photons))[0].time;
 	}
 
-	((t2_t *)(&correlation->photons)[0])->time = 0;
+	((t2_t *)(correlation->photons))[0].time = 0;
 }
 
 int t2_correlation_fread(FILE *stream_in, correlation_t *correlation) {

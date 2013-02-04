@@ -57,6 +57,7 @@
 photon_queue_t *photon_queue_alloc (size_t const length, int const mode) {
 	photon_queue_t *queue = NULL;
 
+	debug("Allocating photon queue, length %zu, mode %d\n", length, mode);
 	queue = (photon_queue_t *)malloc(sizeof(photon_queue_t));
 
 	if ( queue == NULL ) {
@@ -80,6 +81,8 @@ photon_queue_t *photon_queue_alloc (size_t const length, int const mode) {
 		photon_queue_free(&queue);
 		return(queue);
 	}
+
+	debug("Queue photon size: %zu\n", queue->photon_size);
 	
 	queue->queue = malloc(queue->photon_size*length);
 
@@ -87,6 +90,8 @@ photon_queue_t *photon_queue_alloc (size_t const length, int const mode) {
 		photon_queue_free(&queue);
 		return(queue);
 	}
+
+	debug("Done allocating photon queue.\n");
 
 	return(queue);
 }

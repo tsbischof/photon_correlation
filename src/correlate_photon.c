@@ -29,7 +29,7 @@ int correlate_photon(FILE *stream_in, FILE *stream_out,
 	while ( correlator_next(correlator) == PC_SUCCESS ) {
 		correlator->correlation_print(stream_out, 
 				correlator->current_correlation);
-	}
+	} 
 
 	debug("Freeing correlator, photon stream.\n");
 	correlator_free(&correlator);
@@ -151,9 +151,9 @@ correlator_t *correlator_alloc(options_t const *options) {
 
 	correlator->photon_queue = photon_queue_alloc(
 			options->queue_size, correlator->mode);
-	correlator->index_offsets = index_offsets_alloc(correlator->order - 1);
+	correlator->index_offsets = index_offsets_alloc(correlator->order);
 	correlator->photon_permutations = permutations_alloc(
-			correlator->order - 1, options->positive_only);
+			correlator->order, options->positive_only);
 	correlator->current_correlation = correlation_alloc(
 			correlator->mode, correlator->order);
 
@@ -197,6 +197,7 @@ int correlator_init(correlator_t *correlator, photon_stream_t *photon_stream,
 
 	correlator->eof = 0;
 	correlator->in_block = 0;
+	correlator->in_permutations = 0;
 
 	return(PC_SUCCESS);
 }
@@ -206,6 +207,7 @@ int correlator_next(correlator_t *correlator) {
 
 	while ( 1 ) {
 		if ( correlator->in_block ) {
+			debug("Yielding from the current block.\n");
 			result = correlator_yield_from_block(correlator);
 
 			if ( result == PC_SUCCESS ) {
@@ -219,6 +221,7 @@ int correlator_next(correlator_t *correlator) {
 				return(result);
 			}
 		} else {
+			debug("Populating a new block.\n");
 			result = correlator_populate(correlator);
 
 			if ( result == EOF ) {
@@ -240,15 +243,10 @@ void correlator_free(correlator_t **correlator) {
 		index_offsets_free(&((*correlator)->index_offsets));
 		permutations_free(&((*correlator)->photon_permutations));
 		correlation_free(&((*correlator)->current_correlation));
-		debug("left\n");
 		free((*correlator)->left);
-		debug("right\n");
 		free((*correlator)->right);
-		debug("scratch\n");
 		free((*correlator)->scratch);
-		debug("correlator\n");
 		free(*correlator);
-		debug("done\n");
 	}
 }
 
@@ -269,8 +267,9 @@ int correlator_populate(correlator_t *correlator) {
 
 	while ( 1 ) {
 		debug("Getting left, right.\n");
-		photon_queue_front(correlator->photon_queue, &(correlator->left));
-		photon_queue_back(correlator->photon_queue, &(correlator->right));
+		debug("Queue size: %zu\n", photon_queue_size(correlator->photon_queue));
+		photon_queue_front(correlator->photon_queue, correlator->left);
+		photon_queue_back(correlator->photon_queue, correlator->right);
 
 		if ( photon_stream_eof(correlator->photon_stream) ) {
 			debug("EOF of photon stream\n");
@@ -288,11 +287,11 @@ int correlator_populate(correlator_t *correlator) {
 			return(PC_SUCCESS);
 		} else {
 			debug("Getting a photon from the stream.\n");
-			if ( photon_stream_next_photon(correlator->photon_stream) 
-					== PC_SUCCESS ) {
+			result = photon_stream_next_photon(correlator->photon_stream);
+
+			if ( result == PC_SUCCESS ) {
 				result = photon_queue_push(correlator->photon_queue,
 						correlator->photon_stream->current_photon);
-
 				if ( result != PC_SUCCESS ) {
 					error("Error while adding photon to queue: %d\n", result);
 					return(result);
@@ -300,40 +299,84 @@ int correlator_populate(correlator_t *correlator) {
 			} else if ( ! photon_stream_eof(correlator->photon_stream) ) {
 				error("Error while reading photon stream.\n");
 				return(PC_ERROR_IO);
-			} 
+			} else {
+				error("Unknown result of photon stream: %d\n", result);
+				return(result);
+			}
 		}
 	}
 }
 
 void correlator_block_init(correlator_t *correlator) {
 	index_offsets_init(correlator->index_offsets, 
-			photon_queue_size(correlator->photon_queue)-1);
+			photon_queue_size(correlator->photon_queue));
+	permutations_init(correlator->photon_permutations);
 	correlator->in_block = 1;
+	correlator->in_permutations = 0;
 }
 
 int correlator_yield_from_block(correlator_t *correlator) {
 	int result;
-	int i;
 
-	result = index_offsets_next(correlator->index_offsets);
+	while ( 1 ) {
+		if ( correlator->in_permutations ) {
+			/* Try to build the correlation from the current offsets and the
+			 * next permutations.
+			 */
+			debug("Getting the next permutation.\n");
+			result = permutations_next(correlator->photon_permutations);
 
-	if ( result == PC_COMBINATION_OVERFLOW ) {
-		return(result);
+			if ( result == PC_SUCCESS ) {
+				/* valid permutation */
+				return(correlator_build_correlation(correlator));
+			} else if ( result == PC_COMBINATION_OVERFLOW ) {
+				/* end of these offsets */
+				debug("End of the current index offsets.\n");
+				correlator->in_permutations = 0;
+			} else {
+				error("Unknown result of permutations: %d\n", result);
+				return(result);
+			}
+		} else {
+			debug("Getting the next index offsets.\n");
+			result = index_offsets_next(correlator->index_offsets);
+
+			if ( result == PC_SUCCESS ) {
+				/* Valid offsets, prepare for permutations. */
+				debug("Valid offsets, moving to permutations.\n");
+				permutations_init(correlator->photon_permutations);
+				correlator->in_permutations = 1;
+			} else if ( result == PC_COMBINATION_OVERFLOW ) {
+				/* end of this block */
+				debug("End of the current block.\n");
+				return(PC_COMBINATION_OVERFLOW);
+			} else {
+				error("Unknown result of index offsets: %d\n", result);
+				return(result);
+			}
+		}
 	}
+}
 
-	result = photon_queue_front(correlator->photon_queue,
-			&(correlator->current_correlation[0]));
+int correlator_build_correlation(correlator_t *correlator) {
+	int i;
+	int result;
+	combination_t *io = correlator->index_offsets->current_index_offsets;
+	combination_t *p = correlator->photon_permutations->current_permutation;
 
-	for ( i = 1; i < correlator->order; i++ ) {
+	debug("Populating correlation.\n");
+	for ( i = 0; i < correlator->order; i++ ) {
+		debug("Populating photon %d\n", i);
 		result = photon_queue_index(correlator->photon_queue,
 				&(correlator->current_correlation[i*correlator->photon_size]),
-				correlator->index_offsets->current_index_offsets->values[i]);
+				io->values[p->values[i]]);
 
 		if ( result != PC_SUCCESS ) {
 			return(result);
 		}
 	}
 
+	debug("Correlating photons.\n");
 	correlator->correlate(correlator->current_correlation);
 
 	return(PC_SUCCESS);

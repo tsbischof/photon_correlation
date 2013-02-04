@@ -2,6 +2,7 @@
 #define COMBINATIONS_H_
 
 #include <stdio.h>
+#include "options.h"
 
 unsigned int pow_int(unsigned int const base, unsigned int const exponent);
 unsigned int n_combinations(unsigned int const n, unsigned int const m);
@@ -46,5 +47,8 @@ void index_offsets_init(index_offsets_t *index_offsets,
 		unsigned int const limit);
 int index_offsets_next(index_offsets_t *index_offsets);
 void index_offsets_free(index_offsets_t **index_offsets);
+
+int combinations_dispatch(FILE *stream_in, FILE *stream_out, 
+		options_t const *options);
 
 #endif 

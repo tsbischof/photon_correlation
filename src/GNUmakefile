@@ -111,6 +111,13 @@ CORRELATE_VECTOR_LIB =
 #ALL_LIB += ${CORRELATE_VECTOR_LIB}
 #TARGETS += correlate_vector
 
+COMBINATIONS_OBJ = ${COMMON_OBJ} combinations_main.o \
+		combinations.o permutations.o
+ALL_OBJ += ${COMBINATIONS_OBJ}
+COMBINATIONS_LIB = 
+ALL_LIB += ${COMBINATIONS_LIB}
+TARGETS += combinations
+
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
 LIB_TARGETS = 
@@ -168,6 +175,9 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 
 gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
+
+combinations: ${COMBINATIONS_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${COMBINATIONS_LIB}
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
