@@ -176,6 +176,6 @@ int t2_over_min_distance(void *correlator) {
 	t2_t *left = (t2_t *)((correlator_t *)correlator)->left;
 	t2_t *right = (t2_t *)((correlator_t *)correlator)->right;
 
-	return( i64abs(right->time - left->time) >= min );
+	return( min == 0 || i64abs(right->time - left->time) >= min );
 }
 

@@ -55,9 +55,6 @@ void permutations_init(permutations_t *permutations) {
 	if ( ! permutations->populated ) {
 		debug("Initializing permuations.\n");
 
-		permutations->yielded = 0;
-		permutations->current_index = 0;
-
 		for ( i = 0; i < permutations->n_permutations; i++ ) {
 			debug("Initializing permutation %d (%p)\n", 
 					i, 
@@ -93,6 +90,10 @@ void permutations_init(permutations_t *permutations) {
 
 		permutations->populated = 1;
 	}
+
+	permutations->yielded = 0;
+	permutations->current_permutation = permutations->permutations[0];
+	permutations->current_index = 0;
 }
 
 int permutations_next(permutations_t *permutations) {

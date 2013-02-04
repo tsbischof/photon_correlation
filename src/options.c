@@ -263,7 +263,7 @@ int validate_options(program_options_t *program_options, options_t *options) {
 		&& options->start_stop
 		&& (options->channels != 2 || 
 			options->order != 2 || options->mode != MODE_T2 ) ) {
-		error("Start-stop mode is only well-defined for 2 channels,"
+		error("Start-stop mode is only well-defined for 2 channels, "
 				"t2 mode, and order 2.\n");
 		result += -1;
 	}

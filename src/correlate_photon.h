@@ -27,6 +27,9 @@ typedef int (*correlation_print_t)(FILE *stream_out,
 
 correlation_t *correlation_alloc(int const mode, unsigned int const order);
 void correlation_init(correlation_t *correlation);
+int correlation_set_index(correlation_t *correlation,
+		void const *photon,
+		unsigned int const index);
 void correlation_free(correlation_t **correlation);
 
 typedef struct {
@@ -71,6 +74,7 @@ void correlator_free(correlator_t **correlator);
 int correlator_populate(correlator_t *correlator);
 void correlator_block_init(correlator_t *correlator);
 int correlator_yield_from_block(correlator_t *correlator);
+int correlator_valid_distance(correlator_t *correlator);
 int correlator_build_correlation(correlator_t *correlator);
 
 #endif

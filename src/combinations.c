@@ -277,7 +277,7 @@ int combinations_dispatch(FILE *stream_in, FILE *stream_out,
 
 	combinations_free(&combinations); */
 
-	index_offsets_t *index_offsets;
+	/*index_offsets_t *index_offsets;
 
 	index_offsets = index_offsets_alloc(options->order);
 
@@ -289,6 +289,22 @@ int combinations_dispatch(FILE *stream_in, FILE *stream_out,
 
 	while ( index_offsets_next(index_offsets) == PC_SUCCESS ) {
 		combination_fprintf(stream_out, index_offsets->current_index_offsets);
+	}
+
+	*/
+
+	permutations_t *permutations;
+
+	permutations = permutations_alloc(options->order, 0);
+
+	if ( permutations == NULL ) {
+		return(PC_ERROR_MEM);
+	}
+
+	permutations_init(permutations);
+
+	while ( permutations_next(permutations) == PC_SUCCESS ) {
+		combination_fprintf(stream_out, permutations->current_permutation);
 	}
 
 	return(PC_SUCCESS);

@@ -33,7 +33,7 @@ void error(char const *message, ...);
 void warn(char const *message, ...);
 
 int pc_status_print(char const *name, 
-		uint64_t record_number, options_t *options);
+		uint64_t record_number, options_t const *options);
 int pc_check(int error_code);
 
 #endif

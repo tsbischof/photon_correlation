@@ -31,7 +31,8 @@ TARGETS += photons
 
 CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
 		correlate.o correlate_photon.o \
-		combinations.o permutations.o 
+		combinations.o permutations.o \
+		correlate_start_stop.o
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
@@ -81,7 +82,7 @@ TARGETS += channels
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
-		correlate.o correlate_photon.o combinations.o permutations.o # \
+		${SORT ${CORRELATE_OBJ}}
 #		histogram.o
 ALL_OBJ += ${GN_OBJ}
 GN_LIB = 

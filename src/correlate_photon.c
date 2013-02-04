@@ -110,6 +110,23 @@ void correlation_init(correlation_t *correlation) {
 			correlation->photon_size*correlation->order);
 }
 
+int correlation_set_index(correlation_t *correlation,
+		void const *photon,
+		unsigned int const index) {
+	if ( index >= correlation->order ) {
+		error("Index too large for correlation: %u (limit %u)\n", 
+				index,
+				correlation->order);
+		return(PC_ERROR_INDEX);
+	} 
+
+	memcpy(&(correlation->photons[index*correlation->photon_size]),
+			photon,
+			correlation->photon_size);
+
+	return(PC_SUCCESS);
+}
+
 void correlation_free(correlation_t **correlation) {
 	if ( *correlation != NULL ) {
 		free((*correlation)->photons);
@@ -228,8 +245,13 @@ int correlator_next(correlator_t *correlator) {
 				return(EOF);
 			} else if ( result == PC_SUCCESS ) {
 				correlator_block_init(correlator);
+			} else if ( result == PC_ERROR_QUEUE_OVERFLOW ) {
+				error("Queue overflow. Enlarge the queue to perform this "
+						"calculation (current size: %zu)\n", 
+						correlator->photon_queue->length);
+				return(result);
 			} else {
-				error("Unhandled error while populating the correlator %d\n",
+				error("Unhandled error while populating the correlator: %d\n",
 						result);
 				return(result);
 			}
@@ -261,13 +283,10 @@ int correlator_populate(correlator_t *correlator) {
  */
 	int result;
 
-	debug("Popping the first photon.\n");
 	photon_queue_pop(correlator->photon_queue,
 			correlator->current_correlation);
 
 	while ( 1 ) {
-		debug("Getting left, right.\n");
-		debug("Queue size: %zu\n", photon_queue_size(correlator->photon_queue));
 		photon_queue_front(correlator->photon_queue, correlator->left);
 		photon_queue_back(correlator->photon_queue, correlator->right);
 
@@ -281,9 +300,10 @@ int correlator_populate(correlator_t *correlator) {
 				debug("Not enough to correlate.\n");
 				return(EOF);
 			}
-		} else if ( photon_queue_size(correlator->photon_queue) > 0 &&
+		} else if ( photon_queue_size(correlator->photon_queue) >=
+					correlator->order &&
 				! correlator->under_max_distance(correlator) ) {
-			debug("Valid photon limits, even after popping.\n");
+			debug("Over max distance, even after popping.\n");
 			return(PC_SUCCESS);
 		} else {
 			debug("Getting a photon from the stream.\n");
@@ -293,12 +313,12 @@ int correlator_populate(correlator_t *correlator) {
 				result = photon_queue_push(correlator->photon_queue,
 						correlator->photon_stream->current_photon);
 				if ( result != PC_SUCCESS ) {
-					error("Error while adding photon to queue: %d\n", result);
+					error("Error while adding photon to queue: %d\n", 
+							result);
 					return(result);
 				} 
-			} else if ( ! photon_stream_eof(correlator->photon_stream) ) {
-				error("Error while reading photon stream.\n");
-				return(PC_ERROR_IO);
+			} else if ( result == EOF ) {
+				/* Loop around to deal with the existing photons. */
 			} else {
 				error("Unknown result of photon stream: %d\n", result);
 				return(result);
@@ -309,7 +329,7 @@ int correlator_populate(correlator_t *correlator) {
 
 void correlator_block_init(correlator_t *correlator) {
 	index_offsets_init(correlator->index_offsets, 
-			photon_queue_size(correlator->photon_queue));
+			photon_queue_size(correlator->photon_queue) - 1);
 	permutations_init(correlator->photon_permutations);
 	correlator->in_block = 1;
 	correlator->in_permutations = 0;
@@ -342,10 +362,14 @@ int correlator_yield_from_block(correlator_t *correlator) {
 			result = index_offsets_next(correlator->index_offsets);
 
 			if ( result == PC_SUCCESS ) {
-				/* Valid offsets, prepare for permutations. */
-				debug("Valid offsets, moving to permutations.\n");
-				permutations_init(correlator->photon_permutations);
-				correlator->in_permutations = 1;
+				/* Possible valid offsets, check the distance. */
+				if ( correlator_valid_distance(correlator) ) {
+					debug("Valid offsets, moving to permutations.\n");
+					permutations_init(correlator->photon_permutations);
+					correlator->in_permutations = 1;
+				} else {
+					/* distance too far, disregard this one. */
+				}
 			} else if ( result == PC_COMBINATION_OVERFLOW ) {
 				/* end of this block */
 				debug("End of the current block.\n");
@@ -358,20 +382,35 @@ int correlator_yield_from_block(correlator_t *correlator) {
 	}
 }
 
+int correlator_valid_distance(correlator_t *correlator) {
+	photon_queue_index(correlator->photon_queue,
+			correlator->left,
+			correlator->index_offsets->current_index_offsets->values[0]);
+	photon_queue_index(correlator->photon_queue, 
+			correlator->right,
+			correlator->index_offsets->current_index_offsets->values[
+				correlator->order-1]);
+		
+	return( correlator->over_min_distance(correlator) &&
+			correlator->under_max_distance(correlator) );
+}
+
 int correlator_build_correlation(correlator_t *correlator) {
 	int i;
 	int result;
+	correlation_t *cc = correlator->current_correlation;
 	combination_t *io = correlator->index_offsets->current_index_offsets;
 	combination_t *p = correlator->photon_permutations->current_permutation;
 
 	debug("Populating correlation.\n");
 	for ( i = 0; i < correlator->order; i++ ) {
-		debug("Populating photon %d\n", i);
 		result = photon_queue_index(correlator->photon_queue,
-				&(correlator->current_correlation[i*correlator->photon_size]),
+				&(cc->photons[i*correlator->photon_size]),
 				io->values[p->values[i]]);
 
 		if ( result != PC_SUCCESS ) {
+			error("Bad index request during correlation: %d\n", 
+					io->values[p->values[i]]);
 			return(result);
 		}
 	}

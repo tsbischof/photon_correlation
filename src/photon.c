@@ -136,6 +136,10 @@ int photon_queue_pop(photon_queue_t *queue, void *photon) {
 int photon_queue_push(photon_queue_t *queue, void *photon) {
 	size_t next_index;
 
+	if ( photon_queue_full(queue) ) {
+		return(PC_ERROR_QUEUE_OVERFLOW);
+	}
+
 	if ( queue->empty ) {
 		queue->right_index = 0;
 		queue->left_index = 0;
@@ -162,43 +166,24 @@ int photon_queue_push(photon_queue_t *queue, void *photon) {
 }
 
 int photon_queue_front(photon_queue_t const *queue, void *photon) {
-	size_t index;
-
-	if ( queue->empty ) {
-		return(PC_ERROR_QUEUE_EMPTY);
-	} else {
-		index = queue->left_index % queue->length;
-		memcpy(photon, 
-				&(queue->queue[index*queue->photon_size]),
-				queue->photon_size);
-		return(PC_SUCCESS);
-	}
+	return(photon_queue_index(queue, photon, 0));
 }
 
 int photon_queue_back(photon_queue_t const *queue, void *photon) {
-	size_t index;
-
-	if ( queue->empty ) {
-		return(PC_ERROR_QUEUE_EMPTY);
-	} else {
-		index = queue->right_index % queue->length;
-		memcpy(photon,
-				&(queue->queue[index]),
-				queue->photon_size);
-		return(PC_SUCCESS);
-	}
+	return(photon_queue_index(queue, photon, photon_queue_size(queue)-1));
 }
 
-size_t photon_queue_index(photon_queue_t const *queue, void *photon, 
-		int const index) {
+int photon_queue_index(photon_queue_t const *queue, void *photon, 
+		size_t const index) {
 	size_t true_index = (queue->left_index + index) % queue->length;
 
 	if ( index > photon_queue_size(queue) ) {
 		return(PC_ERROR_QUEUE_INDEX);
 	} else { 
 		memcpy(photon, 
-				&(queue->queue[true_index]), 
+				&(queue->queue[true_index*queue->photon_size]), 
 				queue->photon_size);
+
 		return(PC_SUCCESS);
 	}
 }

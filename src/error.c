@@ -42,7 +42,8 @@ void warn(char const *message, ...) {
 	fflush(stderr);
 }
 
-int pc_status_print(char const *name, uint64_t count, options_t *options) {
+int pc_status_print(char const *name, uint64_t count, 
+		options_t const *options) {
 	size_t n_write;
 	time_t rawtime;
 	struct tm *timeinfo;
