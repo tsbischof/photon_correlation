@@ -101,14 +101,16 @@ void t3_correlate(correlation_t *correlation) {
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
-		((t3_t *)(&correlation->photons)[i])->pulse -=
-				((t3_t *)(&correlation->photons)[0])->pulse;
-		((t3_t *)(&correlation->photons)[i])->time -=
-				((t3_t *)(&correlation->photons)[0])->time; 
+		((t3_t *)(correlation->photons))[i].pulse -=
+				((t3_t *)(correlation->photons))[0].pulse;
+		((t3_t *)(correlation->photons))[i].time -=
+				((t3_t *)(correlation->photons))[0].time; 
 	}
 
-	((t3_t *)(&correlation->photons)[0])->pulse = 0;
-	((t3_t *)(&correlation->photons)[0])->time = 0;
+	if ( correlation->order != 1 ) {
+		((t3_t *)(correlation->photons))[0].pulse = 0;
+		((t3_t *)(correlation->photons))[0].time = 0;
+	}
 }
 
 int t3_correlation_fread(FILE *stream_in, correlation_t *correlation) {
@@ -171,9 +173,9 @@ int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 		for ( i = 1; i < correlation->order; i++ ) {
 			fprintf(stream_out, 
 					",%"PRIu32",%"PRId64",%"PRId64,
-					((t3_t *)(correlation->photons))[i].channel,
-					((t3_t *)(correlation->photons))[i].pulse,
-					((t3_t *)(correlation->photons))[i].time);
+					((t3_t *)correlation->photons)[i].channel,
+					((t3_t *)correlation->photons)[i].pulse,
+					((t3_t *)correlation->photons)[i].time);
 		}
 
 		fprintf(stream_out, "\n");
@@ -191,7 +193,7 @@ int t3_correlation_fwrite(FILE *stream_out, correlation_t const *correlation) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t3_under_max_distance(void *correlator) {
+int t3_under_max_distance(void const *correlator) {
 	int64_t max_time = ((correlator_t *)correlator)->max_time_distance;
 	int64_t max_pulse = ((correlator_t *)correlator)->max_pulse_distance;
 	t3_t *left = ((correlator_t *)correlator)->left;
@@ -203,13 +205,15 @@ int t3_under_max_distance(void *correlator) {
 				|| i64abs(right->pulse - left->pulse) < max_pulse) );
 }
 
-int t3_over_min_distance(void *correlator) {
+int t3_over_min_distance(void const *correlator) {
 	int64_t min_time = ((correlator_t *)correlator)->min_time_distance;
 	int64_t min_pulse = ((correlator_t *)correlator)->min_pulse_distance;
 	t3_t *left = (t3_t *)((correlator_t *)correlator)->left;
 	t3_t *right = (t3_t *)((correlator_t *)correlator)->right;
 
-	return( i64abs(right->time - left->time) >= min_time
-			&& i64abs(right->pulse - left->pulse) >= min_pulse );
+	return( (min_time == 0 || 
+				i64abs(right->time - left->time) >= min_time)
+			&& (min_pulse == 0 || 
+				i64abs(right->pulse - left->pulse) >= min_pulse) );
 }
 

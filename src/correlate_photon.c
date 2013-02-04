@@ -153,7 +153,7 @@ correlator_t *correlator_alloc(options_t const *options) {
 				T2_CORRELATION_PRINT(options->binary_out);
 		correlator->under_max_distance = t2_under_max_distance;
 		correlator->over_min_distance = t2_over_min_distance;
-	} else if ( correlator->mode == MODE_T2 ) {
+	} else if ( correlator->mode == MODE_T3 ) {
 		correlator->photon_size = sizeof(t3_t);
 		correlator->correlate = t3_correlate;
 		correlator->correlation_print = 
@@ -222,6 +222,18 @@ int correlator_init(correlator_t *correlator, photon_stream_t *photon_stream,
 int correlator_next(correlator_t *correlator) {
 	int result;
 
+	if ( correlator->order == 1 ) {
+		result = photon_stream_next_photon(correlator->photon_stream);
+		if ( result == PC_SUCCESS ) {
+			correlation_set_index(correlator->current_correlation,
+					correlator->photon_stream->current_photon,
+					0);
+			return(PC_SUCCESS);
+		} else {
+			return(result);
+		}
+	}
+
 	while ( 1 ) {
 		if ( correlator->in_block ) {
 			debug("Yielding from the current block.\n");
@@ -284,7 +296,7 @@ int correlator_populate(correlator_t *correlator) {
 	int result;
 
 	photon_queue_pop(correlator->photon_queue,
-			correlator->current_correlation);
+			correlator->current_correlation->photons);
 
 	while ( 1 ) {
 		photon_queue_front(correlator->photon_queue, correlator->left);

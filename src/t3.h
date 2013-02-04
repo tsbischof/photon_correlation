@@ -34,8 +34,8 @@ int t3_correlation_fwrite(FILE *stream_out, correlation_t const *correlation);
 #define T3_CORRELATION_NEXT(x) ( x ? t3_correlation_fread : t3_correlation_fscanf );
 #define T3_CORRELATION_PRINT(x) ( x ? t3_correlation_fwrite : t3_correlation_fprintf );
 
-int t3_under_max_distance(void *correlator);
-int t3_over_min_distance(void *correlator);
+int t3_under_max_distance(void const *correlator);
+int t3_over_min_distance(void const *correlator);
 
 
 #endif

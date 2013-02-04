@@ -33,8 +33,8 @@ int t2_correlation_fwrite(FILE *stream_out, correlation_t const *correlation);
 #define T2_CORRELATION_NEXT(x) ( x ? t2_correlation_fread : t2_correlation_fscanf );
 #define T2_CORRELATION_PRINT(x) ( x ? t2_correlation_fwrite : t2_correlation_fprintf );
 
-int t2_under_max_distance(void *correlator);
-int t2_over_min_distance(void *correlator);
+int t2_under_max_distance(void const *correlator);
+int t2_over_min_distance(void const *correlator);
 
 
 #endif

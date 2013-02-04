@@ -62,8 +62,8 @@ typedef struct {
 	correlate_t correlate;
 	correlation_print_t correlation_print;
 
-	int (*under_max_distance)(void *correlator);
-	int (*over_min_distance)(void *correlator);
+	int (*under_max_distance)(void const *correlator);
+	int (*over_min_distance)(void const *correlator);
 } correlator_t;
 
 correlator_t *correlator_alloc(options_t const *options);
