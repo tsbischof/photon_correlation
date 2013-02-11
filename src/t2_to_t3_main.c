@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <math.h>
 
 #include "t3.h"
 #include "t2.h"
 #include "options.h"
 #include "files.h"
 #include "error.h"
+#include "conversions.h"
 
 int main(int argc, char *argv[]) {
 	options_t options;
@@ -37,18 +39,19 @@ int main(int argc, char *argv[]) {
 	} 
 
 	if ( result == PC_SUCCESS ) {
-		if ( options.repetition_time == 0 ) {
-			error("Must specify non-zero repetition time.\n");
+		if ( options.repetition_rate == 0 ) {
+			error("Must specify non-zero repetition rate.\n");
+			result = PC_ERROR_ZERO_DIVISION;
+		} else if ( options.repetition_rate > 1e12 ) {
+			error("Repetition rate must be less than %.2lg (%.2lg given)\n",
+					1e12, options.repetition_rate);
 			result = PC_ERROR_ZERO_DIVISION;
 		}
 	}
 
 	if ( result == PC_SUCCESS ) {
 		while ( t2_next(stream_in, &t2) == PC_SUCCESS ) {
-			t3.channel = t2.channel;
-			t3.pulse = t2.time / options.repetition_time;
-			t3.time = t2.time % options.repetition_time;
-
+			t2_to_t3(&t2, &t3, options.repetition_rate);
 			t3_print(stream_out, &t3);
 		}
 	}

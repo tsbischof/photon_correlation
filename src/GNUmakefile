@@ -2,7 +2,7 @@ CC = clang
 LD = clang
 
 INCLUDES = 
-LIBS = -lm
+LIBS = 
 
 CCFLAGS := -Wall 
 # On 32-bit systems wtih large files, the file offset is 64 bits. This causes
@@ -50,7 +50,7 @@ HISTOGRAM_OBJ = ${COMMON_OBJ} histogram_main.o \
 		histogram.o combinations.o permutations.o correlate_photon.o \
 		histogram_photon.o 
 ALL_OBJ += ${HISTOGRAM_OBJ}
-HISTOGRAM_LIB =
+HISTOGRAM_LIB = -lm
 ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += histogram
 
@@ -80,16 +80,9 @@ GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
 		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ}}}
 ALL_OBJ += ${GN_OBJ}
-GN_LIB = 
+GN_LIB = ${sort ${CORRELATE_LIB} ${HISTOGRAM_LIB}}
 ALL_LIB += ${GN_LIB}
 TARGETS += gn
-
-T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o
-ALL_OBJ += ${T3_AS_T2_OBJ}
-T3_AS_T2_LIB = 
-ALL_LIB += ${T3_AS_T2_LIB}
-T3_AS_T2_LIB = 
-TARGETS += t3_as_t2
 
 INTENSITY_TO_T2_OBJ = ${COMMON_OBJ} intensity_to_t2_main.o intensity_to_t2.o
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
@@ -114,11 +107,23 @@ COMBINATIONS_LIB =
 ALL_LIB += ${COMBINATIONS_LIB}
 TARGETS += combinations
 
-T2_TO_T3_OBJ = ${COMMON_OBJ} t2_to_t3_main.o 
+T2_TO_T3_OBJ = ${COMMON_OBJ}  t2_to_t3_main.o conversions.o
 ALL_OBJ += ${T2_TO_T3_OBJ}
-T2_TO_T3_LIB = 
+T2_TO_T3_LIB = -lm
 LL_LIB += ${T2_TO_T3_LIB}
 TARGETS += t2_to_t3
+
+T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o conversions.o
+ALL_OBJ += ${T3_AS_T2_OBJ}
+T3_AS_T2_LIB = -lm
+ALL_LIB += ${T3_AS_T2_LIB}
+TARGETS += t3_as_t2
+
+T3_TO_T2_OBJ = ${COMMON_OBJ} t3_to_t2_main.o conversions.o
+ALL_OBJ += ${T3_TO_T2_OBJ}
+T3_TO_T2_LIB = -lm
+LL_LIB += ${T3_TO_T2_LIB}
+TARGETS += t3_to_t2
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -176,13 +181,16 @@ correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${LD} ${LDFLAGS} ${CORRELATE_VECTOR_LIB} -o $@ $^
 
 gn: ${GN_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${GN_LIB}
+	${LD} ${LDFLAGS} ${GN_LIB} -o $@ $^
 
 combinations: ${COMBINATIONS_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${COMBINATIONS_LIB}
+	${LD} ${LDFLAGS} ${COMBINATIONS_LIB} -o $@ $^
 
 t2_to_t3: ${T2_TO_T3_OBJ}
-	${LD} ${LDFLAGS} -o $@ $^ ${T2_TO_T3_LIB}
+	${LD} ${LDFLAGS} ${T2_TO_T3_LIB} -o $@ $^ 
+
+t3_to_t2: ${T3_TO_T2_OBJ}
+	${LD} ${LDFLAGS} ${T3_TO_T2_LIB} -o $@ $^ 
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 

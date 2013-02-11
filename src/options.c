@@ -136,9 +136,8 @@ option_t all_options[] = {
 			"average intensity for normalization, use\n"
 			"bin_intensity to get the exact result for each\n"
 			"histogram bin."},
-	{'T', "T:", "repetition-time",
-			"Specifies the repetition time (inverse of \n"
-			"repetition rate) for the sync pulse.\n"},
+	{'R', "R:", "repetition-rate",
+			"Specifies the repetition rate for the sync pulse.\n"},
 	};
 
 void default_options(options_t *options) {
@@ -201,7 +200,7 @@ void default_options(options_t *options) {
 
 	options->exact_normalization = 0;
 
-	options->repetition_time = 0;
+	options->repetition_rate = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -334,7 +333,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"exact-normalization", no_argument, 0, 'Z'},
 
 /* t2_to_t3 */
-		{"repetition-time", required_argument, 0, 'T'},
+		{"repetition-rate", required_argument, 0, 'T'},
 		{0, 0, 0, 0}};
 
 	options_string = get_options_string(program_options);
@@ -446,7 +445,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->exact_normalization = 1;
 				break;
 			case 'T':
-				options->repetition_time = strtoi64(optarg, NULL, 10);
+				options->repetition_rate = strtof(optarg, NULL);
 				break;
 			case '?':
 			default:

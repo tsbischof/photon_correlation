@@ -79,7 +79,7 @@ typedef struct {
 	int exact_normalization;
 
 /* t2_to_t3 */
-	int64_t repetition_time;
+	double repetition_rate;
 } options_t;
 
 typedef struct {
