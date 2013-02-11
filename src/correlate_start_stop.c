@@ -14,8 +14,8 @@ int correlate_start_stop(FILE *stream_in, FILE *stream_out,
 		options_t const *options) {
 	int valid = 0;
 	t2_t t2;
-	t2_next_t next = T2_NEXT(options->binary_in);
-	correlation_print_t print = T2_CORRELATION_PRINT(options->binary_out);
+	t2_next_t next = t2_fscanf;
+	correlation_print_t print = t2_correlation_fprintf;
 
 	uint64_t record_number = 0;
 

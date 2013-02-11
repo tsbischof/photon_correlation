@@ -40,8 +40,8 @@ int intensity_to_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
 	int result = 0;
 	int i;
 	intensity_t intensity;
-	intensity_next_t intensity_next = INTENSITY_NEXT(options->binary_in);
-	t2_print_t t2_print = T2_PRINT(options->binary_out);
+	intensity_next_t intensity_next = intensity_fscanf;
+	t2_print_t t2_print = t2_fprintf;
 	t2_t t2;
 
 	srand(options->seed);

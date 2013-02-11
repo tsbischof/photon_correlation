@@ -57,29 +57,6 @@ int counts_increment(counts_t *counts, int channel) {
 	}
 }
 
-int counts_fread(FILE *stream_in, counts_t *counts) {
-	size_t n_read;
-	n_read = fread(&(counts->window), sizeof(window_t), 1, stream_in);
-	if ( n_read != 1 ) {
-		return(PC_ERROR_IO);
-	} 
-
-	n_read = fread(counts->counts, 
-			sizeof(uint64_t), 
-			counts->channels, 
-			stream_in);
-
-	if ( n_read == counts->channels ) {
-		return(PC_SUCCESS);
-	} else {
-		if ( feof(stream_in) ) {
-			return(EOF);
-		} else {
-			return(PC_ERROR_IO);
-		}
-	}
-}
-
 int counts_fscanf(FILE *stream_in, counts_t *counts) {
 	int i;
 	size_t n_read;
@@ -104,26 +81,6 @@ int counts_fscanf(FILE *stream_in, counts_t *counts) {
 	}
 
 	return(PC_SUCCESS);
-}
-
-int counts_fwrite(FILE *stream_out, counts_t const *counts) {
-	size_t n_write;
-
-	n_write = fwrite(&(counts->window), 
-			sizeof(window_t), 
-			1, 
-			stream_out);
-
-	if ( n_write != 1 ) {
-		return(PC_ERROR_IO);
-	} 
-
-	n_write = fwrite(counts->counts, 
-			sizeof(uint64_t),
-			counts->channels,
-			stream_out);
-
-	return( n_write == counts->channels ? PC_SUCCESS : PC_ERROR_IO );
 }
 
 int counts_fprintf(FILE *stream_out, counts_t const *counts) {
@@ -154,11 +111,10 @@ int counts_fprintf(FILE *stream_out, counts_t const *counts) {
 	return(PC_SUCCESS);
 }
 
-int counts_echo(FILE *stream_in,  FILE *stream_out, 
-		int binary_in, int binary_out, int channels) {
+int counts_echo(FILE *stream_in,  FILE *stream_out, int channels) {
 	counts_t *counts = counts_alloc(channels);
-	counts_next_t next = COUNTS_NEXT(binary_in);
-	counts_print_t print = COUNTS_PRINT(binary_out);
+	counts_next_t next = counts_fscanf;
+	counts_print_t print = counts_fprintf;
 
 	if ( counts == NULL ) {
 		return(PC_ERROR_MEM);

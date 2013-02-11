@@ -13,7 +13,7 @@ int intensity_photon(FILE *stream_in, FILE *stream_out, options_t *options) {
 	counts_t *counts;
 	int result = 0;
 	photon_stream_t *photon_stream = photon_stream_alloc(options);
-	counts_print_t counts_print = COUNTS_PRINT(options->binary_out);
+	counts_print_t counts_print = counts_fprintf;
 	uint64_t photons_seen = 0;
 	uint64_t windows_seen = 0;
 	int64_t absolute_lower = 0;

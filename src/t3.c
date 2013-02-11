@@ -11,20 +11,6 @@
 /* 
  * Functions to implement t3 photon read/write.
  */
-int t3_fread(FILE *stream_in, t3_t *t3) {
-	size_t n_read = fread(t3, sizeof(t3_t), 1, stream_in);
-
-	if ( n_read == 1 ) {
-		return(PC_SUCCESS);
-	} else {
-		if ( feof(stream_in) ) {
-			return(EOF);
-		} else {
-			return(PC_ERROR_IO);
-		}
-	}	
-}
-
 int t3_fscanf(FILE *stream_in, t3_t *t3) {
 	int n_read = fscanf(stream_in,
 			"%"SCNu32",%"SCNd64",%"SCNd64"\n",
@@ -53,15 +39,6 @@ int t3_fprintf(FILE *stream_out, t3_t const *t3) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t3_fwrite(FILE *stream_out, t3_t const *t3) {
-	size_t n_write = fwrite(t3,
-			sizeof(t3_t),
-			1,
-			stream_out);
-
-	return( n_write == 1 ? PC_SUCCESS : PC_ERROR_IO );
-}
-
 int t3_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t3 photons. 
@@ -84,10 +61,10 @@ int t3_compare(void const *a, void const *b) {
 	return( difference > 0 );
 }
 
-int t3_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {
+int t3_echo(FILE *stream_in, FILE *stream_out) {
 	t3_t t3;
-	t3_next_t next = T3_NEXT(binary_in);
-	t3_print_t print = T3_PRINT(binary_out);
+	t3_next_t next = t3_fscanf;
+	t3_print_t print = t3_fprintf;
 
 	while ( next(stream_in, &t3) == PC_SUCCESS ) {
 		print(stream_out, &t3);
@@ -110,21 +87,6 @@ void t3_correlate(correlation_t *correlation) {
 	if ( correlation->order != 1 ) {
 		((t3_t *)(correlation->photons))[0].pulse = 0;
 		((t3_t *)(correlation->photons))[0].time = 0;
-	}
-}
-
-int t3_correlation_fread(FILE *stream_in, correlation_t *correlation) {
-	size_t n_read;
-
-	n_read = fread(correlation->photons,
-			sizeof(t3_t),
-			correlation->order,
-			stream_in);
-
-	if ( n_read == correlation->order ) {
-		return(PC_SUCCESS);
-	} else {
-		return( feof(stream_in) ? EOF : PC_ERROR_IO );
 	}
 }
 
@@ -184,15 +146,6 @@ int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t3_correlation_fwrite(FILE *stream_out, correlation_t const *correlation) {
-	fwrite(correlation->photons,
-			sizeof(t3_t),
-			correlation->order,
-			stream_out);
-	
-	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
-}
-
 int t3_under_max_distance(void const *correlator) {
 	int64_t max_time = ((correlator_t *)correlator)->max_time_distance;
 	int64_t max_pulse = ((correlator_t *)correlator)->max_pulse_distance;
@@ -215,5 +168,31 @@ int t3_over_min_distance(void const *correlator) {
 				i64abs(right->time - left->time) >= min_time)
 			&& (min_pulse == 0 || 
 				i64abs(right->pulse - left->pulse) >= min_pulse) );
+}
+
+int t3_correlation_build_channels(correlation_t const *correlation,
+		combination_t *channels_vector) {
+	int i;
+
+	for ( i = 0; i < correlation->order; i++ ) {
+		channels_vector->values[i] = 
+				(uint32_t)((t3_t *)correlation->photons)[i].channel;
+	}
+
+	return(PC_SUCCESS);
+}
+
+int t3_correlation_build_values(correlation_t const *correlation,
+		values_vector_t *values_vector) {
+	int i;
+
+	for ( i = 0; i < correlation->order; i++ ) {
+		values_vector->values[2*i] = 
+				(int64_t)((t3_t *)correlation->photons)[i].pulse;
+		values_vector->values[2*i+1] = 
+				(int64_t)((t3_t *)correlation->photons)[i].time;
+	}
+
+	return(PC_SUCCESS);
 }
 

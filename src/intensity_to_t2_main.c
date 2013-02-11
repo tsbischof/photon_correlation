@@ -22,7 +22,6 @@ int main(int argc, char *argv[]) {
 "randomly distributed among the possible channels.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 
 			OPT_FILE_IN, OPT_FILE_OUT, 
-			OPT_BINARY_IN, OPT_BINARY_OUT,
 			OPT_SEED, OPT_CHANNELS, OPT_EOF}};
 
 	options.channels = 1;

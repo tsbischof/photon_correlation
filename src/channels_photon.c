@@ -25,16 +25,16 @@ photon_stream_offset_t *photon_stream_offset_alloc(options_t const *options) {
 	if ( pso->mode == MODE_T2 ) {
 		debug("Mode t2\n");
 		pso->photon_size = sizeof(t2_t);
-		pso->photon_next = T2V_NEXT(options->binary_in);
-		pso->photon_print = T2V_PRINT(options->binary_out);
+		pso->photon_next = t2v_fscanf;
+		pso->photon_print = t2v_fprintf;
 		pso->photon_offset = t2v_offset;
 		pso->channel_dim = t2v_channel_dimension;
 		pso->window_dim = t2v_window_dimension;
 	} else if ( pso->mode == MODE_T3 ) {
 		debug("Mode t3.\n");
 		pso->photon_size = sizeof(t3_t);
-		pso->photon_next = T3V_NEXT(options->binary_in);
-		pso->photon_print = T3V_PRINT(options->binary_out);
+		pso->photon_next = t3v_fscanf;
+		pso->photon_print = t3v_fprintf;
 		pso->photon_offset = t3v_offset;
 		pso->channel_dim = t3v_channel_dimension;
 		pso->window_dim = t3v_window_dimension;

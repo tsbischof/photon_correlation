@@ -11,11 +11,9 @@ int photons_dispatch(FILE *stream_in, FILE *stream_out, options_t *options) {
 	if ( options->use_void ) {
 		return(photon_echo(stream_in, stream_out, options));
 	} else if ( options->mode == MODE_T2 ) {
-		return(t2_echo(stream_in, stream_out, 
-				options->binary_in, options->binary_out));
+		return(t2_echo(stream_in, stream_out));
 	} else if ( options->mode == MODE_T3 ) {
-		return(t3_echo(stream_in, stream_out,
-				options->binary_in, options->binary_out));
+		return(t3_echo(stream_in, stream_out));
 	} else { 
 		error("Unsupported echo mode: %d\n", options->mode);
 		return(PC_ERROR_MODE);

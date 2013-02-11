@@ -10,9 +10,9 @@ int main(int argc, char *argv[]) {
 	options_t options;
 
 	t2_t t2;
-	t2_print_t t2_print;
+	t2_print_t t2_print = t2_fprintf;
 	t3_t t3;
-	t3_next_t t3_next;
+	t3_next_t t3_next = t3_fscanf;
 
 	int result = 0;
 
@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
 "number and yielding a t2-like photon.\n",
 		{OPT_HELP, OPT_VERSION, OPT_VERBOSE, 
 				OPT_FILE_IN, OPT_FILE_OUT,
-				OPT_BINARY_IN, OPT_BINARY_OUT,
 				OPT_EOF}};
 
 	result = parse_options(argc, argv, &options, &program_options);
@@ -35,9 +34,6 @@ int main(int argc, char *argv[]) {
 	} 
 
 	if ( result == PC_SUCCESS ) {
-		t2_print = T2_PRINT(options.binary_out);
-		t3_next = T3_NEXT(options.binary_in);
-
 		while ( t3_next(stream_in, &t3) == PC_SUCCESS ) {
 			t2.channel = t3.channel;
 			t2.time = t3.pulse;

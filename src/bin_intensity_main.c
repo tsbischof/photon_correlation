@@ -31,8 +31,6 @@ int main(int argc, char *argv[]) {
 "definitions as for histogram.\n",
 		{OPT_HELP, OPT_VERBOSE, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_BINARY_IN, OPT_BINARY_OUT,
-			OPT_USE_VOID,
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
 			OPT_QUEUE_SIZE,
 			OPT_TIME, OPT_PULSE,

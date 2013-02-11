@@ -37,12 +37,6 @@ option_t all_options[] = {
 			"The number of channels in the signal."},
 	{'g', "g:", "order",
 			"The order of the correlation or histogram."},
-	{'a', "a", "binary-in",
-			"Specifies that the input file is in binary format,\n"
-			"rather than text."},
-	{'b', "b", "binary-out",
-			"Specifies that the output file is in binary format,\n"
-			"rather than text."},
 	{'G', "G", "use-void",
 			"Experimental. Use void pointer arithmetic instead\n"
 			"of strong types. This makes for more generic code\n"
@@ -142,6 +136,9 @@ option_t all_options[] = {
 			"average intensity for normalization, use\n"
 			"bin_intensity to get the exact result for each\n"
 			"histogram bin."},
+	{'T', "T:", "repetition-time",
+			"Specifies the repetition time (inverse of \n"
+			"repetition rate) for the sync pulse.\n"},
 	};
 
 void default_options(options_t *options) {
@@ -160,9 +157,6 @@ void default_options(options_t *options) {
 	options->order = 2;
 	
 	options->print_every = 0;
-
-	options->binary_in = 0;
-	options->binary_out = 0;
 
 	options->use_void = 0;
 	options->seed = 0xDEADBEEF;
@@ -206,6 +200,8 @@ void default_options(options_t *options) {
 	options->true_autocorrelation = 0;
 
 	options->exact_normalization = 0;
+
+	options->repetition_time = 0;
 }
 
 int validate_options(program_options_t *program_options, options_t *options) {
@@ -301,9 +297,6 @@ int parse_options(int argc, char *argv[], options_t *options,
 		{"channels", required_argument, 0, 'c'},
 		{"order", required_argument, 0, 'g'},
 
-		{"binary-in", no_argument, 0, 'a'},
-		{"binary-out", no_argument, 0, 'b'},
-
 		{"use-void", no_argument, 0, 'G'},
 		{"seed", required_argument, 0, 'K'},
 
@@ -339,6 +332,9 @@ int parse_options(int argc, char *argv[], options_t *options,
 
 /* gn */
 		{"exact-normalization", no_argument, 0, 'Z'},
+
+/* t2_to_t3 */
+		{"repetition-time", required_argument, 0, 'T'},
 		{0, 0, 0, 0}};
 
 	options_string = get_options_string(program_options);
@@ -374,12 +370,6 @@ int parse_options(int argc, char *argv[], options_t *options,
 				break;
 			case 'g':
 				options->order = strtol(optarg, NULL, 10);
-				break;
-			case 'a':
-				options->binary_in = 1;
-				break;
-			case 'b':
-				options->binary_out = 1;
 				break;
 			case 'G':
 				options->use_void = 1;
@@ -455,6 +445,9 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case 'Z':
 				options->exact_normalization = 1;
 				break;
+			case 'T':
+				options->repetition_time = strtoi64(optarg, NULL, 10);
+				break;
 			case '?':
 			default:
 				usage(argc, argv, program_options);
@@ -529,7 +522,7 @@ int is_option(int option, program_options_t *program_options) {
 void free_options(options_t *options) {
 	free(options->filename_in);
 	free(options->filename_out);
-	free(options->mode_string);
+	free(options->mode_string); 
 	free(options->time_string);
 	free(options->pulse_string);
 	free(options->time_scale_string);

@@ -46,11 +46,11 @@ int correlations_echo(FILE *stream_in, FILE *stream_out,
 	correlation_t *correlation;
 
 	if ( options->mode == MODE_T2 ) {
-		next = T2_CORRELATION_NEXT(options->binary_in);
-		print = T2_CORRELATION_PRINT(options->binary_out);
+		next = t2_correlation_fscanf;
+		print = t2_correlation_fprintf;
 	} else if ( options->mode == MODE_T3 ) {
-		next = T3_CORRELATION_NEXT(options->binary_in);
-		print = T3_CORRELATION_PRINT(options->binary_out);
+		next = t3_correlation_fscanf;
+		print = t3_correlation_fprintf;
 	} else {
 		error("Unsupported mode: %d\n", options->mode);
 		return(PC_ERROR_MODE);
@@ -149,15 +149,13 @@ correlator_t *correlator_alloc(options_t const *options) {
 	if ( correlator->mode == MODE_T2 ) {
 		correlator->photon_size = sizeof(t2_t);
 		correlator->correlate = t2_correlate;
-		correlator->correlation_print = 
-				T2_CORRELATION_PRINT(options->binary_out);
+		correlator->correlation_print = t2_correlation_fprintf;
 		correlator->under_max_distance = t2_under_max_distance;
 		correlator->over_min_distance = t2_over_min_distance;
 	} else if ( correlator->mode == MODE_T3 ) {
 		correlator->photon_size = sizeof(t3_t);
 		correlator->correlate = t3_correlate;
-		correlator->correlation_print = 
-				T3_CORRELATION_PRINT(options->binary_out);
+		correlator->correlation_print = t3_correlation_fprintf;
 		correlator->under_max_distance = t3_under_max_distance;
 		correlator->over_min_distance = t3_over_min_distance;
 	} else {

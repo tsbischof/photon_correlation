@@ -27,9 +27,6 @@ typedef struct {
 
 	int print_every;
 
-	int binary_in;
-	int binary_out;
-
 	int use_void;
 	int seed;
 
@@ -80,6 +77,9 @@ typedef struct {
 
 /* gn */
 	int exact_normalization;
+
+/* t2_to_t3 */
+	int64_t repetition_time;
 } options_t;
 
 typedef struct {
@@ -91,7 +91,6 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_VERBOSE, OPT_PRINT_EVERY,
 		OPT_FILE_IN, OPT_FILE_OUT,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
-		OPT_BINARY_IN, OPT_BINARY_OUT,
 		OPT_USE_VOID, OPT_SEED,
 		OPT_QUEUE_SIZE, 
 		OPT_START_TIME, OPT_STOP_TIME,
@@ -104,6 +103,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_SUPPRESS,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
 		OPT_EXACT_NORMALIZATION, 
+		OPT_REPETITION_TIME,
 		OPT_EOF };
 
 void default_options(options_t *options);

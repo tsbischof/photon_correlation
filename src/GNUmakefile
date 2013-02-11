@@ -10,8 +10,8 @@ CCFLAGS := -Wall
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
-CCFLAGS += -D VERSION="1.6"
-CCFLAGS += -O3 
+CCFLAGS += -D VERSION="2.0"
+CCFLAGS += -O3
 CCFLAGS += ${INCLUDES}
 
 LDFLAGS = -Wall ${LIBS} 
@@ -46,16 +46,13 @@ CORRELATIONS_LIB =
 ALL_LIB += ${CORRELATIONS_LIB}
 TARGETS += correlations
 
-HISTOGRAM_OBJ = histogram_main.o ${COMMON_OBJ} \
-		histogram.o \
-		combinations.o \
-		histogram_gn.o \
-		histogram_t2.o correlate_t2.o \
-		histogram_t3.o correlate_t3.o
+HISTOGRAM_OBJ = ${COMMON_OBJ} histogram_main.o \
+		histogram.o combinations.o permutations.o correlate_photon.o \
+		histogram_photon.o 
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB =
 ALL_LIB += ${HISTOGRAM_LIB}
-#TARGETS += histogram
+TARGETS += histogram
 
 INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
 		intensity.o intensity_photon.o
@@ -65,8 +62,7 @@ ALL_LIB += ${INTENSITY_LIB}
 TARGETS += intensity
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
-		bin_intensity.o \
-		bin_intensity_t2.o bin_intensity_t3.o bin_intensity_photon.o \
+		bin_intensity.o bin_intensity_photon.o \
 		histogram_gn.o
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = 
@@ -82,8 +78,7 @@ TARGETS += channels
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
-		${SORT ${CORRELATE_OBJ}}
-#		histogram.o
+		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ}}}
 ALL_OBJ += ${GN_OBJ}
 GN_LIB = 
 ALL_LIB += ${GN_LIB}
@@ -118,6 +113,12 @@ ALL_OBJ += ${COMBINATIONS_OBJ}
 COMBINATIONS_LIB = 
 ALL_LIB += ${COMBINATIONS_LIB}
 TARGETS += combinations
+
+T2_TO_T3_OBJ = ${COMMON_OBJ} t2_to_t3_main.o 
+ALL_OBJ += ${T2_TO_T3_OBJ}
+T2_TO_T3_LIB = 
+LL_LIB += ${T2_TO_T3_LIB}
+TARGETS += t2_to_t3
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -179,6 +180,9 @@ gn: ${GN_OBJ}
 
 combinations: ${COMBINATIONS_OBJ}
 	${LD} ${LDFLAGS} -o $@ $^ ${COMBINATIONS_LIB}
+
+t2_to_t3: ${T2_TO_T3_OBJ}
+	${LD} ${LDFLAGS} -o $@ $^ ${T2_TO_T3_LIB}
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 

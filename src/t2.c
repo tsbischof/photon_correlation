@@ -11,16 +11,6 @@
 /* 
  * Functions to implement t2 photon read/write.
  */
-int t2_fread(FILE *stream_in, t2_t *t2) {
-	size_t n_read = fread(t2, sizeof(t2_t), 1, stream_in);
-
-	if ( n_read == 1 ) {
-		return(PC_SUCCESS);
-	} else {
-		return( feof(stream_in) ? EOF : PC_ERROR_IO );
-	}
-}
-
 int t2_fscanf(FILE *stream_in, t2_t *t2) {
 	int n_read = fscanf(stream_in,
 			"%"SCNu32",%"SCNd64,
@@ -43,15 +33,6 @@ int t2_fprintf(FILE *stream_out, t2_t const *t2) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t2_fwrite(FILE *stream_out, t2_t const *t2) {
-	size_t n_write = fwrite(t2,
-			sizeof(t2_t),
-			1,
-			stream_out);
-
-	return( n_write == 1 ? PC_SUCCESS : PC_ERROR_IO );
-}
-
 int t2_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t2 photons. 
@@ -63,13 +44,11 @@ int t2_compare(void const *a, void const *b) {
 	return( difference > 0 );
 }
 
-int t2_echo(FILE *stream_in, FILE *stream_out, int binary_in, int binary_out) {
+int t2_echo(FILE *stream_in, FILE *stream_out) {
 	t2_t t2;
-	t2_next_t next = T2_NEXT(binary_in);
-	t2_print_t print = T2_PRINT(binary_out);
 
-	while ( next(stream_in, &t2) == PC_SUCCESS ) {
-		print(stream_out, &t2);
+	while ( t2_fscanf(stream_in, &t2) == PC_SUCCESS ) {
+		t2_fprintf(stream_out, &t2);
 	}
 
 	return(PC_SUCCESS);
@@ -85,21 +64,6 @@ void t2_correlate(correlation_t *correlation) {
 
 	if ( correlation->order != 1 ) {
 		((t2_t *)correlation->photons)[0].time = 0;
-	}
-}
-
-int t2_correlation_fread(FILE *stream_in, correlation_t *correlation) {
-	size_t n_read;
-
-	n_read = fread(correlation->photons,
-			sizeof(t2_t),
-			correlation->order,
-			stream_in);
-
-	if ( n_read == correlation->order ) {
-		return(PC_SUCCESS);
-	} else {
-		return( feof(stream_in) ? EOF : PC_ERROR_IO );
 	}
 }
 
@@ -156,15 +120,6 @@ int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t2_correlation_fwrite(FILE *stream_out, correlation_t const *correlation) {
-	fwrite(correlation->photons,
-			sizeof(t2_t),
-			correlation->order,
-			stream_out);
-
-	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
-}
-
 int t2_under_max_distance(void const *correlator) {
 	int64_t max = ((correlator_t *)correlator)->max_time_distance;
 	t2_t *left = ((correlator_t *)correlator)->left;
@@ -179,5 +134,29 @@ int t2_over_min_distance(void const *correlator) {
 	t2_t *right = (t2_t *)((correlator_t *)correlator)->right;
 
 	return( min == 0 || i64abs(right->time - left->time) >= min );
+}
+
+int t2_correlation_build_channels(correlation_t const *correlation,
+		combination_t *channels_vector) {
+	int i;
+
+	for ( i = 0; i < correlation->order; i++ ) {
+		channels_vector->values[i] = (uint32_t)
+				((t2_t *)correlation->photons)[i].channel;
+	}
+
+	return(PC_SUCCESS);
+}
+
+int t2_correlation_build_values(correlation_t const *correlation,
+		values_vector_t *values_vector) {
+	int i;
+
+	for ( i = 0; i < correlation->order; i++ ) {
+		values_vector->values[i] = 
+				(int64_t)((t2_t *)correlation->photons)[i].time;
+	}
+
+	return(PC_SUCCESS);
 }
 

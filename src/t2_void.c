@@ -9,20 +9,12 @@
 /* 
  * Functions to implement t2 photon read/write.
  */
-int t2v_fread(FILE *stream_in, void *photon) {
-	return(t2_fread(stream_in, photon));
-}
-
 int t2v_fscanf(FILE *stream_in, void *photon) {
 	return(t2_fscanf(stream_in, photon));
 }
 
 int t2v_fprintf(FILE *stream_out, void const *photon) {
 	return(t2_fprintf(stream_out, photon));
-}
-
-int t2v_fwrite(FILE *stream_out, void const *photon) {
-	return(t2_fwrite(stream_out, photon));
 }
 
 int64_t t2v_window_dimension(void const *photon) {

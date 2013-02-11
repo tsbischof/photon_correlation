@@ -302,14 +302,14 @@ int photon_stream_init(photon_stream_t *photons, FILE *stream_in,
 
 	if ( options->mode == MODE_T2 ) {
 		photons->photon_size = sizeof(t2_t);
-		photons->photon_next = T2V_NEXT(options->binary_in);
-		photons->photon_print = T2V_PRINT(options->binary_out);
+		photons->photon_next = t2v_fscanf;
+		photons->photon_print = t2v_fprintf;
 		photons->window_dim = t2v_window_dimension;
 		photons->channel_dim = t2v_channel_dimension;
 	} else if ( options->mode == MODE_T3 ) {
 		photons->photon_size = sizeof(t3_t);
-		photons->photon_next = T3V_NEXT(options->binary_in);
-		photons->photon_print = T3V_PRINT(options->binary_out);
+		photons->photon_next = t3v_fscanf;
+		photons->photon_print = t3v_fprintf;
 		photons->window_dim = t3v_window_dimension;
 		photons->channel_dim = t3v_channel_dimension;
 	} else {

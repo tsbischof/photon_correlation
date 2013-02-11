@@ -1,14 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 
 #include "modes.h"
 #include "error.h"
 #include "files.h"
 #include "histogram.h"
-#include "histogram_gn.h"
-#include "histogram_t2.h"
-#include "histogram_t3.h"
 #include "options.h"
 
 int main(int argc, char *argv[]) {
@@ -47,7 +43,7 @@ int main(int argc, char *argv[]) {
 
 	if ( result == PC_SUCCESS ) {
 		result = histogram_dispatch(stream_in, stream_out, &options);
-	}
+	} 
 			
 	free_options(&options);
 	free_streams(stream_in, stream_out);
