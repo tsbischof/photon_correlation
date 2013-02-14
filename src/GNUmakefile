@@ -11,10 +11,10 @@ CCFLAGS := -Wall
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
 CCFLAGS += -D VERSION="2.0"
-CCFLAGS += -O3
+CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
-LDFLAGS = -Wall ${LIBS} 
+LDFLAGS = -Wall ${LIBS}  
 
 ALL_OBJ = 
 ALL_LIB = 

@@ -8,20 +8,22 @@ typedef struct {
 	int positive_only;
 	unsigned int n_permutations;
 	unsigned int length;
-	int yielded;
-	int populated;
 	unsigned int current_index;
+	
+	int populated;
+	int yielded;
 
-	combinations_t *scratch;
-	combination_t **permutations;
-	combination_t *current_permutation;
-} permutations_t;
+	combination_t *scratch;
+	unsigned int **permutations;
+	unsigned int *values;
+} permutation_t;
 
-permutations_t *permutations_alloc(unsigned int const length, 
+permutation_t *permutation_alloc(unsigned int const length, 
 		int const positive_only);
-void permutations_init(permutations_t *permutations);
-int permutations_next(permutations_t *permutations);
-void permutations_free(permutations_t **permutations);
+void permutation_init(permutation_t *permutation);
+int permutation_next(permutation_t *permutation);
+void permutation_free(permutation_t **permutation);
+int permutation_fprintf(FILE *stream_out, permutation_t const *permutation);
 
 int is_permutation(combination_t const *combination);
 int is_positive_permutation(combination_t const *combination);

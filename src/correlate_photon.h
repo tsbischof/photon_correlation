@@ -55,7 +55,7 @@ typedef struct {
 	photon_queue_t *photon_queue;
 
 	index_offsets_t *index_offsets;
-	permutations_t *photon_permutations;
+	permutation_t *photon_permutation;
 
 	correlation_t *current_correlation;
 

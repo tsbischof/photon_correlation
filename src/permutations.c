@@ -1,132 +1,155 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "permutations.h"
 #include "error.h"
 
-permutations_t *permutations_alloc(unsigned int const length, 
+permutation_t *permutation_alloc(unsigned int const length, 
 		int const positive_only) {
 	unsigned int i;
-	permutations_t *permutations = NULL;
+	permutation_t *permutation = NULL;
 
-	debug("Allocating permutations: %d length, positive only?: %d\n",
+	debug("Allocating permutation: %d length; positive only?: %d\n",
 			length, positive_only);
-	permutations = (permutations_t *)malloc(sizeof(permutations_t));
+	permutation = (permutation_t *)malloc(sizeof(permutation_t));
 
-	if ( permutations == NULL ) {
-		return(permutations);
+	if ( permutation == NULL ) {
+		return(permutation);
 	}
 
-	permutations->positive_only = positive_only;
-	permutations->length = length;
-	permutations->populated = 0;
+	permutation->positive_only = positive_only;
+	permutation->length = length;
+	permutation->populated = 0;
 
-	permutations->n_permutations = n_permutations(length);
-	debug("Allocating %d permutations.\n", permutations->n_permutations);
+	permutation->n_permutations = n_permutations(length);
+	debug("Allocating %d permutations.\n", permutation->n_permutations);
 
-	permutations->permutations = (combination_t **)malloc(
-			sizeof(combination_t *)*permutations->n_permutations);
-	permutations->scratch = combinations_alloc(length, length);
+	permutation->permutations = (unsigned int **)malloc(
+			permutation->n_permutations*sizeof(unsigned int *));
+	permutation->scratch = combination_alloc(length, length);
+	permutation->values = NULL;
 
-	if ( permutations->permutations == NULL || permutations->scratch == NULL) {
-		permutations_free(&permutations);
-		return(permutations);
+	if ( permutation->permutations == NULL || permutation->scratch == NULL) {
+		permutation_free(&permutation);
+		return(permutation);
 	}
 
-	for ( i = 0; i < permutations->n_permutations; i++ ) {
+	for ( i = 0; i < permutation->n_permutations; i++ ) {
 		debug("Allocating combination %d\n", i);
-		permutations->permutations[i] = combination_alloc(length);
-		if ( permutations->permutations[i] == NULL ) {
-			permutations_free(&permutations);
-			return(permutations);
+		permutation->permutations[i] = (unsigned int *)malloc(
+				sizeof(unsigned int)*length);
+		if ( permutation->permutations[i] == NULL ) {
+			permutation_free(&permutation);
+			return(permutation);
 		}
 	}
 
-	debug("Finished allocating permutations.\n");
-	return(permutations);
+	debug("Finished allocating permutation.\n");
+	return(permutation);
 }
 
-void permutations_init(permutations_t *permutations) {
+void permutation_init(permutation_t *permutation) {
 	unsigned int i;
 	unsigned int j;
 	int valid;
 
-	combination_t *current;
-
-	if ( ! permutations->populated ) {
+	if ( ! permutation->populated ) {
 		debug("Initializing permuations.\n");
 
-		for ( i = 0; i < permutations->n_permutations; i++ ) {
-			debug("Initializing permutation %d (%p)\n", 
-					i, 
-					permutations->permutations[i]);
-			combination_init(permutations->permutations[i]);
+		for ( i = 0; i < permutation->n_permutations; i++ ) {
+			memset(permutation->permutations[i], 
+					0, 
+					sizeof(unsigned int)*permutation->length);
 		}
 	
 		debug("Initializing scratch combination.\n");
-		combinations_init(permutations->scratch);
+		combination_init(permutation->scratch);
 	
 		i = 0;
 	
-		while ( combinations_next(permutations->scratch) == PC_SUCCESS ) {
+		while ( combination_next(permutation->scratch) == PC_SUCCESS ) {
 			debug("Currently at combination %d\n", i);
-			current = permutations->scratch->current_combination;
-			valid = is_permutation(current) &&
-					! ( permutations->positive_only && 
-						! is_positive_permutation(current));
+			valid = is_permutation(permutation->scratch) &&
+					! ( permutation->positive_only && 
+						! is_positive_permutation(permutation->scratch));
 	
 			if ( valid ) {
 				debug("Found a permutation.\n");
-				for ( j = 0; j < current->length; j++ ) {
-					permutations->permutations[i]->values[j] =
-							current->values[j];
+				for ( j = 0; j < permutation->length; j++ ) {
+					permutation->permutations[i][j] =
+							permutation->scratch->values[j];
 				}
 	
 				i++;
 			}
 		}
-	
-		permutations->n_permutations = i;
-		debug("Found %d permutations.\n", permutations->n_permutations);
 
-		permutations->populated = 1;
+		j = i;
+
+		permutation->n_permutations = i;
+		debug("Found %d permutation.\n", permutation->n_permutations);
+
+		/* Free the excess permutations: we assume all permutations, but may
+		 * only end up needing the positive ones.
+		 */
+		for ( i = j+1; i < j; i++ ) {
+			free(permutation->permutations[i]);
+		}
+
+		permutation->populated = 1;
 	}
 
-	permutations->yielded = 0;
-	permutations->current_permutation = permutations->permutations[0];
-	permutations->current_index = 0;
+	permutation->yielded = 0;
+	permutation->values = permutation->permutations[0];
+	permutation->current_index = 0;
 }
 
-int permutations_next(permutations_t *permutations) {
-	if ( permutations->yielded ) {
-		permutations->current_index++;
-		if ( permutations->current_index >= permutations->n_permutations ) {
+int permutation_next(permutation_t *permutation) {
+	if ( permutation->yielded ) {
+		permutation->current_index++;
+		if ( permutation->current_index >= permutation->n_permutations ) {
 			return(PC_COMBINATION_OVERFLOW);
 		} else {
-			permutations->current_permutation = 
-					permutations->permutations[permutations->current_index];
-			permutations->yielded = 1;
+			permutation->values = 
+					permutation->permutations[permutation->current_index];
+			permutation->yielded = 1;
 			return(PC_SUCCESS);
 		}
 	} else {
-		permutations->yielded = 1;
-		permutations->current_permutation = 
-				permutations->permutations[permutations->current_index];
+		permutation->yielded = 1;
+		permutation->values = 
+				permutation->permutations[permutation->current_index];
 		return(PC_SUCCESS);
 	}
 }
 
-void permutations_free(permutations_t **permutations) {
+void permutation_free(permutation_t **permutation) {
 	int i;
-	if ( *permutations != NULL ) {
-		for ( i = 0; (*permutations)->permutations != NULL && 
-				i < (*permutations)->n_permutations; i++ ) {
-			combination_free(&((*permutations)->permutations[i]));
+	if ( *permutation != NULL ) {
+		for ( i = 0; (*permutation)->permutations != NULL && 
+				i < (*permutation)->n_permutations; i++ ) {
+			free((*permutation)->permutations[i]);
 		}
 
-		free((*permutations)->permutations);
-		combinations_free(&((*permutations)->scratch));
-		free(*permutations);
+		free((*permutation)->permutations);
+		combination_free(&((*permutation)->scratch));
+		free(*permutation);
 	}
+}
+
+int permutation_fprintf(FILE *stream_out, permutation_t const *permutation) {
+	int i;
+
+	for ( i = 0; i < permutation->length; i++ ) {
+		fprintf(stream_out, "%u", permutation->values[i]);
+		if ( i+1 == permutation->length ) {
+			fprintf(stream_out, "\n");
+		} else {
+			fprintf(stream_out, ",");
+		}
+	}
+
+	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
 int is_permutation(combination_t const *combination) {

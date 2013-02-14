@@ -6,8 +6,8 @@
 #include "intensity.h"
 
 int main(int argc, char *argv[]) {
-	options_t options;
-	int result = 0;
+	options_t options = {};
+	int result = PC_SUCCESS;
 
 	FILE *stream_in = NULL;
 	FILE *stream_out = NULL;

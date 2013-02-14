@@ -9,11 +9,11 @@
 #include "conversions.h"
 
 int main(int argc, char *argv[]) {
-	options_t options;
+	options_t options = {};
 
-	t2_t t2;
+	t2_t t2 = {};
 	t2_print_t t2_print = t2_fprintf;
-	t3_t t3;
+	t3_t t3 = {};
 	t3_next_t t3_next = t3_fscanf;
 
 	int result = 0;

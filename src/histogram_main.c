@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
 	int result = 0;
 
-	options_t options;
+	options_t options = {};
 
 	FILE *stream_in = NULL;
 	FILE *stream_out = NULL;

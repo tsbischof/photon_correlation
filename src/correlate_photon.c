@@ -167,7 +167,7 @@ correlator_t *correlator_alloc(options_t const *options) {
 	correlator->photon_queue = photon_queue_alloc(
 			options->queue_size, correlator->mode);
 	correlator->index_offsets = index_offsets_alloc(correlator->order);
-	correlator->photon_permutations = permutations_alloc(
+	correlator->photon_permutation = permutation_alloc(
 			correlator->order, options->positive_only);
 	correlator->current_correlation = correlation_alloc(
 			correlator->mode, correlator->order);
@@ -178,7 +178,7 @@ correlator_t *correlator_alloc(options_t const *options) {
 			
 	if ( correlator->photon_queue == NULL ||
 			correlator->index_offsets == NULL ||
-			correlator->photon_permutations == NULL ||
+			correlator->photon_permutation == NULL ||
 			correlator->current_correlation == NULL ||
 			correlator->left == NULL ||
 			correlator->right == NULL ||
@@ -207,7 +207,7 @@ int correlator_init(correlator_t *correlator, photon_stream_t *photon_stream,
 
 	photon_queue_init(correlator->photon_queue);
 	index_offsets_init(correlator->index_offsets, 0);
-	permutations_init(correlator->photon_permutations);
+	permutation_init(correlator->photon_permutation);
 	correlation_init(correlator->current_correlation);
 
 	correlator->eof = 0;
@@ -273,7 +273,7 @@ void correlator_free(correlator_t **correlator) {
 	if ( *correlator != NULL ) {
 		photon_queue_free(&((*correlator)->photon_queue));
 		index_offsets_free(&((*correlator)->index_offsets));
-		permutations_free(&((*correlator)->photon_permutations));
+		permutation_free(&((*correlator)->photon_permutation));
 		correlation_free(&((*correlator)->current_correlation));
 		free((*correlator)->left);
 		free((*correlator)->right);
@@ -340,7 +340,7 @@ int correlator_populate(correlator_t *correlator) {
 void correlator_block_init(correlator_t *correlator) {
 	index_offsets_init(correlator->index_offsets, 
 			photon_queue_size(correlator->photon_queue) - 1);
-	permutations_init(correlator->photon_permutations);
+	permutation_init(correlator->photon_permutation);
 	correlator->in_block = 1;
 	correlator->in_permutations = 0;
 }
@@ -354,7 +354,7 @@ int correlator_yield_from_block(correlator_t *correlator) {
 			 * next permutations.
 			 */
 			debug("Getting the next permutation.\n");
-			result = permutations_next(correlator->photon_permutations);
+			result = permutation_next(correlator->photon_permutation);
 
 			if ( result == PC_SUCCESS ) {
 				/* valid permutation */
@@ -375,7 +375,7 @@ int correlator_yield_from_block(correlator_t *correlator) {
 				/* Possible valid offsets, check the distance. */
 				if ( correlator_valid_distance(correlator) ) {
 					debug("Valid offsets, moving to permutations.\n");
-					permutations_init(correlator->photon_permutations);
+					permutation_init(correlator->photon_permutation);
 					correlator->in_permutations = 1;
 				} else {
 					/* distance too far, disregard this one. */
@@ -410,7 +410,7 @@ int correlator_build_correlation(correlator_t *correlator) {
 	int result;
 	correlation_t *cc = correlator->current_correlation;
 	combination_t *io = correlator->index_offsets->current_index_offsets;
-	combination_t *p = correlator->photon_permutations->current_permutation;
+	permutation_t *p = correlator->photon_permutation;
 
 	debug("Populating correlation.\n");
 	for ( i = 0; i < correlator->order; i++ ) {

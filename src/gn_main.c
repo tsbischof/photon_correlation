@@ -1,16 +1,12 @@
 #include <stdio.h>
 
 #include "options.h"
-#include "correlate.h"
-#include "intensity.h"
-#include "bin_intensity.h"
-#include "channels.h"
 #include "error.h"
 #include "files.h"
 #include "gn.h"
 
 int main(int argc, char *argv[]) {
-	int result = 0;
+	int result = PC_SUCCESS;
 
 	options_t options;
 
@@ -47,20 +43,17 @@ int main(int argc, char *argv[]) {
 			OPT_FILE_IN, OPT_FILE_OUT, 
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
 			OPT_QUEUE_SIZE, 
-			OPT_START_TIME, OPT_STOP_TIME, 
-			OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE, 
-			OPT_MAX_PULSE_DISTANCE, OPT_MAX_PULSE_DISTANCE, 
-			OPT_POSITIVE_ONLY, 
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
-			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
-			OPT_SUPPRESS,
 			OPT_EXACT_NORMALIZATION, OPT_EOF}};
 
-	result += parse_options(argc, argv, &options, &program_options);
-	result += open_streams(&stream_in, options.filename_in,
-			&stream_out, options.filename_out);
+	result = parse_options(argc, argv, &options, &program_options);
 
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	}
+
+	if ( result == PC_SUCCESS ) {
 		gn_raw(stream_in, stream_out, &options);
 	}
 

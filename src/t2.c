@@ -152,8 +152,8 @@ int t2_correlation_build_values(correlation_t const *correlation,
 		values_vector_t *values_vector) {
 	int i;
 
-	for ( i = 0; i < correlation->order; i++ ) {
-		values_vector->values[i] = 
+	for ( i = 1; i < correlation->order; i++ ) {
+		values_vector->values[i-1] = 
 				(int64_t)((t2_t *)correlation->photons)[i].time;
 	}
 

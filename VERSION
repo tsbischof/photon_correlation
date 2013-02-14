@@ -1,3 +1,24 @@
+v2.0 (14 February 2013)
+This version marks a complete revamp of the programs. Instead of having 
+specialized versions of the code for each photon mode, everything now operates
+on more generalized photon types. This reduces code bloat and permits more rapid
+error correction, since bugs only need to be fixed in a single place.
+
+The following programs are new to this version:
+-t3_to_t2: convert t3 photons to t2, given a sync rate
+-t2_to_t3: convert t2 photons to t3, given a sync rate
+-combinations: primarily for debugging, this efficiently generates permtuations
+and combinations
+-photons: primarily for debugging, this echos photons in the stream
+-correlations: primarily for debugging, this echos correlations in the stream
+
+The following programs are complete and tested:
+-channels, combinations, correlate, correlations, intensity, intensity_to_t2, photons, t2_to_t3, t3_as_t2, t3_to_t2
+
+The following programs are not usuable:
+-bin_intensity, gn, correlate_vector
+
+
 v1.6 (18 October 2012)
 As of this version, the following programs are effectively complete:
 -correlate

@@ -1,6 +1,7 @@
 *.pyc
 __pycache__
 *.o
+*.os
 *.so
 build
 dist

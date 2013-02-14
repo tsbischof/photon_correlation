@@ -11,28 +11,19 @@ unsigned int factorial(unsigned int const n);
 
 typedef struct {
 	unsigned int length;
+	unsigned int limit;
+
+	int yielded;
 	unsigned int *values;
 } combination_t;
 
-typedef struct {
-	unsigned int length;
-	unsigned int limit;
-	int yielded;
-
-	combination_t *current_combination;
-} combinations_t;
-
-combination_t *combination_alloc(unsigned int const length);
+combination_t *combination_alloc(unsigned int const length,
+		unsigned int const limit);
 void combination_init(combination_t *combination);
 void combination_free(combination_t **combination);
+int combination_next(combination_t *combination);
 unsigned int combination_index(combination_t const *combination);
 int combination_fprintf(FILE *stream_out, combination_t const *combination);
-
-combinations_t *combinations_alloc(unsigned int const length, 
-		unsigned int const limit);
-void combinations_init(combinations_t *combinations);
-int combinations_next(combinations_t *combinations);
-void combinations_free(combinations_t **combinations);
 
 typedef struct {
 	unsigned int length;

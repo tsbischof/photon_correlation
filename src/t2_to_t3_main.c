@@ -9,14 +9,14 @@
 #include "conversions.h"
 
 int main(int argc, char *argv[]) {
-	options_t options;
+	options_t options = {};
 
-	t2_t t2;
+	t2_t t2 = {};
 	t2_next_t t2_next = t2_fscanf;
-	t3_t t3;
+	t3_t t3 = {};
 	t3_print_t t3_print = t3_fprintf;
 
-	int result = 0;
+	int result = PC_SUCCESS;
 
 	FILE *stream_in = NULL;
 	FILE *stream_out = NULL;

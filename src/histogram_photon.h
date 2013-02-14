@@ -8,7 +8,7 @@
 #include "correlate_photon.h"
 
 typedef struct {
-	size_t n_bins;
+	unsigned int n_bins;
 	int print_label;
 	limits_t limits;
 	int scale;
@@ -29,7 +29,6 @@ int edges_index_bsearch(void const *edges, int64_t const value);
 typedef struct {
 	size_t length;
 	int64_t *values;
-	combination_t *combination;
 } values_vector_t;
 
 values_vector_t *values_vector_alloc(unsigned int const length);
@@ -38,7 +37,7 @@ void values_vector_free(values_vector_t **vv);
 int64_t values_vector_index(values_vector_t const *vv, edges_t ** const edges);
 
 typedef struct {
-	size_t length;
+	unsigned int length;
 	int yielded;
 	unsigned int *limits;
 	unsigned int *values;
@@ -64,7 +63,7 @@ typedef struct {
 
 	uint64_t **counts;
 
-	combinations_t *channels_vectors;
+	combination_t *channels_vector;
 	values_vector_t *values_vector;
 	edge_indices_t *edge_indices;
 

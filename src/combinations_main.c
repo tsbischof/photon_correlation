@@ -7,9 +7,9 @@
 #include "permutations.h"
 
 int main(int argc, char *argv[]) {
-	int result = 0;
+	int result = PC_SUCCESS;
 
-	options_t options;
+	options_t options = {};
 
 	FILE *stream_in = NULL;
 	FILE *stream_out = NULL;
@@ -22,11 +22,13 @@ int main(int argc, char *argv[]) {
 	
 	result = parse_options(argc, argv, &options, &program_options);
 
-	result += open_streams(&stream_in, options.filename_in,
-			&stream_out, options.filename_out);
+	if ( result == PC_SUCCESS ) {
+		result = open_streams(&stream_in, options.filename_in,
+				&stream_out, options.filename_out);
+	}
 
 	/* Begin the calculation. */
-	if ( ! result ) {
+	if ( result == PC_SUCCESS ) {
 		result = combinations_dispatch(stream_in, stream_out, &options);
 	}
 

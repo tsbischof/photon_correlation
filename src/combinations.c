@@ -46,7 +46,8 @@ unsigned int factorial(unsigned int const n) {
 }
 
 
-combination_t *combination_alloc(unsigned int const length) {
+combination_t *combination_alloc(unsigned int const length, 
+		unsigned int const limit) {
 	combination_t *combination = NULL;
 
 	combination = (combination_t *)malloc(sizeof(combination_t));
@@ -56,6 +57,7 @@ combination_t *combination_alloc(unsigned int const length) {
 	}
 
 	combination->length = length;
+	combination->limit = limit;
 	combination->values = (unsigned int *)malloc(sizeof(unsigned int)*length);
 
 	if ( combination->values == NULL ) {
@@ -68,6 +70,8 @@ combination_t *combination_alloc(unsigned int const length) {
 
 void combination_init(combination_t *combination) {
 	int i;
+
+	combination->yielded = 0;
 
 	for ( i = 0; i < combination->length; i++ ) {
 		combination->values[i] = 0;
@@ -89,7 +93,7 @@ unsigned int combination_index(combination_t const *combination) {
 
 	for ( i = combination->length-1; i >= 0; i-- ) {
 		result += base_value*combination->values[i];
-		base_value *= combination->length;
+		base_value *= combination->limit;
 	}
 
 	return(result);
@@ -111,49 +115,19 @@ int combination_fprintf(FILE *stream_out, combination_t const *combination) {
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
 
-
-combinations_t *combinations_alloc(unsigned int const length, 
-		unsigned int const limit) {
-	combinations_t *combinations = NULL;
-
-	combinations = (combinations_t *)malloc(sizeof(combinations_t));
-
-	if ( combinations == NULL ) {
-		return(combinations);
-	}
-
-	combinations->length = length;
-	combinations->limit = limit;
-	combinations->yielded = 0;
-
-	combinations->current_combination = combination_alloc(length);
-
-	if ( combinations->current_combination == NULL ) {
-		combinations_free(&combinations);
-		return(combinations);
-	}
-
-	return(combinations);
-}
-
-void combinations_init(combinations_t *combinations) {
-	combination_init(combinations->current_combination);
-	combinations->yielded = 0;
-}
-
-int combinations_next(combinations_t *combinations) {
+int combination_next(combination_t *combination) {
 /* Starting from the final digit, increment. Pass the overflow along,
  * until reaching the beginning. If all overflow, we have reached the end.
  */
 	int i;
-	combination_t *current = combinations->current_combination;
 
-	if ( combinations->yielded ) {
+	if ( combination->yielded ) {
 		debug("Yielded last value, produce the next.\n");
-		for ( i = current->length - 1; i >= 0; i-- ) {
-			current->values[i] = (current->values[i] + 1) % combinations->limit;
+		for ( i = combination->length - 1; i >= 0; i-- ) {
+			combination->values[i] = (combination->values[i] + 1) %
+					combination->limit;
 
-			if ( current->values[i] != 0 ) {
+			if ( combination->values[i] != 0 ) {
 				i = 0;
 			} else if ( i == 0 ) {
 				return(PC_COMBINATION_OVERFLOW);
@@ -163,17 +137,10 @@ int combinations_next(combinations_t *combinations) {
 		return(PC_SUCCESS);
 	} else {
 		debug("Not yet yielded, use this one.\n");
-		combinations->yielded = 1;
+		combination->yielded = 1;
 		return(PC_SUCCESS);
 	}
 }
-
-void combinations_free(combinations_t **combinations) {
-	if ( *combinations != NULL ) {
-		combination_free(&((*combinations)->current_combination));
-	}
-}
-
 
 index_offsets_t *index_offsets_alloc(unsigned int const length) {
 	index_offsets_t *index_offsets = NULL;
@@ -185,7 +152,7 @@ index_offsets_t *index_offsets_alloc(unsigned int const length) {
 	} 
 
 	index_offsets->length = length;
-	index_offsets->current_index_offsets = combination_alloc(length);
+	index_offsets->current_index_offsets = combination_alloc(length, length);
 
 	if ( index_offsets->current_index_offsets == NULL ) {
 		index_offsets_free(&index_offsets);
@@ -259,23 +226,23 @@ void index_offsets_free(index_offsets_t **index_offsets) {
 
 int combinations_dispatch(FILE *stream_in, FILE *stream_out,
 		options_t const *options) {
-/*	combinations_t *combinations;
+	combination_t *combination;
+	permutation_t *permutation;
 
-	combinations = combinations_alloc(options->order, options->order);
-	if ( combinations == NULL ) {
+	combination = combination_alloc(options->order, options->channels);
+	if ( combination == NULL ) {
 		return(PC_ERROR_MEM);
 	}
 
-	combinations_init(combinations);
+	combination_init(combination);
 
-	while ( combinations_next(combinations) == PC_SUCCESS ) { */
-/*		if ( is_permutation(combinations->current_combination) ) {
-			fprintf(stream_out, "permutation!\n");
-		} */
-/*		combination_fprintf(stream_out, combinations->current_combination);
+	while ( combination_next(combination) == PC_SUCCESS ) { 
+		fprintf(stream_out, "Combination index: %u\n", 
+				combination_index(combination));
+		combination_fprintf(stream_out, combination);
 	}
 
-	combinations_free(&combinations); */
+	combination_free(&combination); 
 
 	/*index_offsets_t *index_offsets;
 
@@ -293,19 +260,19 @@ int combinations_dispatch(FILE *stream_in, FILE *stream_out,
 
 	*/
 
-	permutations_t *permutations;
+	permutation = permutation_alloc(options->order, 0);
 
-	permutations = permutations_alloc(options->order, 0);
-
-	if ( permutations == NULL ) {
+	if ( permutation == NULL ) {
 		return(PC_ERROR_MEM);
 	}
 
-	permutations_init(permutations);
+	permutation_init(permutation);
 
-	while ( permutations_next(permutations) == PC_SUCCESS ) {
-		combination_fprintf(stream_out, permutations->current_permutation);
+	while ( permutation_next(permutation) == PC_SUCCESS ) {
+		permutation_fprintf(stream_out, permutation);
 	}
+
+	permutation_free(&permutation); 
 
 	return(PC_SUCCESS);
 }

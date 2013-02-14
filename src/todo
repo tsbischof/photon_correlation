@@ -3,17 +3,6 @@ General:
 -write automated test for all programs
 -look into errno and related for dealing with errors.
 -run valgrind against all programs, check that nothing has been missed.
--try putting together a t2/t3 void interface, for generic programming. Keep the strongly-typed interfaces for general utility, but use the void pointers where it makes sense to reduce code duplication
--implement the t2/t3 queues, streams as front-ends to the generic photon stream. This should make debugging a bit easier, since everything can be set up reliably and changed as needed, rather than being re-implemented each time.
--clean up the photon stream interface, such that the user has access to calls like `photon_stream_next()' and `photon_stream_window_next()', which take care of all interal work. The goal is to have an interface which eventually looks like:
-photon_stream_t *photons = photon_stream_alloc(options);
-(photons)->init(photons);
-while ( (photons)->good() ) {
-	/* do stuff */
-}
--clean up photon_stream_init to make it void. Do allocation in alloc
-
-At the end of windows or feed, the stream indicates as such. Internally, the stream keeps a queue of values ready to go, and performs all processing of channel suppression and offsets on the fly. Additional photon queues can be built as needed, for correlation and whatnot, but this should make the process of actually instantiating and using the stream simpler.
 
 Scripts:
 -plotting for t3 mode correlation
@@ -21,7 +10,7 @@ Scripts:
 Correlate:
 
 Histogram:
--should it be possible to re-initialize the histogram on command? This would save the trouble of allocating new memory each time we need to start a new histogram with the same settings. This could be done by separating the allocation/initiationalization/cleanup routines from the main histogram dispatch, permitting more direct control over the histogram process.
+-modify the backend such that allocation for each of the several modes (t2, t3 g, t3 g1) are performed separately.
 
 Intensity:
 

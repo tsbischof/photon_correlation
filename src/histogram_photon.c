@@ -139,9 +139,8 @@ values_vector_t *values_vector_alloc(unsigned int const length) {
 
 	vv->length = length;
 	vv->values = (int64_t *)malloc(sizeof(int64_t)*length);
-	vv->combination = combination_alloc(length);
 	
-	if ( vv->values == NULL || vv->combination == NULL ) {
+	if ( vv->values == NULL ) {
 		values_vector_free(&vv);
 		return(vv);
 	} 
@@ -151,13 +150,11 @@ values_vector_t *values_vector_alloc(unsigned int const length) {
 
 void values_vector_init(values_vector_t *vv) {
 	memset(vv->values, 0, sizeof(int64_t)*vv->length);
-	combination_init(vv->combination);
 }
 
 void values_vector_free(values_vector_t **vv) {
 	if ( *vv != NULL ) {
 		free((*vv)->values); 
-		combination_free(&((*vv)->combination)); 
 		free(*vv);
 	}
 }
@@ -169,18 +166,23 @@ int64_t values_vector_index(values_vector_t const *vv, edges_t ** const edges) {
  */
 	int i;
 	int result;
+	int base = 1;
+	int64_t index = 0;
 
-	for ( i = 0; i < vv->length; i++ ) {
+	for ( i = vv->length-1; i >= 0; i-- ) {
+		index *= base;
+
 		result = edges[i]->get_index(edges[i], vv->values[i]);
 
 		if ( result < 0 ) {
 			return(result);
 		}
 
-		vv->combination->values[i] = result;
+		index += result;
+		base *= edges[i]->n_bins;
 	}
 
-	return((int64_t)combination_index(vv->combination));
+	return(index);
 }
 
 edge_indices_t *edge_indices_alloc(unsigned int const length) {
@@ -268,7 +270,12 @@ histogram_gn_t *histogram_gn_alloc(options_t const *options) {
 		hist->build_channels = t2_correlation_build_channels;
 		hist->build_values = t2_correlation_build_values;
 	} else if ( hist->mode == MODE_T3 ) {
-		hist->dimensions = (hist->order - 1)*2;
+		if ( hist->order == 1 ) {
+			hist->dimensions = 1;
+		} else {
+			hist->dimensions = (hist->order - 1)*2;
+		}
+
 		hist->build_channels = t3_correlation_build_channels;
 		hist->build_values = t3_correlation_build_values;
 	} else {
@@ -306,29 +313,48 @@ histogram_gn_t *histogram_gn_alloc(options_t const *options) {
 		hist->n_bins = 
 				(size_t)pow_int(options->time_limits.bins, hist->order);
 	} else if ( hist->mode == MODE_T3 ) {
-		for ( i = 0; i < hist->order-1; i++ ) {
-			hist->edges[2*i] = edges_alloc(options->pulse_limits.bins);
-			hist->edges[2*i+1] = edges_alloc(options->time_limits.bins);
-
-			if ( hist->edges[2*i] == NULL || hist->edges[2*i+1] == NULL ) {
+		if ( hist->order == 1 ) {
+			hist->edges[0] = edges_alloc(options->time_limits.bins);
+			if ( hist->edges[0] == NULL ) {
 				error("Could not allocate edges.\n");
 				histogram_gn_free(&hist);
 				return(hist);
 			}
 
-			if ( edges_init(hist->edges[2*i], &(options->pulse_limits),
-						options->pulse_scale, 1) != PC_SUCCESS || 
-					edges_init(hist->edges[2*i+1], &(options->time_limits),
-						options->time_scale, 0) != PC_SUCCESS ) {
-				error("Could not initalize edges.\n");
+			if ( edges_init(hist->edges[0], &(options->time_limits),
+					options->time_scale, 0) != PC_SUCCESS ) {
+				error("Could not initialize edges.\n");
 				histogram_gn_free(&hist);
 				return(hist);
 			}
-		}
+			
+			hist->n_bins = 
+					(size_t)pow_int(options->time_limits.bins, hist->order);
+		} else {
+			for ( i = 0; i < hist->order-1; i++ ) {
+				hist->edges[2*i] = edges_alloc(options->pulse_limits.bins);
+				hist->edges[2*i+1] = edges_alloc(options->time_limits.bins);
 
-		hist->n_bins = 
-				(size_t)pow_int(options->pulse_limits.bins, hist->order)*
-				(size_t)pow_int(options->time_limits.bins, hist->order);
+				if ( hist->edges[2*i] == NULL || hist->edges[2*i+1] == NULL ) {
+					error("Could not allocate edges.\n");
+					histogram_gn_free(&hist);
+					return(hist);
+				}
+
+				if ( edges_init(hist->edges[2*i], &(options->pulse_limits),
+							options->pulse_scale, 1) != PC_SUCCESS || 
+						edges_init(hist->edges[2*i+1], &(options->time_limits),
+							options->time_scale, 0) != PC_SUCCESS ) {
+					error("Could not initalize edges.\n");
+					histogram_gn_free(&hist);
+					return(hist);
+				}
+			}
+
+			hist->n_bins = 
+					(size_t)pow_int(options->pulse_limits.bins, hist->order)*
+					(size_t)pow_int(options->time_limits.bins, hist->order);
+		}
 	} else {
 		histogram_gn_free(&hist);
 		return(hist);
@@ -354,10 +380,10 @@ histogram_gn_t *histogram_gn_alloc(options_t const *options) {
 		}
 	}
 
-	hist->channels_vectors = combinations_alloc(hist->channels, hist->channels);
+	hist->channels_vector = combination_alloc(hist->order, hist->channels);
 	hist->values_vector = values_vector_alloc(hist->dimensions);
 
-	if ( hist->channels_vectors == NULL || hist->values_vector == NULL ) {
+	if ( hist->channels_vector == NULL || hist->values_vector == NULL ) {
 		error("Could not allocate channels or values vector.\n");
 		histogram_gn_free(&hist);
 		return(hist);
@@ -377,7 +403,7 @@ void histogram_gn_init(histogram_gn_t *hist) {
 	int i;
 
 	values_vector_init(hist->values_vector);
-	combinations_init(hist->channels_vectors);
+	combination_init(hist->channels_vector);
 
 	for ( i = 0; i < hist->n_histograms; i++ ) {
 		memset(hist->counts[i], 0, sizeof(uint64_t)*hist->n_bins); 
@@ -388,7 +414,7 @@ void histogram_gn_free(histogram_gn_t **hist) {
 	int i;
 
 	if ( *hist != NULL ) {
-		combinations_free(&((*hist)->channels_vectors));
+		combination_free(&((*hist)->channels_vector));
 		values_vector_free(&((*hist)->values_vector));
 		edge_indices_free(&((*hist)->edge_indices));
 
@@ -422,18 +448,18 @@ int histogram_gn_increment(histogram_gn_t *hist,
 				correlation->order, hist->order);
 	}
 
-	hist->build_channels(correlation, 
-			hist->channels_vectors->current_combination);
+	hist->build_channels(correlation, hist->channels_vector);
 	hist->build_values(correlation, hist->values_vector);
 
-	histogram_index = combination_index(
-			hist->channels_vectors->current_combination);
+	histogram_index = combination_index(hist->channels_vector);
 	bin_index = values_vector_index(hist->values_vector, hist->edges);
 
 	if ( histogram_index < 0 || histogram_index >= hist->n_histograms ) {
 		error("Invalid histogram index requested: %d (limit %d). "
 				"Check that you have specified the correct number of "
-				"channels.\n", histogram_index, hist->n_histograms);
+				"channels.\nFailed for channels:\n", 
+				histogram_index, hist->n_histograms);
+		combination_fprintf(stderr, hist->channels_vector);
 		return(PC_ERROR_INDEX);
 	}
 
@@ -456,15 +482,15 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
  */
 	histogram_gn_t *hist = (histogram_gn_t *)histogram;
 	int i;
-	int histogram_index = -1;
+	int histogram_index;
 	int channel_index;
 	int bin_index;
 
-	combinations_init(hist->channels_vectors);
+	combination_init(hist->channels_vector);
 	
-	while ( combinations_next(hist->channels_vectors) == PC_SUCCESS ) {
+	while ( combination_next(hist->channels_vector) == PC_SUCCESS ) {
 		bin_index = -1;
-		histogram_index++;
+		histogram_index = combination_index(hist->channels_vector);
 
 		if ( histogram_index >= hist->n_histograms ) {
 			error("Trying to print a histogram which does not exist.\n");
@@ -487,17 +513,15 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
 			channel_index = 0;
 
 			fprintf(stream_out, "%"PRIu32, 
-					hist->channels_vectors->current_combination->values[
-						channel_index++]);
+					hist->channels_vector->values[channel_index++]);
 
 			for ( i = 0; i < hist->dimensions; i++ ) {
 				if ( hist->edges[i]->print_label ) {
 					fprintf(stream_out, ",%"PRIu32,
-							hist->channels_vectors->current_combination->values[
-								channel_index++]);
+							hist->channels_vector->values[channel_index++]);
 				}
 
-				fprintf(stream_out, ",%"PRIf64",%"PRIf64,
+				fprintf(stream_out, ",%.2"PRIf64",%.2"PRIf64,
 						hist->edges[i]->bin_edges[
 							hist->edge_indices->values[i]],
 						hist->edges[i]->bin_edges[
@@ -519,7 +543,6 @@ int histogram_photon(FILE *stream_in, FILE *stream_out,
 	correlation_t *correlation = NULL;
 	correlation_next_t next;
 	correlation_print_t print;
-
 
 	hist = histogram_gn_alloc(options);
 	correlation = correlation_alloc(options->mode, options->order);
@@ -544,13 +567,26 @@ int histogram_photon(FILE *stream_in, FILE *stream_out,
 		return(PC_ERROR_MODE);
 	}
 
+	correlation_init(correlation);
+	histogram_gn_init(hist);
+
 	while ( next(stream_in, correlation) == PC_SUCCESS ) {
+		if ( verbose ) {
+			debug("Incrementing for correlation: \n");
+			if ( correlation->mode == MODE_T2 ) {
+				t2_correlation_fprintf(stderr, correlation);
+			} else if ( correlation->mode == MODE_T3 ) {
+				t3_correlation_fprintf(stderr, correlation);
+			} 
+		}
 		result = histogram_gn_increment(hist, correlation);
 		if ( result != PC_SUCCESS ) {
 			error("Could not increment with correlation:\n");
 			print(stderr, correlation);
 		}
 	}
+
+	debug("Finished reading correlations from stream.\n");
 
 	if ( result == PC_SUCCESS ) {
 		hist->print(stream_out, hist);

@@ -278,10 +278,10 @@ int validate_options(program_options_t *program_options, options_t *options) {
 
 int parse_options(int argc, char *argv[], options_t *options, 
 		program_options_t *program_options) {
-	int c;
+	int c = 0;
 	int option_index = 0;
-	int result = 0;
-	char *options_string;
+	int result = PC_SUCCESS;
+	char *options_string = NULL;
 
 	static struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
@@ -340,17 +340,19 @@ int parse_options(int argc, char *argv[], options_t *options,
 	default_options(options);
 
 	while ( (c = getopt_long(argc, argv, options_string,
-						long_options, &option_index)) != -1 ) {
+						long_options, &option_index)) != -1 
+			&& result == PC_SUCCESS ) {
 		switch (c) {
 			case 'h':
 				usage(argc, argv, program_options);
-				return(PC_USAGE);
+				result = PC_USAGE;
+				break;
 			case 'V':
 				verbose = 1;
 				break;
 			case 'v':
 				version(argc, argv);
-				result = -1;
+				result = PC_USAGE;
 				break;
 			case 'p':
 				options->print_every = strtol(optarg, NULL, 10);
@@ -450,7 +452,7 @@ int parse_options(int argc, char *argv[], options_t *options,
 			case '?':
 			default:
 				usage(argc, argv, program_options);
-				return(PC_ERROR_OPTIONS);
+				result = PC_ERROR_OPTIONS;
 		}
 	}
 

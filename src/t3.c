@@ -103,6 +103,15 @@ int t3_correlation_fscanf(FILE *stream_in, correlation_t *correlation) {
 	((t3_t *)(correlation->photons))[0].pulse = 0;
 	((t3_t *)(correlation->photons))[0].time = 0;
 
+	if ( correlation->order == 1 ) {
+		result = fscanf(stream_in,
+				",%"PRId64",%"PRId64,
+				&(((t3_t *)(correlation->photons))[0].pulse),
+				&(((t3_t *)(correlation->photons))[0].time));
+
+		result = (result == 2);
+	}
+
 	for ( i = 1; result && i < correlation->order; i++ ) {
 		result = fscanf(stream_in,
 				",%"PRIu32",%"PRId64",%"PRId64,
@@ -186,13 +195,17 @@ int t3_correlation_build_values(correlation_t const *correlation,
 		values_vector_t *values_vector) {
 	int i;
 
-	for ( i = 0; i < correlation->order; i++ ) {
-		values_vector->values[2*i] = 
-				(int64_t)((t3_t *)correlation->photons)[i].pulse;
-		values_vector->values[2*i+1] = 
-				(int64_t)((t3_t *)correlation->photons)[i].time;
+	if ( correlation->order == 1 ) {
+		values_vector->values[0] = 
+				(int64_t)((t3_t *)correlation->photons)[0].time;
+	} else {
+		for ( i = 1; i < correlation->order; i++ ) {
+			values_vector->values[2*(i-1)] = 
+					(int64_t)((t3_t *)correlation->photons)[i].pulse;
+			values_vector->values[2*(i-1)+1] = 
+					(int64_t)((t3_t *)correlation->photons)[i].time;
+		}
 	}
 
 	return(PC_SUCCESS);
 }
-
