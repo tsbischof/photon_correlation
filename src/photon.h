@@ -22,13 +22,14 @@ void photon_queue_free(photon_queue_t **queue);
 int photon_queue_full(photon_queue_t const *queue);
 int photon_queue_empty(photon_queue_t const *queue);
 int photon_queue_pop(photon_queue_t *queue, void *photon);
-int photon_queue_push(photon_queue_t *queue, void *photon);
+int photon_queue_push(photon_queue_t *queue, void const *photon);
 int photon_queue_front(photon_queue_t const *queue, void *photon);
 int photon_queue_back(photon_queue_t const *queue, void *photon);
 int photon_queue_index(photon_queue_t const *queue, void *photon, 
 		size_t const index);
 size_t photon_queue_size(photon_queue_t const *queue);
 void photon_queue_sort(photon_queue_t *queue);
+void photon_queue_flush(photon_queue_t *queue);
 
 typedef struct {
 	int64_t lower;

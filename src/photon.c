@@ -133,7 +133,7 @@ int photon_queue_pop(photon_queue_t *queue, void *photon) {
 	return(result);
 }
 
-int photon_queue_push(photon_queue_t *queue, void *photon) {
+int photon_queue_push(photon_queue_t *queue, void const *photon) {
 	size_t next_index;
 
 	if ( photon_queue_full(queue) ) {
@@ -240,6 +240,10 @@ void photon_queue_sort(photon_queue_t *queue) {
 			photon_queue_size(queue), 
 			queue->photon_size, 
 			queue->compare); 
+}
+
+void photon_queue_flush(photon_queue_t *photon_queue) {
+	photon_queue->empty = 1;
 }
 
 /* 

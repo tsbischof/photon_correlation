@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "options.h"
 
-int gn_raw(FILE *stream_in, FILE *stream_out, options_t *options);
+int gn(char *filename_in, options_t const *options);
 
 #endif

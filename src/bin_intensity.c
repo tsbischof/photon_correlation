@@ -1,12 +1,13 @@
 #include "bin_intensity.h"
 #include "bin_intensity_photon.h"
-#include "bin_intensity_t2.h"
-#include "bin_intensity_t3.h"
 #include "modes.h"
 #include "error.h"
 
-/* T2 and T3 are handled separately, but the general purpose and algorithm
- * is identical.
+/* T2 and T3 in principle distinct, but I have not worked out the complete math
+ * for T3 mode. For their primary (time/pulse, respectively) axes, the process
+ * is identical, and is described here. The full result for T3 should handle
+ * its time axis, but it is not clear how to do this, or even if it is
+ * necessary.
  *
  * This program calculates the intensity of a time-offset stream of photons.
  * The idea here is that we have a function I(t) which is defined for some
@@ -86,15 +87,7 @@
  */
 
 int bin_intensity_dispatch(FILE *stream_in, FILE *stream_out, 
-		options_t *options) {
-	if ( options->use_void ) {
-		return(bin_intensity_photon(stream_in, stream_out, options));
-	} else if ( options->mode == MODE_T2 ) {
-		return(bin_intensity_t2(stream_in, stream_out, options));
-	} else if ( options->mode == MODE_T3 ) {
-		return(bin_intensity_t3(stream_in, stream_out, options));
-	} else {
-		return(PC_ERROR_MODE);
-	}
+		options_t const *options) {
+	return(bin_intensity_photon(stream_in, stream_out, options));
 }
 

@@ -12,8 +12,6 @@ class Photon
 				Photon const& photon);
 		friend std::istream& operator>>(std::istream& in, 
 				Photon& photon);
-		int fread(std::fstream& in);
-		int fwrite(std::fstream& out);
 
 		friend bool operator<(Photon const& a, Photon const& b);
 		inline friend bool operator<=(Photon const& a, Photon const& b) {
@@ -24,6 +22,9 @@ class Photon
 		friend bool operator==(Photon const& a, Photon const& b);
 		inline friend bool operator!=(Photon const& a, Photon const& b) {
 				return( !operator== (a,b) ); }
+
+		long long window_dim(void);
+		long long channel(void);
 };
 
 template <class PhotonT>

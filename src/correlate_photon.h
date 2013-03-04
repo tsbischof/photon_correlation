@@ -76,6 +76,7 @@ void correlator_block_init(correlator_t *correlator);
 int correlator_yield_from_block(correlator_t *correlator);
 int correlator_valid_distance(correlator_t *correlator);
 int correlator_build_correlation(correlator_t *correlator);
+void correlator_flush(correlator_t *correlator);
 
 #endif
 

@@ -251,7 +251,7 @@ int correlator_next(correlator_t *correlator) {
 			debug("Populating a new block.\n");
 			result = correlator_populate(correlator);
 
-			if ( result == EOF ) {
+			if ( result == EOF || result == PC_WINDOW_NEXT ) {
 				return(EOF);
 			} else if ( result == PC_SUCCESS ) {
 				correlator_block_init(correlator);
@@ -282,7 +282,6 @@ void correlator_free(correlator_t **correlator) {
 	}
 }
 
-
 int correlator_populate(correlator_t *correlator) {
 /* To populate the queue, first remove the front photon since it has been
  * used. Next, bring in new photons from the stream until we have surpassed the
@@ -300,7 +299,8 @@ int correlator_populate(correlator_t *correlator) {
 		photon_queue_front(correlator->photon_queue, correlator->left);
 		photon_queue_back(correlator->photon_queue, correlator->right);
 
-		if ( photon_stream_eof(correlator->photon_stream) ) {
+		if ( photon_stream_eof(correlator->photon_stream) || 
+				result == PC_WINDOW_NEXT ) {
 			debug("EOF of photon stream\n");
 			if ( photon_queue_size(correlator->photon_queue) >=
 					correlator->order ) {
@@ -327,7 +327,7 @@ int correlator_populate(correlator_t *correlator) {
 							result);
 					return(result);
 				} 
-			} else if ( result == EOF ) {
+			} else if ( result == EOF || result == PC_WINDOW_NEXT ) {
 				/* Loop around to deal with the existing photons. */
 			} else {
 				error("Unknown result of photon stream: %d\n", result);
@@ -431,3 +431,6 @@ int correlator_build_correlation(correlator_t *correlator) {
 	return(PC_SUCCESS);
 }
 
+void correlator_flush(correlator_t *correlator) {
+	photon_queue_flush(correlator->photon_queue);
+}

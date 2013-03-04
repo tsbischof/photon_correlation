@@ -63,10 +63,10 @@ TARGETS += intensity
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 		bin_intensity.o bin_intensity_photon.o \
-		histogram_gn.o
-ALL_OBJ += ${BIN_INTENSITY_OBJ}
-BIN_INTENSITY_LIB = 
-ALL_LIB += ${BIN_INTENSITY_LIB}
+		${filter-out %main.o, ${HISTOGRAM_OBJ}}
+#ALL_OBJ += ${BIN_INTENSITY_OBJ}
+#BIN_INTENSITY_LIB = -lm
+#ALL_LIB += ${BIN_INTENSITY_LIB}
 #TARGETS += bin_intensity
 
 CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \

@@ -1,54 +1,97 @@
-#include <unistd.h>
-#include <sys/types.h>
+#include <string.h>
 
 #include "gn.h"
 #include "error.h"
+#include "photon.h"
+#include "histogram_photon.h"
+#include "correlate_photon.h"
 
-int gn_raw(FILE *stream_in, FILE *stream_out, options_t *options) {
-	int result = 0;
-
-//	FILE *histogram_stream;
-//	FILE *intensity_stream;
-
-//	int picoquant_pipe[2];
-//	int channels_pipe[2];
-	int photon_pipe[2]; // Photons pass through here, and may just be picoquant
-						// or channels in disguise.
-	
-//	int intensity_pipe[2]; // intensity or bin_intensity, as may be the case.
-//	int correlate_pipe[2];
-//	int count_all_pipe[2]; // Need all counts for normalization.
-//
-//	pid_t picoquant_pid = getpid();
-//	pid_t channels_pid, correlate_pid, histogram_pid, intensity_pid;
-
-/* There are three pipelines and two stages to pass through here. The first
- * stage is the photon production, which occurs one of two ways:
- * 1. picoquant
- * 2. picoquant -> channels (when offsets/suppression is needed)
- *
- * The second stage takes three forms:
- * 1. a. correlate -> histogram (most correlations)
- *    b. histogram (g1 of t3)
- * 2. intensity (approximate normalization, and integration time calculation)
- * 3. (optional) bin_intensity (exact normalization)
- *
- *
- * As such, we need to produce these different paths when needed, by forking
- * and piping data through the appropriate subprocesses.
+int gn(char *filename_in, options_t const *options) {
+/* This program must perform:
+ * 1. correlation/histogramming
+ * 2. intensity (normal or binned)
  */
+	int result = PC_SUCCESS;
+	char *histogram_filename = malloc(sizeof(char)*(strlen(filename_in) + 120));
+	photon_stream_t *photon_stream = photon_stream_alloc(options);
+	correlator_t *correlator = correlator_alloc(options);
+	histogram_gn_t *histogram = histogram_gn_alloc(options);
 
-	/* First, handle the photons. */
-	debug("Producing photon pipes and forks.\n");
-	pipe(photon_pipe);
+	FILE *photon_file;
+	FILE *histogram_file;
 
-	/* Next, fork to get the two analysis paths. */
+	debug("Initializing.\n");
 
-	/* Set up the histogram path. */
+	if ( histogram_filename == NULL || photon_stream == NULL || 
+			correlator == NULL || histogram == NULL ) {
+		error("Could not allocate space.\n");
+		result = PC_ERROR_OPTIONS;
+	}
 
-	/* Set up the intensity path. */
+	if ( result == PC_SUCCESS ) {
+		photon_file = fopen(filename_in, "r");
+		if ( photon_file == NULL ) {
+			error("Could not open photon file.\n");
+			result = PC_ERROR_OPTIONS;
+		}
+	}
 
-	/* If desired, set up the bin_intensity path */
+	if ( result == PC_SUCCESS ) {
+		if ( photon_stream_init(photon_stream, photon_file, options) 
+				!= PC_SUCCESS ) {
+			error("Could not initialize photon stream.\n");
+			result = PC_ERROR_OPTIONS;
+		}
 
-	return(result);
+		if ( correlator_init(correlator, photon_stream, options) 
+				!= PC_SUCCESS ) {
+			error("Could not initialize correlator.\n");
+			result = PC_ERROR_OPTIONS;
+		}
+	}
+
+	debug("Current result: %d\n", result);
+
+	while ( result == PC_SUCCESS && ! photon_stream_eof(photon_stream) ) {
+		debug("Starting gn.\n");
+		if ( options->bin_width == 0 ) {
+			sprintf(histogram_filename, "%s.g%d", 
+					filename_in, options->order);
+		} else {
+			sprintf(histogram_filename, "%s.g%d.%020"PRId64"_%020"PRId64,
+					filename_in, options->order, 
+					photon_stream->window.limits.lower,
+					photon_stream->window.limits.upper);
+		}
+
+		debug("Writing to  %s.\n", histogram_filename);
+		histogram_file = fopen(histogram_filename, "w");
+
+		if ( histogram_file == NULL ) {
+			error("Could not open %s for writing.\n", histogram_filename);
+			result = PC_ERROR_IO;
+			break;
+		}
+
+		correlator_flush(correlator);
+		histogram_gn_init(histogram);
+
+		while ( correlator_next(correlator) == PC_SUCCESS ) {
+			histogram_gn_increment(histogram, correlator->current_correlation);
+		}
+
+		histogram->print(histogram_file, histogram);
+		fclose(histogram_file);
+
+		photon_stream_next_window(photon_stream);
+	}
+
+	fclose(photon_file);
+
+	free(histogram_filename);
+	photon_stream_free(&photon_stream);
+	correlator_free(&correlator);
+	histogram_gn_free(&histogram);
+	
+	return(PC_SUCCESS);
 }

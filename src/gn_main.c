@@ -5,6 +5,9 @@
 #include "files.h"
 #include "gn.h"
 
+#define ABS(x) ( x >= 0 ? x : -x )
+#define MAX(x, y) ( x < y ? y : x )
+
 int main(int argc, char *argv[]) {
 	int result = PC_SUCCESS;
 
@@ -49,12 +52,12 @@ int main(int argc, char *argv[]) {
 	result = parse_options(argc, argv, &options, &program_options);
 
 	if ( result == PC_SUCCESS ) {
-		result = open_streams(&stream_in, options.filename_in,
-				&stream_out, options.filename_out);
-	}
-
-	if ( result == PC_SUCCESS ) {
-		gn_raw(stream_in, stream_out, &options);
+		debug("Starting gn.\n");
+		options.max_time_distance = MAX(ABS(options.time_limits.lower),
+				ABS(options.time_limits.upper));
+		options.max_pulse_distance = MAX(ABS(options.pulse_limits.lower),
+				ABS(options.pulse_limits.upper));
+		gn(options.filename_in, &options);
 	}
 
 	free_options(&options);

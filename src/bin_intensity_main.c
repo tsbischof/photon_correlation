@@ -8,15 +8,13 @@
 #include "files.h"
 #include "modes.h"
 #include "error.h"
-#include "bin_intensity_t2.h"
-#include "bin_intensity_t3.h"
-#include "histogram_gn.h"
+#include "bin_intensity.h"
 #include "options.h"
 
 int main(int argc, char *argv[]) {
-	int result = 0;
+	int result = PC_SUCCESS;
 
-	options_t options;
+	options_t options = {};
 
 	FILE *stream_in = NULL;
 	FILE *stream_out = NULL;
@@ -45,10 +43,6 @@ int main(int argc, char *argv[]) {
 
 	if ( result == PC_SUCCESS ) {
 		result = bin_intensity_dispatch(stream_in, stream_out, &options);
-	}
-
-	if ( result == EOF ) {
-		result = PC_SUCCESS;
 	}
 
 	free_options(&options);
