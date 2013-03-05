@@ -1,27 +1,26 @@
-#include <fstream>
-
 #include "options.hpp"
+#include "modes.hpp"
 #include "photon.hpp"
 #include "t2.hpp"
+#include "t3.hpp"
+#include "echo.hpp"
 
 int main(int argc, char *argv[]) {
-	Options options(argc, argv);
-
-	/*std::ifstream stream_in;
-	std::ostream& stream_out = std::cout;
+	PCOptions options(argc, argv);
+	std::istream &in = std::cin;
+	std::ostream &out = std::cout;
 	T2 t2;
+	T3 t3;
 
-	stream_in.open("t2.txt");
-
-	while ( stream_in.good() ) {
-		if ( stream_in >> t2 ) {
-			stream_out << t2 << '\n';
+	if ( options.valid() ) {
+		if ( options.mode == MODE_T2 ) {
+			echo(in, out, t2);
+		} else if ( options.mode == MODE_T3 ) {
+			echo(in, out, t3);
+		} else {
+			std::cerr << "Mode not recognized: " << options.mode << "\n";
 		}
-
-	} 
-
-	stream_in.close(); */
-	std::cout << options << std::endl;
+	}
 
 	return(0);
 }

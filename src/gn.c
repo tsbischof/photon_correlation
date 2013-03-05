@@ -65,6 +65,9 @@ int gn(char *filename_in, options_t const *options) {
 		}
 
 		debug("Writing to  %s.\n", histogram_filename);
+		if ( options->print_every != 0 ) {
+			fprintf(stderr, "Writing to %s\n", histogram_filename);
+		}
 		histogram_file = fopen(histogram_filename, "w");
 
 		if ( histogram_file == NULL ) {

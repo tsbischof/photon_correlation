@@ -1,7 +1,6 @@
 #include "t2.hpp"
 
 #include <sstream>
-#include <iostream>
 
 std::ostream& 
 operator<<(std::ostream& out, T2 const& t2) 
@@ -15,11 +14,13 @@ std::istream&
 operator>>(std::istream& in, T2& t2) 
 {
 	std::string line;
+	char c1;
 
-	std::getline(in, line,',');
-	std::istringstream(line) >> t2.channel;
 	std::getline(in, line);
-	std::istringstream(line) >> t2.time; 
+
+	std::istringstream ss(line);
+
+	ss >> t2.channel >> c1 >> t2.time;
 
 	return(in);
 }
@@ -39,5 +40,5 @@ operator>(T2 const& a, T2 const& b)
 bool 
 operator==(T2 const& a, T2 const& b) 
 {
-	return( a.channel == b.channel && a.time == b.time );
+	return( a.channel == b.channel and a.time == b.time );
 }

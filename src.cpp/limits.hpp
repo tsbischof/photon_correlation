@@ -60,8 +60,8 @@ class Edges
 		friend std::ostream& operator<<(std::ostream& out, Edges const& edges);
 		friend std::istream& operator>>(std::istream& in, Edges& edges);
 
-		friend Window<double>& operator[](int const index);
+		//friend Window<double>& operator[](int const index);
 		int index(double value);
-}
+};
 
 #endif

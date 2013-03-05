@@ -2,8 +2,12 @@
 #define PHOTON_HPP_
 
 #include <iostream>
+#include <fstream>
 #include <queue>
 #include <iterator>
+#include <vector>
+
+#include "types.hpp"
 
 class Photon 
 {
@@ -23,64 +27,33 @@ class Photon
 		inline friend bool operator!=(Photon const& a, Photon const& b) {
 				return( !operator== (a,b) ); }
 
-		long long window_dim(void);
-		long long channel(void);
+		virtual dim_t window_dim(void) { return(0); }
+		virtual channeld_t channel(void) { return(0); }
 };
 
-template <class PhotonT>
-class Window : std::iterator<output_iterator_tag, PhotonT>
+class PhotonWindow
 {
 	private:
-		PhotonT lower;
-		PhotonT upper;
-		int64_t width;
 	public:
-		Window(PhotonT const& lower, int64_t const width);
-		Window(Window const& mit);
+}; 
 
-		Window& operator++();
-		Window& operator*();
-
-		friend std::ostream& operator<<(std::ostream& out, 
-				Window const& window);
-		friend std::istream& operator>>(std::istream& in,
-				Window& window);
-
-		bool contains(PhotonT const& value);
-		bool ahead_of(PhotonT const& value);
-};
-
-/* The PhotonStream class has a number of tasks to perform:
- * 1. Read data from an incoming stream.
- * 2. Decode the data, conditioning as necessary:
- *    a. Dropping photons on particular channels
- *    b. Adding time/pulse offsets
- * 3. Yield photons in the current window, or indicate that the window must
- *    be advanced.
- */
 class PhotonStream
 {
-/*	private:
-		queue();
-		compare()
-		mode()
+	private:
+		std::istream& in;
+		PhotonWindow window;
+		Photon photon;
+		bool in_window;
+		std::vector<bool> suppress;
 	public:
-		PhotonQueue();
+		PhotonStream(void);
 
-		operator==();
-		inline friend operator!=() { return( ! operator== ()) };
-		operator++();
-		
+		bool next_photon(Photon& photon);
+		PhotonWindow& next_window(void);
 
-		front();
-		back();
-		push();
-		pop();
-		operator[];
-
-		sort();
-		next_window();
-		window(); */
+		bool eof(void);
+		bool good(void);
+		bool window_over(void);
 };
 
 #endif
