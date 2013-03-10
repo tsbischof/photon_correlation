@@ -43,21 +43,21 @@ typedef struct {
 	int seed;
 
 /* Correlate */
-	uint64_t queue_size;
-	uint64_t max_time_distance;
-	uint64_t min_time_distance;
-	uint64_t max_pulse_distance;
-	uint64_t min_pulse_distance;
+	unsigned long long queue_size;
+	unsigned long long max_time_distance;
+	unsigned long long min_time_distance;
+	unsigned long long max_pulse_distance;
+	unsigned long long min_pulse_distance;
 	int positive_only;
 	int start_stop;
 
 /* Intensity */
-	uint64_t bin_width;
+	unsigned long long bin_width;
 	int count_all;
 	int set_start_time;
-	int64_t start_time;
+	long long start_time;
 	int set_stop_time;
-	int64_t stop_time;
+	long long stop_time;
 
 /* Histogram */
 	char *time_string;
@@ -77,11 +77,11 @@ typedef struct {
 
 	int offset_time;
 	char *time_offsets_string;
-	int64_t *time_offsets;
+	long long *time_offsets;
 
 	int offset_pulse;
 	char *pulse_offsets_string;
-	int64_t *pulse_offsets;
+	long long *pulse_offsets;
 
 /* correlate_vector */
 	int approximate;
@@ -145,9 +145,9 @@ char const* pc_options_string(pc_options_t const *options);
 void pc_options_make_string(pc_options_t *options);
 int pc_options_has_option(pc_options_t const *options, int const option);
 
-int offsets_parse(int64_t **offsets, char *offsets_string,
+int offsets_parse(long long **offsets, char *offsets_string,
 		int const channels);
-int offsets_valid(int64_t const *offsets);
+int offsets_valid(long long const *offsets);
 
 int suppress_parse(pc_options_t *options);
 int suppress_valid(pc_options_t const *options);

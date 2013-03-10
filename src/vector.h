@@ -1,7 +1,7 @@
 #ifndef VECTOR_H_
 #define VECTOR_H_
 
-#include "../types.h"
+#include "types.h"
 
 typedef struct {
 	size_t length;

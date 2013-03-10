@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "vector.h"
-#include "../error.h"
+#include "error.h"
 
 vector_t *vector_alloc (size_t const elem_size, size_t const length) {
 	vector_t *vector = (vector_t *)malloc(sizeof(vector_t));

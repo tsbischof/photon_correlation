@@ -365,12 +365,14 @@ int pc_options_valid(pc_options_t const *options) {
 	}
 
 	if ( pc_options_has_option(options, OPT_TIME_OFFSETS) &&
+			options->offset_time &&
 			! offsets_valid(options->time_offsets) ) {
-		error("Invlalid time offsets.\n");
+		error("Invalid time offsets.\n");
 		return(false);
 	}
 
 	if ( pc_options_has_option(options, OPT_PULSE_OFFSETS) &&
+			options->offset_pulse &&
 			! offsets_valid(options->pulse_offsets) ) {
 		error("Invalid pulse offsets.\n");
 		return(false);
@@ -387,7 +389,7 @@ int pc_options_parse(pc_options_t *options,
 
 	while ( (c = getopt_long(argc, argv, options_string,
 						pc_options_long, &option_index)) != -1 ) {
-		if ( strchr(options_string, c) == NULL ) {
+		if ( strchr(options_string, c) == NULL && c != '?' ) {
 			error("Unknown option %c\n", c);
 			c = '?';
 		}
@@ -603,15 +605,23 @@ int pc_options_parse_suppress(pc_options_t *options) {
 }
 
 int pc_options_parse_time_offsets(pc_options_t *options) {
-	return(offsets_parse(&(options->time_offsets), 
-			options->time_offsets_string,
-			options->channels));
+	if ( options->offset_time ) {
+		return(offsets_parse(&(options->time_offsets), 
+				options->time_offsets_string,
+				options->channels));
+	} else {
+		return(PC_SUCCESS);
+	}
 }
 
 int pc_options_parse_pulse_offsets(pc_options_t *options) {
-	return(offsets_parse(&(options->pulse_offsets),
-			options->pulse_offsets_string,
-			options->channels));
+	if ( options->offset_pulse ) {
+		return(offsets_parse(&(options->pulse_offsets),
+				options->pulse_offsets_string,
+				options->channels));
+	} else {
+		return(PC_SUCCESS);
+	}
 }
 
 int pc_options_parse_convert(pc_options_t *options) {
@@ -696,14 +706,14 @@ void pc_options_version(pc_options_t const *options,
 		STR(VERSION));
 }
 
-int offsets_parse(int64_t **offsets, char *offsets_string, 
+int offsets_parse(long long **offsets, char *offsets_string, 
 		int const channels) {
 	char *c;
 	int channel;
 
 	debug("Parsing offsets from %s\n", offsets_string);
 
-	*offsets = (int64_t *)malloc(sizeof(int64_t)*channels);
+	*offsets = (long long *)malloc(sizeof(long long)*channels);
 
 	if ( *offsets == NULL ) {
 		error("Could not allocate memory for offsets\n");
@@ -728,7 +738,7 @@ int offsets_parse(int64_t **offsets, char *offsets_string,
 	return(PC_SUCCESS);
 }
 
-int offsets_valid(int64_t const *offsets) {
+int offsets_valid(long long const *offsets) {
 	return(offsets != NULL);
 }
 

@@ -6,8 +6,8 @@
 #include "../types.h"
 
 #include "../modes.h"
-#include "t2_void.h"
-#include "t3_void.h"
+#include "t2.h"
+#include "t3.h"
 
 /* 
  * There are three main use cases for a photon stream:

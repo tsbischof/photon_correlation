@@ -1,5 +1,4 @@
 #include "t2.h"
-#include "t2_void.h"
 
 #include "../error.h"
 
@@ -19,6 +18,10 @@ int t2_fscanf(FILE *stream_in, t2_t *t2) {
 	}
 }
 
+int t2v_fscanf(FILE *stream_in, void *t2) {
+	return(t2_fscanf(stream_in, t2));
+}
+
 int t2_fprintf(FILE *stream_out, t2_t const *t2) {
 	fprintf(stream_out,
 			"%u,%lld\n",
@@ -28,7 +31,11 @@ int t2_fprintf(FILE *stream_out, t2_t const *t2) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t2_compare(void const *a, void const *b) {
+int t2v_fprintf(FILE *stream_out, void const *t2) {
+	return(t2_fprintf(stream_out, t2));
+}
+
+int t2v_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t2 photons. 
 	 * The comparison must be done explicitly to avoid issues associated with
@@ -47,6 +54,14 @@ int t2_echo(FILE *stream_in, FILE *stream_out) {
 	}
 
 	return(PC_SUCCESS);
+}
+
+long long t2v_window_dimension(void const *t2) {
+	return(((t2_t *)t2)->time);
+}
+
+long long t2v_channel_dimension(void const *t2) {
+	return(((t2_t *)t2)->channel);
 }
 
 /*void t2_correlate(correlation_t *correlation) {

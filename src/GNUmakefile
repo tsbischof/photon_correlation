@@ -21,10 +21,8 @@ ALL_LIB =
 
 COMMON_OBJ = error.o files.o options.o modes.o limits.o types.o \
 		photon/t2.o photon/t3.o \
-		photon/t2_void.o photon/t3_void.o \
-		photon/window.o photon/queue.o photon/stream.o \
-		run.o \
-		vector/vector.o
+		photon/stream.o photon/window.o \
+		run.o 
 
 PHOTONS_OBJ = ${COMMON_OBJ} photons_main.o \
 		photon/photons.o photon/stream.o photon/conversions.o
@@ -32,6 +30,13 @@ ALL_OBJ += ${PHOTONS_OBJ}
 PHOTONS_LIB = -lm
 ALL_LIB += ${PHOTONS_LIB}
 TARGETS += photons
+
+INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
+		statistics/counts.o statistics/intensity.o
+ALL_OBJ += ${INTENSITY_OBJ}
+INTENSITY_LIB = 
+ALL_LIB += ${INTENSITY_LIB}
+TARGETS += intensity
 
 CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
 		correlate.o correlate_photon.o \
@@ -58,13 +63,6 @@ HISTOGRAM_LIB = -lm
 ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += histogram
 
-INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
-		statistics/counts.o statistics/intensity.o
-ALL_OBJ += ${INTENSITY_OBJ}
-INTENSITY_LIB = 
-ALL_LIB += ${INTENSITY_LIB}
-TARGETS += intensity
-
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 		bin_intensity.o bin_intensity_photon.o \
 		${filter-out %main.o, ${HISTOGRAM_OBJ}}
@@ -73,12 +71,12 @@ BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 #ALL_LIB += ${BIN_INTENSITY_LIB}
 #TARGETS += bin_intensity
 
-CHANNELS_OBJ = ${COMMON_OBJ} channels_main.o \
-		channels.o channels_photon.o
-ALL_OBJ += ${CHANNELS_OBJ}
-CHANNELS_LIB =
-ALL_LIB += ${CHANNELS_LIB}
-TARGETS += channels
+PHOTON_TEMPER_OBJ = ${COMMON_OBJ} photon_temper_main.o \
+		photon/temper.o vector.o photon/offsets.o
+ALL_OBJ += ${PHOTON_TEMPER_OBJ}
+PHOTON_TEMPER_LIB =
+ALL_LIB += ${PHOTON_TEMPER_LIB}
+TARGETS += photon_temper
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
@@ -87,12 +85,6 @@ GN_OBJ = gn_main.o ${COMMON_OBJ} \
 GN_LIB = ${sort ${CORRELATE_LIB} ${HISTOGRAM_LIB}}
 ALL_LIB += ${GN_LIB}
 #TARGETS += gn
-
-INTENSITY_TO_T2_OBJ = ${COMMON_OBJ} intensity_to_t2_main.o intensity_to_t2.o
-ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
-INTENSITY_TO_T2_LIB = 
-ALL_LIB += ${INTENSITY_TO_T2_LIB}
-TARGETS += intensity_to_t2
 
 PHOTON_NUMBER_OBJ = ${COMMON_OBJ} photon_number_main.o \
 		statistics/number.o statistics/counts.o
@@ -158,14 +150,11 @@ intensity: ${INTENSITY_OBJ}
 bin_intensity: ${BIN_INTENSITY_OBJ}
 	${LD} ${LDFLAGS} ${BIN_INTENSITY_LIB} -o $@ $^
 
-channels: ${CHANNELS_OBJ}
-	${LD} ${LDFLAGS} ${CHANNELS_LIB} -o $@ $^ 
+photon_temper: ${PHOTON_TEMPER_OBJ}
+	${LD} ${LDFLAGS} ${PHOTON_TEMPER_LIB} -o $@ $^ 
 
 libphoton_correlation.so: ${LIBPC_OBJ}
 	${LD} ${LIBPC_LDFLAGS} ${LIBPC_LIB} -o $@ $^
-
-intensity_to_t2: ${INTENSITY_TO_T2_OBJ}
-	${LD} ${LDFLAGS} ${INTENSITY_TO_T2_LIB} -o $@ $^
 
 correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${LD} ${LDFLAGS} ${CORRELATE_VECTOR_LIB} -o $@ $^

@@ -1,6 +1,6 @@
 #include "run.h"
 #include "options.h"
-#include "channels.h"
+#include "photon/temper.h"
 
 int main(int argc, char *argv[]) {
 	program_options_t program_options = {
@@ -13,5 +13,5 @@ int main(int argc, char *argv[]) {
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
 			OPT_SUPPRESS, OPT_EOF}};
 
-	return(run(&program_options, channels_dispatch, argc, argv));
+	return(run(&program_options, photon_temper, argc, argv));
 }

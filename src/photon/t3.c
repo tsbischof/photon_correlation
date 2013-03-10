@@ -22,6 +22,10 @@ int t3_fscanf(FILE *stream_in, t3_t *t3) {
 	} 
 }
 
+int t3v_fscanf(FILE *stream_in, void *t3) {
+	return(t3_fscanf(stream_in, t3));
+}
+
 int t3_fprintf(FILE *stream_out, t3_t const *t3) {
 	fprintf(stream_out,
 			"%u,%lld,%lld\n",
@@ -32,7 +36,11 @@ int t3_fprintf(FILE *stream_out, t3_t const *t3) {
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t3_compare(void const *a, void const *b) {
+int t3v_fprintf(FILE *stream_in, void const *t3) {
+	return(t3_fprintf(stream_in, t3));
+}
+
+int t3v_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t3 photons. 
      */
@@ -66,6 +74,13 @@ int t3_echo(FILE *stream_in, FILE *stream_out) {
 	return(PC_SUCCESS);
 }
 
+long long t3v_window_dimension(void const *t3) {
+	return(((t3_t *)t3)->pulse);
+}
+
+long long t3v_channel_dimension(void const *t3) {
+	return(((t3_t *)t3)->channel);
+}
 
 /*void t3_correlate(correlation_t *correlation) {
 	int i;
