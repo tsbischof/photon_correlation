@@ -12,7 +12,9 @@ typedef struct {
 	double upper;
 } limits_t;
 
-int limits_parse(const char *str, limits_t *limits);
-int scale_parse(const char *str, int *scale);
+int limits_parse(limits_t *limits, const char *str);
+int limits_valid(limits_t const *limits);
+
+int scale_parse(int *scale, const char *str);
 
 #endif

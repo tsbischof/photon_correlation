@@ -225,7 +225,7 @@ void index_offsets_free(index_offsets_t **index_offsets) {
 }
 
 int combinations_dispatch(FILE *stream_in, FILE *stream_out,
-		options_t const *options) {
+		pc_options_t const *options) {
 	combination_t *combination;
 	permutation_t *permutation;
 

@@ -4,6 +4,6 @@
 #include "options.h"
 
 int correlate_start_stop(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif

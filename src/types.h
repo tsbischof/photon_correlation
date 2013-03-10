@@ -4,15 +4,12 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define strtou64 strtoull
-#define strtoi64 strtoll
-#define strtou32 strtoul
+typedef int (*compare_t)(const void *, const void *);
 
-#define PRIf64 "lf"
-#define PRIf32 "f"
-typedef double float64_t;
-typedef float float32_t;
+#define true 1
+#define false 0
 
-int64_t i64abs(int64_t i);
+#define MAX(x, y) (x < y ? y : x);
+#define ABS(x) ( x >= 0 ? x : -x );
 
 #endif

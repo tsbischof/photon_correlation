@@ -36,7 +36,8 @@ int intensity_fscanf(FILE *stream_in, intensity_t *intensity) {
 	}
 }
 
-int intensity_to_t2(FILE *stream_in, FILE *stream_out, options_t *options) {
+int intensity_to_t2(FILE *stream_in, FILE *stream_out, 
+		pc_options_t const *options) {
 	int result = 0;
 	int i;
 	intensity_t intensity;

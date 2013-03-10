@@ -1,19 +1,14 @@
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
-#include "files.h"
-#include "error.h"
 #include "t2.h"
 #include "t2_void.h"
-#include "photon.h"
+
+#include "../error.h"
 
 /* 
  * Functions to implement t2 photon read/write.
  */
 int t2_fscanf(FILE *stream_in, t2_t *t2) {
 	int n_read = fscanf(stream_in,
-			"%"SCNu32",%"SCNd64,
+			"%u,%lld",
 			&(t2->channel),
 			&(t2->time)); 
 
@@ -26,7 +21,7 @@ int t2_fscanf(FILE *stream_in, t2_t *t2) {
 
 int t2_fprintf(FILE *stream_out, t2_t const *t2) {
 	fprintf(stream_out,
-			"%"PRIu32",%"PRId64"\n",
+			"%u,%lld\n",
 			t2->channel,
 			t2->time);
 
@@ -37,10 +32,10 @@ int t2_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t2 photons. 
 	 * The comparison must be done explicitly to avoid issues associated with
-	 * casting int64_t to int. If we just return the difference, any value
+	 * casting long long to int. If we just return the difference, any value
 	 * greater than max_int would cause problems.
 	 */
-	int64_t difference = ((t2_t *)a)->time - ((t2_t *)b)->time;
+	long long difference = ((t2_t *)a)->time - ((t2_t *)b)->time;
 	return( difference > 0 );
 }
 
@@ -54,7 +49,7 @@ int t2_echo(FILE *stream_in, FILE *stream_out) {
 	return(PC_SUCCESS);
 }
 
-void t2_correlate(correlation_t *correlation) {
+/*void t2_correlate(correlation_t *correlation) {
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
@@ -121,19 +116,19 @@ int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 }
 
 int t2_under_max_distance(void const *correlator) {
-	int64_t max = ((correlator_t *)correlator)->max_time_distance;
+	long long max = ((correlator_t *)correlator)->max_time_distance;
 	t2_t *left = ((correlator_t *)correlator)->left;
 	t2_t *right = ((correlator_t *)correlator)->right;
 
-	return( max == 0 || i64abs(right->time - left->time) < max );
+	return( max == 0 || llabs(right->time - left->time) < max );
 }
 
 int t2_over_min_distance(void const *correlator) {
-	int64_t min = ((correlator_t *)correlator)->min_time_distance;
+	long long min = ((correlator_t *)correlator)->min_time_distance;
 	t2_t *left = (t2_t *)((correlator_t *)correlator)->left;
 	t2_t *right = (t2_t *)((correlator_t *)correlator)->right;
 
-	return( min == 0 || i64abs(right->time - left->time) >= min );
+	return( min == 0 || llabs(right->time - left->time) >= min );
 }
 
 int t2_correlation_build_channels(correlation_t const *correlation,
@@ -154,9 +149,9 @@ int t2_correlation_build_values(correlation_t const *correlation,
 
 	for ( i = 1; i < correlation->order; i++ ) {
 		values_vector->values[i-1] = 
-				(int64_t)((t2_t *)correlation->photons)[i].time;
+				(long long)((t2_t *)correlation->photons)[i].time;
 	}
 
 	return(PC_SUCCESS);
 }
-
+*/

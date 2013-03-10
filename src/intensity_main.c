@@ -1,17 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "files.h"
-#include "error.h"
-#include "intensity.h"
+#include "run.h"
+#include "options.h"
+#include "statistics/intensity.h"
 
 int main(int argc, char *argv[]) {
-	options_t options = {};
-	int result = PC_SUCCESS;
-
-	FILE *stream_in = NULL;
-	FILE *stream_out = NULL;
-
 	program_options_t program_options = {
 "Given a stream of TTTR data formatted like the output of picoquant, this\n"
 "program calculates the number of photons arriving on any number of detection\n"
@@ -38,19 +29,5 @@ int main(int argc, char *argv[]) {
 			OPT_BIN_WIDTH, OPT_COUNT_ALL,
 			OPT_EOF}};
 
-	result = parse_options(argc, argv, &options, &program_options);
-
-	if ( result == PC_SUCCESS ) { 
-		result = open_streams(&stream_in, options.filename_in,
-				&stream_out, options.filename_out);
-	}
-
-	if ( result == PC_SUCCESS ) {
-		result = intensity_dispatch(stream_in, stream_out, &options);
-	}
-
-	free_options(&options);
-	free_streams(stream_in, stream_out);
-
-	return(pc_check(result));	
+	return(run(&program_options, intensity_photon, argc, argv));
 }

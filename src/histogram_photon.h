@@ -12,8 +12,8 @@ typedef struct {
 	int print_label;
 	limits_t limits;
 	int scale;
-	int (*get_index)(void const *edges, int64_t const value);
-	float64_t *bin_edges;
+	int (*get_index)(void const *edges, long long const value);
+	double *bin_edges;
 } edges_t;
 
 edges_t *edges_alloc(size_t const n_bins);
@@ -21,20 +21,20 @@ int edges_init(edges_t *edges, limits_t const *limits, int const scale,
 		int const print_label);
 void edges_free(edges_t **edges);
 
-int edges_index_linear(void const *edges, int64_t const value);
-int edges_index_log(void const *edges, int64_t const value);
-int edges_index_log_zero(void const *edges, int64_t const value);
-int edges_index_bsearch(void const *edges, int64_t const value);
+int edges_index_linear(void const *edges, long long const value);
+int edges_index_log(void const *edges, long long const value);
+int edges_index_log_zero(void const *edges, long long const value);
+int edges_index_bsearch(void const *edges, long long const value);
 
 typedef struct {
 	size_t length;
-	int64_t *values;
+	long long *values;
 } values_vector_t;
 
 values_vector_t *values_vector_alloc(unsigned int const length);
 void values_vector_init(values_vector_t *vv);
 void values_vector_free(values_vector_t **vv);
-int64_t values_vector_index(values_vector_t const *vv, edges_t ** const edges);
+long long values_vector_index(values_vector_t const *vv, edges_t ** const edges);
 
 typedef struct {
 	unsigned int length;
@@ -61,7 +61,7 @@ typedef struct {
 
 	edges_t **edges;
 
-	uint64_t **counts;
+	unsigned long long **counts;
 
 	combination_t *channels_vector;
 	values_vector_t *values_vector;
@@ -74,7 +74,7 @@ typedef struct {
 			values_vector_t *values);
 } histogram_gn_t;
 
-histogram_gn_t *histogram_gn_alloc(options_t const *options);
+histogram_gn_t *histogram_gn_alloc(pc_options_t const *options);
 void histogram_gn_init(histogram_gn_t *hist);
 void histogram_gn_free(histogram_gn_t **hist);
 
@@ -84,6 +84,6 @@ int histogram_gn_increment(histogram_gn_t *hist,
 int histogram_gn_fprintf(FILE *stream_out, void const *hist);
 
 int histogram_photon(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif

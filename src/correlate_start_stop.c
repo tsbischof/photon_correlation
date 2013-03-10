@@ -11,7 +11,7 @@
  * channel) or nothing (if no photon)
  */
 int correlate_start_stop(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	int valid = 0;
 	t2_t t2;
 	t2_next_t next = t2_fscanf;

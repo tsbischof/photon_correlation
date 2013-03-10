@@ -26,13 +26,13 @@ void stream_close(FILE *stream, FILE *default_stream) {
 	}
 }
 
-int open_streams(FILE **stream_in, char *in_filename,
+int streams_open(FILE **stream_in, char *in_filename,
 		FILE **stream_out, char *out_filename) {
 	return( stream_open(stream_in, stdin, in_filename, "r") +
 			stream_open(stream_out, stdout, out_filename, "w") );
 }
 
-void free_streams(FILE *stream_in, FILE *stream_out) {
+void streams_close(FILE *stream_in, FILE *stream_out) {
 	stream_close(stream_in, stdin);
 	stream_close(stream_out, stdout);
 }

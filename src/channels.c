@@ -7,7 +7,7 @@
 #include "t3.h"
 
 int channels_dispatch(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	return(channels_photon(stream_in, stream_out, options));
 }
 
@@ -49,7 +49,7 @@ offsets_t *offsets_alloc(int const channels) {
 	}
 }
 
-void offsets_init(offsets_t *offsets, options_t const *options) {
+void offsets_init(offsets_t *offsets, pc_options_t const *options) {
 	int i;
 
 	offsets->offset_time = options->offset_time;

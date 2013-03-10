@@ -3,14 +3,17 @@
 
 #include <stdio.h>
 #include "options.h"
-#include "photon.h"
+
+#include "photon/queue.h"
+#include "photon/stream.h"
+
 #include "combinations.h"
 #include "permutations.h"
 
 int correlate_photon(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 int correlations_echo(FILE *stream_in, FILE *stream_out,
-		options_t const *options);
+		pc_options_t const *options);
 
 typedef struct {
 	int mode;
@@ -66,9 +69,9 @@ typedef struct {
 	int (*over_min_distance)(void const *correlator);
 } correlator_t;
 
-correlator_t *correlator_alloc(options_t const *options);
+correlator_t *correlator_alloc(pc_options_t const *options);
 int correlator_init(correlator_t *correlator, photon_stream_t *photon_stream,
-		options_t const *options);
+		pc_options_t const *options);
 int correlator_next(correlator_t *correlator);
 void correlator_free(correlator_t **correlator);
 int correlator_populate(correlator_t *correlator);

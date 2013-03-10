@@ -43,7 +43,7 @@ void warn(char const *message, ...) {
 }
 
 int pc_status_print(char const *name, uint64_t count, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	size_t n_write;
 	time_t rawtime;
 	struct tm *timeinfo;

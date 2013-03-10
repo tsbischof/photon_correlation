@@ -6,7 +6,7 @@
 #include "error.h"
 #include "limits.h"
 
-int limits_parse(const char *str, limits_t *limits) {
+int limits_parse(limits_t *limits, const char *str) {
 	int result;
 
 	debug("Parsing limits: %s.\n", str);
@@ -43,7 +43,11 @@ int limits_parse(const char *str, limits_t *limits) {
 	return(0);
 }
 
-int scale_parse(const char *str, int *scale) {
+int limits_valid(limits_t const *limits) {
+	return( limits->bins > 0 && limits->lower < limits->upper );
+}
+
+int scale_parse(int *scale, const char *str) {
 	if ( str == NULL ) {
 		*scale = SCALE_LINEAR;
 	} else {

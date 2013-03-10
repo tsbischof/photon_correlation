@@ -10,7 +10,7 @@
 #include "t3.h"
 #include "t3_void.h"
 
-photon_stream_offset_t *photon_stream_offset_alloc(options_t const *options) {
+photon_stream_offset_t *photon_stream_offset_alloc(pc_options_t const *options) {
 	photon_stream_offset_t *pso = NULL;
 
 	pso = (photon_stream_offset_t *)malloc(sizeof(photon_stream_offset_t));
@@ -78,7 +78,7 @@ photon_stream_offset_t *photon_stream_offset_alloc(options_t const *options) {
 }
 
 void photon_stream_offset_init(photon_stream_offset_t *pso,
-		FILE *stream_in, options_t const *options) {
+		FILE *stream_in, pc_options_t const *options) {
 	int i;
 
 	debug("Initializing pso.\n");
@@ -228,7 +228,7 @@ void photon_stream_offset_free(photon_stream_offset_t **pso) {
 }
 
 int channels_photon(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	/* This needs to do two things:
 	 * 1. Suppress photons arriving on particular channels.
 	 * 2. Retain those photons on the other channels, and apply any time 

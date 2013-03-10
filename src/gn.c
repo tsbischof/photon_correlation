@@ -6,7 +6,7 @@
 #include "histogram_photon.h"
 #include "correlate_photon.h"
 
-int gn(char *filename_in, options_t const *options) {
+int gn(char *filename_in, pc_options_t const *options) {
 /* This program must perform:
  * 1. correlation/histogramming
  * 2. intensity (normal or binned)

@@ -19,13 +19,17 @@ LDFLAGS = -Wall ${LIBS}
 ALL_OBJ = 
 ALL_LIB = 
 
-COMMON_OBJ = error.o files.o options.o modes.o limits.o  types.o \
-		t2.o t3.o \
-		photon.o t2_void.o t3_void.o
+COMMON_OBJ = error.o files.o options.o modes.o limits.o types.o \
+		photon/t2.o photon/t3.o \
+		photon/t2_void.o photon/t3_void.o \
+		photon/window.o photon/queue.o photon/stream.o \
+		run.o \
+		vector/vector.o
 
-PHOTONS_OBJ = ${COMMON_OBJ} photons_main.o photons.o
+PHOTONS_OBJ = ${COMMON_OBJ} photons_main.o \
+		photon/photons.o photon/stream.o photon/conversions.o
 ALL_OBJ += ${PHOTONS_OBJ}
-PHOTONS_LIB = 
+PHOTONS_LIB = -lm
 ALL_LIB += ${PHOTONS_LIB}
 TARGETS += photons
 
@@ -55,7 +59,7 @@ ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += histogram
 
 INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
-		intensity.o intensity_photon.o
+		statistics/counts.o statistics/intensity.o
 ALL_OBJ += ${INTENSITY_OBJ}
 INTENSITY_LIB = 
 ALL_LIB += ${INTENSITY_LIB}
@@ -79,16 +83,23 @@ TARGETS += channels
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
 		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ}}}
-ALL_OBJ += ${GN_OBJ}
+#ALL_OBJ += ${GN_OBJ}
 GN_LIB = ${sort ${CORRELATE_LIB} ${HISTOGRAM_LIB}}
 ALL_LIB += ${GN_LIB}
-TARGETS += gn
+#TARGETS += gn
 
 INTENSITY_TO_T2_OBJ = ${COMMON_OBJ} intensity_to_t2_main.o intensity_to_t2.o
 ALL_OBJ += ${INTENSITY_TO_T2_OBJ}
 INTENSITY_TO_T2_LIB = 
 ALL_LIB += ${INTENSITY_TO_T2_LIB}
 TARGETS += intensity_to_t2
+
+PHOTON_NUMBER_OBJ = ${COMMON_OBJ} photon_number_main.o \
+		statistics/number.o statistics/counts.o
+ALL_OBJ += ${PHOTON_NUMBER_OBJ}
+PHOTON_NUMBER_LIB = 
+ALL_LIB += ${PHOTON_NUMBER_LIB}
+TARGETS += photon_number
 
 CORRELATE_VECTOR_OBJ = correlate_vector_main.o ${COMMON_OBJ} \
 		correlate_vector.o \
@@ -106,24 +117,6 @@ ALL_OBJ += ${COMBINATIONS_OBJ}
 COMBINATIONS_LIB = 
 ALL_LIB += ${COMBINATIONS_LIB}
 TARGETS += combinations
-
-T2_TO_T3_OBJ = ${COMMON_OBJ}  t2_to_t3_main.o conversions.o
-ALL_OBJ += ${T2_TO_T3_OBJ}
-T2_TO_T3_LIB = -lm
-LL_LIB += ${T2_TO_T3_LIB}
-TARGETS += t2_to_t3
-
-T3_AS_T2_OBJ = ${COMMON_OBJ} t3_as_t2_main.o conversions.o
-ALL_OBJ += ${T3_AS_T2_OBJ}
-T3_AS_T2_LIB = -lm
-ALL_LIB += ${T3_AS_T2_LIB}
-TARGETS += t3_as_t2
-
-T3_TO_T2_OBJ = ${COMMON_OBJ} t3_to_t2_main.o conversions.o
-ALL_OBJ += ${T3_TO_T2_OBJ}
-T3_TO_T2_LIB = -lm
-LL_LIB += ${T3_TO_T2_LIB}
-TARGETS += t3_to_t2
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -171,9 +164,6 @@ channels: ${CHANNELS_OBJ}
 libphoton_correlation.so: ${LIBPC_OBJ}
 	${LD} ${LIBPC_LDFLAGS} ${LIBPC_LIB} -o $@ $^
 
-t3_as_t2: ${T3_AS_T2_OBJ}
-	${LD} ${LDFLAGS} ${T3_AS_T2_LIB} -o $@ $^
-
 intensity_to_t2: ${INTENSITY_TO_T2_OBJ}
 	${LD} ${LDFLAGS} ${INTENSITY_TO_T2_LIB} -o $@ $^
 
@@ -186,11 +176,8 @@ gn: ${GN_OBJ}
 combinations: ${COMBINATIONS_OBJ}
 	${LD} ${LDFLAGS} ${COMBINATIONS_LIB} -o $@ $^
 
-t2_to_t3: ${T2_TO_T3_OBJ}
-	${LD} ${LDFLAGS} ${T2_TO_T3_LIB} -o $@ $^ 
-
-t3_to_t2: ${T3_TO_T2_OBJ}
-	${LD} ${LDFLAGS} ${T3_TO_T2_LIB} -o $@ $^ 
+photon_number: ${PHOTON_NUMBER_OBJ}
+	${LD} ${LDFLAGS} ${PHOTON_NUMBER_LIB} -o $@ $^
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 

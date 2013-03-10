@@ -40,6 +40,6 @@ int index_offsets_next(index_offsets_t *index_offsets);
 void index_offsets_free(index_offsets_t **index_offsets);
 
 int combinations_dispatch(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif 

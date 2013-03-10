@@ -13,9 +13,21 @@ typedef struct {
 	char long_char[10];
 	char long_name[20];
 	char description[1000];
-} option_t;
+} pc_option_t;
 
 typedef struct {
+	char message[10000];
+	int options[100];
+} program_options_t;
+
+typedef struct {
+	program_options_t *program_options;
+	char string[1024];
+
+	int usage;
+	int verbose;
+	int version;
+
 	char *filename_in;
 	char *filename_out;
 
@@ -78,14 +90,11 @@ typedef struct {
 /* gn */
 	int exact_normalization;
 
-/* t2_to_t3 */
+/* photons */
 	double repetition_rate;
-} options_t;
-
-typedef struct {
-	char message[10000];
-	int options[100];
-} program_options_t;
+	char *convert_string;
+	int convert;
+} pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
 		OPT_VERBOSE, OPT_PRINT_EVERY,
@@ -104,24 +113,43 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
 		OPT_EXACT_NORMALIZATION, 
 		OPT_REPETITION_TIME,
+		OPT_CONVERT,
 		OPT_EOF };
 
-void default_options(options_t *options);
-int validate_options(program_options_t *program_options, options_t *options);
-
-int parse_options(int argc, char *argv[], options_t *options, 
+pc_options_t *pc_options_alloc(void);
+void pc_options_init(pc_options_t *options,
 		program_options_t *program_options);
-void usage(int argc, char *argv[], 
-		program_options_t *program_options);
-void version(int argc, char *argv[]);
-int is_option(int option, program_options_t *program_options);
-char *make_option_string(program_options_t *program_options);
-void free_options(options_t *options);
-char *get_options_string(program_options_t *program_options);
+void pc_options_free(pc_options_t **options);
 
-int read_offsets(options_t *options);
-int parse_offsets(char *offsets_string, int64_t **offsets,
-		options_t *options);
-int parse_suppress(options_t *options);
+void pc_options_default(pc_options_t *options);
+int pc_options_valid(pc_options_t const *options);
+int pc_options_parse(pc_options_t *options, 
+		int const argc, char * const *argv);
+
+int pc_options_parse_mode(pc_options_t *options);
+int pc_options_parse_time_scale(pc_options_t *options);
+int pc_options_parse_pulse_scale(pc_options_t *options);
+int pc_options_parse_time_limits(pc_options_t *options);
+int pc_options_parse_pulse_limits(pc_options_t *options);
+int pc_options_parse_suppress(pc_options_t *options);
+int pc_options_parse_time_offsets(pc_options_t *options);
+int pc_options_parse_pulse_offsets(pc_options_t *options);
+int pc_options_parse_convert(pc_options_t *options);
+
+void pc_options_usage(pc_options_t const *options, 
+		int const argc, char * const *argv);
+void pc_options_version(pc_options_t const *options,
+		int const argc, char * const *argv);
+
+char const* pc_options_string(pc_options_t const *options);
+void pc_options_make_string(pc_options_t *options);
+int pc_options_has_option(pc_options_t const *options, int const option);
+
+int offsets_parse(int64_t **offsets, char *offsets_string,
+		int const channels);
+int offsets_valid(int64_t const *offsets);
+
+int suppress_parse(pc_options_t *options);
+int suppress_valid(pc_options_t const *options);
 
 #endif

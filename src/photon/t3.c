@@ -1,19 +1,12 @@
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
-#include "files.h"
-#include "error.h"
 #include "t3.h"
-#include "t3_void.h"
-#include "photon.h"
+#include "../error.h"
 
 /* 
  * Functions to implement t3 photon read/write.
  */
 int t3_fscanf(FILE *stream_in, t3_t *t3) {
 	int n_read = fscanf(stream_in,
-			"%"SCNu32",%"SCNd64",%"SCNd64"\n",
+			"%u,%lld,%lld\n",
 			&(t3->channel),
 			&(t3->pulse),
 			&(t3->time));
@@ -31,7 +24,7 @@ int t3_fscanf(FILE *stream_in, t3_t *t3) {
 
 int t3_fprintf(FILE *stream_out, t3_t const *t3) {
 	fprintf(stream_out,
-			"%"PRIu32",%"PRId64",%"PRId64"\n",
+			"%u,%lld,%lld\n",
 			t3->channel,
 			t3->pulse,
 			t3->time);
@@ -74,7 +67,7 @@ int t3_echo(FILE *stream_in, FILE *stream_out) {
 }
 
 
-void t3_correlate(correlation_t *correlation) {
+/*void t3_correlate(correlation_t *correlation) {
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
@@ -162,9 +155,9 @@ int t3_under_max_distance(void const *correlator) {
 	t3_t *right = ((correlator_t *)correlator)->right;
 
 	return( (max_time == 0 
-				|| i64abs(right->time - left->time) < max_time)
+				|| llabs(right->time - left->time) < max_time)
 			&& (max_pulse == 0 
-				|| i64abs(right->pulse - left->pulse) < max_pulse) );
+				|| llabs(right->pulse - left->pulse) < max_pulse) );
 }
 
 int t3_over_min_distance(void const *correlator) {
@@ -174,9 +167,9 @@ int t3_over_min_distance(void const *correlator) {
 	t3_t *right = (t3_t *)((correlator_t *)correlator)->right;
 
 	return( (min_time == 0 || 
-				i64abs(right->time - left->time) >= min_time)
+				llabs(right->time - left->time) >= min_time)
 			&& (min_pulse == 0 || 
-				i64abs(right->pulse - left->pulse) >= min_pulse) );
+				llabs(right->pulse - left->pulse) >= min_pulse) );
 }
 
 int t3_correlation_build_channels(correlation_t const *correlation,
@@ -208,4 +201,4 @@ int t3_correlation_build_values(correlation_t const *correlation,
 	}
 
 	return(PC_SUCCESS);
-}
+} */

@@ -8,7 +8,7 @@
 #include "t3.h"
 
 int correlate_photon(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	photon_stream_t *photon_stream = photon_stream_alloc(options);
 	correlator_t *correlator = correlator_alloc(options);
 
@@ -39,7 +39,7 @@ int correlate_photon(FILE *stream_in, FILE *stream_out,
 }
 
 int correlations_echo(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
+		pc_options_t const *options) {
 	int result;
 	correlation_next_t next;
 	correlation_print_t print;
@@ -134,7 +134,7 @@ void correlation_free(correlation_t **correlation) {
 	}
 }
 
-correlator_t *correlator_alloc(options_t const *options) {
+correlator_t *correlator_alloc(pc_options_t const *options) {
 	correlator_t *correlator = NULL;
 
 	correlator = (correlator_t *)malloc(sizeof(correlator_t));
@@ -196,7 +196,7 @@ correlator_t *correlator_alloc(options_t const *options) {
 }
 
 int correlator_init(correlator_t *correlator, photon_stream_t *photon_stream,
-		options_t const *options) {
+		pc_options_t const *options) {
 	if ( correlator->mode != photon_stream->mode ) {
 		error("Photon stream mode does not match correlator (%d, %d)\n",
 				photon_stream->mode, correlator->mode);

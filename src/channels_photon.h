@@ -33,14 +33,14 @@ typedef struct {
 	photon_window_dimension_t window_dim;
 } photon_stream_offset_t;
 
-photon_stream_offset_t *photon_stream_offset_alloc(options_t const *options);
+photon_stream_offset_t *photon_stream_offset_alloc(pc_options_t const *options);
 void photon_stream_offset_init(photon_stream_offset_t *pso,
-		FILE *stream_in, options_t const *options);
+		FILE *stream_in, pc_options_t const *options);
 int photon_stream_offset_next(photon_stream_offset_t *pso);
 void photon_stream_offset_free(photon_stream_offset_t **pso);
 int photon_stream_offset_populate(photon_stream_offset_t *pso);
 
 int channels_photon(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif

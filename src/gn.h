@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "options.h"
 
-int gn(char *filename_in, options_t const *options);
+int gn(char *filename_in, pc_options_t const *options);
 
 #endif

@@ -1,6 +1,6 @@
 #include <math.h>
 #include "conversions.h"
-#include "error.h"
+#include "../error.h"
 
 int t3_as_t2(t3_t const *t3, t2_t *t2) {
 	t2->channel = t3->channel;

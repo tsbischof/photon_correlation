@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
 #include "t3_void.h"
-#include "error.h"
-#include "t3.h"
 
 /* 
  * Functions to implement t3 photon read/write.
@@ -17,15 +11,15 @@ int t3v_fprintf(FILE *stream_out, void const *photon) {
 	return(t3_fprintf(stream_out, photon));
 }
 
-int64_t t3v_window_dimension(void const *photon) {
+long long t3v_window_dimension(void const *photon) {
 	return(((t3_t *)photon)->pulse);
 }
 
-int64_t t3v_channel_dimension(void const *photon) {
+long long t3v_channel_dimension(void const *photon) {
 	return(((t3_t *)photon)->channel);
 }
 
-void t3v_offset(void *record, offsets_t const *offsets) {
+/*void t3v_offset(void *record, offsets_t const *offsets) {
 	if ( offsets->offset_time ) {
 		((t3_t *)record)->time += 
 				offsets->time_offsets[((t3_t *)record)->channel];
@@ -35,4 +29,4 @@ void t3v_offset(void *record, offsets_t const *offsets) {
 		((t3_t *)record)->pulse +=
 				offsets->pulse_offsets[((t3_t *)record)->channel];
 	}
-}
+}*/

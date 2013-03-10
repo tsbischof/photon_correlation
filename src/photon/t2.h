@@ -3,14 +3,12 @@
 
 #include <stdio.h>
 
-#include "types.h"
-#include "options.h"
-#include "correlate_photon.h"
-#include "histogram_photon.h"
+/*#include "../correlate_photon.h"
+#include "../histogram_photon.h" */
 
 typedef struct {
-	uint32_t channel;
-	int64_t time;
+	unsigned int channel;
+	long long time;
 } t2_t;
 
 typedef int (*t2_next_t)(FILE *, t2_t *);
@@ -22,7 +20,7 @@ int t2_fprintf(FILE *stream_out, t2_t const *t2);
 int t2_compare(void const *a, void const *b);
 int t2_echo(FILE *stream_in, FILE *stream_out);
 
-void t2_correlate(correlation_t *correlation);
+/*void t2_correlate(correlation_t *correlation);
 int t2_correlation_fscanf(FILE *stream_in, correlation_t *correlation);
 int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation);
 
@@ -33,6 +31,6 @@ int t2_correlation_build_channels(correlation_t const *correlation,
 		combination_t *channels_vector);
 int t2_correlation_build_values(correlation_t const *correlation,
 		values_vector_t *values_vector);
-
+*/
 
 #endif

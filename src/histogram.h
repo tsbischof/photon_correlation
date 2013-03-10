@@ -5,6 +5,6 @@
 #include "options.h"
 
 int histogram_dispatch(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif

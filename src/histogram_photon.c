@@ -21,7 +21,7 @@ edges_t *edges_alloc(size_t const n_bins) {
 	edges->n_bins = n_bins;
 	edges->print_label = 0;
 	edges->scale = SCALE_UNKNOWN;
-	edges->bin_edges = (float64_t *)malloc(sizeof(float64_t)*(n_bins+1));
+	edges->bin_edges = (double *)malloc(sizeof(double)*(n_bins+1));
 
 	if ( edges->bin_edges == NULL ) {
 		edges_free(&edges);
@@ -68,7 +68,7 @@ void edges_free(edges_t **edges) {
 	}
 }
 
-int edges_index_linear(void const *e, int64_t const value) {
+int edges_index_linear(void const *e, long long const value) {
 	edges_t *edges = (edges_t *)e;
 	return(floor(
 			(value-edges->limits.lower) / 
@@ -76,7 +76,7 @@ int edges_index_linear(void const *e, int64_t const value) {
 			edges->limits.bins));
 }
 
-int edges_index_log(void const *e, int64_t const value) {
+int edges_index_log(void const *e, long long const value) {
 	edges_t *edges = (edges_t *)e;
 
 	if ( value <= 0 ) {
@@ -89,7 +89,7 @@ int edges_index_log(void const *e, int64_t const value) {
 	}
 }
 
-int edges_index_log_zero(void const *e, int64_t const value) {
+int edges_index_log_zero(void const *e, long long const value) {
 	if ( value == 0 ) {
 		return(0);
 	} else  {
@@ -97,7 +97,7 @@ int edges_index_log_zero(void const *e, int64_t const value) {
 	}
 }
 
-int edges_index_bsearch(void const *e, int64_t const value) {
+int edges_index_bsearch(void const *e, long long const value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
@@ -138,7 +138,7 @@ values_vector_t *values_vector_alloc(unsigned int const length) {
 	}
 
 	vv->length = length;
-	vv->values = (int64_t *)malloc(sizeof(int64_t)*length);
+	vv->values = (long long *)malloc(sizeof(long long)*length);
 	
 	if ( vv->values == NULL ) {
 		values_vector_free(&vv);
@@ -149,7 +149,7 @@ values_vector_t *values_vector_alloc(unsigned int const length) {
 }
 
 void values_vector_init(values_vector_t *vv) {
-	memset(vv->values, 0, sizeof(int64_t)*vv->length);
+	memset(vv->values, 0, sizeof(long long)*vv->length);
 }
 
 void values_vector_free(values_vector_t **vv) {
@@ -159,7 +159,7 @@ void values_vector_free(values_vector_t **vv) {
 	}
 }
 
-int64_t values_vector_index(values_vector_t const *vv, edges_t ** const edges) {
+long long values_vector_index(values_vector_t const *vv, edges_t ** const edges) {
 /* The values vector needs to be transformed into an index by:
  * 1. Extracting the index of each bin based on the edges.
  * 2. Turning those indices into an overall index, as with combinations.
@@ -167,7 +167,7 @@ int64_t values_vector_index(values_vector_t const *vv, edges_t ** const edges) {
 	int i;
 	int result;
 	int base = 1;
-	int64_t index = 0;
+	long long index = 0;
 
 	for ( i = vv->length-1; i >= 0; i-- ) {
 		index *= base;
@@ -248,7 +248,7 @@ int edge_indices_next(edge_indices_t *edge_indices) {
 }
 
 
-histogram_gn_t *histogram_gn_alloc(options_t const *options) {
+histogram_gn_t *histogram_gn_alloc(pc_options_t const *options) {
 	int i;
 	histogram_gn_t *hist = NULL;
 
@@ -363,7 +363,7 @@ histogram_gn_t *histogram_gn_alloc(options_t const *options) {
 	debug("Histogram has %zu bins.\n", hist->n_bins);
 	hist->n_histograms = pow_int(hist->channels, hist->order);
 
-	hist->counts = (uint64_t **)malloc(sizeof(uint64_t *)*hist->n_histograms);
+	hist->counts = (unsigned long long **)malloc(sizeof(unsigned long long *)*hist->n_histograms);
 
 	if ( hist->counts == NULL ) {
 		error("Could not allocate histogram bins.\n");
@@ -372,7 +372,7 @@ histogram_gn_t *histogram_gn_alloc(options_t const *options) {
 	}
 
 	for ( i = 0; i < hist->n_histograms; i++ ) {
-		hist->counts[i] = (uint64_t *)malloc(sizeof(uint64_t)*hist->n_bins);
+		hist->counts[i] = (unsigned long long *)malloc(sizeof(unsigned long long)*hist->n_bins);
 		if ( hist->counts[i] == NULL ) {
 			error("Could not allocate histogram bins.\n");
 			histogram_gn_free(&hist);
@@ -406,7 +406,7 @@ void histogram_gn_init(histogram_gn_t *hist) {
 	combination_init(hist->channels_vector);
 
 	for ( i = 0; i < hist->n_histograms; i++ ) {
-		memset(hist->counts[i], 0, sizeof(uint64_t)*hist->n_bins); 
+		memset(hist->counts[i], 0, sizeof(unsigned long long)*hist->n_bins); 
 	}
 }
 
@@ -521,14 +521,14 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
 							hist->channels_vector->values[channel_index++]);
 				}
 
-				fprintf(stream_out, ",%.2"PRIf64",%.2"PRIf64,
+				fprintf(stream_out, ",%.2lf,%.2lf",
 						hist->edges[i]->bin_edges[
 							hist->edge_indices->values[i]],
 						hist->edges[i]->bin_edges[
 							hist->edge_indices->values[i]+1]);
 			}
 
-			fprintf(stream_out, ",%"PRIu64"\n",
+			fprintf(stream_out, ",%llu\n",
 					hist->counts[histogram_index][bin_index]);
 		}
 	}
@@ -537,7 +537,7 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
 }
 
 int histogram_photon(FILE *stream_in, FILE *stream_out,
-		options_t const *options) {
+		pc_options_t const *options) {
 	int result = PC_ERROR_UNKNOWN;
 	histogram_gn_t *hist = NULL;
 	correlation_t *correlation = NULL;

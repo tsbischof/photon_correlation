@@ -1,20 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "modes.h"
-#include "error.h"
-#include "files.h"
-#include "histogram.h"
+#include "run.h"
 #include "options.h"
+#include "histogram.h"
 
 int main(int argc, char *argv[]) {
-	int result = 0;
-
-	options_t options = {};
-
-	FILE *stream_in = NULL;
-	FILE *stream_out = NULL;
-
 	program_options_t program_options = {
 "Histogram collects a set of photon correlation events and counts them into\n"
 "bins defined by their relative time delays. The histograms are also\n"
@@ -34,19 +22,5 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE, OPT_EOF}};
 
-	result = parse_options(argc, argv, &options, &program_options);
-
-	if ( result == PC_SUCCESS ) {
-		result = open_streams(&stream_in, options.filename_in,
-				&stream_out, options.filename_out);
-	}
-
-	if ( result == PC_SUCCESS ) {
-		result = histogram_dispatch(stream_in, stream_out, &options);
-	} 
-			
-	free_options(&options);
-	free_streams(stream_in, stream_out);
-
-	return(pc_check(result));
+	return(run(&program_options, histogram_dispatch, argc, argv));
 }

@@ -17,7 +17,7 @@
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
 
-option_t all_options[] = {
+static pc_option_t pc_options_all[] = {
 	{'h', "h", "help", 
 			"Prints this usage message."},
 	{'v', "v", "version",
@@ -138,10 +138,105 @@ option_t all_options[] = {
 			"histogram bin."},
 	{'R', "R:", "repetition-rate",
 			"Specifies the repetition rate for the sync pulse.\n"},
+	{'M', "M:", "convert",
+			"Specifies the output mode and style for converting\n"
+			"photons between types. Choices are:\n"
+			"t2: use the sync rate to form t2 times\n"
+			"as-t2: use the pulse number as t2 time\n"
+			"t3: use the t2 time and sync rate to get pulse\n"
+			"    number, time"}
 	};
 
-void default_options(options_t *options) {
-	verbose = 0;
+
+static struct option pc_options_long[] = {
+	{"help", no_argument, 0, 'h'},
+	{"verbose", no_argument, 0, 'V'},
+	{"version", no_argument, 0, 'v'},
+	{"print-every", required_argument, 0, 'p'},
+
+	{"file-in", required_argument, 0, 'i'},
+	{"file-out", required_argument, 0, 'o'},
+
+	{"mode", required_argument, 0, 'm'},
+	{"channels", required_argument, 0, 'c'},
+	{"order", required_argument, 0, 'g'},
+
+	{"use-void", no_argument, 0, 'G'},
+	{"seed", required_argument, 0, 'K'},
+
+/* Correlate */
+	{"queue-size", required_argument, 0, 'q'},
+	{"max-time-distance", required_argument, 0, 'd'},
+	{"min-time-distance", required_argument, 0, 'D'},
+	{"max-pulse-distance", required_argument, 0, 'e'},
+	{"min-pulse-distance", required_argument, 0, 'E'},
+	{"positive-only", no_argument, 0, 'P'},
+	{"start-stop", no_argument, 0, 'S'},
+
+/* Intensity */ 
+	{"bin-width", required_argument, 0, 'w'},
+	{"count-all", no_argument, 0, 'A'},
+	{"start", required_argument, 0, 'f'},
+	{"stop", required_argument, 0, 'F'},
+
+/* Histogram */ 
+	{"time", required_argument, 0, 'x'},
+	{"pulse", required_argument, 0, 'y'},
+	{"time-scale", required_argument, 0, 'X'},
+	{"pulse-scale", required_argument, 0, 'Y'},
+
+/* Channels */
+	{"time-offsets", required_argument, 0, 'u'},
+	{"pulse-offsets", required_argument, 0, 'U'},
+	{"suppress", required_argument, 0, 's'},
+
+/* correlate_vector */ 
+	{"approximate", required_argument, 0, 'B'},
+	{"true-correlation", no_argument, 0, 'C'},
+
+/* gn */
+	{"exact-normalization", no_argument, 0, 'Z'},
+
+/* t2_to_t3 */
+	{"repetition-rate", required_argument, 0, 'R'},
+	{"convert", required_argument, 0, 'M'},
+	{0, 0, 0, 0}};
+
+
+
+pc_options_t *pc_options_alloc(void) {
+	return(malloc(sizeof(pc_options_t)));
+}
+
+void pc_options_init(pc_options_t *options, 
+		program_options_t *program_options) {
+	options->program_options = program_options;
+	pc_options_default(options);
+	pc_options_make_string(options);
+}
+
+void pc_options_free(pc_options_t **options) {
+	if ( *options != NULL ) {
+		free((*options)->filename_in);
+		free((*options)->filename_out);
+		free((*options)->mode_string);
+		free((*options)->time_string);
+		free((*options)->pulse_string);
+		free((*options)->time_scale_string);
+		free((*options)->pulse_scale_string);
+		free((*options)->time_offsets_string);
+		free((*options)->time_offsets);
+		free((*options)->pulse_offsets_string);
+		free((*options)->pulse_offsets);
+		free((*options)->convert_string);
+		free(*options);
+	}
+}
+
+void pc_options_default(pc_options_t *options) {
+	options->usage = false;
+	options->verbose = false;
+	options->version = false;
 
 	options->filename_in = NULL;
 	options->filename_out = NULL;
@@ -149,15 +244,12 @@ void default_options(options_t *options) {
 	options->mode_string = NULL;
 	options->mode = MODE_UNKNOWN;
 
-	if ( options->channels != 1 ) {
-		options->channels = 2;
-	}
-
+	options->channels = 2;
 	options->order = 2;
 	
 	options->print_every = 0;
 
-	options->use_void = 0;
+	options->use_void = false;
 	options->seed = 0xDEADBEEF;
 
 	options->queue_size = QUEUE_SIZE;
@@ -165,14 +257,14 @@ void default_options(options_t *options) {
 	options->min_time_distance = 0;
 	options->max_pulse_distance = 0;
 	options->min_pulse_distance = 0;
-	options->positive_only = 0;
-	options->start_stop = 0;
+	options->positive_only = false;
+	options->start_stop = false;
 
 	options->bin_width = 0;
-	options->count_all = 0;
-	options->set_start_time = 0;
+	options->count_all = false;
+	options->set_start_time = false;
 	options->start_time = 0;
-	options->set_stop_time = 0;
+	options->set_stop_time = false;
 	options->stop_time = 0;
 
 	options->time_string = NULL;
@@ -183,176 +275,133 @@ void default_options(options_t *options) {
 	options->pulse_scale_string = NULL;
 	options->pulse_scale = SCALE_LINEAR;
 
-	options->suppress_channels = 0;
+	options->suppress_channels = false;
 	options->suppress_string = NULL;
 	options->suppressed_channels = NULL;
 
-	options->offset_time = 0;
+	options->offset_time = false;
 	options->time_offsets_string = NULL;
 	options->time_offsets = NULL;
 
-	options->offset_pulse = 0;
+	options->offset_pulse = false;
 	options->pulse_offsets_string = NULL;
 	options->pulse_offsets = NULL;
 
-	options->approximate = 1;
-	options->true_autocorrelation = 0;
+	options->approximate = false;
+	options->true_autocorrelation = false;
 
-	options->exact_normalization = 0;
+	options->exact_normalization = false;
 
 	options->repetition_rate = 0;
+	options->convert_string = NULL;
+	options->convert = MODE_UNKNOWN;
 }
 
-int validate_options(program_options_t *program_options, options_t *options) {
-	int result = 0;
+int pc_options_valid(pc_options_t const *options) {
+	if ( options->usage || options->version ) {
+		return(false);
+	}
 
-	if ( is_option(OPT_CHANNELS, program_options) && options->channels < 1 ) {
+	if ( pc_options_has_option(options, OPT_CHANNELS) 
+			&& options->channels < 1 ) {
 		error("Must have at least 1 channel (%d specified).\n", 
 				options->channels);
-		result += -1;
+		return(false);
 	}
 
-	if ( is_option(OPT_ORDER, program_options) && options->order < 1 ) {
+	if ( pc_options_has_option(options, OPT_ORDER) && options->order < 1 ) {
 		error("Order of correlation/histogram must be at least 1 (%d "
 				"specified).", options->order);
-		result += -1;
+		return(false);
 	}
 
-	if ( is_option(OPT_MODE, program_options) ) {
-		result += mode_parse(&(options->mode), options->mode_string);
+	if ( pc_options_has_option(options, OPT_MODE) &&
+			options->mode == MODE_UNKNOWN ) {
+		error("Invalid mode: %d\n", options->mode);
+		return(false);
 	}
 
-	if ( is_option(OPT_TIME_SCALE, program_options) ) {
-		result += scale_parse(options->time_scale_string,
-							&(options->time_scale));
+	if ( pc_options_has_option(options, OPT_TIME_SCALE) &&
+			options->time_scale == SCALE_UNKNOWN ) {
+		error("Unknown time scale.\n");
+		return(false);
 	}
 
-	if ( is_option(OPT_PULSE_SCALE, program_options) ) {
-		result += scale_parse(options->pulse_scale_string,
-							&(options->pulse_scale));
+	if ( pc_options_has_option(options, OPT_PULSE_SCALE) &&
+			options->pulse_scale == SCALE_UNKNOWN ) {
+		error("Unknown pulse scale.\n");
+		return(false);
 	}
 
-	if ( is_option(OPT_TIME, program_options) ) {
-		result += limits_parse(options->time_string,
-								&(options->time_limits));
+	if ( pc_options_has_option(options, OPT_TIME) &&
+			! limits_valid(&(options->time_limits)) ) {
+		error("Invalid time limits.\n");
+		return(false);
 	}
 
-	if ( is_option(OPT_PULSE, program_options) 
-		&& ! result
-		&& options->mode == MODE_T3 
-		&& options->order > 1 ) {
-		result += limits_parse(options->pulse_string,
-								&(options->pulse_limits));
+	if ( pc_options_has_option(options, OPT_PULSE) 
+			&& options->mode == MODE_T3 
+			&& options->order > 1
+			&& ! limits_valid(&(options->pulse_limits)) ) {
+		error("Invalid pulse limits.\n");
+		return(false);
 	}
 		
-	if ( is_option(OPT_BIN_WIDTH, program_options)
-		&& ! result
-		&& !(options->bin_width || options->count_all) ) {
+	if ( pc_options_has_option(options, OPT_BIN_WIDTH)
+		&& ! (options->bin_width || options->count_all) ) {
 		error("Bin width must be at least 1 (%"PRId64" specified).\n", 
 				options->bin_width);
-		result += -1;
+		return(false);
 	}
 
-	if ( is_option(OPT_START_STOP, program_options)
-		&& ! result
-		&& options->start_stop
-		&& (options->channels != 2 || 
-			options->order != 2 || options->mode != MODE_T2 ) ) {
-		error("Start-stop mode is only well-defined for 2 channels, "
+	if ( pc_options_has_option(options, OPT_START_STOP) && 
+			options->start_stop && 
+			(options->channels != 2 || 
+			 options->order != 2 || 
+			 options->mode != MODE_T2 ) ) {
+		error("Start-stop mode is only defined for 2 channels, "
 				"t2 mode, and order 2.\n");
-		result += -1;
+		return(false);
 	}
 
-	if ( is_option(OPT_SUPPRESS, program_options) && ! result ) {
-		result += parse_suppress(options);
+	if ( pc_options_has_option(options, OPT_TIME_OFFSETS) &&
+			! offsets_valid(options->time_offsets) ) {
+		error("Invlalid time offsets.\n");
+		return(false);
 	}
 
-	if ( (is_option(OPT_TIME_OFFSETS, program_options)
-			|| is_option(OPT_PULSE_OFFSETS, program_options))
-			 && ! result ) {
-		result += read_offsets(options);
+	if ( pc_options_has_option(options, OPT_PULSE_OFFSETS) &&
+			! offsets_valid(options->pulse_offsets) ) {
+		error("Invalid pulse offsets.\n");
+		return(false);
 	}
-	
-	return(result);
+
+	return(true);
 }
 
-int parse_options(int argc, char *argv[], options_t *options, 
-		program_options_t *program_options) {
+int pc_options_parse(pc_options_t *options, 
+		int const argc, char * const *argv) { 
 	int c = 0;
 	int option_index = 0;
-	int result = PC_SUCCESS;
-	char *options_string = NULL;
-
-	static struct option long_options[] = {
-		{"help", no_argument, 0, 'h'},
-		{"verbose", no_argument, 0, 'V'},
-		{"version", no_argument, 0, 'v'},
-		{"print-every", required_argument, 0, 'p'},
-
-		{"file-in", required_argument, 0, 'i'},
-		{"file-out", required_argument, 0, 'o'},
-
-		{"mode", required_argument, 0, 'm'},
-		{"channels", required_argument, 0, 'c'},
-		{"order", required_argument, 0, 'g'},
-
-		{"use-void", no_argument, 0, 'G'},
-		{"seed", required_argument, 0, 'K'},
-
-/* Correlate */
-		{"queue-size", required_argument, 0, 'q'},
-		{"max-time-distance", required_argument, 0, 'd'},
-		{"min-time-distance", required_argument, 0, 'D'},
-		{"max-pulse-distance", required_argument, 0, 'e'},
-		{"min-pulse-distance", required_argument, 0, 'E'},
-		{"positive-only", no_argument, 0, 'P'},
-		{"start-stop", no_argument, 0, 'S'},
-
-/* Intensity */ 
-		{"bin-width", required_argument, 0, 'w'},
-		{"count-all", no_argument, 0, 'A'},
-		{"start", required_argument, 0, 'f'},
-		{"stop", required_argument, 0, 'F'},
-
-/* Histogram */ 
-		{"time", required_argument, 0, 'x'},
-		{"pulse", required_argument, 0, 'y'},
-		{"time-scale", required_argument, 0, 'X'},
-		{"pulse-scale", required_argument, 0, 'Y'},
-
-/* Channels */
-		{"time-offsets", required_argument, 0, 'u'},
-		{"pulse-offsets", required_argument, 0, 'U'},
-		{"suppress", required_argument, 0, 's'},
-
-/* correlate_vector */ 
-		{"approximate", required_argument, 0, 'B'},
-		{"true-correlation", no_argument, 0, 'C'},
-
-/* gn */
-		{"exact-normalization", no_argument, 0, 'Z'},
-
-/* t2_to_t3 */
-		{"repetition-rate", required_argument, 0, 'T'},
-		{0, 0, 0, 0}};
-
-	options_string = get_options_string(program_options);
-	default_options(options);
+	char const *options_string = pc_options_string(options);
 
 	while ( (c = getopt_long(argc, argv, options_string,
-						long_options, &option_index)) != -1 
-			&& result == PC_SUCCESS ) {
+						pc_options_long, &option_index)) != -1 ) {
+		if ( strchr(options_string, c) == NULL ) {
+			error("Unknown option %c\n", c);
+			c = '?';
+		}
+			
 		switch (c) {
 			case 'h':
-				usage(argc, argv, program_options);
-				result = PC_USAGE;
+				options->usage = true;
 				break;
 			case 'V':
+				options->verbose = true;
 				verbose = 1;
 				break;
 			case 'v':
-				version(argc, argv);
-				result = PC_USAGE;
+				options->version = true;
 				break;
 			case 'p':
 				options->print_every = strtol(optarg, NULL, 10);
@@ -373,34 +422,34 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->order = strtol(optarg, NULL, 10);
 				break;
 			case 'G':
-				options->use_void = 1;
+				options->use_void = true;
 				break;
 			case 'K':
 				options->seed = strtol(optarg, NULL, 10);
 				break;
 			case 'q':
-				options->queue_size = strtou64(optarg, NULL, 10);
+				options->queue_size = strtoull(optarg, NULL, 10);
 				break;
 			case 'd':
-				options->max_time_distance = strtou64(optarg, NULL, 10);
+				options->max_time_distance = strtoull(optarg, NULL, 10);
 				break;
 			case 'D':
-				options->min_time_distance = strtou64(optarg, NULL, 10);
+				options->min_time_distance = strtoull(optarg, NULL, 10);
 				break;
 			case 'e':
-				options->max_pulse_distance = strtou64(optarg, NULL, 10);
+				options->max_pulse_distance = strtoull(optarg, NULL, 10);
 				break;
 			case 'E':
-				options->min_time_distance = strtou64(optarg, NULL, 10);
+				options->min_time_distance = strtoull(optarg, NULL, 10);
 				break;
 			case 'P':
-				options->positive_only = 1;
+				options->positive_only = true;
 				break;
 			case 'w':
-				options->bin_width = strtou64(optarg, NULL, 10);
+				options->bin_width = strtoull(optarg, NULL, 10);
 				break;
 			case 'A':
-				options->count_all = 1;
+				options->count_all = true;
 				break;
 			case 'x':
 				options->time_string = strdup(optarg);
@@ -415,66 +464,204 @@ int parse_options(int argc, char *argv[], options_t *options,
 				options->pulse_scale_string = strdup(optarg);
 				break;
 			case 'S':
-				options->start_stop = 1;
+				options->start_stop = true;
 				break;
 			case 'f':
-				options->set_start_time = 1;
-				options->start_time = strtoi64(optarg, NULL, 10);
+				options->set_start_time = true;
+				options->start_time = strtoll(optarg, NULL, 10);
 				break;
 			case 'F':
-				options->set_stop_time = 1;
-				options->stop_time = strtoi64(optarg, NULL, 10);
+				options->set_stop_time = true;
+				options->stop_time = strtoll(optarg, NULL, 10);
 				break;
 			case 'u':
-				options->offset_time = 1;
+				options->offset_time = true;
 				options->time_offsets_string = strdup(optarg);
 				break;
 			case 'U':
-				options->offset_pulse = 1;
+				options->offset_pulse = true;
 				options->pulse_offsets_string = strdup(optarg);
 				break;
 			case 's':
-				options->suppress_channels = 1;
+				options->suppress_channels = true;
 				options->suppress_string = strdup(optarg);
 				break;
 			case 'B':
 				options->approximate = strtol(optarg, NULL, 10);
 				break;
 			case 'C':
-				options->true_autocorrelation = 1;
+				options->true_autocorrelation = true;
 				break;
 			case 'Z':
-				options->exact_normalization = 1;
+				options->exact_normalization = true;
 				break;
-			case 'T':
+			case 'R':
 				options->repetition_rate = strtof(optarg, NULL);
+				break;
+			case 'M':
+				options->convert_string = strdup(optarg);
+				pc_options_parse_convert(options);
 				break;
 			case '?':
 			default:
-				usage(argc, argv, program_options);
-				result = PC_ERROR_OPTIONS;
+				options->usage = true;
+				break;
 		}
 	}
 
-	if ( ! result ) {
-		result = validate_options(program_options, options);
+	if ( options->usage || options->version ) {
+		return(PC_USAGE);
 	}
 
-	free(options_string);
-	
-	return(result);
+	if ( pc_options_has_option(options, OPT_MODE) &&
+			pc_options_parse_mode(options) != PC_SUCCESS ) {
+		error("Invalid mode: %d\n", options->mode);
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_TIME_SCALE) &&
+			pc_options_parse_time_scale(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_PULSE_SCALE) &&
+			pc_options_parse_pulse_scale(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_TIME) &&
+			pc_options_parse_time_limits(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_PULSE) 
+			&& options->mode == MODE_T3 
+			&& options->order > 1
+			&& pc_options_parse_pulse_limits(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+		
+	if ( pc_options_has_option(options, OPT_BIN_WIDTH)
+		&& ! (options->bin_width || options->count_all) ) {
+		error("Bin width must be at least 1 (%"PRId64" specified).\n", 
+				options->bin_width);
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_START_STOP) && 
+			options->start_stop && 
+			(options->channels != 2 || 
+			 options->order != 2 || 
+			 options->mode != MODE_T2 ) ) {
+		error("Start-stop mode is only defined for 2 channels, "
+				"t2 mode, and order 2.\n");
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_SUPPRESS) &&
+			pc_options_parse_suppress(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_TIME_OFFSETS) &&
+			pc_options_parse_time_offsets(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	if ( pc_options_has_option(options, OPT_PULSE_OFFSETS) &&
+			pc_options_parse_pulse_offsets(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
+	return(PC_SUCCESS);
 }
 
-void usage(int argc, char *argv[], program_options_t *program_options) {
+
+int pc_options_parse_mode(pc_options_t *options) {
+	return(mode_parse(&(options->mode), options->mode_string));
+}
+
+int pc_options_parse_time_scale(pc_options_t *options) {
+	return(scale_parse(&(options->time_scale), options->time_scale_string));
+}
+
+int pc_options_parse_pulse_scale(pc_options_t *options) {
+	return(scale_parse(&(options->pulse_scale), options->pulse_scale_string));
+}
+
+int pc_options_parse_time_limits(pc_options_t *options) {
+	return(limits_parse(&(options->time_limits), options->time_string));
+}
+
+int pc_options_parse_pulse_limits(pc_options_t *options) {
+	return(limits_parse(&(options->pulse_limits), 
+			options->pulse_string));
+}
+
+int pc_options_parse_suppress(pc_options_t *options) {
+	return(suppress_parse(options));
+}
+
+int pc_options_parse_time_offsets(pc_options_t *options) {
+	return(offsets_parse(&(options->time_offsets), 
+			options->time_offsets_string,
+			options->channels));
+}
+
+int pc_options_parse_pulse_offsets(pc_options_t *options) {
+	return(offsets_parse(&(options->pulse_offsets),
+			options->pulse_offsets_string,
+			options->channels));
+}
+
+int pc_options_parse_convert(pc_options_t *options) {
+	return(mode_parse(&(options->convert), options->convert_string));
+}
+
+char const* pc_options_string(pc_options_t const *options) {
+	return(&(options->string[0]));
+}
+
+void pc_options_make_string(pc_options_t *options) {
+	pc_option_t *option;
+	int i;
+	int j;
+	int index = 0;
+	
+	for ( i = 0; options->program_options->options[i] != OPT_EOF; i++ ) {
+		option = &pc_options_all[options->program_options->options[i]];
+
+		for ( j = 0; j < strlen(option->long_char); j++ ) {
+			options->string[index++] = option->long_char[j];
+		}
+	}
+	options->string[index] = '\0';
+}
+
+int pc_options_has_option(pc_options_t const *options, int option) {
+	int i;
+
+	for ( i = 0; options->program_options->options[i] != OPT_EOF; i++ ) {
+		if ( option == options->program_options->options[i] ) {
+			return(1);
+		}
+	}
+
+	return(0);
+}
+
+
+void pc_options_usage(pc_options_t const *options, 
+		int const argc, char * const *argv) {
 	int i,j;
-	option_t *option;
+	pc_option_t *option;
 
 	fprintf(stderr, "Usage: %s [options]\n\n", argv[0]);
-	version(argc, argv);
+	pc_options_version(options, argc, argv);
 	fprintf(stderr, "\n");
 
-	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
-		option = &all_options[program_options->options[i]];
+	for ( i = 0; options->program_options->options[i] != OPT_EOF; i++ ) {
+		option = &pc_options_all[options->program_options->options[i]];
 
 		fprintf(stderr, "%*s-%c, --%s: ", 
 				20-(int)strlen(option->long_name),
@@ -493,10 +680,11 @@ void usage(int argc, char *argv[], program_options_t *program_options) {
 		fprintf(stderr, "\n");
 	}
 
-	fprintf(stderr, "\n%s\n", program_options->message);
+	fprintf(stderr, "\n%s\n", options->program_options->message);
 }
 
-void version(int argc, char *argv[]) {
+void pc_options_version(pc_options_t const *options, 
+		int const argc, char * const *argv) {
 /*	fprintf(stderr, 
 		"%s v%s (build %s)\n", 
 		argv[0], 
@@ -508,91 +696,28 @@ void version(int argc, char *argv[]) {
 		STR(VERSION));
 }
 
-int is_option(int option, program_options_t *program_options) {
-	int i;
-
-	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
-		if ( option == program_options->options[i] ) {
-			return(1);
-		}
-	}
-
-	return(0);
-}
-
-void free_options(options_t *options) {
-	free(options->filename_in);
-	free(options->filename_out);
-	free(options->mode_string); 
-	free(options->time_string);
-	free(options->pulse_string);
-	free(options->time_scale_string);
-	free(options->pulse_scale_string);
-	free(options->suppress_string);
-	free(options->suppressed_channels);
-	free(options->time_offsets_string);
-	free(options->time_offsets);
-	free(options->pulse_offsets_string);
-	free(options->pulse_offsets);
-}
-
-char *get_options_string(program_options_t *program_options) {
-	char buffer[1000];
-	option_t *option;
-	int i;
-	int j;
-	int position = 0;
-	
-	for ( i = 0; program_options->options[i] != OPT_EOF; i++ ) {
-		option = &all_options[program_options->options[i]];
-
-		for ( j = 0; j < strlen(option->long_char); j++ ) {
-			buffer[position++] = option->long_char[j];
-		}
-	}
-	buffer[position] = '\0';
-	
-	return(strdup(buffer));
-}
-
-int read_offsets(options_t *options) {
-	int result = 0;
-
-	if ( options->offset_time ) {
-		result += parse_offsets(options->time_offsets_string, 
-				&(options->time_offsets), options);
-	} 
-
-	if ( options->offset_pulse ) {
-		result += parse_offsets(options->pulse_offsets_string,
-				&(options->pulse_offsets), options);
-	}
-
-	return(result);
-}
-
-int parse_offsets(char *offsets_string, int64_t **offsets, 
-		options_t *options) {
+int offsets_parse(int64_t **offsets, char *offsets_string, 
+		int const channels) {
 	char *c;
 	int channel;
 
 	debug("Parsing offsets from %s\n", offsets_string);
 
-	*offsets = (int64_t *)malloc(sizeof(int64_t)*options->channels);
+	*offsets = (int64_t *)malloc(sizeof(int64_t)*channels);
 
 	if ( *offsets == NULL ) {
 		error("Could not allocate memory for offsets\n");
-		return(-1);
+		return(PC_ERROR_MEM);
 	}
 
 	c = strtok(offsets_string, ",");
 
-	for ( channel = 0; channel < options->channels; channel++ ) {
+	for ( channel = 0; channel < channels; channel++ ) {
 		if ( c == NULL ) {
 			error("Not enough offsets specified (%d found)\n", channel);
-			return(-1);
+			return(PC_ERROR_OPTIONS);
 		} else {
-			(*offsets)[channel] = strtou64(c, NULL, 10);
+			(*offsets)[channel] = strtoull(c, NULL, 10);
 			debug("Offset for channel %d: %"PRId64"\n",
 					channel, (*offsets)[channel]);
 		}
@@ -600,10 +725,14 @@ int parse_offsets(char *offsets_string, int64_t **offsets,
 		c = strtok(NULL, ",");
 	}
 		
-	return(0);
+	return(PC_SUCCESS);
 }
 
-int parse_suppress(options_t *options) {
+int offsets_valid(int64_t const *offsets) {
+	return(offsets != NULL);
+}
+
+int suppress_parse(pc_options_t *options) {
 	char *c;
 	int channel;
 	
@@ -613,7 +742,7 @@ int parse_suppress(options_t *options) {
 
 		if ( options->suppressed_channels == NULL ) {
 			error("Could not allocate memory for supressed channels.\n");
-			return(-1);
+			return(PC_ERROR_MEM);
 		}
 
 		for ( channel = 0; channel < options->channels; channel++ ) {
@@ -626,11 +755,12 @@ int parse_suppress(options_t *options) {
 			channel = strtol(c, NULL, 10);
 
 			if ( channel == 0 && strcmp(c, "0") ) {
+				/* check for parse errors */
 				error("Invalid channel to suppress: %s\n", c);
-				return(-1);
+				return(PC_ERROR_OPTIONS);
 			} else if ( channel < 0 || channel >= options->channels ) {
 				error("Invalid channel to suppress: %d\n", channel);
-				return(-1);
+				return(PC_ERROR_OPTIONS);
 			} else {
 				debug("Suppressing channel %d\n", channel);
 				if ( options->suppressed_channels[channel] ) {
@@ -643,6 +773,10 @@ int parse_suppress(options_t *options) {
 		}
 	}
 
-	return(0);
+	return(PC_SUCCESS);
+}
+
+int suppress_valid(pc_options_t const *options) {
+	return(options->suppressed_channels != NULL);
 }
 
