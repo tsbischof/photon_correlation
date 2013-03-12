@@ -152,8 +152,8 @@ int photon_number(FILE *stream_in, FILE *stream_out,
 	}
 
 	photon_number_init(number,
-			options->set_start_time, options->start_time,
-			options->set_stop_time, options->stop_time);
+			options->set_start, options->start,
+			options->set_stop, options->stop);
 	photon_stream_init(photons, stream_in);
 	photon_stream_set_unwindowed(photons);
 

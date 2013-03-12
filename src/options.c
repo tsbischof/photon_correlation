@@ -262,10 +262,10 @@ void pc_options_default(pc_options_t *options) {
 
 	options->bin_width = 0;
 	options->count_all = false;
-	options->set_start_time = false;
-	options->start_time = 0;
-	options->set_stop_time = false;
-	options->stop_time = 0;
+	options->set_start = false;
+	options->start = 0;
+	options->set_stop = false;
+	options->stop = 0;
 
 	options->time_string = NULL;
 	options->pulse_string = NULL;
@@ -420,7 +420,7 @@ int pc_options_parse(pc_options_t *options,
 				options->use_void = true;
 				break;
 			case 'K':
-				options->seed = strtol(optarg, NULL, 10);
+				options->seed = strtoul(optarg, NULL, 10);
 				break;
 			case 'q':
 				options->queue_size = strtoull(optarg, NULL, 10);
@@ -462,12 +462,12 @@ int pc_options_parse(pc_options_t *options,
 				options->start_stop = true;
 				break;
 			case 'f':
-				options->set_start_time = true;
-				options->start_time = strtoll(optarg, NULL, 10);
+				options->set_start = true;
+				options->start = strtoll(optarg, NULL, 10);
 				break;
 			case 'F':
-				options->set_stop_time = true;
-				options->stop_time = strtoll(optarg, NULL, 10);
+				options->set_stop = true;
+				options->stop = strtoll(optarg, NULL, 10);
 				break;
 			case 'u':
 				options->offset_time = true;
@@ -690,6 +690,103 @@ void pc_options_version(pc_options_t const *options,
 		"%s v%s\n", 
 		argv[0], 
 		STR(VERSION));
+}
+
+int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
+	int i;
+
+	fprintf(stream_out, "[general]\n");
+	fprintf(stream_out, "usage = %d\n", options->usage);
+	fprintf(stream_out, "verbose = %d\n", options->verbose);
+	fprintf(stream_out, "version = %d\n", options->version);
+	fprintf(stream_out, "filename_in = %s\n", options->filename_in);
+	fprintf(stream_out, "filename_out = %s\n", options->filename_out);
+	fprintf(stream_out, "mode = %d (%s)\n", 
+			options->mode, options->mode_string);
+	fprintf(stream_out, "channels = %d\n", options->channels);
+	fprintf(stream_out, "order = %d\n", options->order);
+	fprintf(stream_out, "print_every = %d\n", options->print_every);
+	fprintf(stream_out, "seed = 0x%x\n", options->seed);
+	fprintf(stream_out, "queue_size = %llu\n", options->queue_size);
+
+	fprintf(stream_out, "\n[correlate]\n");
+	fprintf(stream_out, "max_time_distance = %llu\n", 
+			options->max_time_distance);
+	fprintf(stream_out, "min_time_distance = %llu\n", 
+			options->min_time_distance);
+	fprintf(stream_out, "max_pulse_distance = %llu\n", 
+			options->max_pulse_distance);
+	fprintf(stream_out, "min_pulse_distance = %llu\n", 
+			options->min_pulse_distance);
+	fprintf(stream_out, "positive_only = %d\n", options->positive_only);
+	fprintf(stream_out, "start_stop = %d\n", options->start_stop);
+
+	fprintf(stream_out, "\n[intensity]\n");
+	fprintf(stream_out, "bin_width = %llu\n", options->bin_width);
+	fprintf(stream_out, "count_all = %d\n", options->count_all);
+	fprintf(stream_out, "set_start = %d\n", options->set_start);
+	fprintf(stream_out, "start = %lld\n", options->start);
+	fprintf(stream_out, "set_stop = %d\n", options->set_stop);
+	fprintf(stream_out, "stop = %lld\n", options->stop);
+
+	fprintf(stream_out, "\n[histogram]\n");
+	fprintf(stream_out, "time_limits = %lf,%zu,%lf (%s)\n",
+			options->time_limits.lower,
+			options->time_limits.bins,
+			options->time_limits.upper,
+			options->time_string);
+	fprintf(stream_out, "pulse_limits = %lf,%zu,%lf (%s)\n",
+			options->pulse_limits.lower,
+			options->pulse_limits.bins,
+			options->pulse_limits.upper,
+			options->pulse_string);
+	fprintf(stream_out, "time_scale = %d (%s)\n", 
+			options->time_scale, options->time_scale_string);
+	fprintf(stream_out, "pulse_scale = %d (%s)\n", 
+			options->pulse_scale, options->pulse_scale_string);
+
+	fprintf(stream_out, "\n[temper]\n");
+	fprintf(stream_out, "suppress_channels = %d\n", options->suppress_channels);
+	
+	fprintf(stream_out, "suppressed_channels = ");
+	if ( options->suppressed_channels != NULL ) {
+		for ( i = 0; i < options->channels; i++ ) {
+			fprintf(stream_out, "%d", options->suppressed_channels[i]);
+			if ( i + 1 != options->channels ) {
+				fprintf(stream_out, ",");
+			}
+		}
+	}
+	fprintf(stream_out, "(%s)\n", options->suppress_string);
+
+	fprintf(stream_out, "time_offsets = ");
+	if ( options->offset_time ) {
+		for ( i = 0; i < options->channels; i++ ) {
+			fprintf(stream_out, "%lld", options->time_offsets[i]);
+			if ( i + 1 != options->channels ) {
+				fprintf(stream_out, ",");
+			}
+		}
+	}
+	fprintf(stream_out, "(%s)\n", options->time_offsets_string);
+
+	fprintf(stream_out, "pulse_offsets = ");
+	if ( options->offset_pulse ) {
+		for ( i = 0; i < options->channels; i++ ) {
+			fprintf(stream_out, "%lld", options->pulse_offsets[i]);
+			if ( i + 1 != options->channels ) {
+				fprintf(stream_out, ",");
+			}
+		}
+	}
+	fprintf(stream_out, "(%s)\n", options->pulse_offsets_string);
+
+	fprintf(stream_out, "\n[photons]\n");
+	fprintf(stream_out, "repetition_rate = %lf\n", options->repetition_rate);
+	fprintf(stream_out, "convert = %d (%s)\n", 
+			options->convert, options->convert_string);
+
+	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
 
 int offsets_parse(long long **offsets, char *offsets_string, 

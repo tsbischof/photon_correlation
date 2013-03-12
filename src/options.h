@@ -40,7 +40,7 @@ typedef struct {
 	int print_every;
 
 	int use_void;
-	int seed;
+	unsigned int seed;
 
 /* Correlate */
 	unsigned long long queue_size;
@@ -54,10 +54,10 @@ typedef struct {
 /* Intensity */
 	unsigned long long bin_width;
 	int count_all;
-	int set_start_time;
-	long long start_time;
-	int set_stop_time;
-	long long stop_time;
+	int set_start;
+	long long start;
+	int set_stop;
+	long long stop;
 
 /* Histogram */
 	char *time_string;
@@ -144,6 +144,7 @@ void pc_options_version(pc_options_t const *options,
 char const* pc_options_string(pc_options_t const *options);
 void pc_options_make_string(pc_options_t *options);
 int pc_options_has_option(pc_options_t const *options, int const option);
+int pc_options_fprintf(FILE *stream_out, pc_options_t const *options);
 
 int offsets_parse(long long **offsets, char *offsets_string,
 		int const channels);

@@ -7,17 +7,60 @@
 #include "types.h"
 #include "error.h"
 #include "modes.h"
+#include "files.h"
 #include "statistics/intensity.h"
 #include "statistics/number.h"
 #include "correlation/correlator.h"
 #include "histogram/histogram_gn.h"
 
-int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
-/* This program must perform:
- * 1. correlation/histogramming
- * 2. intensity (normal or binned)
- */
+int gn_run(program_options_t *program_options, int const argc,
+		char * const *argv) {
 	int result = PC_SUCCESS;
+	FILE *stream_in = NULL;
+	pc_options_t *options = pc_options_alloc();
+
+	if ( options == NULL ) {
+		error("Could not allocate options.\n");
+		return(PC_ERROR_MEM);
+	}
+
+	pc_options_init(options, program_options);
+	result = pc_options_parse(options, argc, argv);
+
+	if ( result != PC_SUCCESS || ! pc_options_valid(options)) {
+		if ( options->usage ) {
+			pc_options_usage(options, argc, argv);
+			result = PC_USAGE;
+		} else if ( options->version ) {
+			pc_options_version(options, argc, argv);
+			result = PC_VERSION;
+		} else {
+			debug("Invalid options.\n");
+			result = PC_ERROR_OPTIONS;
+		}
+	}
+
+	if ( result == PC_SUCCESS ) {
+		debug("Opening stream in (%s).\n", options->filename_in);
+		result = stream_open(&stream_in, stdin, options->filename_in, "r");
+	}
+
+	if ( result == PC_SUCCESS ) {
+		debug("Dispatching.\n");
+		gn(stream_in, NULL, options);
+	}
+
+	debug("Cleaning up.\n");
+	pc_options_free(&options);
+	stream_close(stream_in, stdin);
+
+	return(pc_check(result));
+}
+
+int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
+	int result = PC_SUCCESS;
+
+	long long photon_number = 0;
 
 	photon_stream_t *photon_stream;
 	correlator_t *correlator;
@@ -30,6 +73,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	FILE *count_all_file = NULL;
 	FILE *intensity_file = NULL;
 	FILE *number_file = NULL;
+	FILE *options_file = NULL;
 
 	char *base_name;
 	char *run_dir;
@@ -38,28 +82,36 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	char *intensity_filename;
 	char *number_filename;
 
-	long long min_time_distance = options->time_limits.lower < 0 ?
-			 0 : (long long)floor(options->time_limits.lower);
-	long long max_time_distance = (long long)floor(
-			max(fabs(options->time_limits.lower), 
-				fabs(options->time_limits.upper)));
-	long long min_pulse_distance = options->pulse_limits.lower < 0 ?
-			0 : (long long)floor(options->pulse_limits.lower);
-	long long max_pulse_distance = (long long)floor(
-			max(fabs(options->pulse_limits.lower),
-				fabs(options->pulse_limits.upper)));
+	long long min_time_distance;
+	long long max_time_distance;
+	long long min_pulse_distance;
+	long long max_pulse_distance;
 
-	debug("Limits: (%lld, %lld) , (%lld, %lld)\n",
-			min_time_distance, max_time_distance,
-			min_pulse_distance, max_pulse_distance);
-
-	if ( options->filename_out != NULL ) {
-		base_name = options->filename_out;
-	} else if ( options->filename_in != NULL ) {
-		base_name =  options->filename_in;
-	} else {
-		error("Must specify an output or input filename.\n");
-		result = PC_ERROR_OPTIONS;
+	if ( result == PC_SUCCESS ) {
+		min_time_distance = options->time_limits.lower < 0 ?
+				 0 : (long long)floor(options->time_limits.lower);
+		max_time_distance = (long long)floor(
+				max(fabs(options->time_limits.lower), 
+					fabs(options->time_limits.upper)));
+		min_pulse_distance = options->pulse_limits.lower < 0 ?
+				0 : (long long)floor(options->pulse_limits.lower);
+		max_pulse_distance = (long long)floor(
+				max(fabs(options->pulse_limits.lower),
+					fabs(options->pulse_limits.upper)));
+		debug("Limits: (%lld, %lld) , (%lld, %lld)\n",
+				min_time_distance, max_time_distance,
+				min_pulse_distance, max_pulse_distance);
+	
+		if ( options->filename_out != NULL ) {
+			debug("Using output filename.\n");
+			base_name = options->filename_out;
+		} else if ( options->filename_in != NULL ) {
+			debug("Using input filename.\n");
+			base_name =  options->filename_in;
+		} else {
+			error("Must specify an output or input filename.\n");
+			result = PC_ERROR_OPTIONS;
+		}
 	}
 
 	if ( result == PC_SUCCESS ) {
@@ -105,23 +157,23 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			intensity_photon_init(intensity,
 					false,
 					options->mode == MODE_T2 ? 50000000000 : 100000,
-					options->set_start_time, options->start_time,
-					options->set_stop_time, options->stop_time);
+					options->set_start, options->start,
+					options->set_stop, options->stop);
 		} else {
 			photon_stream_set_windowed(photon_stream,
 					options->bin_width,
-					options->set_start_time, options->start_time,
-					options->set_stop_time, options->stop_time);
+					options->set_start, options->start,
+					options->set_stop, options->stop);
 			intensity_photon_init(intensity,
 					false,
 					options->bin_width,
-					options->set_start_time, options->start_time,
-					options->set_stop_time, options->stop_time);
+					options->set_start, options->start,
+					options->set_stop, options->stop);
 		}
 	}
 
 	if ( result == PC_SUCCESS ) {
-		sprintf(run_dir, "%s.g%u.run", options->filename_in, options->order);
+		sprintf(run_dir, "%s.g%u.run", base_name, options->order);
 		if ( mkdir(run_dir, 
 				S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) ) {
 			error("Could not make run directory: %s.\n", run_dir);
@@ -133,6 +185,17 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		if ( chdir(run_dir) ) {
 			error("Could not chdir to %s.\n", run_dir);
 			result = PC_ERROR_IO;
+		}
+	}
+
+	if ( result == PC_SUCCESS ) {
+		options_file = fopen("options", "w");
+
+		if ( options_file == NULL ) {
+			error("Could not open options for writing.\n");
+			result = PC_ERROR_IO;
+		} else {
+			pc_options_fprintf(options_file, options);
 		}
 	}
 
@@ -205,6 +268,8 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 				while ( photon_stream_next_photon(photon_stream) 
 						== PC_SUCCESS ) {
 					debug("Found photon.\n");
+					pc_status_print("gn", photon_number++, options);
+
 					correlator_push(correlator, photon_stream->photon);
 					intensity_photon_push(count_all, photon_stream->photon);
 					intensity_photon_push(intensity, photon_stream->photon);
@@ -273,6 +338,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 	count_all_file != NULL ? fclose(count_all_file) : 0 ;
 	intensity_file != NULL ? fclose(intensity_file) : 0 ;
+	options_file != NULL ? fclose(options_file) : 0;
 	
 	return(PC_SUCCESS);
 }

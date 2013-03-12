@@ -326,8 +326,8 @@ int intensity_photon(FILE *stream_in, FILE *stream_out,
 	intensity_photon_init(intensity, 
 			options->count_all,
 			options->bin_width,
-			options->set_start_time, options->start_time,
-			options->set_stop_time, options->stop_time);
+			options->set_start, options->start,
+			options->set_stop, options->stop);
 
 	photon_stream_init(photon_stream, stream_in);
 	photon_stream_set_unwindowed(photon_stream);
