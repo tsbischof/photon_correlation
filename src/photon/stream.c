@@ -140,9 +140,10 @@ int photon_stream_next_windowed(void *photon_stream) {
 		if ( ! photons->yielded ) {
 			/* Photon available, check if it is in the window. */
 			dim =  photons->window_dim(photons->photon);
-			if ( photon_window_contains(&(photons->window), dim) ) {
+			result = photon_window_contains(&(photons->window), dim);
+			if ( result == PC_SUCCESS ) {
 				/* Found a photon, and in the window. */
-				photons->yielded = 1;
+				photons->yielded = true;
 				return(PC_SUCCESS);
 			} else if ( photons->window.lower > dim ) {	
 				/* Have photon, but window is ahead of it. Ignore this photon
@@ -150,14 +151,16 @@ int photon_stream_next_windowed(void *photon_stream) {
 				 * Status would be PC_WINDOW_AHEAD
 				 */
 				debug("Found a photon, but it was before the window.\n");
-				photons->yielded = 1;
+				photons->yielded = true;
 			} else {
 				/* Past the upper bound. */
 				if ( photons->window.set_upper_bound && 
 						dim >= photons->window.upper_bound ) {
+					debug("EOF\n");
 					return(EOF);
 				} else {
 					/* Tell the caller to advance the window. */
+					debug("Next window (%d).\n", PC_WINDOW_NEXT);
 					return(PC_WINDOW_NEXT);
 				}
 			}
@@ -167,7 +170,7 @@ int photon_stream_next_windowed(void *photon_stream) {
 
 			if ( result == PC_SUCCESS ) {
 				/* Found one, loop back to see where it falls. */
-				photons->yielded = 0;
+				photons->yielded = false;
 			} else if ( result == EOF ) {
 				return(EOF);
 			} else {

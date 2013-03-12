@@ -3,8 +3,8 @@
 #include "intensity.h"
 
 #include "../modes.h"
-#include "../photon/t2_void.h"
-#include "../photon/t3_void.h"
+#include "../photon/t2.h"
+#include "../photon/t3.h"
 #include "../photon/stream.h"
 #include "../error.h"
 
@@ -106,6 +106,8 @@ void intensity_photon_init(intensity_photon_t *intensity,
 
 	intensity_photon_counts_init(intensity);
 
+	intensity->count_all = count_all;
+
 	if ( count_all ) {
 		photon_window_init(&(intensity->window), 1,
 				0, 0,
@@ -149,7 +151,7 @@ int intensity_photon_push(intensity_photon_t *intensity, void const *photon) {
 	intensity->last_window_seen = window;
 	result = photon_window_contains(&(intensity->window), window);
 
-	if ( result == PC_RECORD_IN_WINDOW ) {
+	if ( result == PC_RECORD_IN_WINDOW || intensity->count_all ) {
 		debug("Record in window, incrementing.\n");
 		intensity_photon_increment(intensity, channel);
 
@@ -331,27 +333,18 @@ int intensity_photon(FILE *stream_in, FILE *stream_out,
 	photon_stream_set_unwindowed(photon_stream);
 
 	if ( result == PC_SUCCESS ) {
-		debug("Processing stream.\n");
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
-			debug("Pushing photon.\n");
 			intensity_photon_push(intensity, photon_stream->photon);
 	
-			debug("Complete bins available?\n");
 			while ( intensity_photon_next(intensity) == PC_RECORD_AVAILABLE ) {
-				debug("Found a bin.\n");
 				intensity_photon_fprintf(stream_out, intensity);
 			}
-			debug("Next photon.\n");
 		}
 	
-		debug("Flushing intensity.\n");
 		intensity_photon_flush(intensity);
-		debug("Complete bins available?\n");
 		while ( intensity_photon_next(intensity) == PC_RECORD_AVAILABLE ) {
-			debug("Found a bin.\n");
 			intensity_photon_fprintf(stream_out, intensity);
 		}
-		debug("End of photons.\n");
 	}
 
 	debug("Cleaning up.\n");

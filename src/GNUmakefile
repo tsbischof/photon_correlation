@@ -36,32 +36,31 @@ INTENSITY_OBJ = ${COMMON_OBJ} intensity_main.o \
 ALL_OBJ += ${INTENSITY_OBJ}
 INTENSITY_LIB = 
 ALL_LIB += ${INTENSITY_LIB}
-TARGETS += intensity
+TARGETS += photon_intensity
 
 CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
-		correlate.o correlate_photon.o \
-		combinations.o permutations.o \
-		correlate_start_stop.o
+		queue.o photon/queue.o correlate.o \
+		correlation/correlator.o correlation/correlation.o \
+		correlation/photon.o correlation/start_stop.o \
+		combinatorics/combinations.o combinatorics/permutations.o \
+		combinatorics/index_offsets.o
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = 
 ALL_LIB += ${CORRELATE_LIB}
-TARGETS += correlate
-
-CORRELATIONS_OBJ = ${COMMON_OBJ} correlations_main.o \
-		correlate_photon.o \
-		combinations.o permutations.o
-ALL_OBJ += ${CORRELATIONS_OBJ}
-CORRELATIONS_LIB = 
-ALL_LIB += ${CORRELATIONS_LIB}
-TARGETS += correlations
+TARGETS += photon_correlate
 
 HISTOGRAM_OBJ = ${COMMON_OBJ} histogram_main.o \
-		histogram.o combinations.o permutations.o correlate_photon.o \
-		histogram_photon.o 
+		histogram.o \
+		combinatorics/combinations.o combinatorics/permutations.o \
+		combinatorics/index_offsets.o \
+		correlation/correlation.o correlation/photon.o correlation/correlator.o\
+		queue.o photon/queue.o \
+		histogram/photon.o histogram/edges.o histogram/values_vector.o \
+		histogram/histogram_gn.o histogram/photon.o 
 ALL_OBJ += ${HISTOGRAM_OBJ}
 HISTOGRAM_LIB = -lm
 ALL_LIB += ${HISTOGRAM_LIB}
-TARGETS += histogram
+TARGETS += photon_histogram
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 		bin_intensity.o bin_intensity_photon.o \
@@ -72,7 +71,7 @@ BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 #TARGETS += bin_intensity
 
 PHOTON_TEMPER_OBJ = ${COMMON_OBJ} photon_temper_main.o \
-		photon/temper.o vector.o photon/offsets.o
+		photon/temper.o queue.o photon/offsets.o
 ALL_OBJ += ${PHOTON_TEMPER_OBJ}
 PHOTON_TEMPER_LIB =
 ALL_LIB += ${PHOTON_TEMPER_LIB}
@@ -80,11 +79,12 @@ TARGETS += photon_temper
 
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
-		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ}}}
-#ALL_OBJ += ${GN_OBJ}
+		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
+				${INTENSITY_OBJ} ${PHOTON_NUMBER_OBJ}}}
+ALL_OBJ += ${GN_OBJ}
 GN_LIB = ${sort ${CORRELATE_LIB} ${HISTOGRAM_LIB}}
 ALL_LIB += ${GN_LIB}
-#TARGETS += gn
+TARGETS += photon_gn
 
 PHOTON_NUMBER_OBJ = ${COMMON_OBJ} photon_number_main.o \
 		statistics/number.o statistics/counts.o
@@ -104,7 +104,8 @@ CORRELATE_VECTOR_LIB =
 #TARGETS += correlate_vector
 
 COMBINATIONS_OBJ = ${COMMON_OBJ} combinations_main.o \
-		combinations.o permutations.o
+		combinatorics/test.o combinatorics/range.o 
+#		combinatorics/combinations.o combinatoris/permutations.o
 ALL_OBJ += ${COMBINATIONS_OBJ}
 COMBINATIONS_LIB = 
 ALL_LIB += ${COMBINATIONS_LIB}
@@ -135,16 +136,13 @@ uninstall:
 photons: ${PHOTONS_OBJ}
 	${LD} ${LDFLAGS} ${PHOTONS_LIB} -o $@ $^
 
-correlate: ${CORRELATE_OBJ}
+photon_correlate: ${CORRELATE_OBJ}
 	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^
 
-correlations: ${CORRELATIONS_OBJ}
-	${LD} ${LDFLAGS} ${CORRELATIONS_LIB} -o $@ $^
-
-histogram: ${HISTOGRAM_OBJ}
+photon_histogram: ${HISTOGRAM_OBJ}
 	${LD} ${LDFLAGS} ${HISTOGRAM_LIB} -o $@ $^
 
-intensity: ${INTENSITY_OBJ}
+photon_intensity: ${INTENSITY_OBJ}
 	${LD} ${LDFLAGS} ${INTENSITY_LIB} -o $@ $^ 
 
 bin_intensity: ${BIN_INTENSITY_OBJ}
@@ -159,7 +157,7 @@ libphoton_correlation.so: ${LIBPC_OBJ}
 correlate_vector: ${CORRELATE_VECTOR_OBJ}
 	${LD} ${LDFLAGS} ${CORRELATE_VECTOR_LIB} -o $@ $^
 
-gn: ${GN_OBJ}
+photon_gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} ${GN_LIB} -o $@ $^
 
 combinations: ${COMBINATIONS_OBJ}

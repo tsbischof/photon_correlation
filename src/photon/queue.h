@@ -2,8 +2,8 @@
 #define QUEUE_H_
 
 #include "photon.h"
-#include "../vector.h"
+#include "../queue.h"
 
-vector_t *photon_queue_alloc(int const mode, size_t const length);
+queue_t *photon_queue_alloc(int const mode, size_t const length);
 
 #endif

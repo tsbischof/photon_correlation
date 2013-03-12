@@ -14,6 +14,8 @@ typedef struct {
 
 	photon_window_t window;
 
+	int count_all;
+
 	int first_photon_seen;
 	int flushing;
 	int record_available;

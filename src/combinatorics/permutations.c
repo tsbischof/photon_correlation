@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "permutations.h"
-#include "error.h"
+#include "../error.h"
 
 permutation_t *permutation_alloc(unsigned int const length, 
 		int const positive_only) {

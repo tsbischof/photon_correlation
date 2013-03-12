@@ -1,7 +1,7 @@
 #ifndef CORRELATE_START_STOP_
 #define CORRELATE_START_STOP_
 
-#include "options.h"
+#include "../options.h"
 
 int correlate_start_stop(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options);

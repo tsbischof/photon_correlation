@@ -53,12 +53,20 @@ int photons(FILE *stream_in, FILE *stream_out,
 	if ( result == PC_SUCCESS ) {
 		photon_stream_init(photons, stream_in);
 		photon_stream_set_unwindowed(photons);
+		photon_stream_set_windowed(photons,
+				10,
+				false, 0,
+				false, 0);
 
 		if ( options->convert == options->mode ||
 				options->convert == MODE_UNKNOWN ) {
 			debug("Echo photons.\n");
-			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				photons->photon_print(stream_out, photons->photon);
+			while ( ! photon_stream_eof(photons) ) {
+				while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
+					photons->photon_print(stream_out, photons->photon);
+				}
+			
+				photon_stream_next_window(photons);
 			}
 		} else if ( options->mode == MODE_T2 && options->convert == MODE_T3 ) {
 			debug("t2 to t3\n");

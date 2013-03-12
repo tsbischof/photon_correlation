@@ -16,6 +16,7 @@
 #define PC_ERROR_ZERO_DIVISION             -13
 #define PC_ERROR_BEFORE_WINDOW             -14
 #define PC_ERROR_NO_RECORD_AVAILABLE       -15
+#define PC_ERROR_OVERFLOW                  -16
 
 #define PC_USAGE                             1
 #define PC_WINDOW_NEXT                       2

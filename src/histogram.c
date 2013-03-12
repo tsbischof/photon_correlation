@@ -1,5 +1,5 @@
 #include "histogram.h"
-#include "histogram_photon.h"
+#include "histogram/photon.h"
 
 int histogram_dispatch(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {

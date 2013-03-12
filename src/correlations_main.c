@@ -1,5 +1,5 @@
 #include "run.h"
-#include "correlate_photon.h"
+#include "correlation/photon.h"
 #include "options.h"
 
 int main(int argc, char *argv[]) {

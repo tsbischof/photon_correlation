@@ -3,6 +3,7 @@ __pycache__
 *.o
 *.os
 *.so
+*.swp
 build
 dist
 sample_data

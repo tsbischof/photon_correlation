@@ -3,7 +3,7 @@
 #include "temper.h"
 #include "../modes.h"
 #include "../error.h"
-#include "../vector.h"
+#include "../queue.h"
 
 #include "t2.h"
 #include "t3.h"
@@ -64,7 +64,7 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 	debug("Allocating offsets.\n");
 	pst->offsets = offsets_alloc(pst->channels);
 	debug("Allocating queue.\n");
-	pst->queue = vector_alloc(pst->photon_size, queue_length);
+	pst->queue = queue_alloc(pst->photon_size, queue_length);
 
 	if ( pst->offsets == NULL || pst->queue == NULL ) {
 		error("Could not allocate offsets or queue.\n");
@@ -100,11 +100,11 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 	if ( pst->mode == MODE_T2 ) {
 		pst->offset_span = offset_span(pst->offsets->time_offsets,
 				pst->channels);
-		vector_set_comparator(pst->queue, t2v_compare);
+		queue_set_comparator(pst->queue, t2v_compare);
 	} else {
 		pst->offset_span = offset_span(pst->offsets->pulse_offsets,
 				pst->channels);
-		vector_set_comparator(pst->queue, t3v_compare);
+		queue_set_comparator(pst->queue, t3v_compare);
 	}
 }
 
@@ -118,17 +118,17 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 
 	while ( 1 ) {
 		debug("Photons in the queue: %zu (of %zu)\n", 
-				vector_size(pst->queue),
-				vector_capacity(pst->queue));
+				queue_size(pst->queue),
+				queue_capacity(pst->queue));
 
 		if ( feof(pst->stream_in) ) {
 			debug("EOF for stream_in.\n");
-			if ( vector_empty(pst->queue) ) {
+			if ( queue_empty(pst->queue) ) {
 				debug("Queue empty.\n");
 				return(EOF);
 			} else {
 				debug("Popping a photon from queue.\n");
-				vector_pop(pst->queue, pst->current_photon);
+				queue_pop(pst->queue, pst->current_photon);
 				return(PC_SUCCESS);
 			}
 		} else {
@@ -141,28 +141,28 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 				}
 
 				debug("Sorting the queue.\n");
-				vector_sort(pst->queue);
+				queue_sort(pst->queue);
 				pst->yielded_all_sorted = 0;
 			} else {
 				debug("Trying to pop a photon.\n");
 
-				if ( vector_empty(pst->queue) ) {
+				if ( queue_empty(pst->queue) ) {
 					pst->yielded_all_sorted = 1;
 				} else {
-					vector_front(pst->queue, pst->left);
-					vector_back(pst->queue, pst->right);
+					queue_front(pst->queue, pst->left);
+					queue_back(pst->queue, pst->right);
 
 					diff = pst->window_dim(pst->right) -
 							pst->window_dim(pst->left);
 	
 					if ( diff >= pst->offset_span ) {
 						debug("Found a photon outside the offset bounds\n");
-						vector_pop(pst->queue,
+						queue_pop(pst->queue,
 								pst->current_photon);
 						return(PC_SUCCESS);
 					} else {
 						debug("Within the offset bounds, get more photons\n");
-						if ( vector_full(pst->queue) ) {
+						if ( queue_full(pst->queue) ) {
 							error("Photon queue is full, extend its size "
 									"to continue with the calculation. "
 									"Current size: %zu\n", 
@@ -184,7 +184,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 	int suppress;
 	int channel;
 
-	while ( ! vector_full(pst->queue) ) {
+	while ( ! queue_full(pst->queue) ) {
 		result = pst->photon_next(pst->stream_in, pst->current_photon);
 
 		if ( result == EOF ) {
@@ -210,7 +210,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
 			pst->photon_offset(pst->current_photon, pst->offsets);
-			vector_push(pst->queue, pst->current_photon);
+			queue_push(pst->queue, pst->current_photon);
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
@@ -226,7 +226,7 @@ void photon_stream_temper_free(photon_stream_temper_t **pst) {
 		free((*pst)->right);
 		free((*pst)->suppressed_channels);
 		offsets_free(&(*pst)->offsets);
-		vector_free(&(*pst)->queue);
+		queue_free(&(*pst)->queue);
 		free(*pst);
 	}
 }

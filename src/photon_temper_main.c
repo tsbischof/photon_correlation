@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 "and addition of a constant offset to particular channels.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_MODE,
+			OPT_MODE, OPT_CHANNELS,
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
 			OPT_SUPPRESS, OPT_EOF}};
 

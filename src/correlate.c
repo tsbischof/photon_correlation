@@ -1,6 +1,6 @@
 #include "correlate.h"
-#include "correlate_photon.h"
-#include "correlate_start_stop.h"
+#include "correlation/photon.h"
+#include "correlation/start_stop.h"
 
 int correlate_dispatch(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {

@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "options.h"
 
-int gn(char *filename_in, pc_options_t const *options);
+int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options);
 
 #endif

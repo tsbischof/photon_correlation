@@ -1,21 +1,8 @@
-#include <stdio.h>
-
 #include "options.h"
-#include "error.h"
-#include "files.h"
+#include "run.h"
 #include "gn.h"
 
-#define ABS(x) ( x >= 0 ? x : -x )
-#define MAX(x, y) ( x < y ? y : x )
-
 int main(int argc, char *argv[]) {
-	int result = PC_SUCCESS;
-
-	options_t options;
-
-	FILE *stream_in = NULL;
-	FILE *stream_out = NULL;
-
 	program_options_t program_options = {
 "This program performs the calculations needed to calculate the correlation\n"
 "of a stream of photons, including those needed to normalize the result.\n"
@@ -47,23 +34,10 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
 			OPT_QUEUE_SIZE, 
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
+			OPT_BIN_WIDTH,
 			OPT_EXACT_NORMALIZATION, OPT_EOF}};
 
-	result = parse_options(argc, argv, &options, &program_options);
-
-	if ( result == PC_SUCCESS ) {
-		debug("Starting gn.\n");
-		options.max_time_distance = MAX(ABS(options.time_limits.lower),
-				ABS(options.time_limits.upper));
-		options.max_pulse_distance = MAX(ABS(options.pulse_limits.lower),
-				ABS(options.pulse_limits.upper));
-		gn(options.filename_in, &options);
-	}
-
-	free_options(&options);
-	free_streams(stream_in, stream_out);
-
-	return(pc_check(result));
+	return(run(&program_options, gn, argc, argv));
 }
 
 

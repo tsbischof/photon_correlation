@@ -2,9 +2,6 @@
 #define T3_H_
 
 #include <stdio.h>
-#include "t3.h"
-/*#include "correlate_t3.h"
-# include "histogram_t3.h"*/
 
 typedef struct {
 	unsigned int channel;
@@ -27,17 +24,5 @@ int t3_echo(FILE *stream_in, FILE *stream_out);
 
 long long t3v_window_dimension(void const *t3);
 long long t3v_channel_dimension(void const *t3);
-
-/*void t3_correlate(correlation_t *correlation);
-int t3_correlation_fscanf(FILE *stream_in, correlation_t *correlation);
-int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation);
-
-int t3_under_max_distance(void const *correlator);
-int t3_over_min_distance(void const *correlator);
-
-int t3_correlation_build_channels(correlation_t const *correlation,
-		combination_t *channels_vector);
-int t3_correlation_build_values(correlation_t const *correlation,
-		values_vector_t *values_vector);*/
 
 #endif
