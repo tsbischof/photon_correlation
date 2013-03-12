@@ -160,7 +160,6 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		while ( result == PC_SUCCESS && ! photon_stream_eof(photon_stream) ) {
 			correlator_init(correlator);
 			histogram_gn_init(histogram);
-			photon_number_init(number);
 
 			if ( options->bin_width == 0 ) {
 				sprintf(histogram_filename, "g%u", options->order);
