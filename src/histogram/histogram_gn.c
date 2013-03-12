@@ -73,7 +73,7 @@ histogram_gn_t *histogram_gn_alloc(int const mode, unsigned int const order,
 		}
 
 		hist->n_bins = 
-				(size_t)pow_int(time_limits->bins, hist->order);
+				(size_t)pow_int(time_limits->bins, hist->order-1);
 	} else if ( hist->mode == MODE_T3 ) {
 		if ( hist->order == 1 ) {
 			hist->edges[0] = edges_alloc(time_limits->bins);
