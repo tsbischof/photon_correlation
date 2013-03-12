@@ -46,8 +46,12 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	long long min_pulse_distance = options->pulse_limits.lower < 0 ?
 			0 : (long long)floor(options->pulse_limits.lower);
 	long long max_pulse_distance = (long long)floor(
-			max(fabs(options->time_limits.lower),
-				fabs(options->time_limits.upper)));
+			max(fabs(options->pulse_limits.lower),
+				fabs(options->pulse_limits.upper)));
+
+	debug("Limits: (%lld, %lld) , (%lld, %lld)\n",
+			min_time_distance, max_time_distance,
+			min_pulse_distance, max_pulse_distance);
 
 	if ( options->filename_out != NULL ) {
 		base_name = options->filename_out;

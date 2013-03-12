@@ -106,7 +106,7 @@ void intensity_photon_init(intensity_photon_t *intensity,
 
 	intensity_photon_counts_init(intensity);
 
-	intensity->count_all = count_all;
+	intensity->count_all = bin_width == 0 || count_all;
 
 	if ( count_all ) {
 		photon_window_init(&(intensity->window), 1,

@@ -113,8 +113,8 @@ histogram_gn_t *histogram_gn_alloc(int const mode, unsigned int const order,
 			}
 
 			hist->n_bins = 
-					(size_t)pow_int(pulse_limits->bins, hist->order)*
-					(size_t)pow_int(time_limits->bins, hist->order);
+					(size_t)pow_int(pulse_limits->bins, hist->order-1)*
+					(size_t)pow_int(time_limits->bins, hist->order-1);
 		}
 	} else {
 		histogram_gn_free(&hist);
@@ -203,6 +203,7 @@ void histogram_gn_free(histogram_gn_t **hist) {
 
 int histogram_gn_increment(histogram_gn_t *hist, 
 		correlation_t const *correlation) {
+	int i;
 	int histogram_index;
 	int bin_index;
 
@@ -230,6 +231,17 @@ int histogram_gn_increment(histogram_gn_t *hist,
 		error("Invalid bin index requested: %d (limit %d). "
 				"Check that the limits given are valid.\n",
 				bin_index, hist->n_bins);
+		fprintf(stderr, "Values vector which caused the invalid bin: (");
+		for ( i = 0; i < hist->values_vector->length; i++ ) {
+			fprintf(stderr, "%lld", hist->values_vector->values[i]);
+			if ( i+1 != hist->values_vector->length ) {
+				fprintf(stderr, ", ");
+			}
+		}
+
+		fprintf(stderr, ")\n");
+		fflush(stderr);
+
 		return(PC_ERROR_INDEX);
 	}
 

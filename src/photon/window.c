@@ -6,21 +6,29 @@ void photon_window_init(photon_window_t *window,
 		int const set_lower_bound, long long const lower_bound,
 		int const set_upper_bound, long long const upper_bound) {
 	window->width = bin_width;
-	window->set_lower_bound = set_lower_bound;
-	window->set_upper_bound = set_upper_bound;
-	window->lower_bound = lower_bound;
-	window->upper_bound = upper_bound;
 
-	if ( set_lower_bound ) {
-		window->lower = lower_bound;
+	if ( window->width == 0 ) {
+		window->set_lower_bound = false;
+		window->lower_bound = 0;
+		window->set_upper_bound = false;
+		window->upper_bound = 0;
 	} else {
-		window->lower = 0;
-	}
-
-	window->upper = window->lower + window->width;
-
-	if ( set_upper_bound && window->upper > window->upper_bound ) {
-		window->upper = window->upper_bound;
+		window->set_lower_bound = set_lower_bound;
+		window->set_upper_bound = set_upper_bound;
+		window->lower_bound = lower_bound;
+		window->upper_bound = upper_bound;
+	
+		if ( set_lower_bound ) {
+			window->lower = lower_bound;
+		} else {
+			window->lower = 0;
+		}
+	
+		window->upper = window->lower + window->width;
+	
+		if ( set_upper_bound && window->upper > window->upper_bound ) {
+			window->upper = window->upper_bound;
+		}
 	}
 }
 

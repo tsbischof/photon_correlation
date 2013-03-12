@@ -347,13 +347,6 @@ int pc_options_valid(pc_options_t const *options) {
 		return(false);
 	}
 		
-	if ( pc_options_has_option(options, OPT_BIN_WIDTH)
-		&& ! (options->bin_width || options->count_all) ) {
-		error("Bin width must be at least 1 (%"PRId64" specified).\n", 
-				options->bin_width);
-		return(false);
-	}
-
 	if ( pc_options_has_option(options, OPT_START_STOP) && 
 			options->start_stop && 
 			(options->channels != 2 || 
@@ -543,13 +536,6 @@ int pc_options_parse(pc_options_t *options,
 		return(PC_ERROR_OPTIONS);
 	}
 		
-	if ( pc_options_has_option(options, OPT_BIN_WIDTH)
-		&& ! (options->bin_width || options->count_all) ) {
-		error("Bin width must be at least 1 (%"PRId64" specified).\n", 
-				options->bin_width);
-		return(PC_ERROR_OPTIONS);
-	}
-
 	if ( pc_options_has_option(options, OPT_START_STOP) && 
 			options->start_stop && 
 			(options->channels != 2 || 
