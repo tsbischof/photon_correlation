@@ -118,10 +118,6 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 					options->set_start_time, options->start_time,
 					options->set_stop_time, options->stop_time);
 		}
-
-		if ( options->mode == MODE_T3 ) {
-			photon_number_init(number);
-		}
 	}
 
 	if ( result == PC_SUCCESS ) {
@@ -182,14 +178,16 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			}
 
 			if ( options->mode == MODE_T3 ) {
-				photon_number_init(number);
-
 				if ( options->bin_width == 0 ) {
 					sprintf(number_filename, "number");
+					photon_number_init(number, false, 0, false, 0);
 				} else {
 					sprintf(number_filename, "number.%020lld_%020lld",
 							photon_stream->window.lower,
 							photon_stream->window.upper);
+					photon_number_init(number,
+							true, photon_stream->window.lower,
+							true, photon_stream->window.upper);
 				}
 
 				number_file = fopen(number_filename, "w");

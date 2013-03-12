@@ -24,11 +24,23 @@ photon_number_t *photon_number_alloc(unsigned int max_number) {
 	return(number);
 }
 
-void photon_number_init(photon_number_t *number) {
+void photon_number_init(photon_number_t *number,
+		int const set_start, long long const start,
+		int const set_stop, long long const stop) {
 	number->first_seen = false;
 	number->last_pulse = 0;
 	number->current_seen = 0;
 	number->max_seen = 0;
+
+	number->set_start = set_start;
+	number->start = start;
+	number->set_stop = set_stop;
+	number->stop = stop;
+
+	if ( number->set_start ) {
+		number->first_seen = true;
+		number->last_pulse = start - 1;
+	}
 	
 	counts_init(number->counts);
 }
@@ -54,6 +66,10 @@ int photon_number_push(photon_number_t *number, t3_t const *t3) {
 			number->current_seen++;
 			return(photon_number_check_max(number));
 		} else {
+			if ( number->set_stop && number->stop <= t3->pulse ) {
+				return(PC_RECORD_AFTER_WINDOW);
+			} 
+
 			result = photon_number_increment(number, number->current_seen, 1);
 			photon_number_increment(number, 
 					0, 
@@ -96,7 +112,17 @@ int photon_number_check_max(photon_number_t *number) {
 }
 
 int photon_number_flush(photon_number_t *number) {
-	return(photon_number_increment(number, number->current_seen, 1));
+	int result;
+
+	result = photon_number_increment(number, number->current_seen, 1);
+
+	if ( number->set_stop ) {
+		return(photon_number_increment(number, 
+				0,
+				number->stop - number->last_pulse - 2));
+	} else {
+		return(result);
+	}
 }
 
 int photon_number_fprintf(FILE *stream_out, photon_number_t const *number) {
@@ -125,7 +151,9 @@ int photon_number(FILE *stream_in, FILE *stream_out,
 		result = PC_ERROR_MEM;
 	}
 
-	photon_number_init(number);
+	photon_number_init(number,
+			options->set_start_time, options->start_time,
+			options->set_stop_time, options->stop_time);
 	photon_stream_init(photons, stream_in);
 	photon_stream_set_unwindowed(photons);
 

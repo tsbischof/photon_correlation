@@ -14,11 +14,18 @@ typedef struct {
 	long long last_pulse;
 	unsigned long long current_seen;
 
+	int set_start;
+	long long start;
+	int set_stop;
+	long long stop;
+
 	counts_t *counts;
 } photon_number_t;
 
 photon_number_t *photon_number_alloc(unsigned int max_number);
-void photon_number_init(photon_number_t *number);
+void photon_number_init(photon_number_t *number,
+		int const set_start, long long const start,
+		int const set_stop, long long const stop);
 void photon_number_free(photon_number_t **number);
 
 int photon_number_push(photon_number_t *number, t3_t const *t3);

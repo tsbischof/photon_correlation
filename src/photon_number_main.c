@@ -14,7 +14,8 @@ int main(int argc, char *argv[]) {
 "to the time span between pulses. \n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_CHANNELS,
+			OPT_CHANNELS, 
+			OPT_START_TIME, OPT_STOP_TIME,
 			OPT_EOF}};
 
 	return(run(&program_options, photon_number, argc, argv));
