@@ -10,7 +10,7 @@ CCFLAGS := -Wall
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
-CCFLAGS += -D VERSION="2.0"
+CCFLAGS += -D VERSION="3.0"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
