@@ -63,12 +63,11 @@ ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += photon_histogram
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
-		bin_intensity.o bin_intensity_photon.o \
-		${filter-out %main.o, ${HISTOGRAM_OBJ}}
-#ALL_OBJ += ${BIN_INTENSITY_OBJ}
-#BIN_INTENSITY_LIB = -lm
-#ALL_LIB += ${BIN_INTENSITY_LIB}
-#TARGETS += bin_intensity
+		statistics/bin_intensity.o
+ALL_OBJ += ${BIN_INTENSITY_OBJ}
+BIN_INTENSITY_LIB = -lm
+ALL_LIB += ${BIN_INTENSITY_LIB}
+TARGETS += bin_intensity
 
 PHOTON_TEMPER_OBJ = ${COMMON_OBJ} photon_temper_main.o \
 		photon/temper.o queue.o photon/offsets.o
@@ -93,23 +92,13 @@ PHOTON_NUMBER_LIB =
 ALL_LIB += ${PHOTON_NUMBER_LIB}
 TARGETS += photon_number
 
-CORRELATE_VECTOR_OBJ = correlate_vector_main.o ${COMMON_OBJ} \
-		correlate_vector.o \
-		intensity.o intensity_t2.o intensity_t3.o \
-		histogram_gn.o \
-		vector_g2.o
-#ALL_OBJ += ${CORRELATE_VECTOR_OBJ}
-CORRELATE_VECTOR_LIB = 
-#ALL_LIB += ${CORRELATE_VECTOR_LIB}
-#TARGETS += correlate_vector
-
-COMBINATIONS_OBJ = ${COMMON_OBJ} combinations_main.o \
-		combinatorics/test.o combinatorics/range.o 
-#		combinatorics/combinations.o combinatoris/permutations.o
-ALL_OBJ += ${COMBINATIONS_OBJ}
-COMBINATIONS_LIB = 
-ALL_LIB += ${COMBINATIONS_LIB}
-TARGETS += combinations
+NUMBER_TO_CHANNELS_OBJ = ${COMMON_OBJ} number_to_channels_main.o \
+		queue.o \
+		statistics/number_to_channels.o
+ALL_OBJ += ${NUMBER_TO_CHANNELS_OBJ}
+NUMBER_TO_CHANNELS_LIB = 
+ALL_LIB += ${NUMBER_TO_CHANNELS_LIB}
+TARGETS += photon_number_to_channels
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -154,17 +143,14 @@ photon_temper: ${PHOTON_TEMPER_OBJ}
 libphoton_correlation.so: ${LIBPC_OBJ}
 	${LD} ${LIBPC_LDFLAGS} ${LIBPC_LIB} -o $@ $^
 
-correlate_vector: ${CORRELATE_VECTOR_OBJ}
-	${LD} ${LDFLAGS} ${CORRELATE_VECTOR_LIB} -o $@ $^
-
 photon_gn: ${GN_OBJ}
 	${LD} ${LDFLAGS} ${GN_LIB} -o $@ $^
 
-combinations: ${COMBINATIONS_OBJ}
-	${LD} ${LDFLAGS} ${COMBINATIONS_LIB} -o $@ $^
-
 photon_number: ${PHOTON_NUMBER_OBJ}
 	${LD} ${LDFLAGS} ${PHOTON_NUMBER_LIB} -o $@ $^
+
+photon_number_to_channels: ${NUMBER_TO_CHANNELS_OBJ}
+	${LD} ${LDFLAGS} ${NUMBER_TO_CHANNELS_LIB} -o $@ $^
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 

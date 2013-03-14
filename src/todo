@@ -8,19 +8,15 @@ Scripts:
 -plotting for t3 mode correlation
 
 Correlate:
+-consider rewriting the correlator to be completely type-agnostic, and install custom accessors through a front-end to the generic correlator_t
 
 Histogram:
 -modify the backend such that allocation for each of the several modes (t2, t3 g, t3 g1) are performed separately.
 
 Intensity:
+-look into handling start, sotp properly
 
 Bin intensity:
-
-Time-dependent pl/gn:
--turn the Python scripts into C programs for speed?
-
-Python:
--write interfaces to all types of output (photons, correlations, histograms, picoquant histograms, intensity)
 
 Channels:
 
@@ -31,6 +27,3 @@ Correlate vector:
 Intensity_to_t2:
 
 
-Current:
--rewrite intensity to be an object: push values, print result
--rewrite correlator to be type-agnostic, accept a pushed values, inform user when a value is available

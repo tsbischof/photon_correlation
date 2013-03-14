@@ -43,7 +43,7 @@ typedef struct {
 	unsigned int seed;
 
 /* Correlate */
-	unsigned long long queue_size;
+	size_t queue_size;
 	unsigned long long max_time_distance;
 	unsigned long long min_time_distance;
 	unsigned long long max_pulse_distance;

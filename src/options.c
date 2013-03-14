@@ -423,7 +423,7 @@ int pc_options_parse(pc_options_t *options,
 				options->seed = strtoul(optarg, NULL, 10);
 				break;
 			case 'q':
-				options->queue_size = strtoull(optarg, NULL, 10);
+				options->queue_size = strtoul(optarg, NULL, 10);
 				break;
 			case 'd':
 				options->max_time_distance = strtoull(optarg, NULL, 10);
@@ -707,7 +707,7 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "order = %d\n", options->order);
 	fprintf(stream_out, "print_every = %d\n", options->print_every);
 	fprintf(stream_out, "seed = 0x%x\n", options->seed);
-	fprintf(stream_out, "queue_size = %llu\n", options->queue_size);
+	fprintf(stream_out, "queue_size = %zu\n", options->queue_size);
 
 	fprintf(stream_out, "\n[correlate]\n");
 	fprintf(stream_out, "max_time_distance = %llu\n", 
