@@ -95,8 +95,8 @@ int queue_sort(queue_t *queue) {
 			 */
 			debug("Vector loops around, moving records to "
 					"make them contiguous.\n");
-			memmove(&(queue->values[(right+1)*queue->elem_size]), 
-					&(queue->values[left*queue->elem_size]),
+			memmove(&(((char *)queue->values)[(right+1)*queue->elem_size]), 
+					&(((char *)queue->values)[left*queue->elem_size]),
 					queue->elem_size*(queue->length - left));
 		} else if ( left != 0 && ! queue_full(queue) ) {
 			/* There is one continuous block, so move it to the front. 
@@ -104,7 +104,7 @@ int queue_sort(queue_t *queue) {
 			 */
 			debug("Vector is offset from beginning, moving it forward.\n");
 			memmove(queue->values,
-					&(queue->values[left*queue->elem_size]),
+					&(((char *)queue->values)[left*queue->elem_size]),
 					queue->elem_size*queue_size(queue));
 		} else {
 			debug("Vector starts at the beginning of the array, "
@@ -165,7 +165,7 @@ int queue_push(queue_t *queue, void const *elem) {
 		next_index = (queue->right_index + 1) % queue->length;
 	}
 	
-	memcpy(&(queue->values[next_index*queue->elem_size]), 
+	memcpy(&(((char *)queue->values)[next_index*queue->elem_size]), 
 			elem, 
 			queue->elem_size);
 
@@ -189,7 +189,7 @@ int queue_index(queue_t const *queue, void *elem, size_t const index) {
 		return(PC_ERROR_INDEX);
 	} else { 
 		memcpy(elem, 
-				&(queue->values[true_index*queue->elem_size]), 
+				&(((char *)queue->values)[true_index*queue->elem_size]), 
 				queue->elem_size);
 
 		return(PC_SUCCESS);
