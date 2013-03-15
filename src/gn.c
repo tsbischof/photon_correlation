@@ -75,12 +75,12 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	FILE *number_file = NULL;
 	FILE *options_file = NULL;
 
-	char *base_name;
-	char *run_dir;
-	char *histogram_filename;
-	char *count_all_filename;
-	char *intensity_filename;
-	char *number_filename;
+	char *base_name = NULL;
+	char *run_dir = NULL;
+	char *histogram_filename = NULL;
+	char *count_all_filename = NULL;
+	char *intensity_filename = NULL;
+	char *number_filename = NULL;
 
 	long long min_time_distance;
 	long long max_time_distance;

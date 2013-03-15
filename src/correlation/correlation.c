@@ -52,7 +52,7 @@ int correlation_set_index(correlation_t *correlation,
 		return(PC_ERROR_INDEX);
 	} 
 
-	memcpy(&(correlation->photons[index*correlation->photon_size]),
+	memcpy(&(((char *)correlation->photons)[index*correlation->photon_size]),
 			photon,
 			correlation->photon_size);
 

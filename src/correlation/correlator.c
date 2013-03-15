@@ -219,7 +219,7 @@ int correlator_build_correlation(correlator_t *correlator) {
 	debug("Populating correlation.\n");
 	for ( i = 0; i < correlator->order; i++ ) {
 		result = queue_index(correlator->queue,
-				&(cc->photons[i*correlator->photon_size]),
+				&(((char *)cc->photons)[i*correlator->photon_size]),
 				io->values[p->values[i]]);
 
 		if ( result != PC_SUCCESS ) {

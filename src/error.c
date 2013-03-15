@@ -44,7 +44,6 @@ void warn(char const *message, ...) {
 
 int pc_status_print(char const *name, uint64_t count, 
 		pc_options_t const *options) {
-	size_t n_write;
 	time_t rawtime;
 	struct tm *timeinfo;
 	char fmttime[80];
@@ -54,7 +53,7 @@ int pc_status_print(char const *name, uint64_t count,
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
-		n_write = fprintf(stderr, 
+		fprintf(stderr, 
 				"%s: (%s) Record %20"PRIu64"\n", 
 				fmttime, 
 				name, 

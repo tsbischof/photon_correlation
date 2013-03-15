@@ -280,9 +280,8 @@ int intensity_photon_fscanf(FILE *stream_in, intensity_photon_t *intensity) {
 int intensity_photon_fprintf(FILE *stream_out, 
 		intensity_photon_t const *intensity) {
 	int i;
-	size_t n_write;
 
-	n_write = fprintf(stream_out, 
+	fprintf(stream_out, 
 			"%lld,%lld",
 			intensity->window.lower,
 			intensity->window.upper);
@@ -292,7 +291,7 @@ int intensity_photon_fprintf(FILE *stream_out,
 	}
 
 	for ( i = 0; i < intensity->channels; i++ ) {
-		n_write = fprintf(stream_out,
+		fprintf(stream_out,
 				",%llu",
 				intensity->counts->counts[i]);
 	
