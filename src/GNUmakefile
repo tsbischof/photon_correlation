@@ -67,7 +67,7 @@ BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = -lm
 ALL_LIB += ${BIN_INTENSITY_LIB}
-TARGETS += bin_intensity
+TARGETS += photon_bin_intensity
 
 PHOTON_TEMPER_OBJ = ${COMMON_OBJ} photon_temper_main.o \
 		photon/temper.o queue.o photon/offsets.o
@@ -134,7 +134,7 @@ photon_histogram: ${HISTOGRAM_OBJ}
 photon_intensity: ${INTENSITY_OBJ}
 	${LD} ${LDFLAGS} ${INTENSITY_LIB} -o $@ $^ 
 
-bin_intensity: ${BIN_INTENSITY_OBJ}
+photon_bin_intensity: ${BIN_INTENSITY_OBJ}
 	${LD} ${LDFLAGS} ${BIN_INTENSITY_LIB} -o $@ $^
 
 photon_temper: ${PHOTON_TEMPER_OBJ}

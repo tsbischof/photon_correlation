@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "values_vector.h"
 
@@ -40,7 +41,7 @@ long long values_vector_index(values_vector_t const *vv,
  */
 	int i;
 	int result;
-	int base = 1;
+	long long base = 1;
 	long long index = 0;
 
 	for ( i = vv->length-1; i >= 0; i-- ) {
