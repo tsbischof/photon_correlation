@@ -162,14 +162,6 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 						return(PC_SUCCESS);
 					} else {
 						debug("Within the offset bounds, get more photons\n");
-						if ( queue_full(pst->queue) ) {
-							error("Photon queue is full, extend its size "
-									"to continue with the calculation. "
-									"Current size: %zu\n", 
-									pst->queue->length);
-							return(PC_ERROR_QUEUE_OVERFLOW);
-						}
-
 						pst->yielded_all_sorted = 1;
 					}
 				}
@@ -184,7 +176,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 	int suppress;
 	int channel;
 
-	while ( ! queue_full(pst->queue) ) {
+	while ( true ) {
 		result = pst->photon_next(pst->stream_in, pst->current_photon);
 
 		if ( result == EOF ) {
@@ -210,7 +202,12 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
 			pst->photon_offset(pst->current_photon, pst->offsets);
-			queue_push(pst->queue, pst->current_photon);
+			
+			result = queue_push(pst->queue, pst->current_photon);
+			if ( result != PC_SUCCESS ) {
+				error("Could not add photon to queue.\n");
+				return(result);
+			}
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}

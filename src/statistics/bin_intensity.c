@@ -1,7 +1,13 @@
+#include <string.h>
+#include <math.h>
+
 #include "bin_intensity.h"
-#include "bin_intensity_photon.h"
-#include "modes.h"
-#include "error.h"
+#include "../modes.h"
+#include "../error.h"
+#include "../types.h"
+#include "../photon/stream.h"
+#include "../photon/t2.h"
+#include "../photon/t3.h"
 
 /* T2 and T3 in principle distinct, but I have not worked out the complete math
  * for T3 mode. For their primary (time/pulse, respectively) axes, the process
@@ -86,8 +92,308 @@
  * only the pulse dimension is worked out so far.
  */
 
-int bin_intensity_dispatch(FILE *stream_in, FILE *stream_out, 
-		options_t const *options) {
-	return(bin_intensity_photon(stream_in, stream_out, options));
+
+bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
+		unsigned int const channels,
+		limits_t const *time_limits, int const time_scale,
+		limits_t const *pulse_limits, int const pulse_scale,
+		size_t const queue_size) {
+	int i;
+	bin_intensity_t *bin_intensity = NULL;
+
+	bin_intensity = (bin_intensity_t *)malloc(sizeof(bin_intensity_t));
+
+	if ( bin_intensity == NULL ) {
+		return(bin_intensity);
+	}
+
+	bin_intensity->mode = mode;
+	bin_intensity->order = order;
+	bin_intensity->channels = channels;
+
+	if ( mode == MODE_T2 ) {
+		bin_intensity->window_scale = time_scale;
+		memcpy(&(bin_intensity->window_limits),
+				time_limits,
+				sizeof(limits_t));
+		bin_intensity->channel_dim = t2v_channel_dimension;
+		bin_intensity->window_dim = t2v_window_dimension;
+		bin_intensity->photon_size = sizeof(t2_t);
+	} else if ( mode == MODE_T3 ) {
+		if ( order == 1 ) {
+			error("Bin intensity is not well-defined for order 1.\n");
+			bin_intensity_free(&bin_intensity);
+			return(bin_intensity);
+		}
+
+		bin_intensity->window_scale = pulse_scale;
+		memcpy(&(bin_intensity->window_limits),
+				pulse_limits,
+				sizeof(limits_t));
+		bin_intensity->channel_dim = t3v_channel_dimension;
+		bin_intensity->window_dim = t3v_window_dimension;
+		bin_intensity->photon_size = sizeof(t3_t);
+	} else {
+		error("Invalid mode: %d\n", mode);
+		bin_intensity_free(&bin_intensity);
+		return(bin_intensity);
+	}
+
+	bin_intensity->edges = edges_alloc(bin_intensity->window_limits.bins);
+
+	if ( bin_intensity->edges == NULL ) {
+		bin_intensity_free(&bin_intensity);
+		return(bin_intensity);
+	}
+
+	bin_intensity->counts = (unsigned long long **)malloc(
+			sizeof(unsigned long long *)*bin_intensity->channels);
+
+	if ( bin_intensity->counts == NULL ) {
+		bin_intensity_free(&bin_intensity);
+		return(bin_intensity);
+	}
+
+	for ( i = 0; i < bin_intensity->channels; i++ ) {
+		bin_intensity->counts[i] = (unsigned long long *)malloc(
+			sizeof(unsigned long long)*bin_intensity->window_limits.bins);
+
+		if ( bin_intensity->counts[i] == NULL ) {
+			bin_intensity_free(&bin_intensity);
+			return(bin_intensity);
+		}
+	}
+
+	bin_intensity->queue = queue_alloc(bin_intensity->photon_size, queue_size);
+
+	if ( bin_intensity->queue == NULL ) {
+		bin_intensity_free(&bin_intensity);
+		return(bin_intensity);
+	}
+
+	bin_intensity->current = malloc(bin_intensity->photon_size);
+	
+	if ( bin_intensity->current == NULL ) {
+		bin_intensity_free(&bin_intensity);
+		return(bin_intensity);
+	}
+
+	return(bin_intensity);
 }
 
+void bin_intensity_init(bin_intensity_t *bin_intensity,
+		int set_start, long long start,
+		int set_stop, long long stop) {
+	int i;
+
+	bin_intensity->flushing = false;
+
+	bin_intensity->set_start = set_start;
+	bin_intensity->start = start;
+	bin_intensity->set_stop = set_stop;
+	bin_intensity->stop = stop;
+
+	edges_init(bin_intensity->edges,
+			&(bin_intensity->window_limits),
+			bin_intensity->window_scale,
+			false);
+
+	for ( i = 0; i < bin_intensity->channels; i++ ) {
+		memset(bin_intensity->counts[i],
+				0,
+				sizeof(unsigned long long)*bin_intensity->window_limits.bins);
+	}
+
+	queue_init(bin_intensity->queue);
+
+	bin_intensity->maximum_delay = (long long)floor(
+			bin_intensity->window_limits.upper - 
+			bin_intensity->window_limits.lower);
+}
+
+void bin_intensity_free(bin_intensity_t **bin_intensity) {
+	int i;
+
+	if ( *bin_intensity != NULL ) {
+		edges_free(&((*bin_intensity)->edges));
+
+		if ( (*bin_intensity)->counts != NULL ) {
+			for ( i = 0; i < (*bin_intensity)->channels; i++ ) {
+				free((*bin_intensity)->counts[i]);
+			}
+		}
+
+		queue_free(&((*bin_intensity)->queue));
+		
+		free((*bin_intensity)->current);
+		free(*bin_intensity);
+	}
+}
+
+void bin_intensity_increment(bin_intensity_t *bin_intensity) {
+	int i;
+
+	unsigned int channel;
+
+	double left;
+	double right;
+
+	double left_window;
+	double current_window;
+	double right_window;
+
+	queue_pop(bin_intensity->queue, bin_intensity->current);
+
+	left_window = (double)bin_intensity->start;
+	current_window = (double)bin_intensity->window_dim(bin_intensity->current);
+	right_window = (double)bin_intensity->stop;
+
+	for ( i = 0; i < bin_intensity->window_limits.bins; i++ ) {
+		left = current_window + bin_intensity->edges->bin_edges[i];
+		right = current_window + bin_intensity->edges->bin_edges[i+1];
+
+		if ( (left_window <= left && left < right_window) ||
+				(left_window <= right && right < right_window) ) {
+			channel = bin_intensity->channel_dim(bin_intensity->current);
+			bin_intensity->counts[channel][i]++;
+		}
+	}
+}
+
+void bin_intensity_flush(bin_intensity_t *bin_intensity) {
+	bin_intensity->flushing = true;
+
+	while ( ! queue_empty(bin_intensity->queue) ) {
+		debug("Incrementing.\n");
+		bin_intensity_increment(bin_intensity);
+	}
+}
+
+int bin_intensity_valid_distance(bin_intensity_t *bin_intensity) {
+	long long left;
+	long long right;
+
+	queue_front(bin_intensity->queue, bin_intensity->current);
+	left = bin_intensity->window_dim(bin_intensity->current);
+	right = bin_intensity->stop;
+
+	return( right - left > bin_intensity->maximum_delay );
+}
+
+int bin_intensity_push(bin_intensity_t *bin_intensity, void const *photon) {
+	int result;
+	unsigned int channel = bin_intensity->channel_dim(photon);
+	long long window = bin_intensity->window_dim(photon);
+
+	if ( channel >= bin_intensity->channels ) {
+		error("Invalid channel: %d (limit %d)\n", channel,
+				bin_intensity->channels - 1);
+		return(PC_ERROR_INDEX);
+	}
+
+	if ( bin_intensity->set_start && window <= bin_intensity->start ) {
+		debug("Before window.\n");
+		return(PC_SUCCESS);
+	} else if ( bin_intensity->set_stop && window > bin_intensity->stop ) {
+		debug("After window.\n");
+		return(PC_SUCCESS);
+	} else {
+		debug("In window.\n");
+		if ( ! bin_intensity->set_start ) {
+			bin_intensity->set_start = true;
+			bin_intensity->start = window;
+		}
+
+		if ( ! bin_intensity->set_stop ) {
+			bin_intensity->stop = window;
+		}
+	
+		result = queue_push(bin_intensity->queue, photon);
+
+		if ( result != PC_SUCCESS ) {
+			return(result);
+		}
+
+		while ( bin_intensity_valid_distance(bin_intensity) ) {
+			bin_intensity_increment(bin_intensity);
+		}
+
+		return(PC_SUCCESS);
+	}
+}
+
+int bin_intensity_fprintf(FILE *stream_out, 
+		bin_intensity_t const *bin_intensity) {
+	int i;
+	int j;
+
+	for ( i = 0; i < bin_intensity->window_limits.bins; i++ ) {
+		fprintf(stream_out, "%lf,%lf",
+				bin_intensity->edges->bin_edges[i],
+				bin_intensity->edges->bin_edges[i+1]);
+
+		for ( j = 0; j < bin_intensity->channels; j++ ) {
+			fprintf(stream_out, ",%llu", bin_intensity->counts[j][i]);
+		}
+
+		fprintf(stream_out, "\n");
+	}
+
+	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
+}
+
+int bin_intensity(FILE *stream_in, FILE *stream_out, 
+		pc_options_t const *options) {
+	int result = PC_SUCCESS;
+	photon_stream_t *photons;
+	bin_intensity_t *bin_intensity;
+
+	photons = photon_stream_alloc(options->mode);
+	bin_intensity = bin_intensity_alloc(options->mode, options->order,
+			options->channels,
+			&(options->time_limits), options->time_scale,
+			&(options->pulse_limits), options->pulse_scale,
+			options->queue_size);
+
+	if ( photons == NULL || bin_intensity == NULL ) {
+		error("Could not allocate photon stream or bin intensity.\n");
+		result = PC_ERROR_MEM;
+	} 
+
+	if ( result == PC_SUCCESS ) {
+		photon_stream_init(photons, stream_in);
+		photon_stream_set_unwindowed(photons);
+
+		bin_intensity_init(bin_intensity,
+				options->set_start, options->start,
+				options->set_stop, options->stop);
+
+		debug("Running.\n");
+		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
+			debug("Found photon.\n");
+			result = bin_intensity_push(bin_intensity, photons->photon);
+
+			if ( result != PC_SUCCESS ) {
+				if ( result == PC_WINDOW_NEXT ) {
+					result = PC_SUCCESS;
+					break;
+				} else {
+					error("Could not add photon to bin_intensity: %d.\n", 
+							result);
+					break;
+				}
+			}
+		}
+
+		debug("Flushing.\n");
+		if ( result == PC_SUCCESS ) {
+			bin_intensity_flush(bin_intensity);
+			bin_intensity_fprintf(stream_out, bin_intensity);
+		}
+	}
+
+	photon_stream_free(&photons);
+	bin_intensity_free(&bin_intensity);
+
+	return(result);
+}

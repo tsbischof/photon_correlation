@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CHANNELS,
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
-			OPT_SUPPRESS, OPT_EOF}};
+			OPT_SUPPRESS, OPT_QUEUE_SIZE, OPT_EOF}};
 
 	return(run(&program_options, photon_temper, argc, argv));
 }

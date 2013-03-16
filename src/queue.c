@@ -64,7 +64,27 @@ size_t queue_capacity(queue_t const *queue) {
 }
 
 int queue_resize(queue_t *queue, size_t const length) {
-	return(PC_ERROR_MEM);
+	size_t true_size = length * queue->elem_size;
+	void *new;
+
+	if ( length <= queue_capacity(queue) ) {
+		error("Resize would shrink queue, skipping.\n");
+		return(PC_ERROR_MEM);
+	} else if ( true_size < length ) {
+		error("Integer overflow when calculating new queue size.\n");
+		return(PC_ERROR_MEM);
+	} else {
+		new = realloc(queue->values, true_size);
+
+		if ( new == NULL ) {
+			error("Could not realloc space to length %zu\n", length);
+			return(PC_ERROR_MEM);
+		} else {
+			queue->values = new;
+			queue->length = length;
+			return(PC_SUCCESS);
+		}
+	}
 }
 
 void queue_set_comparator(queue_t *queue, compare_t compare) {
@@ -141,6 +161,9 @@ int queue_push(queue_t *queue, void const *elem) {
 	size_t next_index;
 
 	if ( queue_full(queue) ) {
+		warn("Queue needs to be expanded. It may be worthwhile to "
+				"perform this at the start of the calculation instead by "
+				"passing --queue-size.\n");
 		debug("Vector overflowed its bounds (current capacity %zu).\n",
 				queue_capacity(queue));
 
@@ -153,6 +176,8 @@ int queue_push(queue_t *queue, void const *elem) {
 				return(result);
 			}
 		} else {
+			error("Queue resize would cause integer overflow: %zu -> %zu\n",
+					queue->length, queue->length * 2);
 			return(PC_ERROR_MEM);
 		}
 	}
@@ -185,7 +210,7 @@ int queue_push(queue_t *queue, void const *elem) {
 int queue_index(queue_t const *queue, void *elem, size_t const index) {
 	size_t true_index = (queue->left_index + index) % queue->length;
 
-	if ( index > queue_size(queue) ) {
+	if ( index >= queue_size(queue) ) {
 		return(PC_ERROR_INDEX);
 	} else { 
 		memcpy(elem, 

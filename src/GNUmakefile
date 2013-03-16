@@ -63,7 +63,8 @@ ALL_LIB += ${HISTOGRAM_LIB}
 TARGETS += photon_histogram
 
 BIN_INTENSITY_OBJ = ${COMMON_OBJ} bin_intensity_main.o \
-		statistics/bin_intensity.o
+		statistics/bin_intensity.o \
+		${filter-out %main.o, ${sort ${HISTOGRAM_OBJ}}}
 ALL_OBJ += ${BIN_INTENSITY_OBJ}
 BIN_INTENSITY_LIB = -lm
 ALL_LIB += ${BIN_INTENSITY_LIB}

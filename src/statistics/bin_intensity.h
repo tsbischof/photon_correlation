@@ -2,44 +2,60 @@
 #define BIN_INTENSITY_H_
 
 #include <stdio.h>
-#include "options.h"
+#include "../options.h"
+#include "../queue.h"
+#include "../photon/photon.h"
+#include "../photon/window.h"
+#include "../limits.h"
+#include "../histogram/edges.h"
 
 typedef struct {
 	int mode;
+	unsigned int order;
 	unsigned int channels;
+
+	int flushing;
 	
 	limits_t window_limits;
 	int window_scale;
-	photon_window_t photon_window;
+
+	int set_start;
+	long long start;
+	int set_stop;
+	long long stop;
 
 	edges_t *edges;
-	uint64_t **counts;
+	unsigned long long **counts;
 
 	photon_channel_dimension_t channel_dim;
 	photon_window_dimension_t window_dim;
 
-	photon_queue_t *photon_queue;
+	queue_t *queue;
 
 	size_t photon_size;
-	void *front;
-	void *back;
 	void *current;
 
-	int64_t maximum_delay;
+	long long maximum_delay;
 } bin_intensity_t;
 
-bin_intensity_t *bin_intensity_alloc(options_t const *options);
-void bin_intensity_init(bin_intensity_t *bin_counts,
-		photon_window_t *photon_window);
-void bin_intensity_free(bin_intensity_t **bin_counts);
-int bin_intensity_increment(bin_intensity_t *bin_counts);
-void bin_intensity_flush(bin_intensity_t *bin_counts);
-int bin_intensity_push(bin_intensity_t *bin_counts, void const *photon);
+bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
+		unsigned int const channels, 
+		limits_t const *time_limits, int const time_scale,
+		limits_t const *pulse_limits, int const pulse_scale,
+		size_t const queue_size);
+void bin_intensity_init(bin_intensity_t *bin_intensity,
+		int set_start, long long start,
+		int set_stop, long long stop);
+void bin_intensity_free(bin_intensity_t **bin_intensity);
+void bin_intensity_increment(bin_intensity_t *bin_intensity);
+void bin_intensity_flush(bin_intensity_t *bin_intensity);
+int bin_intensity_valid_distance(bin_intensity_t *bin_intensity);
+int bin_intensity_push(bin_intensity_t *bin_intensity, void const *photon);
 
 int bin_intensity_fprintf(FILE *stream_out, 
-		bin_intensity_t const *bin_counts);
+		bin_intensity_t const *bin_intensity);
 
 int bin_intensity(FILE *stream_in, FILE *stream_out, 
-		options_t const *options);
+		pc_options_t const *options);
 
 #endif
