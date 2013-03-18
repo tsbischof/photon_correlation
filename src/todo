@@ -17,6 +17,7 @@ Intensity:
 -look into handling start, sotp properly
 
 Bin intensity:
+-track down all uses of window_dim or channel_dim and determine whether this is contributing to the excess io cost
 
 Channels:
 

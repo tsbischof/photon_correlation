@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
 			OPT_QUEUE_SIZE,
 			OPT_TIME, OPT_PULSE,
+			OPT_START, OPT_STOP,
 			OPT_TIME_SCALE, OPT_PULSE_SCALE, OPT_EOF}};
 
 	return(run(&program_options, bin_intensity, argc, argv));

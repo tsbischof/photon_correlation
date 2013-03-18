@@ -273,6 +273,10 @@ int bin_intensity_valid_distance(bin_intensity_t *bin_intensity) {
 	long long left;
 	long long right;
 
+	if ( queue_empty(bin_intensity->queue) ) {
+		return(false);
+	}
+
 	queue_front(bin_intensity->queue, bin_intensity->current);
 	left = bin_intensity->window_dim(bin_intensity->current);
 	right = bin_intensity->stop;

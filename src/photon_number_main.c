@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_CHANNELS, 
-			OPT_START_TIME, OPT_STOP_TIME,
+			OPT_START, OPT_STOP,
 			OPT_EOF}};
 
 	return(run(&program_options, photon_number, argc, argv));
