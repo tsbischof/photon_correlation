@@ -781,6 +781,9 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	}
 	fprintf(stream_out, "(%s)\n", options->pulse_offsets_string);
 
+	fprintf(stream_out, "exact_normalization = %d\n", 
+			options->exact_normalization);
+
 	fprintf(stream_out, "\n[photons]\n");
 	fprintf(stream_out, "repetition_rate = %lf\n", options->repetition_rate);
 	fprintf(stream_out, "convert = %d (%s)\n", 

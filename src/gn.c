@@ -9,6 +9,7 @@
 #include "modes.h"
 #include "files.h"
 #include "statistics/intensity.h"
+#include "statistics/bin_intensity.h"
 #include "statistics/number.h"
 #include "correlation/correlator.h"
 #include "histogram/histogram_gn.h"
@@ -68,11 +69,13 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	intensity_photon_t *count_all;
 	intensity_photon_t *intensity;
 	photon_number_t *number;
+	bin_intensity_t *bin_intensity;
 
 	FILE *histogram_file = NULL;
 	FILE *count_all_file = NULL;
 	FILE *intensity_file = NULL;
 	FILE *number_file = NULL;
+	FILE *bin_intensity_file = NULL;
 	FILE *options_file = NULL;
 
 	char *base_name = NULL;
@@ -80,6 +83,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	char *histogram_filename = NULL;
 	char *count_all_filename = NULL;
 	char *intensity_filename = NULL;
+	char *bin_intensity_filename = NULL;
 	char *number_filename = NULL;
 
 	long long min_time_distance;
@@ -129,10 +133,23 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		number = photon_number_alloc(options->channels * 64);
 	
 		run_dir = malloc(sizeof(char)*(strlen(base_name)+100));
-		histogram_filename = malloc(sizeof(char)*(strlen(base_name)+1000));
-		count_all_filename = malloc(sizeof(char)*(strlen(base_name)+1000));
-		intensity_filename = malloc(sizeof(char)*(strlen(base_name)+1000));
-		number_filename = malloc(sizeof(char)*(strlen(base_name)+1000));
+		histogram_filename = malloc(sizeof(char)*1000);
+		count_all_filename = malloc(sizeof(char)*1000);
+		intensity_filename = malloc(sizeof(char)*1000);
+		number_filename = malloc(sizeof(char)*1000);
+		bin_intensity_filename = malloc(sizeof(char)*1000);
+
+		if ( options->exact_normalization ) {
+			bin_intensity = bin_intensity_alloc(options->mode, options->order,
+					options->channels,
+					&(options->time_limits), options->time_scale,
+					&(options->pulse_limits), options->pulse_scale,
+					options->queue_size);
+
+			if ( bin_intensity == NULL ) {
+				result = PC_ERROR_MEM;
+			}
+		}
 	
 		if ( photon_stream == NULL || correlator == NULL || 
 				histogram == NULL || count_all == NULL ||
@@ -240,6 +257,32 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 				result = PC_ERROR_IO;
 			}
 
+			if ( options->exact_normalization ) {
+				if ( options->bin_width == 0 ) {
+					sprintf(bin_intensity_filename, "bin_intensity");
+
+					bin_intensity_init(bin_intensity,
+							options->set_start, options->start,
+							options->set_stop, options->stop);
+				} else {
+					sprintf(bin_intensity_filename, 
+							"bin_intensity.%020lld_%020lld",
+							photon_stream->window.lower,
+							photon_stream->window.upper);
+
+					bin_intensity_init(bin_intensity,
+							true, photon_stream->window.lower,
+							true, photon_stream->window.upper);
+				}
+
+				bin_intensity_file = fopen(bin_intensity_filename, "w");
+				if ( bin_intensity_file == NULL ) {
+					error("Could not open %s for writing.\n",
+							bin_intensity_filename);
+					result = PC_ERROR_IO;
+				}
+			}
+
 			if ( options->mode == MODE_T3 ) {
 				if ( options->bin_width == 0 ) {
 					sprintf(number_filename, "number");
@@ -287,6 +330,11 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 						photon_number_push(number, 
 								(t3_t *)photon_stream->photon);
 					}
+
+					if ( options->exact_normalization ) {
+						bin_intensity_push(bin_intensity, 
+								photon_stream->photon);
+					}
 				}
 		
 				correlator_flush(correlator);
@@ -304,6 +352,12 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 					photon_number_flush(number);
 					photon_number_fprintf(number_file, number);
 					fclose(number_file);
+				}
+
+				if ( options->exact_normalization ) {
+					bin_intensity_flush(bin_intensity);
+					bin_intensity_fprintf(bin_intensity_file, bin_intensity);
+					fclose(bin_intensity_file);
 				}
 
 				photon_stream_next_window(photon_stream);
@@ -329,6 +383,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	intensity_photon_free(&count_all);
 	intensity_photon_free(&intensity);
 	photon_number_free(&number);
+	bin_intensity_free(&bin_intensity);
 
 	free(run_dir);
 	free(histogram_filename);

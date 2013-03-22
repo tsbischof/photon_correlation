@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 			OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
 			OPT_BIN_WIDTH,
 			OPT_PRINT_EVERY,
+			OPT_EXACT_NORMALIZATION,
 			OPT_EOF}};
 
 	return(gn_run(&program_options, argc, argv));

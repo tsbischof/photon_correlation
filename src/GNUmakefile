@@ -80,7 +80,8 @@ TARGETS += photon_temper
 GN_OBJ = gn_main.o ${COMMON_OBJ} \
 		gn.o \
 		${filter-out %main.o, ${sort ${CORRELATE_OBJ} ${HISTOGRAM_OBJ} \
-				${INTENSITY_OBJ} ${PHOTON_NUMBER_OBJ}}}
+				${INTENSITY_OBJ} ${PHOTON_NUMBER_OBJ}}} \
+		statistics/bin_intensity.o
 ALL_OBJ += ${GN_OBJ}
 GN_LIB = ${sort ${CORRELATE_LIB} ${HISTOGRAM_LIB}}
 ALL_LIB += ${GN_LIB}
