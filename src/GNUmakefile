@@ -109,13 +109,20 @@ LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
 LIBPC_LDFLAGS = ${LDFLAGS} -shared
 LIBPC_LIB = ${sort ${ALL_LIB}}
-#LIB_TARGETS += libphoton_correlation.so
+LIB_TARGETS += libphoton_correlation.so
+
+INSTALL_DIR = ~
+BIN_DIR = ${INSTALL_DIR}/bin
+LIB_DIR = ${INSTALL_DIR}/lib
+INCLUDE_DIR = ${INSTALL_DIR}/include/photon_correlation
+TEST = test
+CP = cp
 
 all: ${TARGETS} ${LIB_TARGETS}
 
 install: ${TARGETS} ${LIB_TARGETS}
-	${TEST} -d ${INSTALL_DIR} || ${MKDIR} ${INSTALL_DIR}
-	${CP} ${TARGETS} ${INSTALL_DIR}
+	${TEST} -d ${BIN_DIR} || ${MKDIR} ${BIN_DIR}
+	${CP} ${TARGETS} ${BIN_DIR}
 	${TEST} -d ${LIB_DIR} || ${MKDIR} ${LIB_DIR}
 	${CP} ${LIB_TARGETS} ${LIB_DIR}
 	${TEST} -d ${INCLUDE_DIR} || ${MKDIR} ${INCLUDE_DIR}
