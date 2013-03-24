@@ -1,8 +1,5 @@
-__all__ = ["correlate", "files", "gn",
-           "histogram", "intensity", "interactive", "lifetime", "modes",
-           "photon", "time_dependent_g2" ,"time_dependent_pl"]
+__all__ = []
 
-from .Picoquant import Picoquant
-from . import correlate, files, gn, histogram, intensity, interactive, \
-     lifetime, modes, photon
-
+from BinIntensity import *
+from Intensity import *
+from PhotonNumber import *

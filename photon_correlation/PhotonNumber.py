@@ -2,10 +2,8 @@ import csv
 import operator
 
 class PhotonNumber(object):
-    def __init__(self, filename):
+    def __init__(self):
         self._numbers = dict()
-
-        self.from_file(filename)
 
     def __str__(self):
         return("({0})".format(", ".join(map(str,  sorted(self)))))
@@ -37,11 +35,15 @@ class PhotonNumber(object):
 
                 self[number] = seen
 
+        return(self)
+
     def plot(self):
         import matplotlib.pyplot as plt
 
         plt.clf()
         plt.semilogy(self.number(), self.seen())
+        plt.xlabel("Photons per pulse")
+        plt.ylabel("Events seen")
         plt.show()
 
     def fractions(self):
@@ -51,10 +53,10 @@ class PhotonNumber(object):
             yield(seen/total)
     
 if __name__ == "__main__":
-    numbers = PhotonNumber("../src/blargh.number")
+    numbers = PhotonNumber().from_file("blargh.number")
     for n, val in numbers:
         print(n, val)
 
     print(str(numbers))
-##    numbers.plot()
+    numbers.plot()
     print(tuple(numbers.fractions()))

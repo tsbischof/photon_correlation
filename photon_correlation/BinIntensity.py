@@ -1,7 +1,7 @@
 import csv
 import operator
 
-class IntensityBin(object):
+class BinIntensityBin(object):
     def __init__(self, limits, counts):
         self.limits = limits
         self.counts = counts
@@ -9,12 +9,7 @@ class IntensityBin(object):
     def time(self):
         return(self.limits[0])
 
-    def normalized(self):
-        return(tuple(map(lambda x: x*1e12/\
-                         float(self.limits[1] - self.limits[0]),
-                         self.counts)))
-
-class Intensity(object):
+class BinIntensity(object):
     def __init__(self):
         self.channels = 0
         self.bins = list()
@@ -31,11 +26,11 @@ class Intensity(object):
     def from_file(self, filename):
         with open(filename) as stream_in:
             for line in csv.reader(stream_in):
-                bin_lower = int(line[0])
-                bin_upper = int(line[1])
+                bin_lower = float(line[0])
+                bin_upper = float(line[1])
                 counts = tuple(map(int, line[2:]))
 
-                self.bins.append(IntensityBin((bin_lower, bin_upper), counts))
+                self.bins.append(BinIntensityBin((bin_lower, bin_upper), counts))
 
                 if len(counts) > self.channels:
                     self.channels = len(counts)
@@ -61,15 +56,15 @@ class Intensity(object):
         plt.clf()
         times = tuple(map(lambda x: float(x)*1e-12, self.times()))
         
-        for channel, counts in self.normalized():
+        for channel, counts in self.counts():
             plt.plot(times, counts, label=str(channel))
 
         plt.xlabel("t/s")
-        plt.ylabel("Counts/Hz")
+        plt.ylabel("Counts")
         plt.legend()
         
         plt.show()
-
+        
 if __name__ == "__main__":
-    intensity = Intensity().from_file("blargh.intensity")
+    intensity = BinIntensity().from_file("blargh.bin_intensity")
     intensity.plot()

@@ -43,9 +43,10 @@ CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
 		correlation/correlator.o correlation/correlation.o \
 		correlation/photon.o correlation/start_stop.o \
 		combinatorics/combinations.o combinatorics/permutations.o \
-		combinatorics/index_offsets.o
+		combinatorics/index_offsets.o \
+		correlation/correlator_log.o
 ALL_OBJ += ${CORRELATE_OBJ}
-CORRELATE_LIB = 
+CORRELATE_LIB = -lm
 ALL_LIB += ${CORRELATE_LIB}
 TARGETS += photon_correlate
 

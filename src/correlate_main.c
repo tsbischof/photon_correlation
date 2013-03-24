@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
 			OPT_PRINT_EVERY, OPT_POSITIVE_ONLY, OPT_START_STOP,
 			OPT_QUEUE_SIZE,
 			OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
-			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE, OPT_EOF}};
+			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE, 
+			OPT_TIME_SCALE, OPT_EOF}};
 
 	return(run(&program_options, correlate_dispatch, argc, argv));
 }
