@@ -29,27 +29,36 @@ edges_t *edges_alloc(size_t const n_bins) {
 
 int edges_init(edges_t *edges, limits_t const *limits, int const scale, 
 		int const print_label) {
+	double span;
 	int i;
 
 	edges->scale = scale;
 	if ( scale == SCALE_LINEAR ) {
 		edges->get_index = edges_index_linear;
-	} else if ( scale == SCALE_LOG ) {
+		for ( i = 0; i <= edges->n_bins; i++ ) {
+			edges->bin_edges[i] = limits->lower + 
+					(limits->upper - limits->lower)/limits->bins*i;
+		}
+	} else if ( scale == SCALE_LOG || scale == SCALE_LOG_ZERO ) {
 		edges->get_index = edges_index_log;
-	} else if ( scale == SCALE_LOG_ZERO ) {
-		edges->get_index = edges_index_log_zero;
+		span = log(limits->upper) - log(limits->lower);
+
+		for ( i = 0; i <= edges->n_bins; i++ ) {
+			edges->bin_edges[i] = (double)limits->lower + 
+					exp(span/limits->bins * i);
+		}
 	} else {
 		edges->get_index = edges_index_bsearch;
+	}
+
+	if ( scale == SCALE_LOG_ZERO ) {
+		edges->get_index = edges_index_log_zero;
+		edges->bin_edges[0] = 0;
 	}
 
 	memcpy(&(edges->limits), limits, sizeof(limits_t));
 	if ( limits->bins != edges->n_bins ) {
 		return(PC_ERROR_MISMATCH);
-	}
-
-	for ( i = 0; i <= edges->n_bins; i++ ) {
-		edges->bin_edges[i] = limits->lower + 
-				(limits->upper - limits->lower)/limits->bins*i;
 	}
 
 	edges->print_label = print_label;

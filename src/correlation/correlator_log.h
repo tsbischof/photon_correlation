@@ -16,6 +16,7 @@ typedef struct {
 
 	correlation_t *correlation;
 	correlation_print_t correlation_print;
+	correlate_t correlate;
 
 	t2_t left;
 	t2_t right;
