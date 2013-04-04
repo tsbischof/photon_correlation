@@ -63,13 +63,13 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 	long long photon_number = 0;
 
-	photon_stream_t *photon_stream;
-	correlator_t *correlator;
-	histogram_gn_t *histogram;
-	intensity_photon_t *count_all;
-	intensity_photon_t *intensity;
-	photon_number_t *number;
-	bin_intensity_t *bin_intensity;
+	photon_stream_t *photon_stream = NULL;
+	correlator_t *correlator = NULL;
+	histogram_gn_t *histogram = NULL;
+	intensity_photon_t *count_all = NULL;
+	intensity_photon_t *intensity = NULL;
+	photon_number_t *number = NULL;
+	bin_intensity_t *bin_intensity = NULL;
 
 	FILE *histogram_file = NULL;
 	FILE *count_all_file = NULL;
