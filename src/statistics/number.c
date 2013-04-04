@@ -46,7 +46,7 @@ void photon_number_init(photon_number_t *number,
 }
 
 void photon_number_free(photon_number_t **number) {
-	if ( number != NULL ) {
+	if ( *number != NULL ) {
 		counts_free(&((*number)->counts));
 		free(*number);
 	}
