@@ -92,6 +92,7 @@ typedef struct {
 
 /* photons */
 	double repetition_rate;
+	long long time_origin;
 	char *convert_string;
 	int convert;
 } pc_options_t;
@@ -112,7 +113,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_SUPPRESS,
 		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
 		OPT_EXACT_NORMALIZATION, 
-		OPT_REPETITION_TIME,
+		OPT_REPETITION_TIME, OPT_TIME_ORIGIN,
 		OPT_CONVERT,
 		OPT_EOF };
 

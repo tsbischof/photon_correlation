@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 "themselves to read data as needed.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_MODE, OPT_CONVERT,
+			OPT_MODE, OPT_CONVERT, OPT_TIME_ORIGIN,
 			OPT_REPETITION_TIME, OPT_EOF}};
 
 	return(run(&program_options, photons, argc, argv));

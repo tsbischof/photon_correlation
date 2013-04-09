@@ -116,6 +116,7 @@ INSTALL_DIR = ~
 BIN_DIR = ${INSTALL_DIR}/bin
 LIB_DIR = ${INSTALL_DIR}/lib
 INCLUDE_DIR = ${INSTALL_DIR}/include/photon_correlation
+MKDIR = mkdir -p
 TEST = test
 CP = cp
 

@@ -138,6 +138,11 @@ static pc_option_t pc_options_all[] = {
 			"histogram bin."},
 	{'R', "R:", "repetition-rate",
 			"Specifies the repetition rate for the sync pulse.\n"},
+	{'O', "O:", "time-origin",
+			"Specifies the origin in time for the photons being\n"
+			"converted. This compensates for the fact that t2\n"
+			"measurements are not necessarily synchronized with\n"
+			"the excitation source."},
 	{'M', "M:", "convert",
 			"Specifies the output mode and style for converting\n"
 			"photons between types. Choices are:\n"
@@ -199,6 +204,7 @@ static struct option pc_options_long[] = {
 
 /* t2_to_t3 */
 	{"repetition-rate", required_argument, 0, 'R'},
+	{"time-origin", required_argument, 0, 'O'},
 	{"convert", required_argument, 0, 'M'},
 	{0, 0, 0, 0}};
 
@@ -293,6 +299,7 @@ void pc_options_default(pc_options_t *options) {
 	options->exact_normalization = false;
 
 	options->repetition_rate = 0;
+	options->time_origin = 0;
 	options->convert_string = NULL;
 	options->convert = MODE_UNKNOWN;
 }
@@ -492,6 +499,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'R':
 				options->repetition_rate = strtof(optarg, NULL);
+				break;
+			case 'O':
+				options->time_origin = strtoll(optarg, NULL, 10);
 				break;
 			case 'M':
 				options->convert_string = strdup(optarg);

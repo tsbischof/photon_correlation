@@ -173,7 +173,7 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 /* Fill the queue with photons from the stream. */
 	int result;
-	int suppress;
+	int suppress = false;
 	int channel;
 
 	while ( true ) {

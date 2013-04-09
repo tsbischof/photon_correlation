@@ -63,13 +63,15 @@ int photons(FILE *stream_in, FILE *stream_out,
 		} else if ( options->mode == MODE_T2 && options->convert == MODE_T3 ) {
 			debug("t2 to t3\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				t2_to_t3(photons->photon, &t3, options->repetition_rate);
+				t2_to_t3(photons->photon, &t3, options->repetition_rate, 
+						options->time_origin);
 				t3_fprintf(stream_out, &t3);
 			}
 		} else if ( options->mode == MODE_T3 && options->convert == MODE_T2 ) {
 			debug("t3 to t2\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				t3_to_t2(photons->photon, &t2, options->repetition_rate);
+				t3_to_t2(photons->photon, &t2, options->repetition_rate, 
+						options->time_origin);
 				t2_fprintf(stream_out, &t2);
 			}
 		} else if ( options->mode == MODE_T3 && 
