@@ -94,7 +94,7 @@ int correlator_push(correlator_t *correlator, void const *photon) {
 int correlator_next(correlator_t *correlator) {
 	if ( correlator->order == 1 ) {
 		if ( ! queue_empty(correlator->queue) ) {
-			queue_front(correlator->queue, correlator->left);
+			queue_pop(correlator->queue, correlator->left);
 			correlation_set_index(correlator->correlation,
 					0,
 					correlator->left);
