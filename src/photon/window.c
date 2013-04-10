@@ -55,21 +55,15 @@ int photon_window_next(photon_window_t *window) {
 
 int photon_window_contains(photon_window_t const *window, 
 		long long const value) {
-	if ( window->set_lower_bound || window->set_upper_bound ) {
-		if ( window->set_lower_bound && value < window->lower) {
-			return(PC_RECORD_BEFORE_WINDOW);
-		} else if ( window->set_upper_bound && window->upper <= value ) {
-			return(PC_RECORD_AFTER_WINDOW);
-		} else {
-			return(PC_RECORD_IN_WINDOW);
-		}
+	if ( window->set_lower_bound && value < window->lower_bound) {
+		return(PC_RECORD_BEFORE_WINDOW);
+	} else if ( window->set_upper_bound && window->upper_bound <= value ) {
+		return(PC_RECORD_AFTER_WINDOW);
+	} else if ( value < window->lower ) {
+		return(PC_RECORD_BEFORE_WINDOW);
+	} else if ( window->upper <= value ) {
+		return(PC_RECORD_AFTER_WINDOW);
 	} else {
-		if ( value < window->lower ) {
-			return(PC_RECORD_BEFORE_WINDOW);
-		} else if ( window->upper <= value ) {
-			return(PC_RECORD_AFTER_WINDOW);
-		} else {
-			return(PC_RECORD_IN_WINDOW);
-		}
+		return(PC_RECORD_IN_WINDOW);
 	}
 }

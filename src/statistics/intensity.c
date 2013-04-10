@@ -117,6 +117,10 @@ void intensity_photon_init(intensity_photon_t *intensity,
 				set_lower_bound, lower_bound,
 				set_upper_bound, upper_bound);
 	}
+
+	if ( set_lower_bound ) {
+		intensity->first_photon_seen = true;
+	}
 }
 
 void intensity_photon_counts_init(intensity_photon_t *intensity) {
