@@ -6,6 +6,12 @@ class IntensityBin(object):
         self.limits = limits
         self.counts = counts
 
+    def __getitem__(self, index):
+        return(self.counts[index])
+
+    def __setitem__(self, index, value):
+        self.counts[index] = value
+
     def time(self):
         return(self.limits[0])
 
