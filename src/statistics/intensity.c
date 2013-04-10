@@ -174,8 +174,13 @@ int intensity_photon_push(intensity_photon_t *intensity, void const *photon) {
 			intensity->record_available = true;
 			return(PC_WINDOW_NEXT);
 		} else {
-			photon_window_next(&(intensity->window));
-			return(PC_SUCCESS);
+			while ( 1 ) {
+				photon_window_next(&(intensity->window));
+				if ( photon_window_contains(&(intensity->window), window) 
+						== PC_SUCCESS ) {
+					return(PC_SUCCESS);
+				}
+			}
 		}
 	} else {
 		error("Unknown push state: %d\n", result);
@@ -322,26 +327,33 @@ int intensity_photon(FILE *stream_in, FILE *stream_out,
 	} 
 
 	debug("Initializing.\n");
-	intensity_photon_init(intensity, 
-			options->count_all,
-			options->bin_width,
-			options->set_start, options->start,
-			options->set_stop, options->stop);
+	if ( options->bin_width == 0 ) {
+		intensity_photon_init(intensity, 
+				options->count_all,
+				options->mode == MODE_T2 ? 50000000000 : 100000,
+				options->set_start, options->start,
+				options->set_stop, options->stop);
+	} else {
+		intensity_photon_init(intensity, 
+				options->count_all,
+				options->bin_width,
+				options->set_start, options->start,
+				options->set_stop, options->stop);
+	}
 
 	photon_stream_init(photon_stream, stream_in);
-	photon_stream_set_unwindowed(photon_stream);
 
 	if ( result == PC_SUCCESS ) {
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
 			intensity_photon_push(intensity, photon_stream->photon);
 	
-			while ( intensity_photon_next(intensity) == PC_RECORD_AVAILABLE ) {
+			while ( intensity_photon_next(intensity) == PC_SUCCESS ) {
 				intensity_photon_fprintf(stream_out, intensity);
 			}
 		}
 	
 		intensity_photon_flush(intensity);
-		while ( intensity_photon_next(intensity) == PC_RECORD_AVAILABLE ) {
+		while ( intensity_photon_next(intensity) == PC_SUCCESS ) {
 			intensity_photon_fprintf(stream_out, intensity);
 		}
 	}

@@ -30,15 +30,18 @@ class Intensity(object):
 
     def from_file(self, filename):
         with open(filename) as stream_in:
-            for line in csv.reader(stream_in):
-                bin_lower = int(line[0])
-                bin_upper = int(line[1])
-                counts = tuple(map(int, line[2:]))
+            return(self.from_stream(stream_in))
 
-                self.bins.append(IntensityBin((bin_lower, bin_upper), counts))
+    def from_stream(self, stream_in):
+        for line in csv.reader(stream_in):
+            bin_lower = int(line[0])
+            bin_upper = int(line[1])
+            counts = tuple(map(int, line[2:]))
 
-                if len(counts) > self.channels:
-                    self.channels = len(counts)
+            self.bins.append(IntensityBin((bin_lower, bin_upper), counts))
+
+            if len(counts) > self.channels:
+                self.channels = len(counts)
 
         return(self)
 
