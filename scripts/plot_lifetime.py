@@ -29,3 +29,4 @@ if __name__ == "__main__":
             lifetimes = list(lifetime_from_file(csv.reader(stream)))
 
             plot_lifetime(lifetimes)
+

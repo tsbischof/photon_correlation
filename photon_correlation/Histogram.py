@@ -27,6 +27,10 @@ class Limits(object):
 
     def __contains__(self, value):
         return(self.lower <= value and value < self.upper)
+
+##class Histogram(object):
+##    def __init__(self, order=2, mode=pc.modes.T2):
+##        pass
 ##
 ##class TimeBin(object):
 ##     def __init__(self, bounds, resolution=1):

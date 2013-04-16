@@ -24,28 +24,22 @@ int t3_to_t2(t3_t const *t3, t2_t *t2, double repetition_rate,
 
 int t2_to_t3(t2_t const *t2, t3_t *t3, double repetition_rate,
 		long long time_origin) {
+	long double fractpart, intpart;
+
 	long long time;
-	int64_t repetition_time;
 
 	if ( repetition_rate == 0 || repetition_rate > 1e12 ) {
 		return(PC_ERROR_ZERO_DIVISION);
 	}
 
-	repetition_time = 1e12 / repetition_rate;
-
-/* The behavior we want here is a floor instead of truncation: directly invert
- * the modulo arithmetic
- */
 	t3->channel = t2->channel;
 
 	time = t2->time - time_origin;
-	if ( time < 0 ) {
-		t3->pulse = -(-time / repetition_time) - 1;
-	} else {
-		t3->pulse = time / repetition_time;
-	}
 
-	t3->time = time - (t3->pulse * repetition_time);
+/* Round the pulse number to the nearest integer. */
+	fractpart = modfl((long double)time*1e-12*repetition_rate, &intpart);
+	t3->pulse = (long long)floor(intpart + 0.5);;
+	t3->time = (long long)floor(fractpart/repetition_rate*1e12+0.5);
 
 	return(PC_SUCCESS);
 }

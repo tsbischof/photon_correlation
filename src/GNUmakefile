@@ -104,10 +104,10 @@ ALL_LIB += ${NUMBER_TO_CHANNELS_LIB}
 TARGETS += photon_number_to_channels
 
 INTENSITY_CORRELATE_OBJ = ${COMMON_OBJ} intensity_correlate_main.o 
-ALL_OBJ += ${INTENSITY_CORRELATE_OBJ}
+#ALL_OBJ += ${INTENSITY_CORRELATE_OBJ}
 INTENSITY_CORRELATE_LIB = 
-ALL_LIB += ${INTENSITY_CORRELATE_LIB}
-TARGETS += intensity_correlate
+#ALL_LIB += ${INTENSITY_CORRELATE_LIB}
+#TARGETS += intensity_correlate
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
