@@ -22,6 +22,18 @@ unsigned int pow_int(unsigned int const base, unsigned int const exponent) {
 	return(result);
 }
 
+unsigned long long powull(unsigned long long const base, 
+		unsigned long long const exponent) {
+	unsigned long long result = 1;
+	int i;
+
+	for ( i = 0; i < exponent; i++ ) {
+		result *= base;
+	}
+
+	return(result);
+}
+
 unsigned int n_combinations(unsigned int const n, unsigned int const m) {
 	/* The number of combinations will be channels^order, since we have
  	 * order many digits to populate with a channel (up to channels-1)

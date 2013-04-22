@@ -122,15 +122,6 @@ static pc_option_t pc_options_all[] = {
 	{'s', "s:", "suppress",
 			"A comma-delmited list of channels to remove\n"
 			"from the stream."},
-	{'B', "B:", "approximate",
-			"Approximate the true autocorrelation by \n"
-			"only sampling the correlation once for\n"
-			"every n time steps. By default, the \n"
-			"correlation is sampled for every time step."},
-	{'C', "C", "true-correlation",
-			"Rather than calculating the autocorrelation\n"
-			"to match the photon autocorrelation, calculate\n"
-			"it for the standard signal definition."},
 	{'Z', "Z", "exact-normalization",
 			"Rather than using intensity to calculate the\n"
 			"average intensity for normalization, use\n"
@@ -149,7 +140,19 @@ static pc_option_t pc_options_all[] = {
 			"t2: use the sync rate to form t2 times\n"
 			"as-t2: use the pulse number as t2 time\n"
 			"t3: use the t2 time and sync rate to get pulse\n"
-			"    number, time"}
+			"    number, time"},
+	{'B', "B:", "binning",
+			"Number of bins wide to use for the multi-tau\n"
+			"correlation. For more accurate results, lower the\n"
+			"ratio of binning to registers."},
+	{'a', "a:", "registers",
+			"Number of registers to use for the multi-tau\n"
+			"correlation. For more accurate results, lower the\n"
+			"ratio of binning to registers."},
+	{'b', "b:", "depth",
+			"Number of levels deep for the multi-tau \n"
+			"correlation. The maximum delay in units of time\n"
+			"is: binning^(depth-1)*(registers-1)"}
 	};
 
 
@@ -202,10 +205,15 @@ static struct option pc_options_long[] = {
 /* gn */
 	{"exact-normalization", no_argument, 0, 'Z'},
 
-/* t2_to_t3 */
+/* photons */
 	{"repetition-rate", required_argument, 0, 'R'},
 	{"time-origin", required_argument, 0, 'O'},
 	{"convert", required_argument, 0, 'M'},
+
+/* correlate intensity */
+	{"binning", required_argument, 0, 'B'},
+	{"registers", required_argument, 0, 'a'},
+	{"depth", required_argument, 0, 'b'},
 	{0, 0, 0, 0}};
 
 
@@ -293,15 +301,16 @@ void pc_options_default(pc_options_t *options) {
 	options->pulse_offsets_string = NULL;
 	options->pulse_offsets = NULL;
 
-	options->approximate = false;
-	options->true_autocorrelation = false;
-
 	options->exact_normalization = false;
 
 	options->repetition_rate = 0;
 	options->time_origin = 0;
 	options->convert_string = NULL;
 	options->convert = MODE_UNKNOWN;
+
+	options->binning = 2;
+	options->registers = 16;
+	options->depth = 32;
 }
 
 int pc_options_valid(pc_options_t const *options) {
@@ -488,12 +497,6 @@ int pc_options_parse(pc_options_t *options,
 				options->suppress_channels = true;
 				options->suppress_string = strdup(optarg);
 				break;
-			case 'B':
-				options->approximate = strtol(optarg, NULL, 10);
-				break;
-			case 'C':
-				options->true_autocorrelation = true;
-				break;
 			case 'Z':
 				options->exact_normalization = true;
 				break;
@@ -506,6 +509,15 @@ int pc_options_parse(pc_options_t *options,
 			case 'M':
 				options->convert_string = strdup(optarg);
 				pc_options_parse_convert(options);
+				break;
+			case 'B':
+				options->binning = strtoul(optarg, NULL, 10);
+				break;
+			case 'a':
+				options->registers = strtoul(optarg, NULL, 10);
+				break;
+			case 'b':
+				options->depth = strtoul(optarg, NULL, 10);
 				break;
 			case '?':
 			default:

@@ -2,11 +2,15 @@
 #define COUNTS_H_
 
 typedef struct {
-	unsigned int bins;
+	unsigned int channels;
+
+	long long lower;
+	long long upper;
+
 	unsigned long long *counts;
 } counts_t;
 
-counts_t *counts_alloc(unsigned int const bins);
+counts_t *counts_alloc(unsigned int const channels);
 void counts_init(counts_t *counts);
 int counts_increment(counts_t *counts, unsigned int const index);
 int counts_increment_number(counts_t *counts, unsigned int const index,

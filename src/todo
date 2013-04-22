@@ -4,26 +4,8 @@ General:
 -look into errno and related for dealing with errors.
 -run valgrind against all programs, check that nothing has been missed.
 -add lots of comments to explain implementations, etc.
+-rework the intensity system to support calculation from photon stream or reading from file. Populate a intensity_t which contains the information relevant to the current bin, such that a calculation can pull the result as it is populated.
 
 Scripts:
 -plotting for t3 mode correlation
 
-Correlate:
-
-Histogram:
-
-Intensity:
--look into handling start, stop properly
-
-Bin intensity:
--track down all uses of window_dim or channel_dim and determine whether this is contributing to the excess io cost
-
-Channels:
-
-Correlate vector:
--take notes from notebook and compile the vector correlation method.
--for the delays, use an array of left/right to get the origin set correctly.
-
-Intensity_to_t2:
-
-Photons:

@@ -204,10 +204,14 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			pst->photon_offset(pst->current_photon, pst->offsets);
 			
 			result = queue_push(pst->queue, pst->current_photon);
-			if ( result != PC_SUCCESS ) {
+			return(result);
+/*			if ( result != PC_SUCCESS ) {
 				error("Could not add photon to queue.\n");
 				return(result);
-			}
+			} else {
+				if ( ) {
+				}
+			}*/
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}

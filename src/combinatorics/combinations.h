@@ -5,6 +5,8 @@
 #include "../options.h"
 
 unsigned int pow_int(unsigned int const base, unsigned int const exponent);
+unsigned long long powull(unsigned long long const base, 
+		unsigned long long const exponent);
 unsigned int n_combinations(unsigned int const n, unsigned int const m);
 unsigned int n_permutations(unsigned int const n);
 unsigned int factorial(unsigned int const n);

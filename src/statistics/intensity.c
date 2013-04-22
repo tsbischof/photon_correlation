@@ -118,9 +118,14 @@ void intensity_photon_init(intensity_photon_t *intensity,
 				set_upper_bound, upper_bound);
 	}
 
+	intensity->counts->lower = intensity->window.lower;
+	intensity->counts->upper = intensity->window.upper;
+
 	if ( set_lower_bound ) {
 		intensity->first_photon_seen = true;
 	}
+
+	intensity->next = intensity_photon_next_from_photon;
 }
 
 void intensity_photon_counts_init(intensity_photon_t *intensity) {
@@ -131,12 +136,13 @@ void intensity_photon_counts_init(intensity_photon_t *intensity) {
 void intensity_photon_free(intensity_photon_t **intensity) {
 	if ( *intensity != NULL ) {
 		free((*intensity)->photon);
-		free((*intensity)->counts);
+		counts_free(&(*intensity)->counts);
 		free(*intensity);
 	}
 }
 
-int intensity_photon_push(intensity_photon_t *intensity, void const *photon) {
+int intensity_photon_push(intensity_photon_t *intensity, 
+		void const *photon) {
 	int result;
 
 	unsigned int channel;
@@ -161,6 +167,7 @@ int intensity_photon_push(intensity_photon_t *intensity, void const *photon) {
 
 		if ( ! intensity->first_photon_seen ) {
 			intensity->window.lower = window;
+			intensity->counts->lower = window;
 			intensity->first_photon_seen = true;
 		}
 
@@ -180,6 +187,9 @@ int intensity_photon_push(intensity_photon_t *intensity, void const *photon) {
 		} else {
 			while ( 1 ) {
 				photon_window_next(&(intensity->window));
+				intensity->counts->lower = intensity->window.lower;
+				intensity->counts->upper = intensity->window.upper;
+
 				if ( photon_window_contains(&(intensity->window), window) 
 						== PC_SUCCESS ) {
 					return(PC_SUCCESS);
@@ -197,13 +207,17 @@ int intensity_photon_increment(intensity_photon_t *intensity,
 	return(counts_increment(intensity->counts, channel));
 }
 
-int intensity_photon_next(intensity_photon_t *intensity) {
+int intensity_photon_next_from_photon(void *ip) {
+	intensity_photon_t *intensity = ip;
 	int result;
 
 	if ( intensity->yielded ) {
 		debug("Yielded, moving to next window.\n");
 		intensity_photon_counts_init(intensity);
 		photon_window_next(&(intensity->window));
+
+		intensity->counts->lower = intensity->window.lower;
+		intensity->counts->upper = intensity->window.upper;
 
 		intensity->yielded = false;
 		intensity->record_available = false;
@@ -244,6 +258,7 @@ int intensity_photon_next(intensity_photon_t *intensity) {
 				intensity->yielded = true;
 
 				intensity->window.upper = intensity->last_window_seen + 1;
+				intensity->counts->upper = intensity->window.upper;
 				return(PC_RECORD_AVAILABLE);
 			} else {
 				error("intensity_photon_next should never get "
@@ -256,8 +271,23 @@ int intensity_photon_next(intensity_photon_t *intensity) {
 	}
 }
 
+int intensity_photon_next_from_stream(void *ip) {
+	intensity_photon_t *intensity = ip;
+	return(intensity_photon_fscanf(intensity->stream_in, intensity));
+}
+
+int intensity_photon_next(intensity_photon_t *intensity) {
+	return(intensity->next(intensity));
+}
+
 void intensity_photon_flush(intensity_photon_t *intensity) {
 	intensity->flushing = true;
+}
+
+void intensity_photon_init_stream(intensity_photon_t *intensity,
+		FILE *stream_in) {
+	intensity->stream_in = stream_in;
+	intensity->next = intensity_photon_next_from_stream;
 }
 
 int intensity_photon_fscanf(FILE *stream_in, intensity_photon_t *intensity) {
@@ -266,8 +296,8 @@ int intensity_photon_fscanf(FILE *stream_in, intensity_photon_t *intensity) {
 
 	n_read = fscanf(stream_in,
 			"%lld,%lld",
-			&(intensity->window.lower),
-			&(intensity->window.upper));
+			&(intensity->counts->lower),
+			&(intensity->counts->upper));
 
 	if ( n_read != 2 ) {
 		return( feof(stream_in) ? EOF : PC_ERROR_IO );
@@ -292,8 +322,8 @@ int intensity_photon_fprintf(FILE *stream_out,
 
 	fprintf(stream_out, 
 			"%lld,%lld",
-			intensity->window.lower,
-			intensity->window.upper);
+			intensity->counts->lower,
+			intensity->counts->upper);
 
 	if ( ferror(stream_out) ) {
 		return(PC_ERROR_IO);

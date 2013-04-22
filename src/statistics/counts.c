@@ -4,7 +4,7 @@
 #include "counts.h"
 #include "../error.h"
 
-counts_t *counts_alloc(unsigned int const bins) {
+counts_t *counts_alloc(unsigned int const channels) {
 	counts_t *counts = NULL;
 
 	counts = (counts_t *)malloc(sizeof(counts_t));
@@ -13,9 +13,9 @@ counts_t *counts_alloc(unsigned int const bins) {
 		return(counts);
 	}
 
-	counts->bins = bins;
+	counts->channels = channels;
 	counts->counts = (unsigned long long *)malloc(
-			sizeof(unsigned long long)*counts->bins);
+			sizeof(unsigned long long)*counts->channels);
 
 	if ( counts->counts == NULL ) {
 		counts_free(&counts);
@@ -26,11 +26,13 @@ counts_t *counts_alloc(unsigned int const bins) {
 }
 
 void counts_init(counts_t *counts) {
-	memset(counts->counts, 0, counts->bins*sizeof(unsigned long long));
+	memset(counts->counts, 0, counts->channels*sizeof(unsigned long long));
+	counts->lower = 0;
+	counts->upper = 1;
 }
 
 int counts_increment(counts_t *counts, unsigned int const index) {
-	if ( index < counts->bins ) {
+	if ( index < counts->channels ) {
 		counts->counts[index]++;
 		return(PC_SUCCESS);
 	} else {
@@ -40,7 +42,7 @@ int counts_increment(counts_t *counts, unsigned int const index) {
 
 int counts_increment_number(counts_t *counts, unsigned int const index, 
 		unsigned long long const number) {
-	if ( index < counts->bins ) {
+	if ( index < counts->channels ) {
 		counts->counts[index] += number;
 		return(PC_SUCCESS);
 	} else {
@@ -58,7 +60,7 @@ void counts_free(counts_t **counts) {
 int counts_nonzero(counts_t const *counts) {
 	int i;
 
-	for ( i = 0; i < counts->bins; i++ ) {
+	for ( i = 0; i < counts->channels; i++ ) {
 		if ( counts->counts[i] != 0 ) {
 			return(true);
 		}

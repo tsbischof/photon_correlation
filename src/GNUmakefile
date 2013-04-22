@@ -103,11 +103,13 @@ NUMBER_TO_CHANNELS_LIB =
 ALL_LIB += ${NUMBER_TO_CHANNELS_LIB}
 TARGETS += photon_number_to_channels
 
-INTENSITY_CORRELATE_OBJ = ${COMMON_OBJ} intensity_correlate_main.o 
-#ALL_OBJ += ${INTENSITY_CORRELATE_OBJ}
+INTENSITY_CORRELATE_OBJ = ${COMMON_OBJ} intensity_correlate_main.o  \
+		correlation/intensity.o statistics/intensity.o statistics/counts.o \
+		correlation/multi_tau.o combinatorics/combinations.o
+ALL_OBJ += ${INTENSITY_CORRELATE_OBJ}
 INTENSITY_CORRELATE_LIB = 
-#ALL_LIB += ${INTENSITY_CORRELATE_LIB}
-#TARGETS += intensity_correlate
+ALL_LIB += ${INTENSITY_CORRELATE_LIB}
+TARGETS += intensity_correlate
 
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
@@ -116,7 +118,7 @@ LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
 INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
 LIBPC_LDFLAGS = ${LDFLAGS} -shared
 LIBPC_LIB = ${sort ${ALL_LIB}}
-LIB_TARGETS += libphoton_correlation.so
+LIB_TARGETS += #libphoton_correlation.so
 
 INSTALL_DIR = ~
 BIN_DIR = ${INSTALL_DIR}/bin

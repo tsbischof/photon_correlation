@@ -83,10 +83,6 @@ typedef struct {
 	char *pulse_offsets_string;
 	long long *pulse_offsets;
 
-/* correlate_vector */
-	int approximate;
-	int true_autocorrelation;
-
 /* gn */
 	int exact_normalization;
 
@@ -95,6 +91,11 @@ typedef struct {
 	long long time_origin;
 	char *convert_string;
 	int convert;
+
+/* correlate intensity */
+	unsigned int binning;
+	unsigned int registers;
+	unsigned int depth;
 } pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
@@ -111,10 +112,10 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
 		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
 		OPT_SUPPRESS,
-		OPT_APPROXIMATE, OPT_TRUE_CORRELATION,
 		OPT_EXACT_NORMALIZATION, 
 		OPT_REPETITION_TIME, OPT_TIME_ORIGIN,
 		OPT_CONVERT,
+		OPT_BINNING, OPT_REGISTERS, OPT_DEPTH,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);
