@@ -9,3 +9,5 @@ General:
 Scripts:
 -plotting for t3 mode correlation
 
+Intensity correlate:
+-integrate the intensity calculation into the process: use the specified bin-width to condition the photon stream and the histogram bins
