@@ -211,7 +211,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			} else {
 				if ( ) {
 				}
-			}*/
+			} */
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
