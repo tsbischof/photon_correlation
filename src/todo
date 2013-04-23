@@ -4,7 +4,8 @@ General:
 -look into errno and related for dealing with errors.
 -run valgrind against all programs, check that nothing has been missed.
 -add lots of comments to explain implementations, etc.
--rework the intensity system to support calculation from photon stream or reading from file. Populate a intensity_t which contains the information relevant to the current bin, such that a calculation can pull the result as it is populated.
+-reorganize and document the structure of the routines. 
+-move filenames to reflect the current naming scheme.
 
 Scripts:
 -plotting for t3 mode correlation
