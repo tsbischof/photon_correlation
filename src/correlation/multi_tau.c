@@ -322,11 +322,12 @@ int multi_tau_g2cn_fprintf(FILE *stream_out, multi_tau_g2cn_t const *mt) {
 					}
 
 					fprintf(stream_out,
-							"%u,%u,%lld,%lld,%lf\n",
+							"%u,%u,%g,%g,%lf\n",
 							c0, 
 							c1,
-							mt->tau[i][j]*mt->bin_width,
-							mt->tau[i][j]+pow_int(mt->binning, i)*mt->bin_width,
+							(double)mt->tau[i][j]*mt->bin_width,
+							(double)(mt->tau[i][j]+pow_int(mt->binning, i))
+									*mt->bin_width,
 							correlation); 
 				}
 			}
