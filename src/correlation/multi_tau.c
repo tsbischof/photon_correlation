@@ -1,5 +1,6 @@
 #include "multi_tau.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -263,10 +264,23 @@ void multi_tau_g2cn_push(multi_tau_g2cn_t *mt, counts_t const *counts) {
 		}
 
 		mt->pushes[i]++;
+		/* use this section to update the correlation, since this row just
+		 * saw a push 
+		 */
+		for ( c0 = 0; c0 < mt->channels; c0++ ) {
+			mt->averages[i][c0] += mt->signal[i][0][c0];
 
-		if ( mt->pushes[i] == mt->binning ) {
-			mt->pushes[i] = 0;
+			for ( c1 = 0; c1 < mt->channels; c1++ ) {
+				for ( j = (i == 0 ? 0 : mt->registers/mt->binning); 
+						j < mt->registers && j < mt->pushes[i]; j++ ) {
+					mt->g2[i][j][c0][c1] += 
+							mt->signal[i][0][c0]*
+							mt->signal[i][j][c1];
+				}
+			}
+		}
 
+		if ( mt->pushes[i] % mt->binning == 0 ) {
 			for ( c0 = 0; c0 < mt->channels; c0++ ) {
 				mt->intensity[c0] = mt->accumulated[i][c0]/mt->binning;
 				mt->accumulated[i][c0] = 0;
@@ -277,6 +291,7 @@ void multi_tau_g2cn_push(multi_tau_g2cn_t *mt, counts_t const *counts) {
 	}
 
 	/* update correlation */
+	/* use this section to update all correlations.
 	debug("Updating correlation.\n");
 	for ( i = 0; i < mt->depth; i++ ) {
 		for ( c0 = 0; c0 < mt->channels; c0++ ) {
@@ -291,7 +306,7 @@ void multi_tau_g2cn_push(multi_tau_g2cn_t *mt, counts_t const *counts) {
 				}
 			}
 		}
-	}
+	}*/
 }
 
 int multi_tau_g2cn_fprintf(FILE *stream_out, multi_tau_g2cn_t const *mt) {
@@ -304,15 +319,18 @@ int multi_tau_g2cn_fprintf(FILE *stream_out, multi_tau_g2cn_t const *mt) {
 			for ( i = 0; i < mt->depth; i++ ) {
 				for ( j = (i == 0 ? 0 : mt->registers/mt->binning);
 						j < mt->registers; j++ ) {
-					if ( mt->n_seen == 0 ) {
+					if ( mt->n_seen == 0 || mt->pushes[i]-j <=  0 ) {
 						normalization = 0;
 					} else {
 						normalization = 1;
-						normalization *= mt->averages[0][c0];
-						normalization *= mt->averages[i][c1];
-						normalization /= mt->n_seen;
-						normalization *= (double)(mt->n_seen - mt->tau[i][i])/
-								(double)(mt->n_seen);
+						normalization *= mt->pushes[i];
+						normalization *= (double)mt->averages[i][c0]/
+								(double)mt->pushes[i];
+						normalization *= (double)mt->averages[i][c1]/
+								(double)mt->pushes[i]; 
+						/* correct for the undersampling of various bins */
+						normalization *= (double)(mt->pushes[i]-j)/
+								(double)mt->pushes[i];
 					}
 
 					if ( normalization <= 0 ) {
