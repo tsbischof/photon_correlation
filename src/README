@@ -1,51 +1,151 @@
-Thomas Bischof
-tbischof@mit.edu
+----------------------------------------
+Overview
+----------------------------------------
+The C code here is written in C99, tested most extensively on x86-64 Linux
+with the Clang C compiler. It has been tested on 32-bit Linux and FreeBSD as
+well, but not as thoroughly.
 
--------- General outline ----------
-The tools produced in this package are designed to perform a number of tasks 
-related to calculation of photon correlation functions. The rough procedure 
-is as follows:
-(1) Generate photon arrival time data.
-(2) Correlate photons to the desired order.
-(3) Group the correlation events into histogram bins related to time delays.
+All code is written to operate on particular ascii streams of data, be it
+photon data or some form of processed photon data. If necessary, the mechanisms
+required to install binary processing are included in the stream-processing
+code.
 
-(1) is achieved in one of two ways. Given binary data from a Picoquant device,
-the executable picoquant can produce the photon data in a standardized format:
-t2 mode:
-channel (int), time (int) \n
-
-t3 mode:
-channel (int), pulse number (int), time (int) \n
-
-The executable supports a number of Picoquant models and versions (pass --help)
-as a flag to see a list.
-
-All further processing relies on this format for photon data, so any process
-which produces ascii photons in this format is suitable. 
-
-(2) is achieved by the correlate executable. This takes in photon data, and
-finds the appropriate number of photons for a correlation of nth order. The 
-output from this looks like:
-channel 0, channel 1, delay 1, delay 2, ... counts \n
-but the exact specification depends on the order and mode specified.
-
-(3) is achieved by the histogram exectuable.
+----------------------------------------
+Program structure
+----------------------------------------
+All of the code here is written in a single-pass iterator paradigm, which 
+permits minimal memory usage for streams of arbitrary size. As such, all of 
+the main programs will take the following form:
 
 
 
-In addition to these basic processes, there are tools for dealing with wayward
-data:
-- picoquant t3 data can be converted to t2 data by passing --to-t2. See the 
-  executable documentation for details
-- channels can be used to suppress photons arriving on a channel, or to add
-  a time (pulse) offset to the result
-- t3_as_t2 removes the time information from t3 data, leaving just the pulse 
-  information. This makes the photon look like a t2 photon
+for elem in stream:
+    operator.push(elem)
 
--------- Compilation ----------
-The code here is written in C99, and has no external dependencies outside the
-standard C library. It has been tested on both 32-bit and 64-bit Linux 
-(openSUSE) with GCC, and can hopefully be compiled using the provided Makefile.
+    for result in operator:
+        yield(result)
+
+operator.flush()
+for result in operator:
+    yield(result)
 
 
--------- Program structure --------
+
+As mentioned, the advantage of this paradigm is that the operator can be 
+constructed to require minimal resources, with all complexity through into
+the functions push and next as necessary. This has a few disadvantages, 
+namely higher overhead in reading data from the incoming stream and an 
+occasional requirement of a counter-intuitive implementation. The former
+can be addressed by introduction of a custom block push routine, but largely
+the performance hit has not been too problematic.
+
+----------------------------------------
+Piecing tasks together
+----------------------------------------
+The true advantage of the iterator method becomes apparent when multiple
+calcluations must be performed on the same data simultaneously. For example,
+it is common to want to measure the time-averaged intensity of a photon
+stream while correlating the photons (short time) and correlating the
+intensity (long time). Several of these calculations have common steps, and
+by accessing the correct level of complexity for each we can reduce duplication
+of effort:
+
+photons --> photon correlator --> correlation histogram
+   |------> intensity 
+               |-------> intensity correlator
+
+
+
+for photon in photons:
+    correlator.push(photon)
+    intensity.push(photon)
+
+    for correlation in correlator:
+        histogram.push(correlation)
+
+    for counts in intensity:
+        intensity_file.write(counts)
+        intensity_correlator.push(counts)
+
+correlator.flush()
+for correlation in correlator:
+    histogram.push(correlation)
+
+histogram_file.write(histogram)
+
+intensity.flush()
+for counts in intensity:
+    intensity_file.write(counts)
+    intensity_correlator.push(counts)
+
+intensity_correlation_file.write(intensity_correlator)
+
+
+
+These tasks can be performed in C or on the command line with pipes, though in
+C the values can be passed in their binary form, rather than by string parsing.
+
+----------------------------------------
+Programs and their purposes
+----------------------------------------
+>>>> intensity_correlate            <<<<
+input: photon intensity
+output: intensity gn
+
+Calculates the normalized correlation of photon intensity data.
+
+>>>> photon_bin_intensity           <<<<
+input: photons, histogram defintion
+output: histogram bins with counts
+
+Calculates the exact normalization of the photon correlation function by
+explicitly accounting for the finite experiment time when counting the number
+of photons arriving at each possible delay.
+
+>>>> photon_correlate               <<<<
+input: photons
+output: photon correlations
+
+Generates all tuples of length n of the photons in the stream, for use in 
+calculating the photon correlation function.
+
+>>>> photon_gn                      <<<<
+input: photons
+output: photon intensity, gn, integrated intensity, number
+
+Generates a variety of useful results for a given stream of photons, for use
+in studying time-dependence of lifetimes, intensity, or other parameters.
+
+>>>> photon_histogram               <<<<
+input: photon correlations
+output: correlation histogram
+
+Accumlates correlations of photons and counts the number of events falling
+into bins in delay space.
+
+>>>> photon_intensity               <<<<
+input: photons
+output: photon intensity
+
+Counts the number of photons arriving on each channels, every fixed amount of
+time.
+
+>>>> photon_intensity_correlate     <<<<
+input: photons
+output: intensity gn
+
+Joins the tasks of photon_intensity and intensity_correlate into a single 
+executable.
+
+>>>> photon_temper                  <<<<
+input: photons
+output: photons
+
+Transforms the stream of photons by suppressing particular channels or adding
+an offset to a time dimension.
+
+>>>> photons                        <<<<
+input: photons
+output: photons
+
+Transforms the stream of photons by converting between types.

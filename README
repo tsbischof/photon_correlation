@@ -1,0 +1,23 @@
+Thomas Bischof 
+tbischof@mit.edu
+
+Last updated 25 April 2013
+
+----------------------------------------
+Introduction
+----------------------------------------
+The code provided here is a suite of command-line tools for performing 
+calculations on photon arrival data, as produced by hardware such as the 
+PicoQuant PicoHarp and HydraHarp. The tasks covered include:
+- correlation of photons to nth order (gn)
+- calculation of the approximate and exact normalization of the photon 
+  correlation function to nth order
+- binning of photons to produce intensity traces
+- correlation of photon intensity traces to 2nd order
+- conversion between photon data types
+- performing any or all of the aforementioned tasks for subintervals of 
+  experiment time (time-dependent lifetimes, etc)
+
+In addition to performing such calculations, a suite of Python tools is 
+provided to read and manipulate the results. 
+
