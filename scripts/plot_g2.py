@@ -13,7 +13,7 @@ def mean(L):
 def g2_from_stream(stream):
     result = dict()
     for channel_0, channel_1, bin_left, bin_right, counts in csv.reader(stream):
-        key = (channel_0, channel_1)
+        key = (int(channel_0), int(channel_1))
         if key not in result.keys():
             result[key] = list()
 
@@ -29,11 +29,11 @@ def plot_g2s(g2s, scale="linear"):
     else:
         raise(ValueError("Unknown scale: {0}".format(scale)))
 
-    channels = max(map(max, g2s.keys()))
+    channels = max(map(max, g2s.keys()))+1
 
     plt.clf()
 
-    for index, val in enumerate(g2s.values()):
+    for index, val in enumerate(g2s.items()):
         corr, g2 = val
         c0, c1 = corr
 
@@ -41,7 +41,7 @@ def plot_g2s(g2s, scale="linear"):
         times = list(map(lambda x: mean(x[0]), g2))
         counts = list(map(lambda x: x[1], g2))
    
-        plt.plot(times, counts)
+        plotter(times, counts)
         plt.title(str(corr))
         plt.xlabel(r"$\tau$")
         plt.ylabel(r"g^{(2)}(\tau)")
