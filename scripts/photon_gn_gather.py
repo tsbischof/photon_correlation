@@ -71,6 +71,7 @@ def gather(run_dir):
                             run_files)
 
 def gather_run_type(dst, files):
+# this works for gn, but not number
     with open(dst, "w") as stream_out:
         writer = csv.writer(stream_out)
 
