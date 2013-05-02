@@ -14,7 +14,7 @@ def plot_lifetime(lifetime):
         times = list(map(lambda x: x[1], my_lifetime))
         counts = list(map(lambda x: x[2], my_lifetime))
 
-        plt.plot(times, counts)
+        plt.semilogy(times, counts)
     plt.show()
 
 def lifetime_from_file(stream):
