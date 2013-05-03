@@ -213,6 +213,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			result = PC_ERROR_IO;
 		} else {
 			pc_options_fprintf(options_file, options);
+			fflush(options_file);
 		}
 	}
 
