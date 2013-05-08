@@ -3,6 +3,12 @@
 #include "error.h"
 #include "files.h"
 
+/* 
+ * In each program, files must be opened and closed, either as references to
+ * a file in the system or as stdin/stdout. By default, stdin/stdout are used,
+ * so we put the logic to check whether we are opening a file or stream here.
+ */
+
 int stream_open(FILE **stream, FILE *default_stream, 
 		char *filename, char *mode) {
 	if ( filename == NULL ) {

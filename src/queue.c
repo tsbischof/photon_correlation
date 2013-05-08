@@ -4,7 +4,29 @@
 #include "queue.h"
 #include "error.h"
 
-queue_t *queue_alloc (size_t const elem_size, size_t const length) {
+/*
+ * The queue is effectively the C++ vector, though the guarantee of pointer 
+ * arithmetic is not included. The essential point of this structure is to 
+ * provide a way of storing and retrieving values in constant time by storing
+ * them in a linear array. Thus this acts like an efficient queue, which can
+ * be dynamically resized (increased by a factor of 2) when needed but comes
+ * pre-allocated with as much memory as needed. 
+
+ * The basic methods it has are:
+ * -push (add to back)
+ * -pop (remove from front)
+ * -front/back (copy to buffer)
+ * -index (get a position)
+ * -sort (use an installed comparator to sort the queue)
+
+ * The sort routine could be simplified if the movement of memory were handled
+ * during a push, but here the queue is treated as circular, such that an
+ * index overflow returns to the front. If instead an index overflow triggered
+ * a movement of values to the front, the block would be contiguous and pointer
+ * arithmetic would work.
+*/
+
+queue_t *queue_alloc(size_t const elem_size, size_t const length) {
 	queue_t *queue = (queue_t *)malloc(sizeof(queue_t));
 
 	if ( queue == NULL ) {

@@ -17,6 +17,17 @@
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
 
+/* 
+ * Since there are many small programs which comprise this package, and many
+ * of these programs have common options, these routines are used to ensure
+ * that options can be handled simply and consistently. The general procedure
+ * is as follows: 
+ * 1. Specify the help message and the options for the program. 
+ * 2. Set the options to their default values.
+ * 3. Parse the specified options, checking against the allowed values.
+ * 4. Check that the specified options are consistent and valid. 
+ */
+
 static pc_option_t pc_options_all[] = {
 	{'h', "h", "help", 
 			"Prints this usage message."},

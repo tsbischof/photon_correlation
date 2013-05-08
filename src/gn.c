@@ -14,6 +14,17 @@
 #include "correlation/correlator.h"
 #include "histogram/histogram_gn.h"
 
+/* 
+ * For correlation we typically need to join several operations together.
+ * At minimum, we must send the photons to the correlator and the correlations
+ * to the histogrammer, but for diagnostic purposes it is often desirable
+ * to send photons to an intensity measurement or other routine. As such, this
+ * procedure is meant to push photons to all of the different measurements
+ * desired, such that a single pass through the stream is sufficient for 
+ * performing all calculations. This in principle enables real-time processing
+ * but in practice just makes the whole act of processing simpler.
+ */
+
 int gn_run(program_options_t *program_options, int const argc,
 		char * const *argv) {
 	int result = PC_SUCCESS;

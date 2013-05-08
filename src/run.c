@@ -2,6 +2,16 @@
 #include "error.h"
 #include "files.h"
 
+/*
+ * Most programs follow a common routine for processing:
+ * 1. Check options. 
+ * 2. Initialize I/O
+ * 3. Run dispatch to process data.
+ * 4. Clean up.
+ * 
+ * This procedure implements this process.
+ */
+
 int run(program_options_t *program_options, dispatch_t const dispatch,
 		int const argc, char * const *argv) {
 	int result = PC_SUCCESS;
