@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 			OPT_BIN_WIDTH,
 			OPT_PRINT_EVERY,
 			OPT_EXACT_NORMALIZATION,
+			OPT_POSITIVE_ONLY,
 			OPT_EOF}};
 
 	return(gn_run(&program_options, argc, argv));
