@@ -44,7 +44,7 @@ def plot_g2s(g2s, scale="linear"):
         plotter(times, counts)
         plt.title(str(corr))
         plt.xlabel(r"$\tau$")
-        plt.ylabel(r"g^{(2)}(\tau)")
+        plt.ylabel(r"$g^{(2)}(\tau)$")
 
     plt.show()
 
