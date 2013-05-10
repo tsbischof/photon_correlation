@@ -5,28 +5,43 @@ import sys
 
 import matplotlib.pyplot as plt
 
-def plot_lifetime(lifetime):
-    histograms = set(map(lambda x: x[0], lifetime))
+def plot_lifetime(lifetimes):
     plt.clf()
 
-    for histogram in sorted(histograms):
-        my_lifetime = filter(lambda x: x[0] == histogram, lifetime)
-        times = list(map(lambda x: x[1], my_lifetime))
-        counts = list(map(lambda x: x[2], my_lifetime))
+    for index in lifetimes.keys():
+        lifetime = lifetimes[index]
+        
+        times = list(map(lambda x: x[0][0], lifetime))
+        counts = list(map(lambda x: x[1], lifetime))
 
-        plt.semilogy(times, counts)
+        if any(counts):
+            plt.semilogy(times, counts, label=str(index))
+        else:
+            pass
+
+    plt.legend()
     plt.show()
 
-def lifetime_from_file(stream):
-    for histogram_index, bin_left, bin_right, counts in stream:
-        yield((int(histogram_index),
-               float(bin_left),
-               int(counts)))
+def lifetimes_from_file(stream):
+    result = dict()
+    
+    for line in csv.reader(stream):
+        index = int(line[0])
+        bin_left = float(line[1])
+        bin_right = float(line[2])
+        counts = int(line[3])
+
+        if not index in result.keys():
+            result[index] = list()
+
+        result[index].append(((bin_left, bin_right), counts))
+
+    return(result)
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:
         with open(filename) as stream:
-            lifetimes = list(lifetime_from_file(csv.reader(stream)))
+            lifetimes = lifetimes_from_file(stream)
 
             plot_lifetime(lifetimes)
 
