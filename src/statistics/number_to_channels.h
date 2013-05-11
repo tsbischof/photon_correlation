@@ -13,12 +13,16 @@ typedef struct {
 	queue_t *queue;
 	t3_t photon;
 
+	t3_t previous_photon;
+
 	unsigned int current_channel;
 	unsigned int seen_this_pulse;
+	int correlate_successive;
 } number_to_channels_t;
 
 number_to_channels_t *number_to_channels_alloc(size_t const queue_size);
-void number_to_channels_init(number_to_channels_t *number);
+void number_to_channels_init(number_to_channels_t *number,
+		int const correlate_successive);
 int number_to_channels_push(number_to_channels_t *number, t3_t const *t3);
 int number_to_channels_next(number_to_channels_t *number);
 void number_to_channels_flush(number_to_channels_t *number);

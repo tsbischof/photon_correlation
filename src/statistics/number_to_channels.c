@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "number_to_channels.h"
 #include "../modes.h"
 #include "../types.h"
@@ -23,11 +25,14 @@ number_to_channels_t *number_to_channels_alloc(size_t const queue_size) {
 	return(number);
 }
 
-void number_to_channels_init(number_to_channels_t *number) {
+void number_to_channels_init(number_to_channels_t *number,
+		int const correlate_successive) {
 	number->flushing = false;
 	number->current_pulse = 0;
 	number->current_channel = 0;
 	number->seen_this_pulse = 0;
+
+	number->correlate_successive = correlate_successive;
 
 	queue_init(number->queue);
 }
@@ -62,11 +67,19 @@ int number_to_channels_next(number_to_channels_t *number) {
 				front.pulse != back.pulse ) ) {
 		number->photon.channel = number->current_channel;
 		number->photon.pulse = front.pulse;
-		number->photon.time = front.time;
+
+		if ( number->correlate_successive &&
+				 number->previous_photon.pulse == number->photon.pulse ) {
+			number->photon.time = front.time - number->previous_photon.time;
+		} else {
+			number->photon.time = front.time;
+		}
 
 		number->current_channel++;
 
 		queue_pop(number->queue, &front);
+
+		memcpy(&(number->previous_photon), &front, sizeof(t3_t));
 
 		return(PC_SUCCESS);
 	} else {
@@ -129,7 +142,7 @@ int number_to_channels(FILE *stream_in, FILE *stream_out,
 		photon_stream_init(photons, stream_in);
 		photon_stream_set_unwindowed(photons);
 
-		number_to_channels_init(number);
+		number_to_channels_init(number, options->correlate_successive);
 
 		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
 			debug("Found a photon.\n");

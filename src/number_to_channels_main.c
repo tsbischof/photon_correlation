@@ -18,10 +18,18 @@ int main(int argc, char *argv[]) {
 "\n"
 "To determine the order in the pulse and the number of photons in that pulse:\n"
 "number in pulse = (int)floor((1+sqrt(1+8*channel))/2)\n"
-"order in pulse = channel - number in pulse + 1\n",
+"order in pulse = channel - number in pulse + 1\n"
+"\n"
+"If the option --correlate-successive is used, the photons' arrival times\n"
+"are correlated in sucession, rather than relative to the excitation pulse.\n"
+"For example:\n"
+"    0,1,12; 1,1,14   ---->     1,1,12; 2,1,2\n"
+"This way, the lifetimes may be calculated for successive events to determine\n"
+"whether the kinetics are successive or parallel.",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_QUEUE_SIZE,
+			OPT_QUEUE_SIZE, 
+			OPT_CORRELATE_SUCCESSIVE,
 			OPT_EOF}};
 
 	return(run(&program_options, number_to_channels, argc, argv));

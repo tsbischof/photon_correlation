@@ -11,7 +11,7 @@
 typedef struct {
 	char short_char;
 	char long_char[10];
-	char long_name[20];
+	char long_name[50];
 	char description[1000];
 } pc_option_t;
 
@@ -96,6 +96,9 @@ typedef struct {
 	unsigned int binning;
 	unsigned int registers;
 	unsigned int depth;
+
+/* number to channels */
+	int correlate_successive;
 } pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
@@ -116,6 +119,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_REPETITION_TIME, OPT_TIME_ORIGIN,
 		OPT_CONVERT,
 		OPT_BINNING, OPT_REGISTERS, OPT_DEPTH,
+		OPT_CORRELATE_SUCCESSIVE,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);

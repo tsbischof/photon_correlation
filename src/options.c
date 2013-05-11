@@ -163,7 +163,11 @@ static pc_option_t pc_options_all[] = {
 	{'b', "b:", "depth",
 			"Number of levels deep for the multi-tau \n"
 			"correlation. The maximum delay in units of time\n"
-			"is: binning^(depth-1)*(registers-1)"}
+			"is: binning^(depth-1)*(registers-1)"},
+	{'C', "C:", "correlate-successive",
+			"Instead of returning photons with their original\n"
+			"timing, return their timing relative the the\n"
+			"previous photon from their pulse."}
 	};
 
 
@@ -225,6 +229,9 @@ static struct option pc_options_long[] = {
 	{"binning", required_argument, 0, 'B'},
 	{"registers", required_argument, 0, 'a'},
 	{"depth", required_argument, 0, 'b'},
+
+/* number to channel */
+	{"correlate-successive", no_argument, 0, 'C'},
 	{0, 0, 0, 0}};
 
 
@@ -322,6 +329,8 @@ void pc_options_default(pc_options_t *options) {
 	options->binning = 2;
 	options->registers = 16;
 	options->depth = 32;
+
+	options->correlate_successive = false;
 }
 
 int pc_options_valid(pc_options_t const *options) {
@@ -530,6 +539,9 @@ int pc_options_parse(pc_options_t *options,
 			case 'b':
 				options->depth = strtoul(optarg, NULL, 10);
 				break;
+			case 'C':
+				options->correlate_successive = true;
+				break;
 			case '?':
 			default:
 				options->usage = true;
@@ -694,7 +706,7 @@ void pc_options_usage(pc_options_t const *options,
 
 		fprintf(stderr, "%*s-%c, --%s: ", 
 				20-(int)strlen(option->long_name),
-				" ",
+				"",
 				option->short_char,
 				option->long_name);
 
@@ -821,6 +833,10 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "repetition_rate = %lf\n", options->repetition_rate);
 	fprintf(stream_out, "convert = %d (%s)\n", 
 			options->convert, options->convert_string);
+
+	fprintf(stream_out, "\n[number]\n");
+	fprintf(stream_out, "correlate_successive = %d\n", 
+			options->correlate_successive);
 
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
