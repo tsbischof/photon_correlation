@@ -39,11 +39,26 @@ void number_to_channels_init(number_to_channels_t *number,
 
 int number_to_channels_push(number_to_channels_t *number, t3_t const *t3) {
 	int result;
+	t3_t photon;
+	int i;
 
-	result = queue_push(number->queue, t3);
+	/* Check that no photon on this channel has been seen in 
+	 * the current pulse 
+	 */
+	for ( i = 0; i < queue_size(number->queue); i++ ) {
+		queue_index(number->queue, &photon, i);
 
-	if ( result != PC_SUCCESS ) {
-		return(result);
+		if ( photon.pulse == t3->pulse && photon.channel == t3->channel ) {
+			break;
+		}
+	} 
+
+	if ( i == queue_size(number->queue) ) {
+		result = queue_push(number->queue, t3);
+
+		if ( result != PC_SUCCESS ) {
+			return(result);
+		}
 	}
 
 	if ( t3->pulse != number->current_pulse ) {

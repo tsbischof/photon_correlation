@@ -5,7 +5,10 @@
 int main(int argc, char *argv[]) {
 	program_options_t program_options = {
 "This program accepts a stream of t3 photons and return the photons, with \n"
-"channels remapped to indicate the number of photons seen in each pulse."
+"channels remapped to indicate the number of photons seen in each pulse.\n"
+"\n"
+"Note that photons are restricted to arrival on distinct channels; only\n"
+"the first photon on a channel during a given pulse will be used.\n"
 "\n"
 "Photons in pulse            Channels mapped to \n"
 "         1                     0\n"
