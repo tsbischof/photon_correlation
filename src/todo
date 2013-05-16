@@ -12,3 +12,6 @@ Scripts:
 
 Intensity correlate:
 -integrate the intensity calculation into the process: use the specified bin-width to condition the photon stream and the histogram bins
+
+photons:
+-when applying a time offset to t3 data which would make the time negative, instead decrement the pulse number by the appropriate amount.
