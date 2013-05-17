@@ -28,6 +28,19 @@ class Limits(object):
     def __contains__(self, value):
         return(self.lower <= value and value < self.upper)
 
+class Histogram(object):
+    def __init__(Self, order=2, mode=pc.modes.T2):
+        self.order = 1
+        self.mode = mode
+
+    def from_stream(self, stream_in):
+        for line in csv.reader(stream_in):
+            pass
+
+    def from_file(self, filename):
+        with open(filename) as stream_in:
+            return(self.from_stream(stream_in))
+
 ##class Histogram(object):
 ##    def __init__(self, order=2, mode=pc.modes.T2):
 ##        pass
