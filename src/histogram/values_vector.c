@@ -40,20 +40,18 @@ long long values_vector_index(values_vector_t const *vv,
  * 2. Turning those indices into an overall index, as with combinations.
  */
 	int i;
-	int result;
+	long long result;
 	long long base = 1;
 	long long index = 0;
 
 	for ( i = vv->length-1; i >= 0; i-- ) {
-		index *= base;
-
 		result = edges[i]->get_index(edges[i], vv->values[i]);
 
 		if ( result < 0 ) {
 			return(result);
 		}
 
-		index += result;
+		index += base*result;
 		base *= edges[i]->n_bins;
 	}
 
