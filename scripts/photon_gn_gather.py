@@ -77,34 +77,17 @@ def gather_run_type(dst, files):
 
         time_parser = re.compile("\.(?P<start>[0-9]+)_(?P<stop>[0-9]+)$")
 
-        start = list()
-        stop = list()
-        for filename in files:
-            parsed = time_parser.search(filename)
-            start.append(parsed.group("start"))
-            stop.append(parsed.group("stop"))
+        first_file = files[0]
+        data = list(read_data(first_file))
 
-        readers = list(map(read_data, files))
-        first_row = list(map(lambda x: next(x), readers))
+        for i in range(len(data[0])-1):
+            writer.writerow(["", ""] + list(map(operator.itemgetter(i), data)))
 
-        spacers = len(first_row[0][:-1])
-
-        writer.writerow([""]*spacers + start)
-        writer.writerow([""]*spacers +  stop)
-        my_bin = first_row[0][:-1]
-        my_data = list(map(lambda x: x[-1], first_row))
-        writer.writerow(my_bin + my_data)
-
-        try:
-            while True:
-                row = list(map(lambda x: next(x), readers))
-                my_bin = row[0][:-1]
-                my_data = list(map(lambda x: x[-1], row))
-    
-                writer.writerow(my_bin + my_data)
-        except:
-            pass
-                
+        for my_file in files:
+            data = read_data(my_file)
+            parsed = time_parser.search(my_file)
+            writer.writerow([parsed.group("start"), parsed.group("stop")] +
+                             list(map(operator.itemgetter(-1), data)))        
     
 
 if __name__ == "__main__":
