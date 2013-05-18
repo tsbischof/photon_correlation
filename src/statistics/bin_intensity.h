@@ -54,6 +54,10 @@ int bin_intensity_push(bin_intensity_t *bin_intensity, void const *photon);
 
 int bin_intensity_fprintf(FILE *stream_out, 
 		bin_intensity_t const *bin_intensity);
+int bin_intensity_fprintf_bins(FILE *stream_out, 
+		bin_intensity_t const *bin_intensity, unsigned int const blanks);
+int bin_intensity_fprintf_counts(FILE *stream_out, 
+		bin_intensity_t const *bin_intensity);
 
 int bin_intensity(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options);

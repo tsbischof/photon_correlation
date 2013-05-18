@@ -311,3 +311,140 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
 	return(PC_SUCCESS);
 }
 
+int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
+		unsigned int const blanks) {
+/* Print the bin information in rows, with blank spaces left in the first
+ * few columns. This is meant to be used for time-dependent calculations,
+ * where we only need the bin information once.
+ */
+	int i, j, k;
+
+/* First row is the channels. */
+	for ( i = 0; i < blanks; i++ ) {
+		fprintf(stream_out, ",");
+	}
+
+	combination_init(hist->channels_vector);
+	
+	j = 0;
+	while ( combination_next(hist->channels_vector) == PC_SUCCESS ) {
+		if ( j++ != 0 ) {
+			fprintf(stream_out, ",");
+		}
+
+		for ( i = 0; i < hist->n_bins; i++ ) {
+			fprintf(stream_out, "%u",
+					hist->channels_vector->values[0]);
+
+			if ( i + 1 != hist->n_bins ) {
+				fprintf(stream_out, ",");
+			}
+		}
+	}
+
+	fprintf(stream_out, "\n");
+
+/* Now the edges */
+	for ( i = 0; i < hist->dimensions; i++ ) {
+		/* Channel label */
+		for ( j = 0; j < blanks; j++ ) {
+			fprintf(stream_out, ",");
+		}
+
+		combination_init(hist->channels_vector);
+	
+		j = 0;
+		while ( hist->edges[i]->print_label && 
+				combination_next(hist->channels_vector) == PC_SUCCESS ) {
+			if ( j++ != 0 ) {
+				fprintf(stream_out, ",");
+			}
+
+			for ( k = 0; k < hist->n_bins; k++ ) {
+				fprintf(stream_out, "%u",
+						hist->channels_vector->values[i+1]);
+	
+				if ( k + 1 != hist->n_bins ) {
+					fprintf(stream_out, ",");
+				}
+			}
+		}
+		fprintf(stream_out, "\n");
+
+		/* Lower limit */
+		for ( j = 0; j < blanks; j++ ) {
+			fprintf(stream_out, ",");
+		}
+
+		for ( j = 0; j < hist->n_histograms; j++ ) {
+			edge_indices_init(hist->edge_indices, hist->edges);
+			k = 0;
+			while ( edge_indices_next(hist->edge_indices) == PC_SUCCESS ) {
+				if ( k++ != 0 ) {
+					fprintf(stream_out, ",");
+				}
+
+				fprintf(stream_out, "%.2lf",
+						hist->edges[i]->bin_edges[
+								hist->edge_indices->values[i]]);
+			}
+
+			if ( j+1 != hist->n_histograms ) {
+				fprintf(stream_out, ",");
+			}
+		}
+		fprintf(stream_out, "\n");
+
+		/* Upper limit */
+		for ( j = 0; j < blanks; j++ ) {
+			fprintf(stream_out, ",");
+		}
+
+		for ( j = 0; j < hist->n_histograms; j++ ) {
+			edge_indices_init(hist->edge_indices, hist->edges);
+			k = 0;
+			while ( edge_indices_next(hist->edge_indices) == PC_SUCCESS ) {
+				if ( k++ != 0 ) {
+					fprintf(stream_out, ",");
+				}
+
+				fprintf(stream_out, "%.2lf",
+						hist->edges[i]->bin_edges[
+								hist->edge_indices->values[i]+1]);
+			}
+
+			if ( j+1 != hist->n_histograms ) {
+				fprintf(stream_out, ",");
+			}
+		}
+		fprintf(stream_out, "\n");
+
+	}
+
+	return(PC_SUCCESS);
+}
+
+int histogram_gn_fprintf_counts(FILE *stream_out, histogram_gn_t const *hist) {
+/* Print the counts from the histogram. This is meant to be used for
+ * time-dependent calculations.
+ */
+	int histogram_index;
+	int bin_index;
+
+	for ( histogram_index = 0; histogram_index < hist->n_histograms; 
+			histogram_index++ ) {
+		for ( bin_index = 0; bin_index < hist->n_bins; bin_index++ ) {
+			fprintf(stream_out, "%llu",
+					hist->counts[histogram_index][bin_index]);
+			if ( ! ( histogram_index+1 == hist->n_histograms && 
+						bin_index+1 == hist->n_bins) ) {
+				fprintf(stream_out, ",");
+			}
+		}
+	}
+
+	fprintf(stream_out, "\n");
+
+	return(PC_SUCCESS);
+}
+

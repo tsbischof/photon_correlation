@@ -137,6 +137,22 @@ int photon_number_fprintf(FILE *stream_out, photon_number_t const *number) {
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
 
+int photon_number_fprintf_counts(FILE *stream_out, 
+		photon_number_t const *number) {
+	int i;
+
+	for ( i = 0 ; i < number->max_seen+1; i++ ) {
+		fprintf(stream_out, "%llu", number->counts->counts[i]);
+		if ( i != number->max_seen ) {
+			fprintf(stream_out, ",");
+		}
+	}
+
+	fprintf(stream_out, "\n");
+
+	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
+}
+
 int photon_number(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) { 
 	int result = PC_SUCCESS;

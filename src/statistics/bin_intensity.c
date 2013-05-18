@@ -346,6 +346,16 @@ int bin_intensity_fprintf(FILE *stream_out,
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
 
+int bin_intensity_fprintf_bins(FILE *stream_out,
+		bin_intensity_t const *bin_intensity, unsigned int const blanks) {
+	return(PC_ERROR_OPTIONS);
+}
+
+int bin_intensity_fprintf_counts(FILE *stream_out,
+		bin_intensity_t const *bin_intensity) {
+	return(PC_ERROR_OPTIONS);
+}
+
 int bin_intensity(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
 	int result = PC_SUCCESS;

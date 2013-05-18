@@ -45,5 +45,8 @@ int histogram_gn_increment(histogram_gn_t *hist,
 		correlation_t const *correlation);
 
 int histogram_gn_fprintf(FILE *stream_out, void const *hist);
+int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
+		unsigned int const blanks);
+int histogram_gn_fprintf_counts(FILE *stream_out, histogram_gn_t const *hist);
 
 #endif
