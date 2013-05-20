@@ -15,3 +15,6 @@ Intensity correlate:
 
 photons:
 -when applying a time offset to t3 data which would make the time negative, instead decrement the pulse number by the appropriate amount.
+
+photon afterpulsing filter
+-have a separate routine which filters afterpulsing in t3 data

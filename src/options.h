@@ -83,6 +83,8 @@ typedef struct {
 	char *pulse_offsets_string;
 	long long *pulse_offsets;
 
+	int filter_afterpulsing;
+
 /* gn */
 	int exact_normalization;
 
@@ -120,6 +122,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_CONVERT,
 		OPT_BINNING, OPT_REGISTERS, OPT_DEPTH,
 		OPT_CORRELATE_SUCCESSIVE,
+		OPT_FILTER_AFTERPULSING,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);

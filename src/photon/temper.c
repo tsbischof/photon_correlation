@@ -78,12 +78,15 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 
 void photon_stream_temper_init(photon_stream_temper_t *pst,
 		FILE *stream_in, 
+		int const filter_afterpulsing,
 		int const suppress_channels, int const *suppressed_channels,
 		int const offset_time, long long const *time_offsets,
 		int const offset_pulse, long long const *pulse_offsets) {
 	int i;
 
 	pst->stream_in = stream_in;
+
+	pst->filter_afterpulsing = filter_afterpulsing;
 
 	pst->suppress_channels = suppress_channels;
 
@@ -154,8 +157,15 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 
 					diff = pst->window_dim(pst->right) -
 							pst->window_dim(pst->left);
-	
-					if ( diff >= pst->offset_span ) {
+
+					result = (diff >= pst->offset_span);
+
+					if ( pst->filter_afterpulsing &&
+							(((t3_t *)pst->left)->pulse == 
+								((t3_t *)pst->right)->pulse) ) {
+						debug("Filtering afterpulsing but still on a pulse.\n");
+						pst->yielded_all_sorted = 1;
+					} else if ( diff >= pst->offset_span ) {
 						debug("Found a photon outside the offset bounds\n");
 						queue_pop(pst->queue,
 								pst->current_photon);
@@ -175,6 +185,8 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 	int result;
 	int suppress = false;
 	int channel;
+	int i;
+	t3_t t3;
 
 	while ( true ) {
 		result = pst->photon_next(pst->stream_in, pst->current_photon);
@@ -199,19 +211,23 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			}
 		}
 
+		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
+			for ( i = 0; i < queue_size(pst->queue); i++ ) {
+				queue_index(pst->queue, &t3, i);
+				if ( t3.pulse == ((t3_t *)pst->current_photon)->pulse &&
+						t3.channel == ((t3_t *)pst->current_photon)->channel ) {
+					suppress = true;
+					break;
+				}
+			}
+		}
+
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
 			pst->photon_offset(pst->current_photon, pst->offsets);
 			
 			result = queue_push(pst->queue, pst->current_photon);
 			return(result);
-/*			if ( result != PC_SUCCESS ) {
-				error("Could not add photon to queue.\n");
-				return(result);
-			} else {
-				if ( ) {
-				}
-			} */
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
@@ -262,6 +278,7 @@ int photon_temper(FILE *stream_in, FILE *stream_out,
 
 	if ( result == PC_SUCCESS ) {
 		photon_stream_temper_init(pst, stream_in,
+				options->filter_afterpulsing,
 				options->suppress_channels, options->suppressed_channels,
 				options->offset_time, options->time_offsets,
 				options->offset_pulse, options->pulse_offsets);

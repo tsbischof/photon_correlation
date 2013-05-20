@@ -164,10 +164,13 @@ static pc_option_t pc_options_all[] = {
 			"Number of levels deep for the multi-tau \n"
 			"correlation. The maximum delay in units of time\n"
 			"is: binning^(depth-1)*(registers-1)"},
-	{'C', "C:", "correlate-successive",
+	{'C', "C", "correlate-successive",
 			"Instead of returning photons with their original\n"
 			"timing, return their timing relative the the\n"
-			"previous photon from their pulse."}
+			"previous photon from their pulse."},
+	{'H', "H", "filter-afterpulsing",
+			"For t3 mode, retain only the first photon on a\n"
+			"channel for a given pulse."}
 	};
 
 
@@ -208,10 +211,11 @@ static struct option pc_options_long[] = {
 	{"time-scale", required_argument, 0, 'X'},
 	{"pulse-scale", required_argument, 0, 'Y'},
 
-/* Channels */
+/* Temper */
 	{"time-offsets", required_argument, 0, 'u'},
 	{"pulse-offsets", required_argument, 0, 'U'},
 	{"suppress", required_argument, 0, 's'},
+	{"filter-afterpulsing", no_argument, 0, 'H'},
 
 /* correlate_vector */ 
 	{"approximate", required_argument, 0, 'B'},
@@ -318,6 +322,8 @@ void pc_options_default(pc_options_t *options) {
 	options->offset_pulse = false;
 	options->pulse_offsets_string = NULL;
 	options->pulse_offsets = NULL;
+
+	options->filter_afterpulsing = false;
 
 	options->exact_normalization = false;
 
@@ -541,6 +547,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'C':
 				options->correlate_successive = true;
+				break;
+			case 'H':
+				options->filter_afterpulsing = true;
 				break;
 			case '?':
 			default:

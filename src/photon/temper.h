@@ -28,6 +28,8 @@ typedef struct {
 	queue_t *queue;
 	int yielded_all_sorted;
 
+	int filter_afterpulsing;
+
 	photon_next_t photon_next;
 	photon_print_t photon_print;
 
@@ -40,6 +42,7 @@ photon_stream_temper_t *photon_stream_temper_t_alloc(int const mode,
 		unsigned int const channels, size_t const queue_length);
 void photon_stream_temper_init(photon_stream_temper_t *pst,
 		FILE *stream_in, 
+		int const filter_afterpulsing,
 		int const suppress_channels, int const *suppressed_channels,
 		int const offset_time, long long const *time_offsets,
 		int const offset_pulse, long long const *pulse_offsets);
