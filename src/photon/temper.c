@@ -161,6 +161,7 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 					result = (diff >= pst->offset_span);
 
 					if ( pst->filter_afterpulsing &&
+							pst->mode == MODE_T3 && 
 							(((t3_t *)pst->left)->pulse == 
 								((t3_t *)pst->right)->pulse) ) {
 						debug("Filtering afterpulsing but still on a pulse.\n");
