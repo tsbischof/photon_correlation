@@ -347,29 +347,31 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 /* Now the edges */
 	for ( i = 0; i < hist->dimensions; i++ ) {
 		/* Channel label */
-		for ( j = 0; j < blanks; j++ ) {
-			fprintf(stream_out, ",");
-		}
-
-		combination_init(hist->channels_vector);
-	
-		j = 0;
-		while ( hist->edges[i]->print_label && 
-				combination_next(hist->channels_vector) == PC_SUCCESS ) {
-			if ( j++ != 0 ) {
+		if ( hist->edges[i]->print_label ) {
+			for ( j = 0; j < blanks; j++ ) {
 				fprintf(stream_out, ",");
 			}
 
-			for ( k = 0; k < hist->n_bins; k++ ) {
-				fprintf(stream_out, "%u",
-						hist->channels_vector->values[i+1]);
+			combination_init(hist->channels_vector);
 	
-				if ( k + 1 != hist->n_bins ) {
+			j = 0;
+			while ( combination_next(hist->channels_vector) == PC_SUCCESS ) {
+				if ( j++ != 0 ) {
 					fprintf(stream_out, ",");
 				}
+	
+				for ( k = 0; k < hist->n_bins; k++ ) {
+					fprintf(stream_out, "%u",
+							hist->channels_vector->values[i+1]);
+		
+					if ( k + 1 != hist->n_bins ) {
+						fprintf(stream_out, ",");
+					}
+				}
 			}
+	
+			fprintf(stream_out, "\n");
 		}
-		fprintf(stream_out, "\n");
 
 		/* Lower limit */
 		for ( j = 0; j < blanks; j++ ) {
