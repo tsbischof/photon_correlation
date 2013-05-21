@@ -201,6 +201,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		}
 
 		channel = pst->channel_dim(pst->current_photon);
+
 		if ( channel < pst->channels ) {
 			suppress = pst->suppress_channels && 
 					pst->suppressed_channels[channel];
@@ -211,6 +212,8 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 				return(PC_ERROR_CHANNEL);
 			}
 		}
+
+		pst->photon_offset(pst->current_photon, pst->offsets);
 
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
 			for ( i = 0; i < queue_size(pst->queue); i++ ) {
@@ -225,10 +228,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
-			pst->photon_offset(pst->current_photon, pst->offsets);
-			
-			result = queue_push(pst->queue, pst->current_photon);
-			return(result);
+			return(queue_push(pst->queue, pst->current_photon));
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
