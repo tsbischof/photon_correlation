@@ -106,12 +106,12 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	if ( result == PC_SUCCESS ) {
 		min_time_distance = options->time_limits.lower < 0 ?
 				 0 : (long long)floor(options->time_limits.lower);
-		max_time_distance = (long long)floor(
+		max_time_distance = (long long)ceil(
 				max(fabs(options->time_limits.lower), 
 					fabs(options->time_limits.upper)));
 		min_pulse_distance = options->pulse_limits.lower < 0 ?
 				0 : (long long)floor(options->pulse_limits.lower);
-		max_pulse_distance = (long long)floor(
+		max_pulse_distance = (long long)ceil(
 				max(fabs(options->pulse_limits.lower),
 					fabs(options->pulse_limits.upper)));
 		debug("Limits: (%lld, %lld) , (%lld, %lld)\n",
