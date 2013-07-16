@@ -1,6 +1,3 @@
-CC = clang
-LD = clang
-
 INCLUDES = 
 LIBS = 
 

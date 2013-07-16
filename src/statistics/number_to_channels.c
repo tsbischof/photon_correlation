@@ -38,7 +38,7 @@ void number_to_channels_init(number_to_channels_t *number,
 }
 
 int number_to_channels_push(number_to_channels_t *number, t3_t const *t3) {
-	int result;
+	int result = PC_SUCCESS;
 	t3_t photon;
 	int i;
 

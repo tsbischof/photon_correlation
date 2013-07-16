@@ -24,7 +24,7 @@ int t3_to_t2(t3_t const *t3, t2_t *t2, double repetition_rate,
 
 int t2_to_t3(t2_t const *t2, t3_t *t3, double repetition_rate,
 		long long time_origin) {
-	long double fractpart, intpart;
+	double fractpart, intpart;
 
 	long long time;
 
@@ -37,10 +37,9 @@ int t2_to_t3(t2_t const *t2, t3_t *t3, double repetition_rate,
 	time = t2->time - time_origin;
 
 /* Round the pulse number to the nearest integer. */
-	fractpart = modfl((long double)time*1e-12*repetition_rate, &intpart);
+	fractpart = modf(time*1e-12*repetition_rate, &intpart);
 	t3->pulse = (long long)floor(intpart + 0.5);;
 	t3->time = (long long)floor(fractpart/repetition_rate*1e12+0.5);
 
 	return(PC_SUCCESS);
 }
-
