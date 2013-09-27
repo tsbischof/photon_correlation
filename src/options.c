@@ -170,7 +170,10 @@ static pc_option_t pc_options_all[] = {
 			"previous photon from their pulse."},
 	{'H', "H", "filter-afterpulsing",
 			"For t3 mode, retain only the first photon on a\n"
-			"channel for a given pulse."}
+			"channel for a given pulse."},
+	{'I', "I:", "time-gating",
+			"For t3 mode, suppress any photons which arrive\n"
+			"before the specified time after a pulse."}
 	};
 
 
@@ -216,6 +219,7 @@ static struct option pc_options_long[] = {
 	{"pulse-offsets", required_argument, 0, 'U'},
 	{"suppress", required_argument, 0, 's'},
 	{"filter-afterpulsing", no_argument, 0, 'H'},
+	{"time-gating", required_argument, 0, 'I'},
 
 /* correlate_vector */ 
 	{"approximate", required_argument, 0, 'B'},
@@ -325,6 +329,9 @@ void pc_options_default(pc_options_t *options) {
 
 	options->filter_afterpulsing = false;
 
+	options->time_gating = false;
+	options->gate_time = 0;
+
 	options->exact_normalization = false;
 
 	options->repetition_rate = 0;
@@ -410,6 +417,12 @@ int pc_options_valid(pc_options_t const *options) {
 			options->offset_pulse &&
 			! offsets_valid(options->pulse_offsets) ) {
 		error("Invalid pulse offsets.\n");
+		return(false);
+	}
+
+	if ( pc_options_has_option(options, OPT_TIME_GATING)
+			&& ! options->mode == MODE_T3 ) {
+		error("Time gating only defined for t3 mode.\n");
 		return(false);
 	}
 
@@ -550,6 +563,10 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'H':
 				options->filter_afterpulsing = true;
+				break;
+			case 'I':
+				options->time_gating = true;
+				options->gate_time = strtoll(optarg, NULL, 10);
 				break;
 			case '?':
 			default:
@@ -813,6 +830,9 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	}
 	fprintf(stream_out, "(%s)\n", options->suppress_string);
 
+	fprintf(stream_out, "gate time = %d (%lld)\n", 
+			options->time_gating, options->gate_time);
+
 	fprintf(stream_out, "time_offsets = ");
 	if ( options->offset_time ) {
 		for ( i = 0; i < options->channels; i++ ) {
@@ -834,6 +854,7 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 		}
 	}
 	fprintf(stream_out, "(%s)\n", options->pulse_offsets_string);
+
 
 	fprintf(stream_out, "exact_normalization = %d\n", 
 			options->exact_normalization);

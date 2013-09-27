@@ -12,7 +12,8 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS,
 			OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS,
 			OPT_SUPPRESS, OPT_QUEUE_SIZE, 
-			OPT_FILTER_AFTERPULSING, OPT_EOF}};
+			OPT_FILTER_AFTERPULSING, OPT_TIME_GATING,
+			OPT_EOF}};
 
 	return(run(&program_options, photon_temper, argc, argv));
 }

@@ -70,7 +70,7 @@ typedef struct {
 	char *pulse_scale_string;
 	int pulse_scale;
 
-/* Channels */
+/* temper */
 	int suppress_channels;
 	char *suppress_string;
 	int *suppressed_channels;
@@ -84,6 +84,9 @@ typedef struct {
 	long long *pulse_offsets;
 
 	int filter_afterpulsing;
+
+	int time_gating;
+	long long gate_time;
 
 /* gn */
 	int exact_normalization;
@@ -123,6 +126,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_BINNING, OPT_REGISTERS, OPT_DEPTH,
 		OPT_CORRELATE_SUCCESSIVE,
 		OPT_FILTER_AFTERPULSING,
+		OPT_TIME_GATING,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);

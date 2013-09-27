@@ -30,6 +30,9 @@ typedef struct {
 
 	int filter_afterpulsing;
 
+	int time_gating;
+	long long gate_time;
+
 	photon_next_t photon_next;
 	photon_print_t photon_print;
 
@@ -45,7 +48,8 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 		int const filter_afterpulsing,
 		int const suppress_channels, int const *suppressed_channels,
 		int const offset_time, long long const *time_offsets,
-		int const offset_pulse, long long const *pulse_offsets);
+		int const offset_pulse, long long const *pulse_offsets,
+		int const time_gating, long long const gate_time);
 int photon_stream_temper_next(photon_stream_temper_t *pst);
 void photon_stream_temper_free(photon_stream_temper_t **pst);
 int photon_stream_temper_populate(photon_stream_temper_t *pst);

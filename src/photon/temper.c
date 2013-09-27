@@ -81,7 +81,8 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 		int const filter_afterpulsing,
 		int const suppress_channels, int const *suppressed_channels,
 		int const offset_time, long long const *time_offsets,
-		int const offset_pulse, long long const *pulse_offsets) {
+		int const offset_pulse, long long const *pulse_offsets,
+		int const time_gating, long long const gate_time) {
 	int i;
 
 	pst->stream_in = stream_in;
@@ -109,6 +110,9 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 				pst->channels);
 		queue_set_comparator(pst->queue, t3v_compare);
 	}
+
+	pst->time_gating = time_gating;
+	pst->gate_time = gate_time;
 }
 
 /* Yield a photon from the queue. If values can be taken from the queue,
@@ -215,6 +219,16 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 
 		pst->photon_offset(pst->current_photon, pst->offsets);
 
+		/* Time gating */
+		if ( ! suppress && pst->time_gating && pst->mode == MODE_T3 ) {
+			debug("%lld <? %lld\n", 
+					((t3_t *)pst->current_photon)->time, pst->gate_time);
+			if ( ((t3_t *)pst->current_photon)->time < pst->gate_time ) {
+				suppress = true;
+			}
+		}
+
+		/* Afterpulsing filter */
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
 			for ( i = 0; i < queue_size(pst->queue); i++ ) {
 				queue_index(pst->queue, &t3, i);
@@ -282,7 +296,8 @@ int photon_temper(FILE *stream_in, FILE *stream_out,
 				options->filter_afterpulsing,
 				options->suppress_channels, options->suppressed_channels,
 				options->offset_time, options->time_offsets,
-				options->offset_pulse, options->pulse_offsets);
+				options->offset_pulse, options->pulse_offsets,
+				options->time_gating, options->gate_time);
 
 		while ( photon_stream_temper_next(pst) == PC_SUCCESS ) {
 			pst->photon_print(stream_out, pst->current_photon);
