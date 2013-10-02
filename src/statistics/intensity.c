@@ -261,8 +261,7 @@ int intensity_photon_next_from_photon(void *ip) {
 				intensity->counts->upper = intensity->window.upper;
 				return(PC_RECORD_AVAILABLE);
 			} else {
-				error("intensity_photon_next should never get "
-						"here, investigate.\n");
+				debug("Flushing, but no photons ever arrived.\n");
 				return(PC_ERROR_NO_RECORD_AVAILABLE);
 			}
 		} else {
