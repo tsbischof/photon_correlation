@@ -42,6 +42,8 @@ typedef struct {
 	int use_void;
 	unsigned int seed;
 
+	unsigned long long window_width;
+
 /* Correlate */
 	size_t queue_size;
 	unsigned long long max_time_distance;
@@ -112,6 +114,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 		OPT_USE_VOID, OPT_SEED,
 		OPT_QUEUE_SIZE, 
+		OPT_WINDOW_WIDTH,
 		OPT_START, OPT_STOP,
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
 		OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE,

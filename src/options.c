@@ -60,6 +60,14 @@ static pc_option_t pc_options_all[] = {
 			"photons. By default, this is 100000, and if it is\n"
 			"too small an appropriate warning message will be\n"
 			"displayed."},
+	{'W', "W:", "window-width",
+			"The width of the time bin for processing photons,\n"
+			"for a time-dependent calculation. This is used to\n"
+			"specify that a calculation should be performed\n"
+			"for photons arriving from t to t+dt, repeated\n"
+			"for the length of the experiment. The units are\n"
+			"picoseconds for t2 mode, and number of pulses\n"
+			"for t3."},
 	{'f', "f:", "start",
 			"The lower limit of time (or pulse) for the run; \n"
 			"do not process photons which arrive before \n"
@@ -193,6 +201,8 @@ static struct option pc_options_long[] = {
 	{"use-void", no_argument, 0, 'G'},
 	{"seed", required_argument, 0, 'K'},
 
+	{"window-width", required_argument, 0, 'W'},
+
 /* Correlate */
 	{"queue-size", required_argument, 0, 'q'},
 	{"max-time-distance", required_argument, 0, 'd'},
@@ -291,6 +301,8 @@ void pc_options_default(pc_options_t *options) {
 
 	options->use_void = false;
 	options->seed = 0xDEADBEEF;
+
+	options->window_width = 0;
 
 	options->queue_size = QUEUE_SIZE;
 	options->max_time_distance = 0;
@@ -479,6 +491,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'q':
 				options->queue_size = strtoul(optarg, NULL, 10);
+				break;
+			case 'W':
+				options->window_width = strtoull(optarg, NULL, 10);
 				break;
 			case 'd':
 				options->max_time_distance = strtoull(optarg, NULL, 10);
@@ -779,6 +794,7 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "print_every = %d\n", options->print_every);
 	fprintf(stream_out, "seed = 0x%x\n", options->seed);
 	fprintf(stream_out, "queue_size = %zu\n", options->queue_size);
+	fprintf(stream_out, "window_width = %llu\n", options->window_width);
 
 	fprintf(stream_out, "\n[correlate]\n");
 	fprintf(stream_out, "max_time_distance = %llu\n", 

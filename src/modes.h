@@ -9,6 +9,8 @@
 
 #define MODE_AS_T2              0xDEAD
 
+#define DEFAULT_BIN_WIDTH(x) x == MODE_T2 ? 50000000000 : 100000
+
 int mode_parse(int *mode, char const *mode_string);
 
 #endif

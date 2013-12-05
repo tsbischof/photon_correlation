@@ -82,6 +82,8 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	photon_number_t *number = NULL;
 	bin_intensity_t *bin_intensity = NULL;
 
+	unsigned long long bin_width;
+
 	FILE *histogram_file = NULL;
 	FILE *count_all_file = NULL;
 	FILE *intensity_file = NULL;
@@ -183,24 +185,28 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 		photon_stream_init(photon_stream, stream_in);
 
-		if ( options->bin_width == 0 ) {
+		if ( options->window_width == 0 ) {
+			/* Perform a single calculation */
 			photon_stream_set_unwindowed(photon_stream);
-			intensity_photon_init(intensity,
-					false,
-					options->mode == MODE_T2 ? 50000000000 : 100000,
-					options->set_start, options->start,
-					options->set_stop, options->stop);
+
+			bin_width = options->bin_width ? options->bin_width :
+					DEFAULT_BIN_WIDTH(options->mode);
 		} else {
 			photon_stream_set_windowed(photon_stream,
-					options->bin_width,
+					options->window_width,
 					options->set_start, options->start,
 					options->set_stop, options->stop);
-			intensity_photon_init(intensity,
-					false,
-					options->bin_width,
-					options->set_start, options->start,
-					options->set_stop, options->stop);
+
+			bin_width = options->bin_width ? options->bin_width :
+					options->window_width;
 		}
+
+		intensity_photon_init(intensity,
+				false,
+				bin_width,
+				options->set_start, options->start,
+				options->set_stop, options->stop);
+			
 	}
 
 	if ( result == PC_SUCCESS ) {
@@ -255,7 +261,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 	if ( result == PC_SUCCESS ) {
 		debug("Opening possible time-dependent files.\n");
-		if ( options->bin_width == 0 ) {
+		if ( options->window_width == 0 ) {
 			sprintf(histogram_filename, "g%u", options->order);
 		} else {
 			sprintf(histogram_filename, "g%u.td", options->order);
@@ -270,7 +276,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 		if ( options->exact_normalization ) {
 			debug("Bin intensity.\n");
-			if ( options->bin_width == 0 ) {
+			if ( options->window_width == 0 ) {
 				sprintf(bin_intensity_filename, "bin_intensity");
 			} else {
 				sprintf(bin_intensity_filename, "bin_intensity.td");
@@ -285,7 +291,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		}
 
 		if ( options->mode == MODE_T3 ) {
-			if ( options->bin_width == 0 ) {
+			if ( options->window_width == 0 ) {
 				sprintf(number_filename, "number");
 			} else {
 				sprintf(number_filename, "number.td");
@@ -301,7 +307,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	}
 
 	/* Write the bin information to file, if time-dependent */
-	if ( result == PC_SUCCESS && options->bin_width != 0 ) {
+	if ( result == PC_SUCCESS && options->window_width != 0 ) {
 		debug("Handling time-dependent file headers.\n");
 		histogram_gn_init(histogram);
 		histogram_gn_fprintf_bins(histogram_file, histogram, 2);
@@ -322,7 +328,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			histogram_gn_init(histogram);
 			correlator_init(correlator);
 
-			if ( options->bin_width == 0 ) {
+			if ( options->window_width == 0 ) {
 				photon_number_init(number, false, 0, false, 0);
 			} else {
 				photon_number_init(number,
@@ -331,7 +337,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			}
 
 			if ( options->exact_normalization ) {
-				if ( options->bin_width == 0 ) {
+				if ( options->window_width == 0 ) {
 					bin_intensity_init(bin_intensity,
 							options->set_start, options->start,
 							options->set_stop, options->stop);
@@ -382,7 +388,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			}
 
 			if ( histogram_file != NULL ) {
-				if ( options->bin_width == 0 ) {
+				if ( options->window_width == 0 ) {
 					histogram_gn_fprintf(histogram_file, histogram);
 				} else {
 					fprintf(histogram_file, "%lld,%lld,",
@@ -394,7 +400,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 
 			if ( options->mode == MODE_T3 && number_file != NULL ) {
 				photon_number_flush(number);
-				if ( options->bin_width == 0 ) {
+				if ( options->window_width == 0 ) {
 					photon_number_fprintf(number_file, number);
 				} else {
 					fprintf(number_file, "%lld,%lld,",
@@ -407,7 +413,7 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 			if ( options->exact_normalization && 
 					bin_intensity_file != NULL ) {
 				bin_intensity_flush(bin_intensity);
-				if ( options->bin_width == 0 ) {
+				if ( options->window_width == 0 ) {
 					bin_intensity_fprintf(bin_intensity_file, 
 							bin_intensity);
 				} else {

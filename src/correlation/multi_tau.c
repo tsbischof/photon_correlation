@@ -319,7 +319,7 @@ int multi_tau_g2cn_fprintf(FILE *stream_out, multi_tau_g2cn_t const *mt) {
 			for ( i = 0; i < mt->depth; i++ ) {
 				for ( j = (i == 0 ? 0 : mt->registers/mt->binning);
 						j < mt->registers; j++ ) {
-					if ( mt->n_seen == 0 || mt->pushes[i]-j <=  0 ) {
+					if ( mt->n_seen == 0 || mt->pushes[i] <=  j ) {
 						normalization = 0;
 					} else {
 						normalization = 1;
