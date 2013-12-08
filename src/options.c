@@ -181,7 +181,14 @@ static pc_option_t pc_options_all[] = {
 			"channel for a given pulse."},
 	{'I', "I:", "time-gating",
 			"For t3 mode, suppress any photons which arrive\n"
-			"before the specified time after a pulse."}
+			"before the specified time after a pulse."},
+	{'j', "j:", "sync-channel",
+			"Specifies the t2 channel which should be treated\n"
+			"as the sync source for conversion to t3 photons."},
+	{'J', "J:", "sync-divider",
+			"Specifies the sync divider, which effectively tells\n"
+			"how many sync events are skipped between recorded\n"
+			"events."},
 	};
 
 
@@ -250,6 +257,11 @@ static struct option pc_options_long[] = {
 
 /* number to channel */
 	{"correlate-successive", no_argument, 0, 'C'},
+
+/* synced t2 */
+	{"sync-channel", required_argument, 0, 'j'},
+	{"sync-divider", required_argument, 0, 'J'},
+
 	{0, 0, 0, 0}};
 
 
@@ -356,6 +368,9 @@ void pc_options_default(pc_options_t *options) {
 	options->depth = 32;
 
 	options->correlate_successive = false;
+
+	options->sync_channel = 0;
+	options->sync_divider = 0;
 }
 
 int pc_options_valid(pc_options_t const *options) {
@@ -582,6 +597,12 @@ int pc_options_parse(pc_options_t *options,
 			case 'I':
 				options->time_gating = true;
 				options->gate_time = strtoll(optarg, NULL, 10);
+				break;
+			case 'j':
+				options->sync_channel = strtoul(optarg, NULL, 10);
+				break;
+			case 'J':
+				options->sync_divider = strtoul(optarg, NULL, 10);
 				break;
 			case '?':
 			default:
@@ -883,6 +904,10 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "\n[number]\n");
 	fprintf(stream_out, "correlate_successive = %d\n", 
 			options->correlate_successive);
+
+	fprintf(stream_out, "\n[synced_t2]\n");
+	fprintf(stream_out, "sync_channel = %u\n", options->sync_channel);
+	fprintf(stream_out, "sync_divider = %u\n", options->sync_divider);
 
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }

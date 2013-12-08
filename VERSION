@@ -1,3 +1,11 @@
+v3.3 (6 December 2013)
+Added a new program called photon_synced_t2. This is meant to transform t2 data
+into t3 data by treating one of the channels as a dedicated sync source. This 
+is primarily used for overcoming limitations of the t3 hardware, such as lower
+time resolution or lower achievable data rates.
+
+--------------------------------------------------------------------------------
+
 v3.2 (5 December 2013)
 Changed the functionality for photon_gn to have separate options for intensity
 bin width and time-dependent bin width. Now, when the bin width for intensity

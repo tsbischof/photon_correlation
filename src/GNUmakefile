@@ -7,7 +7,7 @@ CCFLAGS := -Wall
 # principle) affect 64-bit systems adversely, though if we ever get to 
 # 128-bit filesystems we will need to switch this to 128. 
 CCFLAGS += -D _FILE_OFFSET_BITS=64 
-CCFLAGS += -D VERSION="3.2"
+CCFLAGS += -D VERSION="3.3"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
@@ -118,6 +118,12 @@ PHOTON_INTENSITY_CORRELATE_LIB = ${sort \
 ALL_LIB += ${PHOTON_INTENSITY_CORRELATE_LIB}
 TARGETS += photon_intensity_correlate
 
+PHOTON_SYNCED_T2_OBJ = ${COMMON_OBJ} synced_t2_main.o photon/synced_t2.o queue.o
+ALL_OBJ += ${PHOTON_SYNCED_T2_OBJ}
+PHOTON_SYNCED_T2_LIB = -lm
+ALL_LIB += ${PHOTON_SYNCED_T2_LIB}
+TARGETS += photon_synced_t2
+
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
 LIB_TARGETS = 
@@ -183,6 +189,9 @@ intensity_correlate: ${INTENSITY_CORRELATE_OBJ}
 
 photon_intensity_correlate: ${PHOTON_INTENSITY_CORRELATE_OBJ}
 	${LD} ${LDFLAGS} ${PHOTON_INTENSITY_CORRELATE_LIB} -o $@ $^
+
+photon_synced_t2: ${PHOTON_SYNCED_T2_OBJ}
+	${LD} ${LDFLAGS} ${PHOTON_SYNCED_T2_LIB} -o $@ $^
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 

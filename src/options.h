@@ -106,6 +106,10 @@ typedef struct {
 
 /* number to channels */
 	int correlate_successive;
+
+/* synced t2 */
+	unsigned int sync_channel;
+	unsigned int sync_divider;
 } pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
@@ -130,6 +134,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_CORRELATE_SUCCESSIVE,
 		OPT_FILTER_AFTERPULSING,
 		OPT_TIME_GATING,
+		OPT_SYNC_CHANNEL, OPT_SYNC_DIVIDER,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);
