@@ -1,3 +1,13 @@
+CC = clang
+LD = clang 
+
+INSTALL_DIR = ~
+
+TEST = test
+MKDIR = mkdir -p
+
+
+
 INCLUDES = 
 LIBS = 
 
@@ -133,13 +143,9 @@ LIBPC_LDFLAGS = ${LDFLAGS} -shared
 LIBPC_LIB = ${sort ${ALL_LIB}}
 LIB_TARGETS += libphoton_correlation.so
 
-INSTALL_DIR = ~
 BIN_DIR = ${INSTALL_DIR}/bin
 LIB_DIR = ${INSTALL_DIR}/lib
 INCLUDE_DIR = ${INSTALL_DIR}/include/photon_correlation
-MKDIR = mkdir -p
-TEST = test
-CP = cp
 
 all: ${TARGETS} ${LIB_TARGETS}
 
