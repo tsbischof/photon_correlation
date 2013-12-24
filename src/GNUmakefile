@@ -12,11 +12,6 @@ INCLUDES =
 LIBS = 
 
 CCFLAGS := -Wall 
-# On 32-bit systems wtih large files, the file offset is 64 bits. This causes
-# errors if not adjusted, so fix it here as needed. This should not (in 
-# principle) affect 64-bit systems adversely, though if we ever get to 
-# 128-bit filesystems we will need to switch this to 128. 
-CCFLAGS += -D _FILE_OFFSET_BITS=64 
 CCFLAGS += -D VERSION="3.3"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
