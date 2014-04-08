@@ -8,9 +8,10 @@
 Time dependent code:
 -create a wrapper to gn which handles the creation and streaming of gn.td work. Basically, make it possible to yield the histograms, rather than just writing the file to a directory, so that binning can be done in real time instead.
 -create similar wrappers for number and whatnot.
+-perform the intensity-dependent analysis in C, rather than Python
 
 Integration with PicoQuant
--create a version of photon_gn which takes a photon stream directly through PicoQuant. This should speed up calculations
+-create a version of photon_gn which takes a photon stream directly through PicoQuant. This should speed up calculations.
 
 Photons:
 -enable a t3 time offset: internally convert to t2, apply offset, convert back

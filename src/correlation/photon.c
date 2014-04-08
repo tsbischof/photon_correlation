@@ -301,26 +301,34 @@ int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 }
 
 int t3_under_max_distance(void const *correlator) {
-	int64_t max_time = ((correlator_t *)correlator)->max_time_distance;
-	int64_t max_pulse = ((correlator_t *)correlator)->max_pulse_distance;
+	long long max_time = ((correlator_t *)correlator)->max_time_distance;
+	long long max_pulse = ((correlator_t *)correlator)->max_pulse_distance;
 	t3_t *left = ((correlator_t *)correlator)->left;
 	t3_t *right = ((correlator_t *)correlator)->right;
 
-	return( (max_time == 0 
-				|| llabs(right->time - left->time) < max_time)
-			&& (max_pulse == 0 
-				|| llabs(right->pulse - left->pulse) < max_pulse) );
+	if ( ((correlator_t *)correlator)->order == 1 ) {
+		return( max_time == 0 || llabs(left->time) < max_time );
+	} else {
+		return( (max_time == 0 
+					|| llabs(right->time - left->time) < max_time)
+				&& (max_pulse == 0 
+					|| llabs(right->pulse - left->pulse) < max_pulse) );
+	}
 }
 
 int t3_over_min_distance(void const *correlator) {
-	int64_t min_time = ((correlator_t *)correlator)->min_time_distance;
-	int64_t min_pulse = ((correlator_t *)correlator)->min_pulse_distance;
+	long long min_time = ((correlator_t *)correlator)->min_time_distance;
+	long long min_pulse = ((correlator_t *)correlator)->min_pulse_distance;
 	t3_t *left = (t3_t *)((correlator_t *)correlator)->left;
 	t3_t *right = (t3_t *)((correlator_t *)correlator)->right;
 
-	return( (min_time == 0 || 
-				llabs(right->time - left->time) >= min_time)
-			&& (min_pulse == 0 || 
-				llabs(right->pulse - left->pulse) >= min_pulse) );
+	if ( ((correlator_t *)correlator)->order == 1 ) {
+		return( min_time == 0 || llabs(left->time) >= min_time );
+	} else {
+		return( (min_time == 0 || 
+					llabs(right->time - left->time) >= min_time)
+				&& (min_pulse == 0 || 
+					llabs(right->pulse - left->pulse) >= min_pulse) );
+	}
 }
 

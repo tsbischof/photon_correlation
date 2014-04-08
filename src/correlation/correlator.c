@@ -119,6 +119,28 @@ int correlator_init(correlator_t *correlator) {
 }
 
 int correlator_push(correlator_t *correlator, void const *photon) {
+	/* For first-order correlation, any photon is considered
+	 * valid once it is in the queue. Only let valid photons
+	 * through.
+	 */
+	int status = PC_SUCCESS;
+
+	if ( correlator->order == 1 ) {
+		status = queue_push(correlator->queue, photon);
+
+		if ( status != PC_SUCCESS) {
+			return(status);
+		}
+
+		if ( correlator_valid_distance(correlator) ) {
+			return(PC_SUCCESS);
+		} else {
+			queue_init(correlator->queue);
+			return(PC_SUCCESS);
+		}
+		
+	}
+	
 	return(queue_push(correlator->queue, photon));
 }
 
@@ -157,8 +179,8 @@ int correlator_next(correlator_t *correlator) {
 }
 
 int correlator_next_block(correlator_t *correlator) {
-/* Check that there are enough photons, and htat they are far enough apart 
- * t ob considered a block (flusihng means they always are)
+/* Check that there are enough photons, and that they are far enough apart 
+ * to be considered a block (flusihng means they always are)
  * */
 	if ( correlator->yielded ) {
 		queue_pop(correlator->queue, correlator->left);
