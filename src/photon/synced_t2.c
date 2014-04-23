@@ -153,14 +153,17 @@ int synced_t2_push(synced_t2_t *synced_t2, t2_t const *t2) {
 	if ( t2->channel == synced_t2->sync_channel ) {
 		if ( synced_t2->first_sync_seen ) {
 			debug("New sync pulse\n");
-			memcpy(&(synced_t2->last_sync), &(synced_t2->next_sync), 	
-					sizeof(t2_t));
-			memcpy(&(synced_t2->next_sync), t2, sizeof(t2_t));
+			if ( queue_empty(synced_t2->queue) ) {
+				memcpy(&(synced_t2->last_sync), t2, sizeof(t2_t));
+				synced_t2->sync_index++;
+			} else {
+				memcpy(&(synced_t2->next_sync), t2, sizeof(t2_t));
+			}
 
 			synced_t2_flush(synced_t2);
 		} else {
 			debug("First sync.\n");
-			memcpy(&(synced_t2->next_sync), t2, sizeof(t2_t));
+			memcpy(&(synced_t2->last_sync), t2, sizeof(t2_t));
 
 			synced_t2->first_sync_seen = true;
 			synced_t2->sync_index++;
@@ -180,33 +183,18 @@ void synced_t2_flush(synced_t2_t *synced_t2) {
 
 int synced_t2_next(synced_t2_t *synced_t2) {
 	t2_t photon;
-	double sync_time, sync_delay, photon_delay, pulse, time;
 
 	if ( synced_t2->flushing ) {
 		if ( queue_empty(synced_t2->queue) ) {
+			synced_t2->flushing = false;
 			return(PC_ERROR_NO_RECORD_AVAILABLE);
 		} else {
 			queue_pop(synced_t2->queue, &photon);
 
 			synced_t2->photon.channel = photon.channel;
 
-			if ( synced_t2->sync_divider > 1 ) {
-				sync_delay = synced_t2->next_sync.time - 
-						synced_t2->last_sync.time;
-				sync_time = sync_delay / synced_t2->sync_divider;
-				photon_delay = photon.time - synced_t2->last_sync.time;
-
-				time = modf(photon_delay/sync_time, &pulse) * sync_time;
-
-				synced_t2->photon.pulse = 
-						synced_t2->sync_index * synced_t2->sync_divider + 
-						(unsigned long long)pulse;
-				synced_t2->photon.time = (unsigned long long)round(time);
-			} else {
-				synced_t2->photon.pulse = synced_t2->sync_index;
-				synced_t2->photon.time = photon.time 
-						- synced_t2->last_sync.time;
-			}
+			synced_t2->photon.pulse = synced_t2->sync_index;
+			synced_t2->photon.time = photon.time - synced_t2->last_sync.time;
 
 			if ( queue_empty(synced_t2->queue) ) {
 				synced_t2->flushing = false;

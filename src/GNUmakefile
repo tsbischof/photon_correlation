@@ -42,7 +42,7 @@ INCLUDES =
 LIBS = 
 
 CCFLAGS := -Wall 
-CCFLAGS += -D VERSION="3.3"
+CCFLAGS += -D VERSION="3.4"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
@@ -159,6 +159,12 @@ PHOTON_SYNCED_T2_LIB = -lm
 ALL_LIB += ${PHOTON_SYNCED_T2_LIB}
 TARGETS += photon_synced_t2
 
+PHOTON_T3_WAIT_OBJ = ${COMMON_OBJ} t3_wait_main.o t3_wait/t3_wait.o
+ALL_OBJ += ${PHOTON_T3_WAIT_OBJ}
+PHOTON_T3_WAIT_LIB = 
+ALL_LIB += ${PHOTON_T3_WAIT_LIB}
+TARGETS += photon_t3_wait
+
 # Now the heavy lifting: build the objects and include files for inclusion
 # in the library.
 LIB_TARGETS = 
@@ -223,6 +229,9 @@ photon_intensity_correlate: ${PHOTON_INTENSITY_CORRELATE_OBJ}
 
 photon_synced_t2: ${PHOTON_SYNCED_T2_OBJ}
 	${LD} ${LDFLAGS} ${PHOTON_SYNCED_T2_LIB} -o $@ $^
+
+photon_t3_wait: ${PHOTON_T3_WAIT_OBJ}
+	${LD} ${LDFLAGS} ${PHOTON_T3_WAIT_LIB} -o $@ $^
 
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
