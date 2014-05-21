@@ -42,13 +42,14 @@ void debug(char const *message, ...) {
 	 * to ignore it.
 	 */
 	va_list args;
-	va_start(args, message);
+
 	if ( verbose ) {
+		va_start(args, message);
 		fprintf(stderr, "DEBUG: ");
 		vfprintf(stderr, message, args);
+		va_end(args);
+		fflush(stderr);
 	}
-	va_end(args);
-	fflush(stderr);
 }
 
 void error(char const *message, ...) {

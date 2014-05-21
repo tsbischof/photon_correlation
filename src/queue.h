@@ -60,10 +60,13 @@ int queue_resize(queue_t *queue, size_t const length);
 void queue_set_comparator(queue_t *queue, compare_t compare);
 int queue_sort(queue_t *queue);
 
-int queue_index(queue_t const *queue, void *elem, size_t const index);
+int queue_index_copy(queue_t const *queue, void *elem, size_t const index);
+int queue_index(queue_t const *queue, void **elem, size_t const index);
 int queue_pop(queue_t *queue, void *elem);
 int queue_push(queue_t *queue, void const *elem);
-int queue_front(queue_t const *queue, void *elem);
-int queue_back(queue_t const *queue, void *elem);
+int queue_front(queue_t const *queue, void **elem);
+int queue_front_copy(queue_t const *queue, void *elem);
+int queue_back(queue_t const *queue, void **elem);
+int queue_back_copy(queue_t const *queue, void *elem);
 
 #endif

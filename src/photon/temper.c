@@ -222,7 +222,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 	int suppress = false;
 	int channel;
 	int i;
-	t3_t t3;
+	t3_t *t3 = NULL;
 
 	while ( true ) {
 		result = pst->photon_next(pst->stream_in, pst->current_photon);
@@ -262,9 +262,9 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		/* Afterpulsing filter */
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
 			for ( i = 0; i < queue_size(pst->queue); i++ ) {
-				queue_index(pst->queue, &t3, i);
-				if ( t3.pulse == ((t3_t *)pst->current_photon)->pulse &&
-						t3.channel == ((t3_t *)pst->current_photon)->channel ) {
+				queue_index(pst->queue, (void *)&t3, i);
+				if ( t3->pulse == ((t3_t *)pst->current_photon)->pulse &&
+					t3->channel == ((t3_t *)pst->current_photon)->channel ) {
 					suppress = true;
 					break;
 				}

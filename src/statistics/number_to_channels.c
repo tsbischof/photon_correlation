@@ -70,16 +70,16 @@ void number_to_channels_init(number_to_channels_t *number,
 
 int number_to_channels_push(number_to_channels_t *number, t3_t const *t3) {
 	int result = PC_SUCCESS;
-	t3_t photon;
+	t3_t *photon = NULL;
 	int i;
 
 	/* Check that no photon on this channel has been seen in 
 	 * the current pulse 
 	 */
 	for ( i = 0; i < queue_size(number->queue); i++ ) {
-		queue_index(number->queue, &photon, i);
+		queue_index(number->queue, (void *)&photon, i);
 
-		if ( photon.pulse == t3->pulse && photon.channel == t3->channel ) {
+		if ( photon->pulse == t3->pulse && photon->channel == t3->channel ) {
 			break;
 		}
 	} 
@@ -102,30 +102,27 @@ int number_to_channels_push(number_to_channels_t *number, t3_t const *t3) {
 }
 
 int number_to_channels_next(number_to_channels_t *number) {
-	t3_t front;
-	t3_t back;
+	t3_t *front = NULL;
+	t3_t *back = NULL;
 
-	queue_front(number->queue, &front);
-	queue_back(number->queue, &back);
+	queue_front(number->queue, (void *)&front);
+	queue_back(number->queue, (void *)&back);
 
 	if ( ( number->flushing && ! queue_empty(number->queue)) ||
 			( queue_size(number->queue) > 1 && 
-				front.pulse != back.pulse ) ) {
+				front->pulse != back->pulse ) ) {
 		number->photon.channel = number->current_channel;
-		number->photon.pulse = front.pulse;
+		number->photon.pulse = front->pulse;
 
 		if ( number->correlate_successive &&
 				 number->previous_photon.pulse == number->photon.pulse ) {
-			number->photon.time = front.time - number->previous_photon.time;
+			number->photon.time = front->time - number->previous_photon.time;
 		} else {
-			number->photon.time = front.time;
+			number->photon.time = front->time;
 		}
 
 		number->current_channel++;
-
-		queue_pop(number->queue, &front);
-
-		memcpy(&(number->previous_photon), &front, sizeof(t3_t));
+		queue_pop(number->queue, &(number->previous_photon));
 
 		return(PC_SUCCESS);
 	} else {
@@ -134,17 +131,17 @@ int number_to_channels_next(number_to_channels_t *number) {
 }
 
 void number_to_channels_pulse_over(number_to_channels_t *number) {
-	t3_t front;
-	t3_t back;
+	t3_t *front = NULL;
+	t3_t *back = NULL;
 	int i;
 
 	if ( number->flushing ) {
 		number->seen_this_pulse = queue_size(number->queue);
 	} else {
-		queue_front(number->queue, &front);
+		queue_front(number->queue, (void *)&front);
 		for ( i = queue_size(number->queue) - 1; i >= 0; i-- ) {
-			queue_index(number->queue, &back, i);
-			if ( front.pulse == back.pulse ) {
+			queue_index(number->queue, (void *)&back, i);
+			if ( front->pulse == back->pulse ) {
 				break;
 			}
 		}

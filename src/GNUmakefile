@@ -29,8 +29,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-CC = clang
-LD = clang 
+CC = gcc
+LD = gcc
 
 INSTALL_DIR = ~
 
@@ -42,11 +42,13 @@ INCLUDES =
 LIBS = 
 
 CCFLAGS := -Wall 
-CCFLAGS += -D VERSION="3.4"
+CCFLAGS += -D VERSION="3.5"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
+CCFLAGS += -pg 
 
-LDFLAGS = -Wall ${LIBS}  
+LDFLAGS := -Wall ${LIBS}  
+LDFLAGS += -pg 
 
 ALL_OBJ = 
 ALL_LIB = 
@@ -75,8 +77,7 @@ CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
 		correlation/correlator.o correlation/correlation.o \
 		correlation/photon.o correlation/start_stop.o \
 		combinatorics/combinations.o combinatorics/permutations.o \
-		combinatorics/index_offsets.o \
-		correlation/correlator_log.o
+		combinatorics/index_offsets.o 
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = -lm
 ALL_LIB += ${CORRELATE_LIB}
@@ -195,7 +196,7 @@ photons: ${PHOTONS_OBJ}
 	${LD} ${LDFLAGS} ${PHOTONS_LIB} -o $@ $^
 
 photon_correlate: ${CORRELATE_OBJ}
-	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^
+	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^ 
 
 photon_histogram: ${HISTOGRAM_OBJ}
 	${LD} ${LDFLAGS} ${HISTOGRAM_LIB} -o $@ $^
