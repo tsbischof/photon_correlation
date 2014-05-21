@@ -29,8 +29,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-CC = gcc
-LD = gcc
+CC = clang
+LD = clang
 
 INSTALL_DIR = ~
 
@@ -45,10 +45,14 @@ CCFLAGS := -Wall
 CCFLAGS += -D VERSION="3.5"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
-CCFLAGS += -pg 
 
 LDFLAGS := -Wall ${LIBS}  
-LDFLAGS += -pg 
+
+# use this line and gcc to profile with gprof
+#CC = gcc
+#LD = gcc
+#CCFLAGS += -pg 
+#LDFLAGS += -pg
 
 ALL_OBJ = 
 ALL_LIB = 
