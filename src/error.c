@@ -49,8 +49,8 @@ void debug(char const *message, ...) {
 		vfprintf(stderr, message, args);
 		va_end(args);
 		fflush(stderr);
-	} 
-}
+	}  
+} 
 
 void error(char const *message, ...) {
 	/* Handle error messages. This is here in case we ever want to do 

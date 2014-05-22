@@ -48,7 +48,7 @@ CCFLAGS += ${INCLUDES}
 
 LDFLAGS := -Wall ${LIBS}  
 
-# use this line and gcc to profile with gprof
+# use to profile with gprof
 #CC = gcc
 #LD = gcc
 #CCFLAGS += -pg 
@@ -170,28 +170,13 @@ PHOTON_T3_WAIT_LIB =
 ALL_LIB += ${PHOTON_T3_WAIT_LIB}
 TARGETS += photon_t3_wait
 
-# Now the heavy lifting: build the objects and include files for inclusion
-# in the library.
-LIB_TARGETS = 
-LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
-INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
-LIBPC_LDFLAGS = ${LDFLAGS} -shared
-LIBPC_LIB = ${sort ${ALL_LIB}}
-LIB_TARGETS += libphoton_correlation.so
-
 BIN_DIR = ${INSTALL_DIR}/bin
-LIB_DIR = ${INSTALL_DIR}/lib
-INCLUDE_DIR = ${INSTALL_DIR}/include/photon_correlation
 
-all: ${TARGETS} ${LIB_TARGETS}
+all: ${TARGETS}
 
-install: ${TARGETS} ${LIB_TARGETS}
+install: ${TARGETS}
 	${TEST} -d ${BIN_DIR} || ${MKDIR} ${BIN_DIR}
 	${CP} ${TARGETS} ${BIN_DIR}
-	${TEST} -d ${LIB_DIR} || ${MKDIR} ${LIB_DIR}
-	${CP} ${LIB_TARGETS} ${LIB_DIR}
-	${TEST} -d ${INCLUDE_DIR} || ${MKDIR} ${INCLUDE_DIR}
-	${CP} --parents ${INCLUDES} ${INCLUDE_DIR}
 
 uninstall: 
 	${RM} ${addprefix ${INSTALL_DIR}, ${TARGETS}}
@@ -245,4 +230,4 @@ photon_t3_wait: ${PHOTON_T3_WAIT_OBJ}
 	${CC} ${CCFLAGS} -fpic -c -o $@ $<
 
 clean:
-	${RM} ${sort ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ}}
