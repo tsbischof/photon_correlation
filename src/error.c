@@ -86,7 +86,7 @@ int pc_status_print(char const *name, uint64_t count,
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
 		fprintf(stderr, 
-				"%s: (%s) Record %20"PRIu64"\n", 
+				"%s: (%s) Record %20"PRId64"\n", 
 				fmttime, 
 				name, 
 				count);
