@@ -104,17 +104,14 @@ void edges_free(edges_t **edges) {
 	}
 }
 
-int edges_index_linear(void const *e, long long const value) {
-	edges_t *edges = (edges_t *)e;
+int edges_index_linear(edges_t const *edges, long long const value) {
 	return(floor(
 			(value-edges->limits.lower) / 
 			(edges->limits.upper-edges->limits.lower) *
 			edges->limits.bins));
 }
 
-int edges_index_log(void const *e, long long const value) {
-	edges_t *edges = (edges_t *)e;
-
+int edges_index_log(edges_t const *edges, long long const value) {
 	if ( value <= 0 ) {
 		return(PC_ERROR_INDEX);
 	} else {
@@ -125,19 +122,18 @@ int edges_index_log(void const *e, long long const value) {
 	}
 }
 
-int edges_index_log_zero(void const *e, long long const value) {
+int edges_index_log_zero(edges_t const *edges, long long const value) {
 	if ( value == 0 ) {
 		return(0);
 	} else  {
-		return(edges_index_log(e, value));
+		return(edges_index_log(edges, value));
 	}
 }
 
-int edges_index_bsearch(void const *e, long long const value) {
+int edges_index_bsearch(edges_t const *edges, long long const value) {
 	/* Perform a binary search of the edges to determine which bin the value
 	 * falls into. 
 	 */
-	edges_t *edges = (edges_t *)e;
 	size_t lower_index;
 	size_t upper_index;;
 	size_t middle_index;

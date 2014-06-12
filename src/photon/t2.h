@@ -34,25 +34,15 @@
 
 #include <stdio.h>
 
-typedef struct {
-	unsigned int channel;
-	long long time;
-} t2_t;
+#include "photon.h"
 
-typedef int (*t2_next_t)(FILE *, t2_t *);
-typedef int (*t2v_next_t)(FILE *, void *);
-typedef int (*t2_print_t)(FILE *, t2_t const *);
-typedef int (*t2v_print_t)(FILE *, void const *);
+int t2_fscanf(FILE *stream_in, photon_t *photon);
+int t2_fprintf(FILE *stream_out, photon_t const *photon);
 
-int t2_fscanf(FILE *stream_in, t2_t *t2);
-int t2v_fscanf(FILE *stream_in, void *t2);
-int t2_fprintf(FILE *stream_out, t2_t const *t2);
-int t2v_fprintf(FILE *stream_out, void const *t2);
-
-int t2v_compare(void const *a, void const *b);
+int t2_compare(void const *a, void const *b);
 int t2_echo(FILE *stream_in, FILE *stream_out);
 
-long long t2v_window_dimension(void const *t2);
-long long t2v_channel_dimension(void const *t2);
+long long t2_window_dimension(photon_t const *photon);
+long long t2_channel_dimension(photon_t const *photon);
 
 #endif

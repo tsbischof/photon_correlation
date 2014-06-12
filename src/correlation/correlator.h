@@ -34,11 +34,12 @@
 
 #include "correlation.h"
 #include "../photon/stream.h"
+#include "../photon/photon.h"
 #include "../queue.h"
 #include "../combinatorics/permutations.h"
 #include "../combinatorics/index_offsets.h"
 
-typedef struct {
+typedef struct _correlator_t {
 	int mode;
 	unsigned int order;
 
@@ -47,9 +48,8 @@ typedef struct {
 	int in_permutations;
 	int yielded;
 
-	size_t photon_size;
-	void *left;
-	void *right;
+	photon_t left;
+	photon_t right;
 
 	long long min_pulse_distance;
 	long long max_pulse_distance;
@@ -65,8 +65,8 @@ typedef struct {
 	correlate_t correlate;
 	correlation_print_t correlation_print;
 
-	int (*under_max_distance)(void const *correlator);
-	int (*over_min_distance)(void const *correlator);
+	int (*under_max_distance)(struct _correlator_t const *correlator);
+	int (*over_min_distance)(struct _correlator_t const *correlator);
 } correlator_t;
 
 correlator_t *correlator_alloc(int const mode, unsigned int const order,
@@ -77,7 +77,7 @@ correlator_t *correlator_alloc(int const mode, unsigned int const order,
 int correlator_init(correlator_t *correlator);
 void correlator_free(correlator_t **correlator);
 
-int correlator_push(correlator_t *correlator, void const *photon);
+int correlator_push(correlator_t *correlator, photon_t const *photon);
 int correlator_next(correlator_t *correlator);
 
 int correlator_next_block(correlator_t *correlator);

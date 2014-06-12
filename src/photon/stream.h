@@ -36,12 +36,11 @@
 #include "photon.h"
 #include "window.h"
 
-typedef struct {
+typedef struct _photon_stream_t {
 	FILE *stream_in;
 
 	int mode;
-	size_t photon_size;
-	void *photon;
+	photon_t photon;
 	int yielded;
 
 	photon_next_t photon_next;
@@ -51,7 +50,7 @@ typedef struct {
 	photon_channel_dimension_t channel_dim;
 	photon_window_t window;
 
-	int (*photon_stream_next)(void *photon_stream);
+	int (*photon_stream_next)(struct _photon_stream_t *photon_stream);
 } photon_stream_t;
 
 photon_stream_t *photon_stream_alloc(int const mode);
@@ -67,8 +66,8 @@ void photon_stream_set_windowed(photon_stream_t *photons,
 int photon_stream_next_photon(photon_stream_t *photons);
 int photon_stream_next_window(photon_stream_t *photons);
 
-int photon_stream_next_windowed(void *photon_stream);
-int photon_stream_next_unwindowed(void *photon_stream);
+int photon_stream_next_windowed(photon_stream_t *photon_stream);
+int photon_stream_next_unwindowed(photon_stream_t *photon_stream);
 
 int photon_stream_eof(photon_stream_t *photons);
 

@@ -44,7 +44,7 @@ LIBS =
 CCFLAGS := -Wall
 # clang arguments to check for undefined behavior.
 #CCFLAGS := -fsanitize=undefined-trap -fsanitize-undefined-trap-on-error 
-CCFLAGS += -D VERSION="3.5"
+CCFLAGS += -D VERSION="3.6"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 

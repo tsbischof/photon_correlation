@@ -97,25 +97,21 @@ intensity_photon_t *intensity_photon_alloc(unsigned int const channels,
 	}
 
 	if ( mode == MODE_T2 ) {
-		intensity->photon_size = sizeof(t2_t);
-		intensity->channel_dim = t2v_channel_dimension;
-		intensity->window_dim = t2v_window_dimension;
+		intensity->channel_dim = t2_channel_dimension;
+		intensity->window_dim = t2_window_dimension;
 	} else if ( mode == MODE_T3 ) {
-		intensity->photon_size = sizeof(t3_t);
-		intensity->channel_dim = t3v_channel_dimension;
-		intensity->window_dim = t3v_window_dimension;
+		intensity->channel_dim = t3_channel_dimension;
+		intensity->window_dim = t3_window_dimension;
 	} else {
 		error("Invalid mode: %d\n", mode);
 		intensity_photon_free(&intensity);
 		return(intensity);
 	}
 
-	intensity->photon = malloc(intensity->photon_size);
 	intensity->channels = channels;
-
 	intensity->counts = counts_alloc(intensity->channels);
 
-	if ( intensity->counts == NULL || intensity->photon == NULL ) {
+	if ( intensity->counts == NULL ) {
 		intensity_photon_free(&intensity);
 		return(intensity);
 	}
@@ -166,14 +162,13 @@ void intensity_photon_counts_init(intensity_photon_t *intensity) {
 
 void intensity_photon_free(intensity_photon_t **intensity) {
 	if ( *intensity != NULL ) {
-		free((*intensity)->photon);
 		counts_free(&(*intensity)->counts);
 		free(*intensity);
 	}
 }
 
 int intensity_photon_push(intensity_photon_t *intensity, 
-		void const *photon) {
+		photon_t const *photon) {
 	int result;
 
 	unsigned int channel;
@@ -209,7 +204,7 @@ int intensity_photon_push(intensity_photon_t *intensity,
 		return(PC_SUCCESS);
 	} else if ( result == PC_RECORD_AFTER_WINDOW ) {
 		debug("Record after window, yield this one and move on.\n");
-		memcpy(intensity->photon, photon, intensity->photon_size);
+		memcpy(&(intensity->photon), photon, sizeof(photon_t));
 		intensity->photon_held = true;
 
 		if ( intensity->first_photon_seen ) {
@@ -238,9 +233,8 @@ int intensity_photon_increment(intensity_photon_t *intensity,
 	return(counts_increment(intensity->counts, channel));
 }
 
-int intensity_photon_next_from_photon(void *ip) {
-	intensity_photon_t *intensity = ip;
-	int result;
+int intensity_photon_next_from_photon(intensity_photon_t *intensity) {
+	int result = PC_SUCCESS;
 
 	if ( intensity->yielded ) {
 		debug("Yielded, moving to next window.\n");
@@ -263,7 +257,7 @@ int intensity_photon_next_from_photon(void *ip) {
 
 	if ( intensity->photon_held ) {
 		debug("Photon held, push.\n");
-		result = intensity_photon_push(intensity, intensity->photon);
+		result = intensity_photon_push(intensity, &(intensity->photon));
 
 		if ( result == PC_SUCCESS ) {
 			debug("Pushed successfully.\n");
@@ -301,8 +295,7 @@ int intensity_photon_next_from_photon(void *ip) {
 	}
 }
 
-int intensity_photon_next_from_stream(void *ip) {
-	intensity_photon_t *intensity = ip;
+int intensity_photon_next_from_stream(intensity_photon_t *intensity) {
 	return(intensity_photon_fscanf(intensity->stream_in, intensity));
 }
 
@@ -409,7 +402,7 @@ int intensity_photon(FILE *stream_in, FILE *stream_out,
 
 	if ( result == PC_SUCCESS ) {
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
-			intensity_photon_push(intensity, photon_stream->photon);
+			intensity_photon_push(intensity, &(photon_stream->photon));
 	
 			while ( intensity_photon_next(intensity) == PC_SUCCESS ) {
 				intensity_photon_fprintf(stream_out, intensity);

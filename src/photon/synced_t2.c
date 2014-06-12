@@ -92,7 +92,7 @@ int synced_t2(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		synced_t2_init(synced_t2, options->sync_channel, options->sync_divider);
 
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
-			synced_t2_push(synced_t2, (t2_t *)photon_stream->photon);
+			synced_t2_push(synced_t2, &(photon_stream->photon));
 
 			while ( synced_t2_next(synced_t2) == PC_SUCCESS )  {
 				t3_fprintf(stream_out, &(synced_t2->photon));
@@ -149,28 +149,28 @@ void synced_t2_init(synced_t2_t *synced_t2,
 	queue_init(synced_t2->queue);
 }
 
-int synced_t2_push(synced_t2_t *synced_t2, t2_t const *t2) {
-	if ( t2->channel == synced_t2->sync_channel ) {
+int synced_t2_push(synced_t2_t *synced_t2, photon_t const *photon) {
+	if ( photon->t2.channel == synced_t2->sync_channel ) {
 		if ( synced_t2->first_sync_seen ) {
 			debug("New sync pulse\n");
 			if ( queue_empty(synced_t2->queue) ) {
-				memcpy(&(synced_t2->last_sync), t2, sizeof(t2_t));
+				memcpy(&(synced_t2->last_sync), photon, sizeof(photon_t));
 				synced_t2->sync_index++;
 			} else {
-				memcpy(&(synced_t2->next_sync), t2, sizeof(t2_t));
+				memcpy(&(synced_t2->next_sync), photon, sizeof(photon_t));
 			}
 
 			synced_t2_flush(synced_t2);
 		} else {
 			debug("First sync.\n");
-			memcpy(&(synced_t2->last_sync), t2, sizeof(t2_t));
+			memcpy(&(synced_t2->last_sync), photon, sizeof(photon_t));
 
 			synced_t2->first_sync_seen = true;
 			synced_t2->sync_index++;
 		}
 	} else {
 		if ( synced_t2->first_sync_seen ) { 
-			queue_push(synced_t2->queue, t2);
+			queue_push(synced_t2->queue, photon);
 		}
 	}
 
@@ -182,7 +182,7 @@ void synced_t2_flush(synced_t2_t *synced_t2) {
 }
 
 int synced_t2_next(synced_t2_t *synced_t2) {
-	t2_t photon;
+	photon_t photon;
 
 	if ( synced_t2->flushing ) {
 		if ( queue_empty(synced_t2->queue) ) {
@@ -191,10 +191,11 @@ int synced_t2_next(synced_t2_t *synced_t2) {
 		} else {
 			queue_pop(synced_t2->queue, &photon);
 
-			synced_t2->photon.channel = photon.channel;
+			synced_t2->photon.t3.channel = photon.t2.channel;
 
-			synced_t2->photon.pulse = synced_t2->sync_index;
-			synced_t2->photon.time = photon.time - synced_t2->last_sync.time;
+			synced_t2->photon.t3.pulse = synced_t2->sync_index;
+			synced_t2->photon.t3.time = photon.t2.time - 
+				synced_t2->last_sync.t2.time;
 
 			if ( queue_empty(synced_t2->queue) ) {
 				synced_t2->flushing = false;

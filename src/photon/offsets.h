@@ -32,6 +32,8 @@
 #ifndef OFFSETS_H_
 #define OFFSETS_H_
 
+#include "photon.h"
+
 typedef struct {
 	unsigned int channels;
 
@@ -41,7 +43,7 @@ typedef struct {
 	long long *pulse_offsets;
 } offsets_t;
 
-typedef void (*photon_offset_t)(void *photon, offsets_t const *offsets);
+typedef void (*photon_offset_t)(photon_t *photon, offsets_t const *offsets);
 
 offsets_t *offsets_alloc(unsigned int const channels);
 void offsets_init(offsets_t *offsets, 
@@ -50,7 +52,7 @@ void offsets_init(offsets_t *offsets,
 void offsets_free(offsets_t **offsets);
 long long offset_span(long long const *offsets, unsigned int const channels);
 
-void t2v_offset(void *photon, offsets_t const *offsets);
-void t3v_offset(void *photon, offsets_t const *offsets);
+void t2_offset(photon_t *photon, offsets_t const *offsets);
+void t3_offset(photon_t *photon, offsets_t const *offsets);
 
 #endif

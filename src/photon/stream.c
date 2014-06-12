@@ -97,26 +97,17 @@ photon_stream_t *photon_stream_alloc(int const mode) {
 
 	photons->mode = mode;
 	if ( mode == MODE_T2 ) {
-		photons->photon_next = t2v_fscanf;
-		photons->photon_print = t2v_fprintf;
-		photons->window_dim = t2v_window_dimension;
-		photons->channel_dim = t2v_channel_dimension;
-		photons->photon_size = sizeof(t2_t);
+		photons->photon_next = t2_fscanf;
+		photons->photon_print = t2_fprintf;
+		photons->window_dim = t2_window_dimension;
+		photons->channel_dim = t2_channel_dimension;
 	} else if ( mode == MODE_T3 ) {
-		photons->photon_next = t3v_fscanf;
-		photons->photon_print = t3v_fprintf;
-		photons->window_dim = t3v_window_dimension;
-		photons->channel_dim = t3v_channel_dimension;
-		photons->photon_size = sizeof(t3_t);
+		photons->photon_next = t3_fscanf;
+		photons->photon_print = t3_fprintf;
+		photons->window_dim = t3_window_dimension;
+		photons->channel_dim = t3_channel_dimension;
 	} else {
 		error("Invalid mode: %d\n", mode);
-		photon_stream_free(&photons);
-		return(photons);
-	}
-
-	photons->photon = malloc(photons->photon_size);
-
-	if ( photons->photon == NULL ) {
 		photon_stream_free(&photons);
 		return(photons);
 	}
@@ -136,7 +127,6 @@ void photon_stream_init(photon_stream_t *photons, FILE *stream_in) {
 
 void photon_stream_free(photon_stream_t **photons) {
 	if ( *photons != NULL ) {
-		free((*photons)->photon);
 		free(*photons);
 	}
 }
@@ -162,15 +152,14 @@ void photon_stream_set_windowed(photon_stream_t *photons,
 			set_upper_bound, upper_bound);
 }
 
-int photon_stream_next_windowed(void *photon_stream) {
-	photon_stream_t *photons = (photon_stream_t *)photon_stream;
+int photon_stream_next_windowed(photon_stream_t *photons) {
 	long long dim;
 	int result;
 
 	while ( 1 ) {
 		if ( ! photons->yielded ) {
 			/* Photon available, check if it is in the window. */
-			dim =  photons->window_dim(photons->photon);
+			dim =  photons->window_dim(&photons->photon);
 			result = photon_window_contains(&(photons->window), dim);
 			if ( result == PC_SUCCESS ) {
 				/* Found a photon, and in the window. */
@@ -196,8 +185,7 @@ int photon_stream_next_windowed(void *photon_stream) {
 				}
 			}
 		} else {
-			result = photons->photon_next(photons->stream_in, 
-					photons->photon);
+			result = photons->photon_next(photons->stream_in, &photons->photon);
 
 			if ( result == PC_SUCCESS ) {
 				/* Found one, loop back to see where it falls. */
@@ -214,9 +202,8 @@ int photon_stream_next_windowed(void *photon_stream) {
 	}
 }
 
-int photon_stream_next_unwindowed(void *photon_stream) {
-	photon_stream_t *photons = (photon_stream_t *)photon_stream;
-	return(photons->photon_next(photons->stream_in, photons->photon));
+int photon_stream_next_unwindowed(photon_stream_t *photons) {
+	return(photons->photon_next(photons->stream_in, &photons->photon));
 }
 
 int photon_stream_next_window(photon_stream_t *photons) {

@@ -78,7 +78,7 @@ int photon_intensity_correlate_g2_log(FILE *stream_in, FILE *stream_out,
 		multi_tau_g2cn_init(mt);
 
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
-			intensity_photon_push(intensity, photon_stream->photon);
+			intensity_photon_push(intensity, &(photon_stream->photon));
 	
 			while ( intensity_photon_next(intensity) == PC_SUCCESS ) {
 				multi_tau_g2cn_push(mt, intensity->counts);

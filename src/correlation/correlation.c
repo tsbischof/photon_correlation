@@ -34,8 +34,6 @@
 
 #include "correlation.h"
 #include "../modes.h"
-#include "../photon/t2.h"
-#include "../photon/t3.h"
 #include "../error.h"
 
 correlation_t *correlation_alloc(int const mode, unsigned int const order) {
@@ -49,16 +47,12 @@ correlation_t *correlation_alloc(int const mode, unsigned int const order) {
 	correlation->mode = mode;
 	correlation->order = order;
 
-	if ( mode == MODE_T2 ) {
-		correlation->photon_size = sizeof(t2_t);
-	} else if ( mode == MODE_T3 ) {
-		correlation->photon_size = sizeof(t3_t);
-	} else {
+	if ( ! (mode == MODE_T2 || mode == MODE_T3) ) {
 		error("Unsupported mode: %d\n", mode);
 		correlation_free(&correlation);
 	}
 
-	correlation->photons = malloc(correlation->photon_size*order);
+	correlation->photons = (photon_t *)malloc(order*sizeof(photon_t));
 
 	if ( correlation->photons == NULL ) {
 		correlation_free(&correlation);
@@ -71,11 +65,11 @@ correlation_t *correlation_alloc(int const mode, unsigned int const order) {
 void correlation_init(correlation_t *correlation) {
 	memset(correlation->photons, 
 			0, 
-			correlation->photon_size*correlation->order);
+			sizeof(photon_t)*correlation->order);
 }
 
 int correlation_set_index(correlation_t *correlation,
-		unsigned int const index, void const *photon) {
+		unsigned int const index, photon_t const *photon) {
 	if ( index >= correlation->order ) {
 		error("Index too large for correlation: %u (limit %u)\n", 
 				index,
@@ -83,9 +77,9 @@ int correlation_set_index(correlation_t *correlation,
 		return(PC_ERROR_INDEX);
 	} 
 
-	memcpy(&(((char *)correlation->photons)[index*correlation->photon_size]),
+	memcpy(&(correlation->photons[index]),
 			photon,
-			correlation->photon_size);
+			sizeof(photon_t));
 
 	return(PC_SUCCESS);
 }

@@ -59,7 +59,7 @@ void photon_number_init(photon_number_t *number,
 		int const set_stop, long long const stop);
 void photon_number_free(photon_number_t **number);
 
-int photon_number_push(photon_number_t *number, t3_t const *t3);
+int photon_number_push(photon_number_t *number, photon_t const *photon);
 int photon_number_increment(photon_number_t *number, 
 		unsigned int const n_photons, unsigned long long seen);
 int photon_number_check_max(photon_number_t *number);

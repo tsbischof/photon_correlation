@@ -44,10 +44,10 @@ typedef struct {
 	unsigned int sync_channel;
 	unsigned int sync_divider;
 
-	t2_t last_sync;
-	t2_t next_sync;
+	photon_t last_sync;
+	photon_t next_sync;
 
-	t3_t photon;
+	photon_t photon;
 
 	int flushing;
 	int first_sync_seen;
@@ -63,7 +63,7 @@ synced_t2_t *synced_t2_alloc(size_t const queue_size);
 void synced_t2_free(synced_t2_t **synced_t2);
 void synced_t2_init(synced_t2_t *synced_t2, 
 		unsigned int const sync_channel, unsigned int const sync_divider);
-int synced_t2_push(synced_t2_t *synced_t2, t2_t const *t2);
+int synced_t2_push(synced_t2_t *synced_t2, photon_t const *photon);
 void synced_t2_flush(synced_t2_t *synced_t2);
 int synced_t2_next(synced_t2_t *synced_t2);
 
