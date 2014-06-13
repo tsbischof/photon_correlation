@@ -247,6 +247,7 @@ void bin_intensity_free(bin_intensity_t **bin_intensity) {
 
 		queue_free(&((*bin_intensity)->queue));
 		free(*bin_intensity);
+		*bin_intensity = NULL;
 	}
 }
 
