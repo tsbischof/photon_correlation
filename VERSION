@@ -1,4 +1,4 @@
-v3.6 ()
+v3.6 (13 June 2014)
 
 I realized that there are ways to get around playing with void pointers: unions,
 self-referencing structs, etc. To get rid of the cruft I introduced when 
