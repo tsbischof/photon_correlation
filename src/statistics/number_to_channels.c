@@ -71,7 +71,7 @@ void number_to_channels_init(number_to_channels_t *number,
 int number_to_channels_push(number_to_channels_t *number,
 		photon_t const *photon) {
 	int result = PC_SUCCESS;
-	photon_t old;
+	photon_t *old;
 	int i;
 
 	/* Check that no photon on this channel has been seen in 
@@ -80,48 +80,48 @@ int number_to_channels_push(number_to_channels_t *number,
 	for ( i = 0; i < queue_size(number->queue); i++ ) {
 		queue_index(number->queue, (void *)&old, i);
 
-		if ( photon->t3.pulse == old.t3.pulse 
-				&& photon->t3.channel == old.t3.channel ) {
+		if ( photon->t3.pulse == old->t3.pulse 
+				&& photon->t3.channel == old->t3.channel ) {
 			break;
 		}
 	} 
 
 	if ( i == queue_size(number->queue) ) {
-		result = queue_push(number->queue, &old);
+		result = queue_push(number->queue, photon);
 
 		if ( result != PC_SUCCESS ) {
 			return(result);
 		}
 	}
 
-	if ( old.t3.pulse != number->current_pulse ) {
+	if ( photon->t3.pulse != number->current_pulse ) {
 		number_to_channels_pulse_over(number);
 	}
 
-	number->current_pulse = old.t3.pulse;
+	number->current_pulse = photon->t3.pulse;
 		
 	return(result);
 }
 
 int number_to_channels_next(number_to_channels_t *number) {
-	photon_t front;
-	photon_t back;
+	photon_t *front = NULL;
+	photon_t *back = NULL;
 
 	queue_front(number->queue, (void *)&front);
 	queue_back(number->queue, (void *)&back);
 
 	if ( ( number->flushing && ! queue_empty(number->queue)) ||
 			( queue_size(number->queue) > 1 && 
-				front.t3.pulse != back.t3.pulse ) ) {
+				front->t3.pulse != back->t3.pulse ) ) {
 		number->photon.t3.channel = number->current_channel;
-		number->photon.t3.pulse = front.t3.pulse;
+		number->photon.t3.pulse = front->t3.pulse;
 
 		if ( number->correlate_successive &&
 				 number->previous_photon.t3.pulse == number->photon.t3.pulse ) {
-			number->photon.t3.time = front.t3.time - 
+			number->photon.t3.time = front->t3.time - 
 				number->previous_photon.t3.time;
 		} else {
-			number->photon.t3.time = front.t3.time;
+			number->photon.t3.time = front->t3.time;
 		}
 
 		number->current_channel++;

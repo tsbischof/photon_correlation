@@ -119,7 +119,7 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 	int status = PC_SUCCESS;
 
 	if ( correlator->order == 1 ) {
-		status = queue_push(correlator->queue, (void *)photon);
+		status = queue_push(correlator->queue, photon);
 
 		if ( status != PC_SUCCESS) {
 			return(status);
@@ -134,7 +134,7 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 		
 	}
 	
-	return(queue_push(correlator->queue, (void *)photon));
+	return(queue_push(correlator->queue, photon));
 }
 
 int correlator_next(correlator_t *correlator) {
@@ -143,7 +143,7 @@ int correlator_next(correlator_t *correlator) {
 			queue_front(correlator->queue, (void *)&correlator->left);
 			correlation_set_index(correlator->correlation,
 					0,
-					(void *)&correlator->left);
+					correlator->left);
 			queue_pop(correlator->queue, NULL);
 			return(PC_SUCCESS);
 		} else {
@@ -243,10 +243,10 @@ void correlator_free(correlator_t **correlator) {
 
 int correlator_valid_distance(correlator_t *correlator) {
 	queue_index(correlator->queue,
-			(void *)&(correlator->left),
+			(void *)&correlator->left,
 			correlator->index_offsets->current_index_offsets->values[0]);
 	queue_index(correlator->queue, 
-			(void *)&(correlator->right),
+			(void *)&correlator->right,
 			correlator->index_offsets->current_index_offsets->values[
 				correlator->order-1]);
 		

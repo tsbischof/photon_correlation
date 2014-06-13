@@ -34,6 +34,7 @@
 
 #include "queue.h"
 #include "error.h"
+#include "photon/photon.h"
 
 /*
  * The queue is effectively the C++ vector, though the guarantee of pointer 

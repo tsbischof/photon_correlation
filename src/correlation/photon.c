@@ -75,7 +75,7 @@ int correlate_photon(FILE *stream_in, FILE *stream_out,
 			if ( result != PC_SUCCESS ) {
 				break;
 			}
-		
+	
 			while ( correlator_next(correlator) == PC_SUCCESS ) {
 				debug("Found correlation.\n");
 				correlator->correlation_print(stream_out, 
@@ -141,12 +141,12 @@ void t2_correlate(correlation_t *correlation) {
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
-		((t2_t *)correlation->photons)[i].time -=
-				((t2_t *)correlation->photons)[0].time;
+		correlation->photons[i].t2.time -=
+				correlation->photons[0].t2.time;
 	}
 
 	if ( correlation->order != 1 ) {
-		((t2_t *)correlation->photons)[0].time = 0;
+		correlation->photons[0].t2.time = 0;
 	}
 }
 
@@ -156,17 +156,17 @@ int t2_correlation_fscanf(FILE *stream_in, correlation_t *correlation) {
 
 	result = fscanf(stream_in,
 			"%u",
-			&(((t2_t *)correlation->photons)[0].channel));
+			&(correlation->photons[0].t2.channel));
 
 	result = (result == 1);
 
-	((t2_t *)(correlation->photons))[0].time = 0;
+	correlation->photons[0].t2.time = 0;
 
 	for ( i = 1; result && i < correlation->order; i++ ) {
 		result = fscanf(stream_in,
 				",%u,%lld",
-				&(((t2_t *)correlation->photons)[i].channel),
-				&(((t2_t *)correlation->photons)[i].time));
+				&(correlation->photons[i].t2.channel),
+				&(correlation->photons[i].t2.time));
 
 		result = (result == 2);
 	}
@@ -205,13 +205,13 @@ int t2_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 
 int t2_under_max_distance(correlator_t const *correlator) {
 	return( correlator->max_time_distance == 0 || 
-			llabs(correlator->right.t2.time - correlator->left.t2.time) 
+			llabs(correlator->right->t2.time - correlator->left->t2.time) 
 				< correlator->max_time_distance);
 }
 
 int t2_over_min_distance(correlator_t const *correlator) {
 	return( correlator->min_time_distance == 0 || 
-			llabs(correlator->right.t2.time - correlator->left.t2.time)
+			llabs(correlator->right->t2.time - correlator->left->t2.time)
 				>= correlator->min_time_distance);
 }
 
@@ -299,15 +299,15 @@ int t3_correlation_fprintf(FILE *stream_out, correlation_t const *correlation) {
 int t3_under_max_distance(correlator_t const *correlator) {
 	if ( correlator->order == 1 ) {
 		return( correlator->max_time_distance == 0 || 
-				llabs(correlator->left.t3.time) < 
+				llabs(correlator->left->t3.time) < 
 					correlator->max_time_distance);
 	} else {
 		return( ( correlator->max_time_distance == 0 || 
-				llabs(correlator->right.t3.time - correlator->left.t3.time) 
+				llabs(correlator->right->t3.time - correlator->left->t3.time) 
 					< correlator->max_time_distance)
 				&& ( correlator->max_pulse_distance == 0 || 
-					llabs(correlator->right.t3.pulse - 
-							correlator->left.t3.pulse) 
+					llabs(correlator->right->t3.pulse - 
+							correlator->left->t3.pulse) 
 						< correlator->max_pulse_distance) );
 	}
 }
@@ -315,14 +315,15 @@ int t3_under_max_distance(correlator_t const *correlator) {
 int t3_over_min_distance(correlator_t const *correlator) {
 	if ( correlator->order == 1 ) {
 		return( correlator->min_time_distance == 0 || 
-			llabs(correlator->left.t3.time) >= correlator->min_time_distance );
+			llabs(correlator->left->t3.time) >= correlator->min_time_distance );
 	} else {
 		return( ( correlator->min_time_distance == 0 || 
-					llabs(correlator->right.t3.time - correlator->left.t3.time) 
+					llabs(correlator->right->t3.time -
+							 correlator->left->t3.time) 
 						>= correlator->min_time_distance)
 				&& ( correlator->min_pulse_distance == 0 || 
-					llabs(correlator->right.t3.pulse - 
-							correlator->left.t3.pulse) 
+					llabs(correlator->right->t3.pulse - 
+							correlator->left->t3.pulse) 
 						>= correlator->min_pulse_distance) );
 	}
 }

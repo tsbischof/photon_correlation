@@ -48,8 +48,8 @@ typedef struct _correlator_t {
 	int in_permutations;
 	int yielded;
 
-	photon_t left;
-	photon_t right;
+	photon_t *left;
+	photon_t *right;
 
 	long long min_pulse_distance;
 	long long max_pulse_distance;

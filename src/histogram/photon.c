@@ -44,8 +44,7 @@ int t2_correlation_build_channels(correlation_t const *correlation,
 	int i;
 
 	for ( i = 0; i < correlation->order; i++ ) {
-		channels_vector->values[i] = (unsigned int)
-				((t2_t *)correlation->photons)[i].channel;
+		channels_vector->values[i] = correlation->photons[i].t2.channel;
 	}
 
 	return(PC_SUCCESS);
@@ -56,8 +55,7 @@ int t2_correlation_build_values(correlation_t const *correlation,
 	int i;
 
 	for ( i = 1; i < correlation->order; i++ ) {
-		values_vector->values[i-1] = 
-				(long long)((t2_t *)correlation->photons)[i].time;
+		values_vector->values[i-1] = correlation->photons[i].t2.time;
 	}
 
 	return(PC_SUCCESS);
@@ -68,8 +66,7 @@ int t3_correlation_build_channels(correlation_t const *correlation,
 	int i;
 
 	for ( i = 0; i < correlation->order; i++ ) {
-		channels_vector->values[i] = 
-				(unsigned int)((t3_t *)correlation->photons)[i].channel;
+		channels_vector->values[i] = correlation->photons[i].t3.channel;
 	}
 
 	return(PC_SUCCESS);
@@ -80,14 +77,11 @@ int t3_correlation_build_values(correlation_t const *correlation,
 	int i;
 
 	if ( correlation->order == 1 ) {
-		values_vector->values[0] = 
-				(long long)((t3_t *)correlation->photons)[0].time;
+		values_vector->values[0] = correlation->photons[0].t3.time;
 	} else {
 		for ( i = 1; i < correlation->order; i++ ) {
-			values_vector->values[2*(i-1)] = 
-					(long long)((t3_t *)correlation->photons)[i].pulse;
-			values_vector->values[2*(i-1)+1] = 
-					(long long)((t3_t *)correlation->photons)[i].time;
+			values_vector->values[2*(i-1)] = correlation->photons[i].t3.pulse;
+			values_vector->values[2*(i-1)+1] = correlation->photons[i].t3.time;
 		}
 	}
 
