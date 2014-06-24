@@ -118,6 +118,7 @@ size_t queue_capacity(queue_t const *queue) {
 
 int queue_resize(queue_t *queue, size_t const length) {
 	size_t true_size = length * queue->elem_size;
+	size_t left, right;
 	void *new;
 
 	if ( length <= queue_capacity(queue) ) {
@@ -134,7 +135,26 @@ int queue_resize(queue_t *queue, size_t const length) {
 			return(PC_ERROR_MEM);
 		} else {
 			queue->values = new;
+
+			/* Make sure to rearrange the array: we expect values to run over
+			 * the end in a circular fashion, so move anything that starts over
+			 * at the beginning to the end.
+			 */
+			left = queue->left_index % queue->length;
+			right = queue->right_index % queue->length;
+
+			if ( left > right ) {
+				memmove(
+					&(((char *)queue->values)[(length - queue->length + left)
+												*queue->elem_size]),
+					&(((char *)queue->values)[left*queue->elem_size]),
+					(queue->length - left)*queue->elem_size);
+			}
+
+			queue->left_index += length - queue->length;
+			queue->right_index += length - queue->length;
 			queue->length = length;
+
 			return(PC_SUCCESS);
 		}
 	}
