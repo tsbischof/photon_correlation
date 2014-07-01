@@ -139,16 +139,18 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 
 int correlator_next(correlator_t *correlator) {
 	if ( correlator->order == 1 ) {
-		if ( ! queue_empty(correlator->queue) ) {
-			queue_front(correlator->queue, (void *)&correlator->left);
+		while ( ! queue_empty(correlator->queue) ) {
+			queue_pop(correlator->queue, (void *)&correlator->left);
 			correlation_set_index(correlator->correlation,
 					0,
 					correlator->left);
-			queue_pop(correlator->queue, NULL);
-			return(PC_SUCCESS);
-		} else {
-			return(EOF);
-		}
+
+			if ( correlator_valid_distance(correlator) ) {
+				return(PC_SUCCESS);
+			} 
+		} 
+
+		return(EOF);
 	}
 
 	while ( true ) {

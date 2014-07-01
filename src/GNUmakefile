@@ -36,7 +36,7 @@ INSTALL_DIR = ~
 
 TEST = test
 MKDIR = mkdir -p
-CP = cp 
+CP = cp -p
 
 INCLUDES = 
 LIBS = 

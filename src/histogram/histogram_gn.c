@@ -229,6 +229,7 @@ void histogram_gn_free(histogram_gn_t **hist) {
 		} 
 
 		free(*hist);
+		*hist = NULL;
 	}
 }
 
