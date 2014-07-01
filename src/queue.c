@@ -34,6 +34,7 @@
 
 #include "queue.h"
 #include "error.h"
+#include "photon/photon.h"
 
 /*
  * The queue is effectively the C++ vector, though the guarantee of pointer 
@@ -217,7 +218,11 @@ int queue_sort(queue_t *queue) {
 }
 
 int queue_pop(queue_t *queue, void *elem) {
-	int result = queue_front(queue, elem);
+	int result = PC_SUCCESS;
+
+	if ( elem != NULL ) {
+		result = queue_front_copy(queue, elem);
+	}
 
 	if ( result == PC_SUCCESS ) {
 		queue->left_index++;
@@ -280,7 +285,19 @@ int queue_push(queue_t *queue, void const *elem) {
 	return(PC_SUCCESS);
 }
 
-int queue_index(queue_t const *queue, void *elem, size_t const index) {
+int queue_index(queue_t const *queue, void **elem, size_t const index) {
+	size_t true_index = (queue->left_index + index) % queue->length;
+
+	if ( index >= queue_size(queue) ) {
+		return(PC_ERROR_INDEX);
+	} else { 
+		*elem = &((char *)queue->values)[true_index*queue->elem_size];
+
+		return(PC_SUCCESS);
+	}
+}
+
+int queue_index_copy(queue_t const *queue, void *elem, size_t const index) {
 	size_t true_index = (queue->left_index + index) % queue->length;
 
 	if ( index >= queue_size(queue) ) {
@@ -294,10 +311,19 @@ int queue_index(queue_t const *queue, void *elem, size_t const index) {
 	}
 }
 
-int queue_front(queue_t const *queue, void *elem) {
+int queue_front(queue_t const *queue, void **elem) {
 	return(queue_index(queue, elem, 0));
 }
 
-int queue_back(queue_t const *queue, void *elem) {
+int queue_front_copy(queue_t const *queue, void *elem) {
+	return(queue_index_copy(queue, elem, 0));
+}
+
+int queue_back(queue_t const *queue, void **elem) {
 	return(queue_index(queue, elem, queue_size(queue)-1));
 }
+
+int queue_back_copy(queue_t const *queue, void *elem) {
+	return(queue_index_copy(queue, elem, queue_size(queue)-1));
+}
+

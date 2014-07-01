@@ -49,8 +49,7 @@ int photons_echo(FILE *stream_in, FILE *stream_out,
 		photon_stream_init(photon_stream, stream_in);
 
 		while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS) {
-			photon_stream->photon_print(stream_out, 
-					photon_stream->photon);
+			photon_stream->photon_print(stream_out, &photon_stream->photon);
 		}
 	}
 
@@ -61,8 +60,7 @@ int photons_echo(FILE *stream_in, FILE *stream_out,
  
 int photons(FILE *stream_in, FILE *stream_out,
 		pc_options_t const *options) {
-	t2_t t2;
-	t3_t t3;
+	photon_t photon;
 	int result = PC_SUCCESS;
 	photon_stream_t *photons;
 
@@ -89,28 +87,28 @@ int photons(FILE *stream_in, FILE *stream_out,
 				options->convert == MODE_UNKNOWN ) {
 			debug("Echo photons.\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				photons->photon_print(stream_out, photons->photon);
+				photons->photon_print(stream_out, &(photons->photon));
 			}
 		} else if ( options->mode == MODE_T2 && options->convert == MODE_T3 ) {
 			debug("t2 to t3\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				t2_to_t3(photons->photon, &t3, options->repetition_rate, 
+				t2_to_t3(&photons->photon, &photon, options->repetition_rate, 
 						options->time_origin);
-				t3_fprintf(stream_out, &t3);
+				t3_fprintf(stream_out, &photon);
 			}
 		} else if ( options->mode == MODE_T3 && options->convert == MODE_T2 ) {
 			debug("t3 to t2\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				t3_to_t2(photons->photon, &t2, options->repetition_rate, 
+				t3_to_t2(&photons->photon, &photon, options->repetition_rate, 
 						options->time_origin);
-				t2_fprintf(stream_out, &t2);
+				t2_fprintf(stream_out, &photon);
 			}
 		} else if ( options->mode == MODE_T3 && 
 				options->convert == MODE_AS_T2 ) {
 			debug("t3 as t2\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-				t3_as_t2(photons->photon, &t2);
-				t2_fprintf(stream_out, &t2);
+				t3_as_t2(&photons->photon, &photon);
+				t2_fprintf(stream_out, &photon);
 			}
 		} else {
 			error("Invalid photon conversion: %d to %d\n", 

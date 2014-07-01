@@ -44,9 +44,7 @@
 int correlate_start_stop(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
 	int valid = 0;
-	t2_t t2;
-	t2_next_t next = t2_fscanf;
-	correlation_print_t print = t2_correlation_fprintf;
+	photon_t photon;
 
 	unsigned long long record_number = 0;
 
@@ -67,21 +65,21 @@ int correlate_start_stop(FILE *stream_in, FILE *stream_out,
 
 	debug("Correlating in start-stop mode.\n");
 
-	while ( next(stream_in, &t2) == PC_SUCCESS ) {
-		if ( t2.channel == 0 ) {
+	while ( t2_fscanf(stream_in, &photon) == PC_SUCCESS ) {
+		if ( photon.t2.channel == 0 ) {
 			valid = 1;
-			correlation_set_index(correlation, 0, &t2);
-		} else if ( valid && t2.channel == 1 ) {
+			correlation_set_index(correlation, 0, &photon);
+		} else if ( valid && photon.t2.channel == 1 ) {
 			record_number++;
 			pc_status_print("correlate", record_number, options);
 
-			correlation_set_index(correlation, 1, &t2);
+			correlation_set_index(correlation, 1, &photon);
 			t2_correlate(correlation);
-			print(stream_out, correlation);
+			t2_correlation_fprintf(stream_out, correlation);
 			valid = 0;
-		} else if ( t2.channel > 2 ) {
+		} else if ( photon.t2.channel > 2 ) {
 			warn("Start-stop mode only works for 2 channels. "
-					"Channel index %d found.\n", t2.channel);
+					"Channel index %d found.\n", photon.t2.channel);
 		}
 	}
 

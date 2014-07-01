@@ -45,10 +45,9 @@ typedef struct {
 
 	int mode;
 	unsigned int channels;
-	size_t photon_size;
-	void *current_photon;
-	void *left;
-	void *right;
+	photon_t current_photon;
+	photon_t left;
+	photon_t right;
 
 	int suppress_channels;
 	int *suppressed_channels;

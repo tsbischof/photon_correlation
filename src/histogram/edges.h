@@ -34,12 +34,12 @@
 
 #include "../limits.h"
 
-typedef struct {
+typedef struct _edges_t {
 	unsigned int n_bins;
 	int print_label;
 	limits_t limits;
 	int scale;
-	int (*get_index)(void const *edges, long long const value);
+	int (*get_index)(struct _edges_t const *edges, long long const value);
 	double *bin_edges;
 } edges_t;
 
@@ -48,10 +48,10 @@ int edges_init(edges_t *edges, limits_t const *limits, int const scale,
 		int const print_label);
 void edges_free(edges_t **edges);
 
-int edges_index_linear(void const *edges, long long const value);
-int edges_index_log(void const *edges, long long const value);
-int edges_index_log_zero(void const *edges, long long const value);
-int edges_index_bsearch(void const *edges, long long const value);
+int edges_index_linear(edges_t const *edges, long long const value);
+int edges_index_log(edges_t const *edges, long long const value);
+int edges_index_log_zero(edges_t const *edges, long long const value);
+int edges_index_bsearch(edges_t const *edges, long long const value);
 
 typedef struct {
 	unsigned int length;

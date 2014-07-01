@@ -29,20 +29,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef T3_H_
-#define T3_H_
+#include "options.h"
+#include "run.h"
+#include "t3_wait/t3_wait.h"
 
-#include <stdio.h>
+int main(int argc, char *argv[]) {
+	program_options_t program_options = {
+"This program is meant to measure the waiting time distribution of photons\n"
+"as a function of emission lifetime.",
+		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 
+			OPT_FILE_IN, OPT_FILE_OUT, 
+			OPT_TIME, OPT_PULSE,
+			OPT_EOF}};
 
-#include "photon.h"
+	return(run(&program_options, t3_wait, argc, argv)); 
+}
 
-int t3_fscanf(FILE *stream_out, photon_t *photon);
-int t3_fprintf(FILE *stream_out, photon_t const *photon);
 
-int t3_compare(void const *a, void const *b);
-int t3_echo(FILE *stream_in, FILE *stream_out);
-
-long long t3_window_dimension(photon_t const *photon);
-long long t3_channel_dimension(photon_t const *photon);
-
-#endif

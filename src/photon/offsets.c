@@ -101,21 +101,21 @@ long long offset_span(long long const *offsets, unsigned int const channels) {
 	return(max-min);
 }
 
-void t2v_offset(void *record, offsets_t const *offsets) {
+void t2_offset(photon_t *record, offsets_t const *offsets) {
 	if ( offsets->offset_time ) {
-		((t2_t *)record)->time +=
-				offsets->time_offsets[((t2_t *)record)->channel];
+		record->t2.time +=
+				offsets->time_offsets[record->t2.channel];
 	}
 }
 
-void t3v_offset(void *record, offsets_t const *offsets) {
+void t3_offset(photon_t *record, offsets_t const *offsets) {
 	if ( offsets->offset_time ) {
-		((t3_t *)record)->time +=
-			offsets->time_offsets[((t3_t *)record)->channel];
+		record->t3.time +=
+			offsets->time_offsets[record->t3.channel];
 	}
 
 	if ( offsets->offset_pulse ) {
-		((t3_t *)record)->pulse +=
-			offsets->pulse_offsets[((t3_t *)record)->channel];
+		record->t3.pulse +=
+			offsets->pulse_offsets[record->t3.channel];
 	}
 }

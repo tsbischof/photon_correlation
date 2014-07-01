@@ -282,11 +282,10 @@ int histogram_gn_increment(histogram_gn_t *hist,
 	return(PC_SUCCESS);
 }
 			
-int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
+int histogram_gn_fprintf(FILE *stream_out, histogram_gn_t *hist) {
 /* Cycle through the combinations of channels, and for each combination
  * of channels cycle over the edges.
  */
-	histogram_gn_t *hist = (histogram_gn_t *)histogram;
 	int i;
 	int histogram_index;
 	int channel_index;
@@ -318,7 +317,7 @@ int histogram_gn_fprintf(FILE *stream_out, void const *histogram) {
 
 			channel_index = 0;
 
-			fprintf(stream_out, "%"PRIu32, 
+			fprintf(stream_out, "%u", 
 					hist->channels_vector->values[channel_index++]);
 
 			for ( i = 0; i < hist->dimensions; i++ ) {

@@ -83,31 +83,31 @@ void photon_number_free(photon_number_t **number) {
 	}
 }
 
-int photon_number_push(photon_number_t *number, t3_t const *t3) {
+int photon_number_push(photon_number_t *number, photon_t const *photon) {
 	int result = PC_SUCCESS;
 
 	if ( ! number->first_seen ) {
 		number->first_seen = true;
-		number->last_pulse = t3->pulse;
+		number->last_pulse = photon->t3.pulse;
 		number->current_seen++;
 
 		return(photon_number_check_max(number));
 	} else {
-		if ( t3->pulse == number->last_pulse ) {
+		if ( photon->t3.pulse == number->last_pulse ) {
 			number->current_seen++;
 			return(photon_number_check_max(number));
 		} else {
-			if ( number->set_stop && number->stop <= t3->pulse ) {
+			if ( number->set_stop && number->stop <= photon->t3.pulse ) {
 				return(PC_RECORD_AFTER_WINDOW);
 			} 
 
 			result = photon_number_increment(number, number->current_seen, 1);
 			photon_number_increment(number, 
 					0, 
-					t3->pulse - number->last_pulse - 1);
+					photon->t3.pulse - number->last_pulse - 1);
 
 			number->current_seen = 1;
-			number->last_pulse = t3->pulse;
+			number->last_pulse = photon->t3.pulse;
 
 			if ( result == PC_SUCCESS ) {
 				return(photon_number_check_max(number));
@@ -208,7 +208,7 @@ int photon_number(FILE *stream_in, FILE *stream_out,
 
 	if ( result == PC_SUCCESS) {
 		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-			photon_number_push(number, (t3_t *)photons->photon);
+			photon_number_push(number, &(photons->photon));
 		}
 
 		photon_number_flush(number);

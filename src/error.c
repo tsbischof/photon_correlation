@@ -42,14 +42,15 @@ void debug(char const *message, ...) {
 	 * to ignore it.
 	 */
 	va_list args;
-	va_start(args, message);
+
 	if ( verbose ) {
+		va_start(args, message);
 		fprintf(stderr, "DEBUG: ");
 		vfprintf(stderr, message, args);
-	}
-	va_end(args);
-	fflush(stderr);
-}
+		va_end(args);
+		fflush(stderr);
+	}  
+} 
 
 void error(char const *message, ...) {
 	/* Handle error messages. This is here in case we ever want to do 
@@ -85,7 +86,7 @@ int pc_status_print(char const *name, uint64_t count,
 		timeinfo = localtime(&rawtime);
 		strftime(fmttime, 80, "%Y.%m.%d %H.%M.%S", timeinfo);
 		fprintf(stderr, 
-				"%s: (%s) Record %20"PRIu64"\n", 
+				"%s: (%s) Record %20"PRId64"\n", 
 				fmttime, 
 				name, 
 				count);

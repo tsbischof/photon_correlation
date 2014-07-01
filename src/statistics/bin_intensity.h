@@ -63,8 +63,7 @@ typedef struct {
 
 	queue_t *queue;
 
-	size_t photon_size;
-	void *current;
+	photon_t photon;
 
 	long long maximum_delay;
 } bin_intensity_t;
@@ -81,7 +80,7 @@ void bin_intensity_free(bin_intensity_t **bin_intensity);
 void bin_intensity_increment(bin_intensity_t *bin_intensity);
 void bin_intensity_flush(bin_intensity_t *bin_intensity);
 int bin_intensity_valid_distance(bin_intensity_t *bin_intensity);
-int bin_intensity_push(bin_intensity_t *bin_intensity, void const *photon);
+int bin_intensity_push(bin_intensity_t *bin_intensity, photon_t const *photon);
 
 int bin_intensity_fprintf(FILE *stream_out, 
 		bin_intensity_t const *bin_intensity);

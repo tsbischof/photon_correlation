@@ -147,9 +147,8 @@ bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
 		memcpy(&(bin_intensity->window_limits),
 				time_limits,
 				sizeof(limits_t));
-		bin_intensity->channel_dim = t2v_channel_dimension;
-		bin_intensity->window_dim = t2v_window_dimension;
-		bin_intensity->photon_size = sizeof(t2_t);
+		bin_intensity->channel_dim = t2_channel_dimension;
+		bin_intensity->window_dim = t2_window_dimension;
 	} else if ( mode == MODE_T3 ) {
 		if ( order == 1 ) {
 			error("Bin intensity is not well-defined for order 1.\n");
@@ -161,9 +160,8 @@ bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
 		memcpy(&(bin_intensity->window_limits),
 				pulse_limits,
 				sizeof(limits_t));
-		bin_intensity->channel_dim = t3v_channel_dimension;
-		bin_intensity->window_dim = t3v_window_dimension;
-		bin_intensity->photon_size = sizeof(t3_t);
+		bin_intensity->channel_dim = t3_channel_dimension;
+		bin_intensity->window_dim = t3_window_dimension;
 	} else {
 		error("Invalid mode: %d\n", mode);
 		bin_intensity_free(&bin_intensity);
@@ -195,16 +193,9 @@ bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
 		}
 	}
 
-	bin_intensity->queue = queue_alloc(bin_intensity->photon_size, queue_size);
+	bin_intensity->queue = queue_alloc(sizeof(photon_t), queue_size);
 
 	if ( bin_intensity->queue == NULL ) {
-		bin_intensity_free(&bin_intensity);
-		return(bin_intensity);
-	}
-
-	bin_intensity->current = malloc(bin_intensity->photon_size);
-	
-	if ( bin_intensity->current == NULL ) {
 		bin_intensity_free(&bin_intensity);
 		return(bin_intensity);
 	}
@@ -255,9 +246,8 @@ void bin_intensity_free(bin_intensity_t **bin_intensity) {
 		}
 
 		queue_free(&((*bin_intensity)->queue));
-		
-		free((*bin_intensity)->current);
 		free(*bin_intensity);
+		*bin_intensity = NULL;
 	}
 }
 
@@ -273,10 +263,11 @@ void bin_intensity_increment(bin_intensity_t *bin_intensity) {
 	double current_window;
 	double right_window;
 
-	queue_pop(bin_intensity->queue, bin_intensity->current);
+	queue_pop(bin_intensity->queue, &(bin_intensity->photon));
 
 	left_window = (double)bin_intensity->start;
-	current_window = (double)bin_intensity->window_dim(bin_intensity->current);
+	current_window = (double)bin_intensity->window_dim(
+			&(bin_intensity->photon));
 	right_window = (double)bin_intensity->stop;
 
 	for ( i = 0; i < bin_intensity->window_limits.bins; i++ ) {
@@ -285,7 +276,7 @@ void bin_intensity_increment(bin_intensity_t *bin_intensity) {
 
 		if ( (left_window <= left && left < right_window) ||
 				(left_window <= right && right < right_window) ) {
-			channel = bin_intensity->channel_dim(bin_intensity->current);
+			channel = bin_intensity->channel_dim(&(bin_intensity->photon));
 			bin_intensity->counts[channel][i]++;
 		}
 	}
@@ -308,14 +299,14 @@ int bin_intensity_valid_distance(bin_intensity_t *bin_intensity) {
 		return(false);
 	}
 
-	queue_front(bin_intensity->queue, bin_intensity->current);
-	left = bin_intensity->window_dim(bin_intensity->current);
+	queue_front(bin_intensity->queue, (void *)&(bin_intensity->photon));
+	left = bin_intensity->window_dim(&(bin_intensity->photon));
 	right = bin_intensity->stop;
 
 	return( right - left > bin_intensity->maximum_delay );
 }
 
-int bin_intensity_push(bin_intensity_t *bin_intensity, void const *photon) {
+int bin_intensity_push(bin_intensity_t *bin_intensity, photon_t const *photon) {
 	int result;
 	unsigned int channel = bin_intensity->channel_dim(photon);
 	long long window = bin_intensity->window_dim(photon);
@@ -416,7 +407,7 @@ int bin_intensity(FILE *stream_in, FILE *stream_out,
 		debug("Running.\n");
 		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
 			debug("Found photon.\n");
-			result = bin_intensity_push(bin_intensity, photons->photon);
+			result = bin_intensity_push(bin_intensity, &(photons->photon));
 
 			if ( result != PC_SUCCESS ) {
 				if ( result == PC_WINDOW_NEXT ) {

@@ -4,13 +4,15 @@
 -run valgrind against all programs, check that nothing has been missed.
 -add lots of comments to explain implementations, etc.
 -look into creating a single program which integrates all of the different operations on the photon stream.
+-test the performance of subprocess in Python. How does the piping system in Python compare with pipes in Linux for speed? 
 
 Time dependent code:
 -create a wrapper to gn which handles the creation and streaming of gn.td work. Basically, make it possible to yield the histograms, rather than just writing the file to a directory, so that binning can be done in real time instead.
 -create similar wrappers for number and whatnot.
+-perform the intensity-dependent analysis in C, rather than Python
 
 Integration with PicoQuant
--create a version of photon_gn which takes a photon stream directly through PicoQuant. This should speed up calculations
+-create a version of photon_gn which takes a photon stream directly through PicoQuant. This should speed up calculations.
 
 Photons:
 -enable a t3 time offset: internally convert to t2, apply offset, convert back

@@ -45,7 +45,8 @@ int main(int argc, char *argv[]) {
 "divider used.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 
 			OPT_FILE_IN, OPT_FILE_OUT, 
-			OPT_SYNC_CHANNEL, OPT_SYNC_DIVIDER,
+			OPT_SYNC_CHANNEL, 
+/*			OPT_SYNC_DIVIDER, */
 			OPT_QUEUE_SIZE, 
 			OPT_EOF}};
 

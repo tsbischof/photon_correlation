@@ -386,9 +386,9 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 					== PC_SUCCESS ) {
 				pc_status_print("gn", photon_number++, options);
 
-				correlator_push(correlator, photon_stream->photon);
-				intensity_photon_push(count_all, photon_stream->photon);
-				intensity_photon_push(intensity, photon_stream->photon);
+				correlator_push(correlator, &(photon_stream->photon));
+				intensity_photon_push(count_all, &(photon_stream->photon));
+				intensity_photon_push(intensity, &(photon_stream->photon));
 
 				while ( correlator_next(correlator) == PC_SUCCESS ) {
 					histogram_gn_increment(histogram, 
@@ -400,13 +400,11 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 				}
 
 				if ( options->mode == MODE_T3 ) {
-					photon_number_push(number, 
-							(t3_t *)photon_stream->photon);
+					photon_number_push(number, &(photon_stream->photon));
 				}
 
 				if ( options->exact_normalization ) {
-					bin_intensity_push(bin_intensity, 
-							photon_stream->photon);
+					bin_intensity_push(bin_intensity, &(photon_stream->photon));
 				}
 			}
 	

@@ -35,12 +35,12 @@
 /* 
  * Functions to implement t3 photon read/write.
  */
-int t3_fscanf(FILE *stream_in, t3_t *t3) {
+int t3_fscanf(FILE *stream_in, photon_t *photon) {
 	int n_read = fscanf(stream_in,
 			"%u,%lld,%lld\n",
-			&(t3->channel),
-			&(t3->pulse),
-			&(t3->time));
+			&(photon->t3.channel),
+			&(photon->t3.pulse),
+			&(photon->t3.time));
 
 	if ( n_read == 3 ) {
 		return(PC_SUCCESS);
@@ -53,25 +53,17 @@ int t3_fscanf(FILE *stream_in, t3_t *t3) {
 	} 
 }
 
-int t3v_fscanf(FILE *stream_in, void *t3) {
-	return(t3_fscanf(stream_in, t3));
-}
-
-int t3_fprintf(FILE *stream_out, t3_t const *t3) {
+int t3_fprintf(FILE *stream_out, photon_t const *photon) {
 	fprintf(stream_out,
 			"%u,%lld,%lld\n",
-			t3->channel,
-			t3->pulse,
-			t3->time);
+			photon->t3.channel,
+			photon->t3.pulse,
+			photon->t3.time);
 
 	return( ! ferror(stream_out) ? PC_SUCCESS : PC_ERROR_IO );
 }
 
-int t3v_fprintf(FILE *stream_in, void const *t3) {
-	return(t3_fprintf(stream_in, t3));
-}
-
-int t3v_compare(void const *a, void const *b) {
+int t3_compare(void const *a, void const *b) {
 	/* Comparator to be used with standard sorting algorithms (qsort) to sort
 	 * t3 photons. 
      */
@@ -84,31 +76,29 @@ int t3v_compare(void const *a, void const *b) {
 	 */
 	int64_t difference;
 
-	if ( ((t3_t *)a)->pulse == ((t3_t *)b)->pulse ) {
-		difference = ((t3_t *)a)->time - ((t3_t *)b)->time;
+	if ( ((photon_t *)a)->t3.pulse == ((photon_t *)b)->t3.pulse ) {
+		difference = ((photon_t *)a)->t3.time - ((photon_t *)b)->t3.time;
 	} else {
-		difference = ((t3_t *)a)->pulse - ((t3_t *)b)->pulse;
+		difference = ((photon_t *)a)->t3.pulse - ((photon_t *)b)->t3.pulse;
 	}
 
 	return( difference > 0 );
 }
 
 int t3_echo(FILE *stream_in, FILE *stream_out) {
-	t3_t t3;
-	t3_next_t next = t3_fscanf;
-	t3_print_t print = t3_fprintf;
+	photon_t photon;
 
-	while ( next(stream_in, &t3) == PC_SUCCESS ) {
-		print(stream_out, &t3);
+	while ( t3_fscanf(stream_in, &photon) == PC_SUCCESS ) {
+		t3_fprintf(stream_out, &photon);
 	}
 
 	return(PC_SUCCESS);
 }
 
-long long t3v_window_dimension(void const *t3) {
-	return(((t3_t *)t3)->pulse);
+long long t3_window_dimension(photon_t const *photon) {
+	return(photon->t3.pulse);
 }
 
-long long t3v_channel_dimension(void const *t3) {
-	return(((t3_t *)t3)->channel);
+long long t3_channel_dimension(photon_t const *photon) {
+	return(photon->t3.channel);
 }

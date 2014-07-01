@@ -39,7 +39,7 @@
 #include "../correlation/correlation.h"
 #include "../combinatorics/combinations.h"
 
-typedef struct {
+typedef struct _histogram_gn_t {
 	int channels;
 	int order;
 	int mode;
@@ -58,7 +58,7 @@ typedef struct {
 	values_vector_t *values_vector;
 	edge_indices_t *edge_indices;
 
-	int (*print)(FILE *stream_out, void const *hist);
+	int (*print)(FILE *stream_out, struct _histogram_gn_t *hist);
 	int (*build_channels)(correlation_t const *correlation,
 			combination_t *channels);
 	int (*build_values)(correlation_t const *correlation, 
@@ -75,7 +75,7 @@ void histogram_gn_free(histogram_gn_t **hist);
 int histogram_gn_increment(histogram_gn_t *hist, 
 		correlation_t const *correlation);
 
-int histogram_gn_fprintf(FILE *stream_out, void const *hist);
+int histogram_gn_fprintf(FILE *stream_out, histogram_gn_t *hist);
 int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 		unsigned int const blanks);
 int histogram_gn_fprintf_counts(FILE *stream_out, histogram_gn_t const *hist);

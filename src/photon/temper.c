@@ -54,20 +54,18 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 	
 	if ( pst->mode == MODE_T2 ) {
 		debug("Mode t2\n");
-		pst->photon_size = sizeof(t2_t);
-		pst->photon_next = t2v_fscanf;
-		pst->photon_print = t2v_fprintf;
-		pst->photon_offset = t2v_offset;
-		pst->channel_dim = t2v_channel_dimension;
-		pst->window_dim = t2v_window_dimension;
+		pst->photon_next = t2_fscanf;
+		pst->photon_print = t2_fprintf;
+		pst->photon_offset = t2_offset;
+		pst->channel_dim = t2_channel_dimension;
+		pst->window_dim = t2_window_dimension;
 	} else if ( pst->mode == MODE_T3 ) {
 		debug("Mode t3.\n");
-		pst->photon_size = sizeof(t3_t);
-		pst->photon_next = t3v_fscanf;
-		pst->photon_print = t3v_fprintf;
-		pst->photon_offset = t3v_offset;
-		pst->channel_dim = t3v_channel_dimension;
-		pst->window_dim = t3v_window_dimension;
+		pst->photon_next = t3_fscanf;
+		pst->photon_print = t3_fprintf;
+		pst->photon_offset = t3_offset;
+		pst->channel_dim = t3_channel_dimension;
+		pst->window_dim = t3_window_dimension;
 	} else {
 		error("Invalid mode: %d\n", pst->mode);
 		photon_stream_temper_free(&pst);
@@ -76,18 +74,11 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 
 	pst->yielded_all_sorted = 1;
 
-	debug("Allocating photons.\n");
-	pst->current_photon = malloc(pst->photon_size);
-	pst->left = malloc(pst->photon_size);
-	pst->right = malloc(pst->photon_size);
-
 	pst->suppress_channels = false;
 	pst->suppressed_channels = (int *)malloc(pst->channels*sizeof(int));
 
-	if ( pst->current_photon == NULL ||
-			pst->left == NULL || pst->right == NULL || 
-			pst->suppressed_channels == NULL ) {
-		error("Could not allocate photons.\n");
+	if ( pst->suppressed_channels == NULL ) {
+		error("Could not allocate suppressed channels.\n");
 		photon_stream_temper_free(&pst);
 		return(pst);
 	}
@@ -95,7 +86,7 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 	debug("Allocating offsets.\n");
 	pst->offsets = offsets_alloc(pst->channels);
 	debug("Allocating queue.\n");
-	pst->queue = queue_alloc(pst->photon_size, queue_length);
+	pst->queue = queue_alloc(sizeof(photon_t), queue_length);
 
 	if ( pst->offsets == NULL || pst->queue == NULL ) {
 		error("Could not allocate offsets or queue.\n");
@@ -135,11 +126,11 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 	if ( pst->mode == MODE_T2 ) {
 		pst->offset_span = offset_span(pst->offsets->time_offsets,
 				pst->channels);
-		queue_set_comparator(pst->queue, t2v_compare);
+		queue_set_comparator(pst->queue, t2_compare);
 	} else {
 		pst->offset_span = offset_span(pst->offsets->pulse_offsets,
 				pst->channels);
-		queue_set_comparator(pst->queue, t3v_compare);
+		queue_set_comparator(pst->queue, t3_compare);
 	}
 
 	pst->time_gating = time_gating;
@@ -166,7 +157,7 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 				return(EOF);
 			} else {
 				debug("Popping a photon from queue.\n");
-				queue_pop(pst->queue, pst->current_photon);
+				queue_pop(pst->queue, &(pst->current_photon));
 				return(PC_SUCCESS);
 			}
 		} else {
@@ -187,24 +178,23 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 				if ( queue_empty(pst->queue) ) {
 					pst->yielded_all_sorted = 1;
 				} else {
-					queue_front(pst->queue, pst->left);
-					queue_back(pst->queue, pst->right);
+					queue_front(pst->queue, (void *)&(pst->left));
+					queue_back(pst->queue, (void *)&(pst->right));
 
-					diff = pst->window_dim(pst->right) -
-							pst->window_dim(pst->left);
+					diff = pst->window_dim(&(pst->right)) -
+							pst->window_dim(&(pst->left));
 
 					result = (diff >= pst->offset_span);
 
 					if ( pst->filter_afterpulsing &&
 							pst->mode == MODE_T3 && 
-							(((t3_t *)pst->left)->pulse == 
-								((t3_t *)pst->right)->pulse) ) {
+							pst->left.t3.pulse == 
+								pst->right.t3.pulse ) {
 						debug("Filtering afterpulsing but still on a pulse.\n");
 						pst->yielded_all_sorted = 1;
 					} else if ( diff >= pst->offset_span ) {
 						debug("Found a photon outside the offset bounds\n");
-						queue_pop(pst->queue,
-								pst->current_photon);
+						queue_pop(pst->queue, &(pst->current_photon));
 						return(PC_SUCCESS);
 					} else {
 						debug("Within the offset bounds, get more photons\n");
@@ -222,10 +212,10 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 	int suppress = false;
 	int channel;
 	int i;
-	t3_t t3;
+	photon_t photon;
 
 	while ( true ) {
-		result = pst->photon_next(pst->stream_in, pst->current_photon);
+		result = pst->photon_next(pst->stream_in, &(pst->current_photon));
 
 		if ( result == EOF ) {
 			debug("End of the stream.\n");
@@ -235,7 +225,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			return(result);
 		}
 
-		channel = pst->channel_dim(pst->current_photon);
+		channel = pst->channel_dim(&(pst->current_photon));
 
 		if ( channel < pst->channels ) {
 			suppress = pst->suppress_channels && 
@@ -248,13 +238,13 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			}
 		}
 
-		pst->photon_offset(pst->current_photon, pst->offsets);
+		pst->photon_offset(&(pst->current_photon), pst->offsets);
 
 		/* Time gating */
 		if ( ! suppress && pst->time_gating && pst->mode == MODE_T3 ) {
 			debug("%lld <? %lld\n", 
-					((t3_t *)pst->current_photon)->time, pst->gate_time);
-			if ( ((t3_t *)pst->current_photon)->time < pst->gate_time ) {
+					pst->current_photon.t3.time, pst->gate_time);
+			if ( pst->current_photon.t3.time < pst->gate_time ) {
 				suppress = true;
 			}
 		}
@@ -262,9 +252,9 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		/* Afterpulsing filter */
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
 			for ( i = 0; i < queue_size(pst->queue); i++ ) {
-				queue_index(pst->queue, &t3, i);
-				if ( t3.pulse == ((t3_t *)pst->current_photon)->pulse &&
-						t3.channel == ((t3_t *)pst->current_photon)->channel ) {
+				queue_index(pst->queue, (void *)&photon, i);
+				if ( photon.t3.pulse == pst->current_photon.t3.pulse &&
+					photon.t3.channel == pst->current_photon.t3.channel ) {
 					suppress = true;
 					break;
 				}
@@ -273,7 +263,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
-			return(queue_push(pst->queue, pst->current_photon));
+			return(queue_push(pst->queue, &(pst->current_photon)));
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
@@ -284,9 +274,6 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 
 void photon_stream_temper_free(photon_stream_temper_t **pst) {
 	if ( *pst != NULL ) {
-		free((*pst)->current_photon);
-		free((*pst)->left);
-		free((*pst)->right);
 		free((*pst)->suppressed_channels);
 		offsets_free(&(*pst)->offsets);
 		queue_free(&(*pst)->queue);
@@ -331,7 +318,7 @@ int photon_temper(FILE *stream_in, FILE *stream_out,
 				options->time_gating, options->gate_time);
 
 		while ( photon_stream_temper_next(pst) == PC_SUCCESS ) {
-			pst->photon_print(stream_out, pst->current_photon);
+			pst->photon_print(stream_out, &(pst->current_photon));
 		}
 	}
 

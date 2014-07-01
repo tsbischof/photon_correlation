@@ -35,10 +35,29 @@
 #include <stdio.h>
 #include "../options.h"
 
-typedef int (*photon_next_t)(FILE *, void *);
-typedef int (*photon_print_t)(FILE *, void const *);
+typedef struct {
+	unsigned int channel;
+	long long time;
+} t2_t;
 
-typedef long long (*photon_window_dimension_t)(void const *);
-typedef long long (*photon_channel_dimension_t)(void const *);
+typedef struct {
+	unsigned int channel;
+	long long pulse;
+	long long time;
+} t3_t;
+
+typedef union { 
+	t2_t t2;
+	t3_t t3;
+} photon_t;
+
+#include "t2.h"
+#include "t3.h"
+
+typedef int (*photon_next_t)(FILE *, photon_t *);
+typedef int (*photon_print_t)(FILE *, photon_t const *);
+
+typedef long long (*photon_window_dimension_t)(photon_t const *);
+typedef long long (*photon_channel_dimension_t)(photon_t const *);
 
 #endif

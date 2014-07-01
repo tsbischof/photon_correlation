@@ -29,20 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef T3_H_
-#define T3_H_
+#include "t3_wait.h"
 
-#include <stdio.h>
+#include "../error.h"
 
-#include "photon.h"
-
-int t3_fscanf(FILE *stream_out, photon_t *photon);
-int t3_fprintf(FILE *stream_out, photon_t const *photon);
-
-int t3_compare(void const *a, void const *b);
-int t3_echo(FILE *stream_in, FILE *stream_out);
-
-long long t3_window_dimension(photon_t const *photon);
-long long t3_channel_dimension(photon_t const *photon);
-
-#endif
+int t3_wait(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
+	return(PC_SUCCESS);
+}

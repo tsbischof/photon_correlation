@@ -30,24 +30,31 @@
 #
 
 CC = clang
-LD = clang 
+LD = clang
 
 INSTALL_DIR = ~
 
 TEST = test
 MKDIR = mkdir -p
-
-
+CP = cp 
 
 INCLUDES = 
 LIBS = 
 
-CCFLAGS := -Wall 
-CCFLAGS += -D VERSION="3.3"
+CCFLAGS := -Wall
+# clang arguments to check for undefined behavior.
+#CCFLAGS := -fsanitize=undefined-trap -fsanitize-undefined-trap-on-error 
+CCFLAGS += -D VERSION="3.6"
 CCFLAGS += -O3 
 CCFLAGS += ${INCLUDES}
 
-LDFLAGS = -Wall ${LIBS}  
+LDFLAGS := -Wall ${LIBS}  
+
+# use to profile with gprof
+#CC = gcc
+#LD = gcc
+#CCFLAGS += -pg 
+#LDFLAGS += -pg
 
 ALL_OBJ = 
 ALL_LIB = 
@@ -76,8 +83,7 @@ CORRELATE_OBJ = ${COMMON_OBJ} correlate_main.o \
 		correlation/correlator.o correlation/correlation.o \
 		correlation/photon.o correlation/start_stop.o \
 		combinatorics/combinations.o combinatorics/permutations.o \
-		combinatorics/index_offsets.o \
-		correlation/correlator_log.o
+		combinatorics/index_offsets.o 
 ALL_OBJ += ${CORRELATE_OBJ}
 CORRELATE_LIB = -lm
 ALL_LIB += ${CORRELATE_LIB}
@@ -160,28 +166,19 @@ PHOTON_SYNCED_T2_LIB = -lm
 ALL_LIB += ${PHOTON_SYNCED_T2_LIB}
 TARGETS += photon_synced_t2
 
-# Now the heavy lifting: build the objects and include files for inclusion
-# in the library.
-LIB_TARGETS = 
-LIBPC_OBJ = ${patsubst %.o, %.os, ${sort ${filter-out %main.o, ${ALL_OBJ}}}}
-INCLUDES = ${patsubst %.o, %.h, ${LIBPC_OBJ}}
-LIBPC_LDFLAGS = ${LDFLAGS} -shared
-LIBPC_LIB = ${sort ${ALL_LIB}}
-LIB_TARGETS += libphoton_correlation.so
+PHOTON_T3_WAIT_OBJ = ${COMMON_OBJ} t3_wait_main.o t3_wait/t3_wait.o
+ALL_OBJ += ${PHOTON_T3_WAIT_OBJ}
+PHOTON_T3_WAIT_LIB = 
+ALL_LIB += ${PHOTON_T3_WAIT_LIB}
+TARGETS += photon_t3_wait
 
 BIN_DIR = ${INSTALL_DIR}/bin
-LIB_DIR = ${INSTALL_DIR}/lib
-INCLUDE_DIR = ${INSTALL_DIR}/include/photon_correlation
 
-all: ${TARGETS} ${LIB_TARGETS}
+all: ${TARGETS}
 
-install: ${TARGETS} ${LIB_TARGETS}
+install: ${TARGETS}
 	${TEST} -d ${BIN_DIR} || ${MKDIR} ${BIN_DIR}
 	${CP} ${TARGETS} ${BIN_DIR}
-	${TEST} -d ${LIB_DIR} || ${MKDIR} ${LIB_DIR}
-	${CP} ${LIB_TARGETS} ${LIB_DIR}
-	${TEST} -d ${INCLUDE_DIR} || ${MKDIR} ${INCLUDE_DIR}
-	${CP} --parents ${INCLUDES} ${INCLUDE_DIR}
 
 uninstall: 
 	${RM} ${addprefix ${INSTALL_DIR}, ${TARGETS}}
@@ -190,7 +187,7 @@ photons: ${PHOTONS_OBJ}
 	${LD} ${LDFLAGS} ${PHOTONS_LIB} -o $@ $^
 
 photon_correlate: ${CORRELATE_OBJ}
-	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^
+	${LD} ${LDFLAGS} ${CORRELATE_LIB} -o $@ $^ 
 
 photon_histogram: ${HISTOGRAM_OBJ}
 	${LD} ${LDFLAGS} ${HISTOGRAM_LIB} -o $@ $^
@@ -225,6 +222,9 @@ photon_intensity_correlate: ${PHOTON_INTENSITY_CORRELATE_OBJ}
 photon_synced_t2: ${PHOTON_SYNCED_T2_OBJ}
 	${LD} ${LDFLAGS} ${PHOTON_SYNCED_T2_LIB} -o $@ $^
 
+photon_t3_wait: ${PHOTON_T3_WAIT_OBJ}
+	${LD} ${LDFLAGS} ${PHOTON_T3_WAIT_LIB} -o $@ $^
+
 %.o: %.c
 	${CC} ${CCFLAGS} -c -o $@ $< 
 
@@ -232,4 +232,4 @@ photon_synced_t2: ${PHOTON_SYNCED_T2_OBJ}
 	${CC} ${CCFLAGS} -fpic -c -o $@ $<
 
 clean:
-	${RM} ${sort ${TARGETS} ${ALL_OBJ} ${LIBPC_OBJ} ${LIB_TARGETS}}
+	${RM} ${sort ${TARGETS} ${ALL_OBJ}}
