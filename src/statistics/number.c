@@ -80,6 +80,7 @@ void photon_number_free(photon_number_t **number) {
 	if ( *number != NULL ) {
 		counts_free(&((*number)->counts));
 		free(*number);
+		*number = NULL;
 	}
 }
 

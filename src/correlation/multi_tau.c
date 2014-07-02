@@ -263,6 +263,7 @@ void multi_tau_g2cn_free(multi_tau_g2cn_t **mt) {
 		free((*mt)->tau);
 
 		free(*mt);
+		*mt = NULL;
 	}
 }
 

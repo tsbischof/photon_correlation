@@ -165,6 +165,7 @@ void number_to_channels_free(number_to_channels_t **number) {
 	if ( *number != NULL ) {
 		queue_free(&((*number)->queue));
 		free(*number);
+		*number = NULL;
 	}
 }
 

@@ -278,6 +278,7 @@ void photon_stream_temper_free(photon_stream_temper_t **pst) {
 		offsets_free(&(*pst)->offsets);
 		queue_free(&(*pst)->queue);
 		free(*pst);
+		*pst = NULL;
 	}
 }
 

@@ -165,6 +165,7 @@ void permutation_free(permutation_t **permutation) {
 		free((*permutation)->permutations);
 		combination_free(&((*permutation)->scratch));
 		free(*permutation);
+		*permutation = NULL;
 	}
 }
 

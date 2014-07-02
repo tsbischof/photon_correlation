@@ -81,6 +81,7 @@ void offsets_free(offsets_t **offsets) {
 		free((*offsets)->time_offsets);
 		free((*offsets)->pulse_offsets);
 		free(*offsets);
+		*offsets = NULL;
 	}
 }
 

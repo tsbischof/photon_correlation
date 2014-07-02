@@ -61,6 +61,7 @@ void values_vector_free(values_vector_t **vv) {
 	if ( *vv != NULL ) {
 		free((*vv)->values); 
 		free(*vv);
+		*vv = NULL;
 	}
 }
 

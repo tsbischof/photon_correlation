@@ -114,5 +114,6 @@ void index_offsets_free(index_offsets_t **index_offsets) {
 	if ( *index_offsets != NULL ) {
 		combination_free(&((*index_offsets)->current_index_offsets));
 		free(*index_offsets);
+		*index_offsets = NULL;
 	}
 }

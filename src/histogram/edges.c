@@ -101,6 +101,7 @@ void edges_free(edges_t **edges) {
 	if ( *edges != NULL ) {
 		free((*edges)->bin_edges);
 		free(*edges);
+		*edges = NULL;
 	}
 }
 
@@ -200,6 +201,7 @@ void edge_indices_free(edge_indices_t **edge_indices) {
 		free((*edge_indices)->limits);
 		free((*edge_indices)->values);
 		free(*edge_indices);
+		*edge_indices = NULL;
 	}
 }
 

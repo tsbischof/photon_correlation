@@ -85,6 +85,7 @@ void counts_free(counts_t **counts) {
 	if ( *counts != NULL ) {
 		free((*counts)->counts);
 		free(*counts);
+		*counts = NULL;
 	}
 }
 

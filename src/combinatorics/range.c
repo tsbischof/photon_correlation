@@ -75,6 +75,7 @@ int range_next(range_t *range) {
 void range_free(range_t **range) { 
 	if ( *range != NULL ) {
 		free(*range);
+		*range = NULL;
 	}
 }
 

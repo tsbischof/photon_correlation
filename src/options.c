@@ -323,6 +323,7 @@ void pc_options_free(pc_options_t **options) {
 		free((*options)->pulse_offsets);
 		free((*options)->convert_string);
 		free(*options);
+		*options = NULL;
 	}
 }
 

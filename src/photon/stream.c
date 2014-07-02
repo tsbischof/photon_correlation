@@ -128,6 +128,7 @@ void photon_stream_init(photon_stream_t *photons, FILE *stream_in) {
 void photon_stream_free(photon_stream_t **photons) {
 	if ( *photons != NULL ) {
 		free(*photons);
+		*photons = NULL;
 	}
 }
 

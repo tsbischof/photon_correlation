@@ -164,6 +164,7 @@ void intensity_photon_free(intensity_photon_t **intensity) {
 	if ( *intensity != NULL ) {
 		counts_free(&(*intensity)->counts);
 		free(*intensity);
+		*intensity = NULL;
 	}
 }
 

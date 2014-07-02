@@ -124,6 +124,7 @@ void combination_free(combination_t **combination) {
 	if ( *combination != NULL ) {
 		free((*combination)->values);
 		free(*combination);
+		*combination = NULL;
 	}
 }
 

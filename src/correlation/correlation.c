@@ -88,6 +88,7 @@ void correlation_free(correlation_t **correlation) {
 	if ( *correlation != NULL ) {
 		free((*correlation)->photons);
 		free(*correlation);
+		*correlation = NULL;
 	}
 }
 
