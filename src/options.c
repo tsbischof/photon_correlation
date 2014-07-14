@@ -45,8 +45,8 @@
 /* See http://www.daniweb.com/software-development/c/threads/
  *     348802/passing-string-as-d-compiler-option
  */
-#define XSTR(x) #x
-#define STR(x) XSTR(x)
+//#define XSTR(x) #x
+//#define STR(x) XSTR(x)
 
 /* 
  * Since there are many small programs which comprise this package, and many
@@ -828,7 +828,7 @@ void pc_options_version(pc_options_t const *options,
 	fprintf(stderr, 
 		"%s v%s\n", 
 		argv[0], 
-		STR(VERSION));
+		VERSION);
 }
 
 int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {

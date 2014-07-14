@@ -1,0 +1,72 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
+AM_CFLAGS = -Wall -O3 
+AM_LDFLAGS = 
+
+bin_PROGRAMS = photons photon_intensity photon_correlate photon_histogram \
+		photon_bin_intensity photon_temper photon_gn photon_number \
+		photon_number_to_channels intensity_correlate \
+		photon_intensity_correlate photon_synced_t2 
+
+common_sources = error.c files.c options.c modes.c limits.c types.c \
+		photon/t2.c photon/t3.c \
+		photon/stream.c photon/window.c \
+		run.c 
+
+photons_SOURCES = $(common_sources) photons_main.c \
+		photon/photons.c photon/conversions.c
+photon_intensity_SOURCES = $(common_sources) intensity_main.c \
+		statistics/counts.c statistics/intensity.c
+photon_correlate_SOURCES = $(common_sources) correlate_main.c \
+		queue.c photon/queue.c correlate.c \
+		correlation/correlator.c correlation/correlation.c \
+		correlation/photon.c correlation/start_stop.c \
+		combinatorics/combinations.c combinatorics/permutations.c \
+		combinatorics/index_offsets.c 
+photon_histogram_SOURCES = $(common_sources) histogram_main.c \
+		histogram.c \
+		combinatorics/combinations.c combinatorics/permutations.c \
+		combinatorics/index_offsets.c \
+		queue.c photon/queue.c \
+		correlation/correlation.c correlation/photon.c correlation/correlator.c\
+		histogram/photon.c histogram/edges.c histogram/values_vector.c \
+		histogram/histogram_gn.c 
+photon_bin_intensity_SOURCES = $(common_sources) bin_intensity_main.c \
+		statistics/bin_intensity.c \
+		combinatorics/combinations.c combinatorics/permutations.c \
+		combinatorics/index_offsets.c \
+		correlation/correlation.c correlation/photon.c correlation/correlator.c\
+		queue.c photon/queue.c \
+		histogram/photon.c histogram/edges.c histogram/values_vector.c \
+		histogram/histogram_gn.c 
+photon_temper_SOURCES = $(common_sources) photon_temper_main.c \
+		photon/temper.c queue.c photon/offsets.c
+photon_gn_SOURCES = $(common_sources) gn_main.c \
+		gn.c \
+		queue.c photon/queue.c \
+		correlation/correlator.c correlation/correlation.c \
+		correlation/photon.c correlation/start_stop.c \
+		combinatorics/combinations.c combinatorics/permutations.c \
+		combinatorics/index_offsets.c \
+		statistics/counts.c statistics/intensity.c \
+		statistics/number.c \
+		histogram/photon.c histogram/edges.c histogram/values_vector.c \
+		histogram/histogram_gn.c \
+		statistics/bin_intensity.c
+photon_number_SOURCES = $(common_sources) photon_number_main.c \
+		statistics/number.c statistics/counts.c
+photon_number_to_channels_SOURCES = $(common_sources) \
+		number_to_channels_main.c \
+		queue.c \
+		statistics/number_to_channels.c
+intensity_correlate_SOURCES = $(common_sources) intensity_correlate_main.c \
+		correlation/intensity.c statistics/intensity.c statistics/counts.c \
+		correlation/multi_tau.c combinatorics/combinations.c
+photon_intensity_correlate_SOURCES = $(common_sources) \
+		photon_intensity_correlate_main.c  \
+		photon_intensity_correlate.c \
+		correlation/intensity.c correlation/multi_tau.c \
+		combinatorics/combinations.c \
+		statistics/counts.c statistics/intensity.c
+photon_synced_t2_SOURCES = $(common_sources) synced_t2_main.c \
+		 photon/synced_t2.c queue.c
