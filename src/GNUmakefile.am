@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-AM_CFLAGS = -Wall -O3 
+AM_CFLAGS = -Wall
 AM_LDFLAGS = 
 
 bin_PROGRAMS = photons photon_intensity photon_correlate photon_histogram \
