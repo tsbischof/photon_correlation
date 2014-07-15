@@ -213,11 +213,8 @@ CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
-CXX = g++
-CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"photon_correlation\" -DPACKAGE_TARNAME=\"photon_correlation\" -DPACKAGE_VERSION=\"3.7\" -DPACKAGE_STRING=\"photon_correlation\ 3.7\" -DPACKAGE_BUGREPORT=\"tbischof@mit.edu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"photon_correlation\" -DVERSION=\"3.7\" -DHAVE_LIBM=1 -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_LIMITS_H=1 -DHAVE_STDDEF_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_UNISTD_H=1 -DHAVE__BOOL=1 -DHAVE_FORK=1 -DHAVE_VFORK=1 -DHAVE_WORKING_VFORK=1 -DHAVE_WORKING_FORK=1 -DHAVE_STDLIB_H=1 -DHAVE_MALLOC=1 -DHAVE_STDLIB_H=1 -DHAVE_REALLOC=1 -DHAVE_FLOOR=1 -DHAVE_MEMMOVE=1 -DHAVE_MEMSET=1 -DHAVE_MKDIR=1 -DHAVE_MODF=1 -DHAVE_STRCHR=1 -DHAVE_STRDUP=1 -DHAVE_STRTOL=1 -DHAVE_STRTOUL=1 -DHAVE_STRTOULL=1
+DEFS = -DPACKAGE_NAME=\"photon_correlation\" -DPACKAGE_TARNAME=\"photon_correlation\" -DPACKAGE_VERSION=\"3.7\" -DPACKAGE_STRING=\"photon_correlation\ 3.7\" -DPACKAGE_BUGREPORT=\"tbischof@mit.edu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"photon_correlation\" -DVERSION=\"3.7\" -DHAVE_LIBM=1 -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_LIMITS_H=1 -DHAVE_STDDEF_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_UNISTD_H=1 -DHAVE__BOOL=1 -DHAVE_STDLIB_H=1 -DHAVE_MALLOC=1 -DHAVE_STDLIB_H=1 -DHAVE_REALLOC=1 -DHAVE_FLOOR=1 -DHAVE_MEMMOVE=1 -DHAVE_MEMSET=1 -DHAVE_MKDIR=1 -DHAVE_MODF=1 -DHAVE_STRCHR=1 -DHAVE_STRDUP=1 -DHAVE_STRTOL=1 -DHAVE_STRTOUL=1 -DHAVE_STRTOULL=1
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
@@ -254,7 +251,6 @@ abs_srcdir = /home/tsbischof/src/photon_correlation/src
 abs_top_builddir = /home/tsbischof/src/photon_correlation
 abs_top_srcdir = /home/tsbischof/src/photon_correlation
 ac_ct_CC = gcc
-ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -281,7 +277,7 @@ mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/tsbischof
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin

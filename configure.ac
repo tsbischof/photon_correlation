@@ -1,13 +1,9 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.69])
 AC_INIT(photon_correlation, 3.7, tbischof@mit.edu)
 AM_INIT_AUTOMAKE(photon_correlation, 3.7)
 AC_CONFIG_SRCDIR([src])
 
 # Checks for programs.
-AC_PROG_CXX
 AC_PROG_CC
 
 # Checks for libraries.
@@ -26,11 +22,9 @@ AC_TYPE_UINT64_T
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
-AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memmove memset mkdir modf strchr strdup strtol strtoul strtoull])
-
 
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
 AC_OUTPUT
