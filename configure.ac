@@ -1,10 +1,11 @@
 AC_PREREQ([2.69])
-AC_INIT(photon_correlation, 3.7, tbischof@mit.edu)
-AM_INIT_AUTOMAKE(photon_correlation, 3.7)
+AC_INIT([photon_correlation], [3.7], [tbischof@mit.edu])
 AC_CONFIG_SRCDIR([src])
+AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':

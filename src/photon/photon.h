@@ -33,7 +33,6 @@
 #define PHOTON_H_
 
 #include <stdio.h>
-#include "../options.h"
 
 typedef struct {
 	unsigned int channel;

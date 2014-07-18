@@ -140,7 +140,7 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 int correlator_next(correlator_t *correlator) {
 	if ( correlator->order == 1 ) {
 		while ( ! queue_empty(correlator->queue) ) {
-			queue_pop(correlator->queue, (void *)&correlator->left);
+			queue_pop(correlator->queue, correlator->left);
 			correlation_set_index(correlator->correlation,
 					0,
 					correlator->left);
