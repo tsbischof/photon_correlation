@@ -27,5 +27,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memmove memset mkdir modf strchr strdup strtol strtoul strtoull])
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile man/GNUmakefile])
 AC_OUTPUT

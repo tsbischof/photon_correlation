@@ -70,3 +70,20 @@ photon_intensity_correlate_SOURCES = $(common_sources) \
 		statistics/counts.c statistics/intensity.c
 photon_synced_t2_SOURCES = $(common_sources) synced_t2_main.c \
 		 photon/synced_t2.c queue.c
+
+
+include_HEADERS = correlate.h error.h files.h gn.h histogram.h limits.h \
+		modes.h options.h photon_intensity_correlate.h queue.h run.h types.h \
+		combinatorics/combinations.h combinatorics/index_offsets.h \
+		combinatorics/permutations.h combinatorics/range.h \
+		correlation/correlation.h correlation/correlator.h \
+		correlation/intensity.h correlation/multi_tau.h \
+		correlation/photon.h correlation/start_stop.h \
+		histogram/edges.h histogram/histogram_gn.h \
+		histogram/photon.h histogram/values_vector.h \
+		photon/conversions.h photon/offsets.h photon/photon.h \
+		photon/photons.h photon/queue.h photon/stream.h \
+		photon/synced_t2.h photon/t2.h photon/t3.h \
+		photon/temper.h photon/window.h \
+		statistics/bin_intensity.h statistics/counts.h statistics/intensity.h \
+		statistics/number.h statistics/number_to_channels.h
