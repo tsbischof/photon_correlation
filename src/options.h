@@ -103,6 +103,9 @@ typedef struct {
 	char *pulse_scale_string;
 	int pulse_scale;
 
+	char *intensity_string;
+	limits_t intensity_limits;
+
 /* temper */
 	int suppress_channels;
 	char *suppress_string;
@@ -156,6 +159,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
+		OPT_INTENSITY,
 		OPT_TIME_OFFSETS, OPT_PULSE_OFFSETS, 
 		OPT_SUPPRESS,
 		OPT_EXACT_NORMALIZATION, 

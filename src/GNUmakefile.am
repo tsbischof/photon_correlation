@@ -6,10 +6,11 @@ AM_LDFLAGS =
 bin_PROGRAMS = photons photon_intensity photon_correlate photon_histogram \
 		photon_bin_intensity photon_temper photon_gn photon_number \
 		photon_number_to_channels intensity_correlate \
-		photon_intensity_correlate photon_synced_t2 
+		photon_intensity_correlate photon_synced_t2 \
+		photon_intensity_dependent_gn photon photon_flid
 
 common_sources = error.c files.c options.c modes.c limits.c types.c \
-		photon/t2.c photon/t3.c \
+		photon/photon.c photon/t2.c photon/t3.c \
 		photon/stream.c photon/window.c \
 		run.c 
 
@@ -70,7 +71,11 @@ photon_intensity_correlate_SOURCES = $(common_sources) \
 		statistics/counts.c statistics/intensity.c
 photon_synced_t2_SOURCES = $(common_sources) synced_t2_main.c \
 		 photon/synced_t2.c queue.c
-
+photon_intensity_dependent_gn_SOURCES = $(common_sources) \
+		photon_intensity_dependent_gn_main.c \
+		intensity_dependent_gn.c
+photon_flid_SOURCES = $(common_sources) \
+		flid.c
 
 include_HEADERS = correlate.h error.h files.h gn.h histogram.h limits.h \
 		modes.h options.h photon_intensity_correlate.h queue.h run.h types.h \
@@ -86,4 +91,5 @@ include_HEADERS = correlate.h error.h files.h gn.h histogram.h limits.h \
 		photon/synced_t2.h photon/t2.h photon/t3.h \
 		photon/temper.h photon/window.h \
 		statistics/bin_intensity.h statistics/counts.h statistics/intensity.h \
-		statistics/number.h statistics/number_to_channels.h
+		statistics/number.h statistics/number_to_channels.h \
+		intensity_dependent_gn.h flid.h 

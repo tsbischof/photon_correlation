@@ -6,6 +6,7 @@
 -look into creating a single program which integrates all of the different operations on the photon stream.
 -test the performance of subprocess in Python. How does the piping system in Python compare with pipes in Linux for speed? 
 -refactor the code to be more library-like: build a users' API which contains only the functions necessary to do work, and hide away any internal stuff.
+-build a gui for basic tasks like correlation, FLID, etc.
 
 Time dependent code:
 -create a wrapper to gn which handles the creation and streaming of gn.td work. Basically, make it possible to yield the histograms, rather than just writing the file to a directory, so that binning can be done in real time instead.

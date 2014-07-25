@@ -161,6 +161,11 @@ static pc_option_t pc_options_all[] = {
 			"           on a log axis)\n"
 			" log-zero: same as log, except that the lowest\n"
 			"           bin is extended to include 0"},
+	{'Q', "Q:", "intensity",
+			"The limits for an intensity axis in e.g. a FLID\n"
+			"diagram or time-dependent gn. Follows the format:\n"
+			"         lower, number of bins, upper \n"
+			"with no spaces, and the extrema in picoseconds."},
 	{'u', "u:", "time-offsets",
 			"A common-delimited list of time offsets to\n"
 			"apply to the channels. All channels must be\n"
@@ -261,6 +266,7 @@ static struct option pc_options_long[] = {
 	{"pulse", required_argument, 0, 'y'},
 	{"time-scale", required_argument, 0, 'X'},
 	{"pulse-scale", required_argument, 0, 'Y'},
+	{"intensity", required_argument, 0, 'Q'},
 
 /* Temper */
 	{"time-offsets", required_argument, 0, 'u'},
@@ -365,6 +371,7 @@ void pc_options_default(pc_options_t *options) {
 
 	options->time_string = NULL;
 	options->pulse_string = NULL;
+	options->intensity_string = NULL;
 
 	options->time_scale_string = NULL;
 	options->time_scale = SCALE_LINEAR;
@@ -575,6 +582,9 @@ int pc_options_parse(pc_options_t *options,
 			case 'Y':
 				options->pulse_scale_string = strdup(optarg);
 				break;
+			case 'Q':
+				options->intensity_string = strdup(optarg);
+				break;
 			case 'S':
 				options->start_stop = true;
 				break;
@@ -700,6 +710,11 @@ int pc_options_parse(pc_options_t *options,
 		return(PC_ERROR_OPTIONS);
 	}
 
+	if ( pc_options_has_option(options, OPT_INTENSITY) &&
+			pc_options_parse_intensity_limits(options) != PC_SUCCESS ) {
+		return(PC_ERROR_OPTIONS);
+	}
+
 	return(PC_SUCCESS);
 }
 
@@ -723,6 +738,11 @@ int pc_options_parse_time_limits(pc_options_t *options) {
 int pc_options_parse_pulse_limits(pc_options_t *options) {
 	return(limits_parse(&(options->pulse_limits), 
 			options->pulse_string));
+}
+
+int pc_options_parse_intensity_limits(pc_options_t *options) {
+	return(limits_parse(&(options->intensity_limits),
+			options->intensity_string));
 }
 
 int pc_options_parse_suppress(pc_options_t *options) {
