@@ -49,6 +49,7 @@ int edges_init(edges_t *edges, limits_t const *limits, int const scale,
 void edges_free(edges_t **edges);
 
 int edges_index_linear(edges_t const *edges, long long const value);
+int edges_index_linear_double(edges_t const *edges, double const value);
 int edges_index_log(edges_t const *edges, long long const value);
 int edges_index_log_zero(edges_t const *edges, long long const value);
 int edges_index_bsearch(edges_t const *edges, long long const value);

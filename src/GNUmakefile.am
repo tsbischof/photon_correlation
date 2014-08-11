@@ -7,7 +7,7 @@ bin_PROGRAMS = photons photon_intensity photon_correlate photon_histogram \
 		photon_bin_intensity photon_temper photon_gn photon_number \
 		photon_number_to_channels intensity_correlate \
 		photon_intensity_correlate photon_synced_t2 \
-		photon_intensity_dependent_gn photon photon_flid
+		photon_intensity_dependent_gn photon_flid
 
 common_sources = error.c files.c options.c modes.c limits.c types.c \
 		photon/photon.c photon/t2.c photon/t3.c \
@@ -75,7 +75,7 @@ photon_intensity_dependent_gn_SOURCES = $(common_sources) \
 		photon_intensity_dependent_gn_main.c \
 		intensity_dependent_gn.c
 photon_flid_SOURCES = $(common_sources) \
-		flid.c
+		photon_flid_main.c flid.c histogram/edges.c
 
 include_HEADERS = correlate.h error.h files.h gn.h histogram.h limits.h \
 		modes.h options.h photon_intensity_correlate.h queue.h run.h types.h \

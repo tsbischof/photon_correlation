@@ -31,15 +31,54 @@
 
 #include "options.h"
 #include "run.h"
-#include "photon_flid.h"
+#include "flid.h"
 
 int main(int argc, char *argv[]) {
 	program_options_t program_options = {
-"\n",
+"In the study of nanocrystal photoluminescence intermittency, there is often\n"
+"a correlation between emission intensity and lifetime. Quantifying this\n"
+"behavior can be done in several ways, including:\n"
+"1. Measurement of the lifetime for all photons emitted during periods\n"
+"   of equivalent intensity.\n"
+"2. Estimation of the instantaneous lifetime and intensity.\n"
+"\n"
+"This second method is used here, to calculate what is known as the\n"
+"Fluorescence Lifetime Intensity Diagram (FLID).\n"
+"\n"
+"The FLID is calculated by first dividing the photon stream into windows\n"
+"of equivalent time (the same number of pulses, as lifetimes require t3-mode\n"
+"data), then determining the mean arrival time for all photons in each \n"
+"window. An alternative approach is to calculate the lifetime histogram\n"
+"for each window, then to fit the data to an exponential form and report the\n"
+"optimal time constant. For this program, the mean arrival time is determined\n"
+"directly by counting the number of photons which arrive in the window and \n"
+"their cumulative arrival time, which are then divided to determine the mean.\n"
+"\n"
+"The cumulative arrival time is internally handled as a 64-bit unsigned\n"
+"integer, so if you are seeing odd results check to make sure that you are\n"
+"not including too many photons per window. In picoseconds, this would be\n"
+"10^8 photons each arriving 1 second after an excitation pulse (10^12 ps).\n"
+"\n"
+"The output format is a csv file, where the first two rows specify the lower\n"
+"and upper limits for the mean arrival time histogram, and the first two\n"
+"columns specify the lower and upper limits for the intensity histogram.\n"
+"For example, with arrival times spaced by 10ns and intensity bins spaced\n"
+"by 0.0002 photons per pulse, the output file might look like this:\n"
+"       ,       ,     0, 10000, 20000, ...\n"
+"       ,       , 10000, 20000, 30000, ...\n"
+" 0.0000, 0.0002,   xxx,   xxx,   xxx, ...\n"
+" 0.0002, 0.0004,   xxx,   xxx,   xxx, ...\n"
+"(whitespace added for clarity, xxx represent integer numbers of events which\n"
+"were found with the given intensity and mean arrival time).\n"
+"\n"
+"Windows with no photons are discarded, so signal at zero arrival time and \n"
+"near-zero intensity are real. A uniform background will bias the measurement\n"
+"toward half the repetition period, so at low intensities the FLID will tend\n"
+"to exhibit a peak near this value.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 
 			OPT_FILE_IN, OPT_FILE_OUT, 
 			OPT_WINDOW_WIDTH, OPT_TIME, OPT_INTENSITY,
 			OPT_EOF}};
 
-	return(run(&program_options, photon_flid, argc, argv));
+	return(run(&program_options, flid, argc, argv));
 }

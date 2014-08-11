@@ -187,6 +187,7 @@ int pc_options_parse_time_scale(pc_options_t *options);
 int pc_options_parse_pulse_scale(pc_options_t *options);
 int pc_options_parse_time_limits(pc_options_t *options);
 int pc_options_parse_pulse_limits(pc_options_t *options);
+int pc_options_parse_intensity_limits(pc_options_t *options);
 int pc_options_parse_suppress(pc_options_t *options);
 int pc_options_parse_time_offsets(pc_options_t *options);
 int pc_options_parse_pulse_offsets(pc_options_t *options);

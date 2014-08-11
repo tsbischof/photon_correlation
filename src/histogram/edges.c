@@ -112,6 +112,13 @@ int edges_index_linear(edges_t const *edges, long long const value) {
 			edges->limits.bins));
 }
 
+int edges_index_linear_double(edges_t const *edges, double const value) {
+	return(floor(
+			(value-edges->limits.lower) / 
+			(edges->limits.upper-edges->limits.lower) *
+			edges->limits.bins));
+}
+
 int edges_index_log(edges_t const *edges, long long const value) {
 	if ( value <= 0 ) {
 		return(PC_ERROR_INDEX);

@@ -854,7 +854,6 @@ void pc_options_version(pc_options_t const *options,
 int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	int i;
 
-	fprintf(stream_out, "[general]\n");
 	fprintf(stream_out, "usage = %d\n", options->usage);
 	fprintf(stream_out, "verbose = %d\n", options->verbose);
 	fprintf(stream_out, "version = %d\n", options->version);
@@ -869,7 +868,6 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "queue_size = %zu\n", options->queue_size);
 	fprintf(stream_out, "window_width = %llu\n", options->window_width);
 
-	fprintf(stream_out, "\n[correlate]\n");
 	fprintf(stream_out, "max_time_distance = %llu\n", 
 			options->max_time_distance);
 	fprintf(stream_out, "min_time_distance = %llu\n", 
@@ -881,7 +879,6 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "positive_only = %d\n", options->positive_only);
 	fprintf(stream_out, "start_stop = %d\n", options->start_stop);
 
-	fprintf(stream_out, "\n[intensity]\n");
 	fprintf(stream_out, "bin_width = %llu\n", options->bin_width);
 	fprintf(stream_out, "count_all = %d\n", options->count_all);
 	fprintf(stream_out, "set_start = %d\n", options->set_start);
@@ -889,7 +886,6 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "set_stop = %d\n", options->set_stop);
 	fprintf(stream_out, "stop = %lld\n", options->stop);
 
-	fprintf(stream_out, "\n[histogram]\n");
 	fprintf(stream_out, "time_limits = %lf,%zu,%lf (%s)\n",
 			options->time_limits.lower,
 			options->time_limits.bins,
@@ -904,8 +900,12 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 			options->time_scale, options->time_scale_string);
 	fprintf(stream_out, "pulse_scale = %d (%s)\n", 
 			options->pulse_scale, options->pulse_scale_string);
+	fprintf(stream_out, "intensity_limits = %lf,%zu,%lf (%s)\n",
+			options->intensity_limits.lower,
+			options->intensity_limits.bins,
+			options->intensity_limits.upper,
+			options->intensity_string);
 
-	fprintf(stream_out, "\n[temper]\n");
 	fprintf(stream_out, "suppress_channels = %d\n", options->suppress_channels);
 	
 	fprintf(stream_out, "suppressed_channels = ");
@@ -948,16 +948,13 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 	fprintf(stream_out, "exact_normalization = %d\n", 
 			options->exact_normalization);
 
-	fprintf(stream_out, "\n[photons]\n");
 	fprintf(stream_out, "repetition_rate = %lf\n", options->repetition_rate);
 	fprintf(stream_out, "convert = %d (%s)\n", 
 			options->convert, options->convert_string);
 
-	fprintf(stream_out, "\n[number]\n");
 	fprintf(stream_out, "correlate_successive = %d\n", 
 			options->correlate_successive);
 
-	fprintf(stream_out, "\n[synced_t2]\n");
 	fprintf(stream_out, "sync_channel = %u\n", options->sync_channel);
 	fprintf(stream_out, "sync_divider = %u\n", options->sync_divider);
 

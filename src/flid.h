@@ -28,31 +28,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef PHOTON_FLID_H_
-#define PHOTON_FLID_H_
+#ifndef FLID_H_
+#define FLID_H_
 
 #include <stdio.h>
-#include "../options.h"
-#include "../histogram/edges.h"
-#include "../photon/t3.h"
-#include "../statistics/intensity.h"
+#include "options.h"
+#include "histogram/edges.h"
+#include "photon/t3.h"
+#include "photon/window.h"
+#include "limits.h"
 
 typedef struct {
-	t3_t photon;
+	photon_window_t window;
+
 	unsigned int **counts;
 	edges_t *time_axis;
 	edges_t *intensity_axis;
 
-	intensity_photon_t *intensity;
+	unsigned int total_counts;
 	unsigned long long total_lifetime;
-} photon_flid_t;
+} flid_t;
 
-int photon_flid(FILE *stream_in, FILE *stream_out, pc_options_t *options);
+int flid(FILE *stream_in, FILE *stream_out, pc_options_t const *options);
 
-photon_flid_t *photon_flid_alloc(void);
-int photon_flid_push(photon_flid_t *flid, photon_t *photon);
-void photon_flid_flush(photon_flid_t *flid);
-int photon_flid_fprintf(FILE *stream_out, photon_flid_t *flid);
-void photon_flid_free(photon_flid_t **flid);
+flid_t *flid_alloc(limits_t const *time_limits, 
+		limits_t const *intensity_limits);
+void flid_init(flid_t *flid, long long const window_width);
+int flid_push(flid_t *flid, t3_t const *photon);
+int flid_flush(flid_t *flid);
+int flid_update(flid_t *flid, double const intensity, double const lifetime);
+int flid_fprintf(FILE *stream_out, flid_t const *flid);
+void flid_free(flid_t **flid);
 
 #endif
