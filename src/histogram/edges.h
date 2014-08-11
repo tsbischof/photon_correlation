@@ -35,7 +35,7 @@
 #include "../limits.h"
 
 typedef struct _edges_t {
-	unsigned int n_bins;
+	size_t n_bins;
 	int print_label;
 	limits_t limits;
 	int scale;
@@ -65,5 +65,17 @@ edge_indices_t *edge_indices_alloc(unsigned int const length);
 void edge_indices_init(edge_indices_t *edge_indices, edges_t ** const edges);
 void edge_indices_free(edge_indices_t **edge_indices);
 int edge_indices_next(edge_indices_t *edge_indices);
+
+typedef struct _edges_int_t {
+	size_t n_bins;
+	limits_int_t limits;
+	long long *bin_edges;
+} edges_int_t;
+
+edges_int_t *edges_int_alloc(size_t const n_bins);
+int edges_int_init(edges_int_t *edges, limits_int_t const *limits);
+void edges_int_free(edges_int_t **edges);
+
+size_t edges_int_index_linear(edges_int_t const *edges, long long const value);
 
 #endif

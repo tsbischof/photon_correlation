@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 "were found with the given intensity and mean arrival time).\n"
 "\n"
 "Windows with no photons are discarded, so signal at zero arrival time and \n"
-"near-zero intensity are real. A uniform background will bias the measurement\n"
+"near-zero intensity is real. A uniform background will bias the measurement\n"
 "toward half the repetition period, so at low intensities the FLID will tend\n"
 "to exhibit a peak near this value.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 

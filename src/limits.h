@@ -46,6 +46,15 @@ typedef struct {
 int limits_parse(limits_t *limits, const char *str);
 int limits_valid(limits_t const *limits);
 
+typedef struct {
+	long long lower;
+	size_t bins;
+	long long upper;
+} limits_int_t;
+
+int limits_int_parse(limits_int_t *limits, const char *str);
+int limits_int_valid(limits_int_t const *limits);
+
 int scale_parse(int *scale, const char *str);
 
 #endif

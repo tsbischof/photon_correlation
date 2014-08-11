@@ -78,6 +78,57 @@ int limits_valid(limits_t const *limits) {
 	return( limits->bins > 0 && limits->lower < limits->upper );
 }
 
+int limits_int_parse(limits_int_t *limits, const char *str) {
+	int result;
+
+	debug("Parsing limits: %s.\n", str);
+
+	if ( str == NULL ) {
+		error("Fatal error, no limits specified.\n");
+		return(-1);
+	}
+
+	result = sscanf(str, "%lld,%zu,%lld", 
+				&(limits->lower), 
+				&(limits->bins),
+				&(limits->upper));
+
+	if ( result != 3 ) {
+		error("Limits could not be parsed: %s.\n"
+				"The correct format is lower,bins,upper (no spaces).\n",
+				str);
+		return(-1);
+	}
+
+	if ( limits->lower >= limits->upper ) {
+		error("Lower limit must be less than upper limit "
+				"(%lld, %lld specified)\n", 
+				limits->lower, limits->upper);
+		return(-1);
+	}
+
+	if ( limits->bins <= 0 ) {
+		error("Must have at least one bin.\n");
+		return(-1);
+	}
+
+	if ( (limits->upper - limits->lower) % limits->bins != 0 ) {
+		error("Number of bins must be an integer divisor of the span "
+				"of possible values: %lld %% %zu = %lld.\n",
+				limits->upper - limits->lower,
+				limits->bins,
+				(limits->upper - limits->lower) % limits->bins);
+		return(-1);
+	}
+
+	return(0);
+}
+
+int limits_int_valid(limits_int_t const *limits) {
+	return( limits->bins > 0 && limits->lower < limits->upper && 
+			(limits->upper - limits->lower) % limits->bins == 0 );
+}
+
 int scale_parse(int *scale, const char *str) {
 	if ( str == NULL ) {
 		*scale = SCALE_LINEAR;

@@ -165,7 +165,10 @@ static pc_option_t pc_options_all[] = {
 			"The limits for an intensity axis in e.g. a FLID\n"
 			"diagram or time-dependent gn. Follows the format:\n"
 			"         lower, number of bins, upper \n"
-			"with no spaces, and the extrema in picoseconds."},
+			"with no spaces. The lower and upper limits \n"
+			"are the number of photons found in a given time\n"
+			"window, and the number of bins must evenly divide\n"
+			"the span of counts ((upper - lower) %% bins == 0)."},
 	{'u', "u:", "time-offsets",
 			"A common-delimited list of time offsets to\n"
 			"apply to the channels. All channels must be\n"
@@ -741,7 +744,7 @@ int pc_options_parse_pulse_limits(pc_options_t *options) {
 }
 
 int pc_options_parse_intensity_limits(pc_options_t *options) {
-	return(limits_parse(&(options->intensity_limits),
+	return(limits_int_parse(&(options->intensity_limits),
 			options->intensity_string));
 }
 
@@ -900,7 +903,7 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 			options->time_scale, options->time_scale_string);
 	fprintf(stream_out, "pulse_scale = %d (%s)\n", 
 			options->pulse_scale, options->pulse_scale_string);
-	fprintf(stream_out, "intensity_limits = %lf,%zu,%lf (%s)\n",
+	fprintf(stream_out, "intensity_limits = %lld,%zu,%lld (%s)\n",
 			options->intensity_limits.lower,
 			options->intensity_limits.bins,
 			options->intensity_limits.upper,

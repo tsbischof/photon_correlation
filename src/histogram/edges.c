@@ -233,3 +233,61 @@ int edge_indices_next(edge_indices_t *edge_indices) {
 	}
 }
 
+edges_int_t *edges_int_alloc(size_t const n_bins) {
+	edges_int_t *edges = NULL;
+
+	edges = (edges_int_t *)malloc(sizeof(edges_int_t));
+
+	if ( edges == NULL ) {
+		return(edges);
+	}
+
+	edges->n_bins = n_bins;
+	edges->bin_edges = (long long *)malloc(sizeof(long long)*(n_bins+1));
+
+	if ( edges->bin_edges == NULL ) {
+		edges_int_free(&edges);
+		return(edges);
+	}
+
+	return(edges);
+}
+
+int edges_int_init(edges_int_t *edges, limits_int_t const *limits) {
+	int i;
+
+	if ( (limits->upper - limits->lower) % limits->bins != 0 ) {
+		error("Number of bins must be an integer divisor of the span "
+				"of possible values: %lld %% %zu = %lld.\n",
+				limits->upper - limits->lower,
+				limits->bins,
+				(limits->upper - limits->lower) % limits->bins);
+		return(PC_ERROR_OPTIONS);
+	}
+
+	for ( i = 0; i <= edges->n_bins; i++ ) {
+		edges->bin_edges[i] = limits->lower + 
+				(limits->upper - limits->lower)*i/limits->bins;
+	}
+
+	memcpy(&(edges->limits), limits, sizeof(limits_int_t));
+
+	if ( limits->bins != edges->n_bins ) {
+		return(PC_ERROR_MISMATCH);
+	}
+
+	return(PC_SUCCESS);
+}
+
+void edges_int_free(edges_int_t **edges) {
+	if ( *edges != NULL ) {
+		free((*edges)->bin_edges);
+		free(*edges);
+		*edges = NULL;
+	}
+}
+
+size_t edges_int_index_linear(edges_int_t const *edges, long long const value) {
+	return((value-edges->limits.lower)*edges->limits.bins / 
+		(edges->limits.upper-edges->limits.lower));
+}

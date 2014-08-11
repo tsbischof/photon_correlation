@@ -43,7 +43,7 @@ typedef struct {
 
 	unsigned int **counts;
 	edges_t *time_axis;
-	edges_t *intensity_axis;
+	edges_int_t *intensity_axis;
 
 	unsigned int total_counts;
 	unsigned long long total_lifetime;
@@ -52,11 +52,11 @@ typedef struct {
 int flid(FILE *stream_in, FILE *stream_out, pc_options_t const *options);
 
 flid_t *flid_alloc(limits_t const *time_limits, 
-		limits_t const *intensity_limits);
+		limits_int_t const *intensity_limits);
 void flid_init(flid_t *flid, long long const window_width);
 int flid_push(flid_t *flid, t3_t const *photon);
 int flid_flush(flid_t *flid);
-int flid_update(flid_t *flid, double const intensity, double const lifetime);
+int flid_update(flid_t *flid, long long const intensity, double const lifetime);
 int flid_fprintf(FILE *stream_out, flid_t const *flid);
 void flid_free(flid_t **flid);
 

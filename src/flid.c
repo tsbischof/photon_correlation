@@ -81,7 +81,7 @@ int flid(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 }
 
 flid_t *flid_alloc(limits_t const *time_limits, 
-		limits_t const *intensity_limits) {
+		limits_int_t const *intensity_limits) {
 	flid_t *flid = NULL;
 	int i;
 
@@ -92,13 +92,13 @@ flid_t *flid_alloc(limits_t const *time_limits,
 	} 
 
 	flid->time_axis = edges_alloc(time_limits->bins);
-	flid->intensity_axis = edges_alloc(intensity_limits->bins);
+	flid->intensity_axis = edges_int_alloc(intensity_limits->bins);
 
 	if ( flid != NULL ) {
 		if ( edges_init(flid->time_axis, time_limits, 
 				SCALE_LINEAR, false) != PC_SUCCESS ||
-			edges_init(flid->intensity_axis, intensity_limits,  
-					SCALE_LINEAR, false) != PC_SUCCESS ) {
+			edges_int_init(flid->intensity_axis, intensity_limits) 
+				!= PC_SUCCESS ) {
 			flid_free(&flid);
 		}
 	}
@@ -164,8 +164,7 @@ int flid_push(flid_t *flid, t3_t const *photon) {
 
 int flid_flush(flid_t *flid) {
 	int result = PC_SUCCESS;
-	double intensity = (double)flid->total_counts / 
-			(double)flid->window.width;
+	double intensity = flid->total_counts;
 	double mean_lifetime;
 
 	if ( flid->total_counts != 0 ) {
@@ -181,10 +180,11 @@ int flid_flush(flid_t *flid) {
 	return(result);
 }
 
-int flid_update(flid_t *flid, double const intensity, double const lifetime) {
+int flid_update(flid_t *flid, long long const intensity, 
+		double const lifetime) {
 	int time_index = edges_index_linear_double(flid->time_axis,
 			lifetime);
-	int intensity_index = edges_index_linear_double(flid->intensity_axis, 
+	int intensity_index = edges_int_index_linear(flid->intensity_axis, 
 			intensity);
 
 	if ( intensity_index < flid->intensity_axis->n_bins 
@@ -227,8 +227,10 @@ int flid_fprintf(FILE *stream_out, flid_t const *flid) {
 
 	for ( i = 0; i < flid->intensity_axis->n_bins; i++ ) {
 		fprintf(stream_out, "%lf,%lf,", 
-				flid->intensity_axis->bin_edges[i],
-				flid->intensity_axis->bin_edges[i+1]);
+				flid->intensity_axis->bin_edges[i]/
+					(double)flid->intensity_axis->n_bins,
+				flid->intensity_axis->bin_edges[i+1]/
+					(double)flid->intensity_axis->n_bins);
 
 		for ( j = 0; j < flid->time_axis->n_bins-1; j++ ) {
 			fprintf(stream_out, "%u,", flid->counts[i][j]);
@@ -255,7 +257,7 @@ void flid_free(flid_t **flid) {
 		}
 
 		edges_free(&((*flid)->time_axis));
-		edges_free(&((*flid)->intensity_axis));
+		edges_int_free(&((*flid)->intensity_axis));
 
 		free(*flid);
 		*flid = NULL;

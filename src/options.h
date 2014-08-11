@@ -104,7 +104,7 @@ typedef struct {
 	int pulse_scale;
 
 	char *intensity_string;
-	limits_t intensity_limits;
+	limits_int_t intensity_limits;
 
 /* temper */
 	int suppress_channels;
