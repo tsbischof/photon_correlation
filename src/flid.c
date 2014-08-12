@@ -201,8 +201,8 @@ int flid_update(flid_t *flid, long long const intensity,
 			return(PC_ERROR_INDEX);
 		}
 	} else {
-		error("Found an intensity out of bounds: got %lf, but expected a "
-				"value between %lf and %lf.\n", 
+		error("Found an intensity out of bounds: got %lld, but expected a "
+				"value between %lld and %lld.\n", 
 				intensity, flid->intensity_axis->limits.lower, 
 				flid->intensity_axis->limits.upper);
 		return(PC_ERROR_INDEX);
