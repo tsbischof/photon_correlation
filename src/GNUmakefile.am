@@ -77,7 +77,9 @@ photon_intensity_dependent_gn_SOURCES = $(common_sources) \
 photon_flid_SOURCES = $(common_sources) \
 		photon_flid_main.c flid.c histogram/edges.c
 
-include_HEADERS = correlate.h error.h files.h gn.h histogram.h limits.h \
+pkgincludedir = $(includedir)/@PACKAGE@
+nobase_pkginclude_HEADERS = correlate.h error.h files.h gn.h  \
+		histogram.h limits.h \
 		modes.h options.h photon_intensity_correlate.h queue.h run.h types.h \
 		combinatorics/combinations.h combinatorics/index_offsets.h \
 		combinatorics/permutations.h combinatorics/range.h \
