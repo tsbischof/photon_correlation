@@ -9,3 +9,11 @@ dist
 sample_data
 manuals
 scratch
+GNUmakefile.in
+
+compile
+configure
+depcomp
+install-sh
+missing
+

@@ -38,11 +38,20 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "limits.h"
 #include "histogram/edges.h"
 #include "correlation/photon_gn.h"
+#include "statistics/counts.h"
 
 typedef struct {
-	int mode;
+	unsigned int intensity_bins;
+	unsigned long long window_width;
+
+	photon_window_t window;
+	photon_window_dimension_t window_dim;
 	
-	photon_gn_t *gns;
+	photon_gn_t *current_gn;
+	unsigned long long current_counts;
+
+	histogram_gn_t **histograms;
+	counts_t *windows_seen;
 
 	edges_int_t *intensities;
 } idgn_t;
@@ -50,10 +59,13 @@ typedef struct {
 int intensity_dependent_gn(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options);
 
-idgn_t *idgn_alloc();
-void idgn_init(idgn_t *idgn);
+idgn_t *idgn_alloc(int const mode, int const order, int const channels,
+		size_t const queue_size, 
+		limits_t const *time_limits, limits_t const *pulse_limits,
+		limits_int_t const *intensity_limits);
+void idgn_init(idgn_t *idgn, long long const window_width);
 int idgn_push(idgn_t *idgn, photon_t const *photon);
-void idgn_flush(idgn_t *idgn);
+int idgn_flush(idgn_t *idgn);
 int idgn_fprintf(FILE *stream_out, idgn_t const *idgn);
 void idgn_free(idgn_t **idgn);
 

@@ -282,6 +282,25 @@ int histogram_gn_increment(histogram_gn_t *hist,
 
 	return(PC_SUCCESS);
 }
+
+/* Combine the counts from one histogram with another. */
+int histogram_gn_update(histogram_gn_t *dst, histogram_gn_t const *src) {
+	size_t i, j;
+
+	if ( src->n_histograms != dst->n_histograms ||
+			src->n_bins != dst->n_bins ) {
+		error("Attempting to add two histograms of unequal size.\n");
+		return(PC_ERROR_INDEX);
+	}
+
+	for ( i = 0; i < dst->n_histograms; i++ ) {
+		for ( j = 0; j < dst->n_bins; j++ ) {
+			dst->counts[i][j] += src->counts[i][j];
+		}
+	}
+
+	return(PC_SUCCESS);
+}
 			
 int histogram_gn_fprintf(FILE *stream_out, histogram_gn_t *hist) {
 /* Cycle through the combinations of channels, and for each combination

@@ -68,8 +68,7 @@ int main(int argc, char *argv[]) {
 			OPT_MODE, OPT_CHANNELS, OPT_ORDER,
 			OPT_QUEUE_SIZE,
 			OPT_WINDOW_WIDTH, 
-			OPT_TIME, OPT_PULSE,
-			OPT_BIN_WIDTH,
+			OPT_TIME, OPT_PULSE, OPT_INTENSITY,
 			OPT_EOF}};
 
 	return(run(&program_options, intensity_dependent_gn, argc, argv));

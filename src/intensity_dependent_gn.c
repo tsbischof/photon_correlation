@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "intensity_dependent_gn.h"
 #include "photon/stream.h"
 #include "error.h"
+#include "modes.h"
 
 int intensity_dependent_gn(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
@@ -40,16 +41,28 @@ int intensity_dependent_gn(FILE *stream_in, FILE *stream_out,
 	photon_stream_t *photons = NULL;
 	idgn_t *idgn = NULL;
 
-	idgn = idgn_alloc();
-
-	if ( idgn == NULL ) {
-		result = PC_ERROR_MEM;
-	} else {
-		photon_stream_init(photons, stream_in);
-		photon_stream_set_unwindowed(photons);
-		idgn_init(idgn);
+	if ( options->window_width == 0 ) {
+		error("Window width must be greater than 0.\n");
+		return(PC_ERROR_OPTIONS);
 	}
 
+	photons = photon_stream_alloc(options->mode);
+	idgn = idgn_alloc(options->mode, options->order, options->channels,
+			options->queue_size,
+			&(options->time_limits), &(options->pulse_limits),
+			&(options->intensity_limits));
+
+	if ( photons == NULL || idgn == NULL ) {
+		error("Could not allocate photon stream or idgn.\n");
+		result = PC_ERROR_MEM;
+	} else {
+		debug("Initializing\n");
+		photon_stream_init(photons, stream_in);
+		photon_stream_set_unwindowed(photons);
+		idgn_init(idgn, options->window_width);
+	}
+
+	debug("Working on stream\n");
 	while ( result == PC_SUCCESS && 
 			photons->photon_stream_next(photons) == PC_SUCCESS ) {
 		result = idgn_push(idgn, &(photons->photon));
@@ -60,34 +73,182 @@ int intensity_dependent_gn(FILE *stream_in, FILE *stream_out,
 		idgn_fprintf(stream_out, idgn);
 	}
 	
+	photon_stream_free(&photons);
 	idgn_free(&idgn);
 
 	return(result);
 }
 
-idgn_t *idgn_alloc() {
+idgn_t *idgn_alloc(int const mode, int const order, int const channels,
+			size_t const queue_size, 
+			limits_t const *time_limits, limits_t const *pulse_limits,
+			limits_int_t const *intensity_limits) {
+	unsigned int i;
 	idgn_t *idgn = NULL;
+
+	idgn = (idgn_t *)malloc(sizeof(idgn_t));
+
+	if ( idgn != NULL ) {
+		idgn->intensity_bins = intensity_limits->bins;
+		idgn->window_width = 0;
+
+		if ( mode == MODE_T2 ) {
+			idgn->window_dim = t2_window_dimension;
+		} else if ( mode == MODE_T3 ) {
+			idgn->window_dim = t3_window_dimension;
+		} else {
+			error("Mode not supported: %d\n", mode);
+			idgn_free(&idgn);
+		}
+	}
+
+	if ( idgn != NULL ) {
+		idgn->current_gn = photon_gn_alloc(mode, order, channels,
+					queue_size, time_limits, pulse_limits);
+
+		if ( idgn->current_gn == NULL ) {
+			idgn_free(&idgn);
+		}
+	}
+
+	if ( idgn != NULL ) {
+		idgn->histograms = (histogram_gn_t **)malloc(sizeof(histogram_gn_t *)
+				*idgn->intensity_bins);
+
+		if ( idgn->histograms == NULL ) {
+			idgn_free(&idgn);
+		} else {
+			for ( i = 0; idgn != NULL && i < idgn->intensity_bins; i++ ) {
+				idgn->histograms[i] = histogram_gn_alloc(mode, order,
+						channels, 
+						SCALE_LINEAR, time_limits, 
+						SCALE_LINEAR, pulse_limits);
+
+				if ( idgn->histograms[i] == NULL ) {
+					idgn_free(&idgn);
+				}
+			}
+		}
+	}
+
+	if ( idgn != NULL ) {
+		idgn->windows_seen = counts_alloc(idgn->intensity_bins);
+	}
+
+	if ( idgn != NULL ) {
+		idgn->intensities = edges_int_alloc(intensity_limits->bins);
+	
+		if ( idgn->intensities == NULL ) {
+			idgn_free(&idgn);
+		} else {
+			if ( edges_int_init(idgn->intensities, intensity_limits) 
+					!= PC_SUCCESS ) {
+				idgn_free(&idgn);
+			}
+		}
+	}
 
 	return(idgn);
 }
 
-void idgn_init(idgn_t *idgn) {
+void idgn_init(idgn_t *idgn, long long const window_width) {
+	int i;
 
+	photon_window_init(&(idgn->window), window_width, false, 0, false, 0);
+
+	photon_gn_init(idgn->current_gn);
+
+	for ( i = 0; i < idgn->intensity_bins; i++ ) {
+		histogram_gn_init(idgn->histograms[i]);
+	}
+
+	counts_init(idgn->windows_seen);
 }
 
 int idgn_push(idgn_t *idgn, photon_t const *photon) {
-	return(PC_SUCCESS);
+	int status = PC_SUCCESS;
+
+	while ( true ) {
+		status = photon_window_contains(&(idgn->window), 
+				idgn->window_dim(photon));
+
+		if ( status == PC_RECORD_IN_WINDOW ) {
+			idgn->current_counts++;
+			photon_gn_push(idgn->current_gn, photon);
+			return(PC_SUCCESS);
+		} else if ( status == PC_RECORD_AFTER_WINDOW ) {
+			idgn_flush(idgn);
+			photon_window_next(&(idgn->window));
+		} else {
+			error("Photon stream does not appear to be time-ordered.\n");
+			return(PC_RECORD_BEFORE_WINDOW);
+		}
+	}
 }
 
-void idgn_flush(idgn_t *idgn) {
+int idgn_flush(idgn_t *idgn) {
+	int result = PC_SUCCESS;
+	int index;
 
+	if ( idgn->current_counts != 0 ) {
+		index = edges_int_index_linear(idgn->intensities, idgn->current_counts);
+
+		photon_gn_flush(idgn->current_gn);
+
+		if ( 0 <= index && index < idgn->intensity_bins ) {
+			debug("Updating index %d (%lld counts)\n", 
+					index, idgn->current_counts);
+			histogram_gn_update(idgn->histograms[index],
+					idgn->current_gn->histogram);	
+			counts_increment(idgn->windows_seen, index);
+		} else {
+			error("Invalid intensity: %lld found, limits are (%lld, %lld)\n",
+					idgn->current_counts,
+					idgn->intensities->limits.lower,
+					idgn->intensities->limits.upper);
+			result = PC_ERROR_INDEX;
+		}
+	
+		photon_gn_init(idgn->current_gn);
+		idgn->current_counts = 0;
+	}
+
+	return(result);
 }
 
 int idgn_fprintf(FILE *stream_out, idgn_t const *idgn) {
-	return(PC_SUCCESS);
+	unsigned int i;
+
+	histogram_gn_fprintf_bins(stream_out, idgn->histograms[0], 3);
+
+	for ( i = 0; i < idgn->intensity_bins; i++ ) {
+		fprintf(stream_out, "%lld,%lld,%llu,",
+				idgn->intensities->bin_edges[i],
+				idgn->intensities->bin_edges[i+1],
+				idgn->windows_seen->counts[i]);
+
+		histogram_gn_fprintf_counts(stream_out, idgn->histograms[i]);
+	}
+	
+	return(ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS);
 }
 
 void idgn_free(idgn_t **idgn) {
-	free(*idgn);
-	*idgn = NULL;
+	unsigned int i;
+
+	if ( *idgn != NULL ) {
+		if ( (*idgn)->histograms != NULL ) {
+			for ( i = 0; i < (*idgn)->intensity_bins; i++ ) {
+				histogram_gn_free(&((*idgn)->histograms[i]));
+			}
+
+			free((*idgn)->histograms);
+		}
+
+		counts_free(&((*idgn)->windows_seen));
+		edges_int_free(&((*idgn)->intensities));
+
+		free(*idgn);
+		*idgn = NULL;
+	}
 }

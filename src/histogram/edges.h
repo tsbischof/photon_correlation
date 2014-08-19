@@ -76,6 +76,6 @@ edges_int_t *edges_int_alloc(size_t const n_bins);
 int edges_int_init(edges_int_t *edges, limits_int_t const *limits);
 void edges_int_free(edges_int_t **edges);
 
-size_t edges_int_index_linear(edges_int_t const *edges, long long const value);
+int edges_int_index_linear(edges_int_t const *edges, long long const value);
 
 #endif

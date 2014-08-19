@@ -32,7 +32,6 @@
 #include "photon_gn.h"
 #include <math.h>
 #include "../error.h"
-#include "../correlation/photon.h"
 /* 
  * For correlation we typically need to join several operations together.
  * At minimum, we must send the photons to the correlator and the correlations
@@ -96,7 +95,6 @@ int photon_gn_push(photon_gn_t *gn, photon_t const *photon) {
 
 	while ( result == PC_SUCCESS &&
 				correlator_next(gn->correlator) == PC_SUCCESS ) {
-		printf("here\n");
 		histogram_gn_increment(gn->histogram,
 				gn->correlator->correlation);
 	}
