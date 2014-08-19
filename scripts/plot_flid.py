@@ -6,6 +6,11 @@ import csv
 import matplotlib.pyplot as plt
 import numpy
 
+def force_aspect(ax,aspect=1):
+    im = ax.get_images()
+    extent =  im[0].get_extent()
+    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
+
 class FLID(object):
     def __init__(self, filename=None):
         self.intensity = list()
@@ -38,7 +43,16 @@ class FLID(object):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        ax.imshow(self.counts, interpolation="none")
+        ax.imshow(self.counts,
+                  interpolation="none",
+                  origin="lower",
+                  extent=[self.arrival_time[0][0],
+                          self.arrival_time[0][1],
+                          self.intensity[0][0],
+                          self.intensity[1][1]])
+        force_aspect(ax)
+        ax.set_xlabel("Time/ns")
+        ax.set_ylabel("Counts per bin")
         
         return(fig)
 

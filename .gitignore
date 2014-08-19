@@ -11,8 +11,12 @@ manuals
 scratch
 GNUmakefile.in
 
+aclocal.m4
+autom4te.cache
+autoscan.log
 compile
 configure
+configure.scan
 depcomp
 install-sh
 missing
