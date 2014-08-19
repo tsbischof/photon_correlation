@@ -42,8 +42,7 @@
 #include "statistics/intensity.h"
 #include "statistics/bin_intensity.h"
 #include "statistics/number.h"
-#include "correlation/correlator.h"
-#include "histogram/histogram_gn.h"
+#include "correlation/photon_gn.h"
 
 /* 
  * For correlation we typically need to join several operations together.
@@ -106,51 +105,28 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	long long photon_number = 0;
 
 	photon_stream_t *photon_stream = NULL;
-	correlator_t *correlator = NULL;
-	histogram_gn_t *histogram = NULL;
+	photon_gn_t *gn = NULL;
 	intensity_photon_t *count_all = NULL;
 	intensity_photon_t *intensity = NULL;
 	photon_number_t *number = NULL;
-	bin_intensity_t *bin_intensity = NULL;
 
 	unsigned long long bin_width;
 
-	FILE *histogram_file = NULL;
+	FILE *gn_file = NULL;
 	FILE *count_all_file = NULL;
 	FILE *intensity_file = NULL;
 	FILE *number_file = NULL;
-	FILE *bin_intensity_file = NULL;
 	FILE *options_file = NULL;
 
 	char *base_name = NULL;
 	char *run_dir = NULL;
-	char *histogram_filename = NULL;
+	char *gn_filename = NULL;
 	char *count_all_filename = NULL;
 	char *intensity_filename = NULL;
-	char *bin_intensity_filename = NULL;
 	char *number_filename = NULL;
-
-	long long min_time_distance;
-	long long max_time_distance;
-	long long min_pulse_distance;
-	long long max_pulse_distance;
 
 	debug("Initializing options\n");
 	if ( result == PC_SUCCESS ) {
-		min_time_distance = options->time_limits.lower < 0 ?
-				 0 : (long long)floor(options->time_limits.lower);
-		max_time_distance = (long long)ceil(
-				max(fabs(options->time_limits.lower), 
-					fabs(options->time_limits.upper)));
-		min_pulse_distance = options->pulse_limits.lower < 0 ?
-				0 : (long long)floor(options->pulse_limits.lower);
-		max_pulse_distance = (long long)ceil(
-				max(fabs(options->pulse_limits.lower),
-					fabs(options->pulse_limits.upper)));
-		debug("Limits: (%lld, %lld) , (%lld, %lld)\n",
-				min_time_distance, max_time_distance,
-				min_pulse_distance, max_pulse_distance);
-	
 		if ( options->filename_out != NULL ) {
 			debug("Using output filename.\n");
 			base_name = options->filename_out;
@@ -166,41 +142,22 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	if ( result == PC_SUCCESS ) {
 		debug("Allocating memory.\n");
 		photon_stream = photon_stream_alloc(options->mode);
-		correlator = correlator_alloc(options->mode, options->order,
-				options->queue_size, options->positive_only,
-				min_time_distance, max_time_distance,
-				min_pulse_distance, max_pulse_distance);
-		histogram = histogram_gn_alloc(options->mode, options->order,
-				options->channels,
-				options->time_scale, &(options->time_limits),
-				options->pulse_scale, &(options->pulse_limits));
+		gn = photon_gn_alloc(options->mode, options->order,
+				options->channels, options->queue_size,
+				&(options->time_limits), &(options->pulse_limits));
 		count_all = intensity_photon_alloc(options->channels, options->mode);
 		intensity = intensity_photon_alloc(options->channels, options->mode);
 		number = photon_number_alloc(options->channels * 64);
 	
-		run_dir = malloc(sizeof(char)*(strlen(base_name)+100));
-		histogram_filename = malloc(sizeof(char)*1000);
-		count_all_filename = malloc(sizeof(char)*1000);
-		intensity_filename = malloc(sizeof(char)*1000);
-		number_filename = malloc(sizeof(char)*1000);
-		bin_intensity_filename = malloc(sizeof(char)*1000);
+		run_dir = malloc(sizeof(char)*(strlen(base_name)+128));
+		gn_filename = malloc(sizeof(char)*16);
+		count_all_filename = malloc((strlen("count_all")+1)*sizeof(char));
+		intensity_filename = malloc((strlen("intensity")+1)*sizeof(char));
+		number_filename = malloc((strlen("number.td")+1)*sizeof(char));
 
-		if ( options->exact_normalization ) {
-			bin_intensity = bin_intensity_alloc(options->mode, options->order,
-					options->channels,
-					&(options->time_limits), options->time_scale,
-					&(options->pulse_limits), options->pulse_scale,
-					options->queue_size);
-
-			if ( bin_intensity == NULL ) {
-				result = PC_ERROR_MEM;
-			}
-		}
-	
-		if ( photon_stream == NULL || correlator == NULL || 
-				histogram == NULL || count_all == NULL ||
+		if ( photon_stream == NULL || gn == NULL || count_all == NULL ||
 				intensity == NULL || number == NULL ||
-				run_dir == NULL || histogram_filename == NULL || 
+				run_dir == NULL || gn_filename == NULL || 
 				count_all_filename == NULL || intensity_filename == NULL ) {
 			result = PC_ERROR_MEM;
 		}
@@ -293,32 +250,16 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	if ( result == PC_SUCCESS ) {
 		debug("Opening possible time-dependent files.\n");
 		if ( options->window_width == 0 ) {
-			sprintf(histogram_filename, "g%u", options->order);
+			sprintf(gn_filename, "g%u", options->order);
 		} else {
-			sprintf(histogram_filename, "g%u.td", options->order);
+			sprintf(gn_filename, "g%u.td", options->order);
 		} 
 
-		histogram_file = fopen(histogram_filename, "w");
+		gn_file = fopen(gn_filename, "w");
 
-		if ( histogram_file == NULL ) {
-			error("Could not open %s for writing.\n", histogram_filename);
+		if ( gn_file == NULL ) {
+			error("Could not open %s for writing.\n", gn_filename);
 			result = PC_ERROR_IO;
-		}
-
-		if ( options->exact_normalization ) {
-			debug("Bin intensity.\n");
-			if ( options->window_width == 0 ) {
-				sprintf(bin_intensity_filename, "bin_intensity");
-			} else {
-				sprintf(bin_intensity_filename, "bin_intensity.td");
-			}
-
-			bin_intensity_file = fopen(bin_intensity_filename, "w");
-			if ( bin_intensity_file == NULL ) {
-				error("Could not open %s for writing.\n",
-						bin_intensity_filename);
-				result = PC_ERROR_IO;
-			}
 		}
 
 		if ( options->mode == MODE_T3 ) {
@@ -337,27 +278,18 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 		}
 	}
 
-	/* Write the bin information to file, if time-dependent */
-	if ( result == PC_SUCCESS && options->window_width != 0 ) {
-		debug("Handling time-dependent file headers.\n");
-		histogram_gn_init(histogram);
-		histogram_gn_fprintf_bins(histogram_file, histogram, 2);
-
-		if ( options->exact_normalization ) {
-			bin_intensity_init(bin_intensity,
-					options->set_start, options->start,
-					options->set_stop, options->stop);
-
-			bin_intensity_fprintf_bins(bin_intensity_file, bin_intensity, 2);
-		}
-	}
-
 	/* Start the actual calculation */
 	if ( result == PC_SUCCESS ) {
+		/* Write the bin information to file, if time-dependent */
+		if ( options->window_width != 0 ) {
+			debug("Handling time-dependent file headers.\n");
+			photon_gn_init(gn);
+			photon_gn_fprintf_bins(gn_file, gn, 2);
+		}
+
 		debug("Starting the calculation.\n");
 		while ( result == PC_SUCCESS && ! photon_stream_eof(photon_stream) ) {
-			histogram_gn_init(histogram);
-			correlator_init(correlator);
+			photon_gn_init(gn);
 
 			if ( options->window_width == 0 ) {
 				photon_number_init(number, false, 0, false, 0);
@@ -367,33 +299,15 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 						true, photon_stream->window.upper);
 			}
 
-			if ( options->exact_normalization ) {
-				if ( options->window_width == 0 ) {
-					bin_intensity_init(bin_intensity,
-							options->set_start, options->start,
-							options->set_stop, options->stop);
-				} else {
-					bin_intensity_init(bin_intensity,
-							true, photon_stream->window.lower,
-							true, photon_stream->window.upper);
-				}
-			}
-
 			debug("-----------Working on (%lld, %lld)-------------\n", 
 					photon_stream->window.lower,
 					photon_stream->window.upper);
-			while ( photon_stream_next_photon(photon_stream) 
-					== PC_SUCCESS ) {
+			while ( photon_stream_next_photon(photon_stream) == PC_SUCCESS ) {
 				pc_status_print("gn", photon_number++, options);
 
-				correlator_push(correlator, &(photon_stream->photon));
+				photon_gn_push(gn, &(photon_stream->photon));
 				intensity_photon_push(count_all, &(photon_stream->photon));
 				intensity_photon_push(intensity, &(photon_stream->photon));
-
-				while ( correlator_next(correlator) == PC_SUCCESS ) {
-					histogram_gn_increment(histogram, 
-							correlator->correlation);
-				}
 
 				while ( intensity_photon_next(intensity) == PC_SUCCESS ) {
 					intensity_photon_fprintf(intensity_file, intensity);
@@ -402,28 +316,20 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 				if ( options->mode == MODE_T3 ) {
 					photon_number_push(number, &(photon_stream->photon));
 				}
-
-				if ( options->exact_normalization ) {
-					bin_intensity_push(bin_intensity, &(photon_stream->photon));
-				}
 			}
 	
 			debug("Window over.\n");
 
-			correlator_flush(correlator);
-			while ( correlator_next(correlator) == PC_SUCCESS ) {
-				histogram_gn_increment(histogram, 
-						correlator->correlation);
-			}
+			photon_gn_flush(gn);
 
-			if ( histogram_file != NULL ) {
+			if ( gn_file != NULL ) {
 				if ( options->window_width == 0 ) {
-					histogram_gn_fprintf(histogram_file, histogram);
+					photon_gn_fprintf(gn_file, gn);
 				} else {
-					fprintf(histogram_file, "%lld,%lld,",
+					fprintf(gn_file, "%lld,%lld,",
 							photon_stream->window.lower,
 							photon_stream->window.upper);
-					histogram_gn_fprintf_counts(histogram_file, histogram);
+					photon_gn_fprintf_counts(gn_file, gn);
 				}
 			}
 
@@ -439,27 +345,11 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 				}
 			}
 
-			if ( options->exact_normalization && 
-					bin_intensity_file != NULL ) {
-				bin_intensity_flush(bin_intensity);
-				if ( options->window_width == 0 ) {
-					bin_intensity_fprintf(bin_intensity_file, 
-							bin_intensity);
-				} else {
-					fprintf(bin_intensity_file, "%lld,%lld,",
-							photon_stream->window.lower,
-							photon_stream->window.upper);
-					bin_intensity_fprintf_counts(bin_intensity_file, 
-							bin_intensity);
-				}
-			}
-
 			photon_stream_next_window(photon_stream);
 		}
 
-		bin_intensity_file != NULL ? fclose(bin_intensity_file) : 0;
 		number_file != NULL ? fclose(number_file) : 0;
-		histogram_file != NULL ? fclose(histogram_file) : 0;
+		gn_file != NULL ? fclose(gn_file) : 0;
 
 		if ( result == PC_SUCCESS ) {
 			intensity_photon_flush(count_all);
@@ -475,15 +365,13 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	}
 
 	photon_stream_free(&photon_stream);
-	correlator_free(&correlator);
-	histogram_gn_free(&histogram);
+	photon_gn_free(&gn);
 	intensity_photon_free(&count_all);
 	intensity_photon_free(&intensity);
 	photon_number_free(&number);
-	bin_intensity_free(&bin_intensity);
 
 	free(run_dir);
-	free(histogram_filename);
+	free(gn_filename);
 	free(count_all_filename);
 	free(intensity_filename);
 	free(number_filename);
@@ -492,5 +380,5 @@ int gn(FILE *stream_in, FILE *stream_out, pc_options_t const *options) {
 	intensity_file != NULL ? fclose(intensity_file) : 0 ;
 	options_file != NULL ? fclose(options_file) : 0;
 	
-	return(PC_SUCCESS);
+	return(result);
 }

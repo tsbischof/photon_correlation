@@ -29,39 +29,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "options.h"
-#include "run.h"
-#include "gn.h"
+#ifndef PHOTON_GN_H_
+#define PHOTON_GN_H_
 
-int main(int argc, char *argv[]) {
-	program_options_t program_options = {
-"This program performs the calculations needed to calculate the correlation\n"
-"of a stream of photons, including those needed to normalize the result.\n"
-"It does not perform the normalization, but instead produces the results\n"
-"necessary to do so.\n"
-"\n"
-"For a given input file, some number of files will be output:\n"
-" 1. intensity data\n"
-"    a. *.count-all: The total number of counts found on all channels, useful\n"
-"       for approximate normalization. By default, this is the output.\n"
-"    b. *.bin_intensity: The exact values needed to normalize each histogram\n"
-"       bin. This is more expensive to calculate than .count-all, so only\n"
-"       use this if the exact result is desired.\n"
-" 2. Correlation data\n"
-"    *.gn: The n is the appropriate value for the given correlation. This\n"
-"    file contains the histogrammed correlation events, and is the non-\n"
-"    normalized correlation.\n",
-		{OPT_VERBOSE, OPT_HELP, OPT_VERSION, 
-			OPT_FILE_IN, OPT_FILE_OUT, 
-			OPT_MODE, OPT_CHANNELS, OPT_ORDER, 
-			OPT_QUEUE_SIZE, 
-			OPT_WINDOW_WIDTH,
-			OPT_TIME, OPT_PULSE,
-			OPT_BIN_WIDTH,
-			OPT_PRINT_EVERY,
-			OPT_EOF}};
+#include <stdio.h>
+#include "../options.h"
+#include "../correlation/correlator.h"
+#include "../histogram/histogram_gn.h"
 
-	return(gn_run(&program_options, argc, argv));
-}
+typedef struct {
+	correlator_t *correlator;
+	histogram_gn_t *histogram;
+} photon_gn_t;
 
+photon_gn_t *photon_gn_alloc(int const mode, int const order, 
+		int const channels, size_t const queue_size,
+		limits_t const *time_limits, limits_t const *pulse_limits);
+void photon_gn_init(photon_gn_t *gn);
+int photon_gn_push(photon_gn_t *gn, photon_t const *photon);
+int photon_gn_flush(photon_gn_t *gn);
+int photon_gn_fprintf(FILE *stream_out, photon_gn_t const *gn);
+int photon_gn_fprintf_bins(FILE *stream_out, photon_gn_t const *gn,
+			unsigned int const blanks);
+int photon_gn_fprintf_counts(FILE *stream_out, photon_gn_t const *gn);
+void photon_gn_free(photon_gn_t **gn);
 
+#endif

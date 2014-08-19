@@ -228,9 +228,9 @@ int flid_fprintf(FILE *stream_out, flid_t const *flid) {
 	for ( i = 0; i < flid->intensity_axis->n_bins; i++ ) {
 		fprintf(stream_out, "%lf,%lf,", 
 				flid->intensity_axis->bin_edges[i]/
-					(double)flid->intensity_axis->n_bins,
+					(double)flid->window.width,
 				flid->intensity_axis->bin_edges[i+1]/
-					(double)flid->intensity_axis->n_bins);
+					(double)flid->window.width);
 
 		for ( j = 0; j < flid->time_axis->n_bins-1; j++ ) {
 			fprintf(stream_out, "%u,", flid->counts[i][j]);

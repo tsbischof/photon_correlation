@@ -5,7 +5,9 @@ AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_RANLIB
 AM_PROG_CC_C_O
+AM_PROG_AS
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
