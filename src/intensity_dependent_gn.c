@@ -219,13 +219,18 @@ int idgn_flush(idgn_t *idgn) {
 int idgn_fprintf(FILE *stream_out, idgn_t const *idgn) {
 	unsigned int i;
 
-	histogram_gn_fprintf_bins(stream_out, idgn->histograms[0], 3);
+	histogram_gn_fprintf_bins(stream_out, idgn->histograms[0], 4);
 
 	for ( i = 0; i < idgn->intensity_bins; i++ ) {
-		fprintf(stream_out, "%lld,%lld,%llu,",
+		fprintf(stream_out, "%lld,%lld,",
 				idgn->intensities->bin_edges[i],
-				idgn->intensities->bin_edges[i+1],
-				idgn->windows_seen->counts[i]);
+				idgn->intensities->bin_edges[i+1]);
+		if ( i == 0 ) {
+				fprintf(stream_out, "%lld,", idgn->window.width);
+		} else {
+				fprintf(stream_out, ",");
+		}
+		fprintf(stream_out, "%llu,", idgn->windows_seen->counts[i]);
 
 		histogram_gn_fprintf_counts(stream_out, idgn->histograms[i]);
 	}

@@ -15,6 +15,7 @@ class FLID(object):
     def __init__(self, filename=None):
         self.intensity = list()
         self.arrival_time = list()
+        self.window_width = None
 
         self.counts = list()
 
@@ -30,12 +31,15 @@ class FLID(object):
 
         time_bins = (next(reader), next(reader))
 
-        for left, right in zip(time_bins[0][2:], time_bins[1][2:]):
+        for left, right in zip(time_bins[0][3:], time_bins[1][3:]):
             self.arrival_time.append((float(left), float(right)))
 
         for line in reader:
             self.intensity.append((float(line[0]), float(line[1])))
-            self.counts.append(list(map(int, line[2:])))
+            if self.window_width is None and line[2]:
+                self.window_width = int(line[2])
+
+            self.counts.append(list(map(int, line[3:])))
 
         return(self)
 
@@ -47,12 +51,12 @@ class FLID(object):
                   interpolation="none",
                   origin="lower",
                   extent=[self.arrival_time[0][0],
-                          self.arrival_time[0][1],
+                          self.arrival_time[-1][1],
                           self.intensity[0][0],
-                          self.intensity[1][1]])
+                          self.intensity[-1][1]])
         force_aspect(ax)
-        ax.set_xlabel("Time/ns")
-        ax.set_ylabel("Counts per bin")
+        ax.set_xlabel("Time/ps")
+        ax.set_ylabel("Counts per window (width {})".format(self.window_width))
         
         return(fig)
 

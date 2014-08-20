@@ -217,7 +217,7 @@ int flid_fprintf(FILE *stream_out, flid_t const *flid) {
 	 */
 
 	for ( offset = 0; offset < 2; offset++ ) {
-		fprintf(stream_out, ",,");
+		fprintf(stream_out, ",,,");
 
 		for ( i = offset; i < flid->time_axis->n_bins+offset-1; i++ ) {
 			fprintf(stream_out, "%lf,", flid->time_axis->bin_edges[i]);
@@ -226,11 +226,15 @@ int flid_fprintf(FILE *stream_out, flid_t const *flid) {
 	}
 
 	for ( i = 0; i < flid->intensity_axis->n_bins; i++ ) {
-		fprintf(stream_out, "%lf,%lf,", 
-				flid->intensity_axis->bin_edges[i]/
-					(double)flid->window.width,
-				flid->intensity_axis->bin_edges[i+1]/
-					(double)flid->window.width);
+		fprintf(stream_out, "%lld,%lld,", 
+				flid->intensity_axis->bin_edges[i],
+				flid->intensity_axis->bin_edges[i+1]);
+
+		if ( i == 0 ) {
+			fprintf(stream_out, "%lld,", flid->window.width);
+		} else {
+			fprintf(stream_out, ",");
+		}
 
 		for ( j = 0; j < flid->time_axis->n_bins-1; j++ ) {
 			fprintf(stream_out, "%u,", flid->counts[i][j]);
