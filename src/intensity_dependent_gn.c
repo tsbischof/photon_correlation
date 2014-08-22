@@ -225,11 +225,7 @@ int idgn_fprintf(FILE *stream_out, idgn_t const *idgn) {
 		fprintf(stream_out, "%lld,%lld,",
 				idgn->intensities->bin_edges[i],
 				idgn->intensities->bin_edges[i+1]);
-		if ( i == 0 ) {
-				fprintf(stream_out, "%lld,", idgn->window.width);
-		} else {
-				fprintf(stream_out, ",");
-		}
+		fprintf(stream_out, "%lld,", idgn->window.width);
 		fprintf(stream_out, "%llu,", idgn->windows_seen->counts[i]);
 
 		histogram_gn_fprintf_counts(stream_out, idgn->histograms[i]);

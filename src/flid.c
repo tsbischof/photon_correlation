@@ -230,11 +230,7 @@ int flid_fprintf(FILE *stream_out, flid_t const *flid) {
 				flid->intensity_axis->bin_edges[i],
 				flid->intensity_axis->bin_edges[i+1]);
 
-		if ( i == 0 ) {
-			fprintf(stream_out, "%lld,", flid->window.width);
-		} else {
-			fprintf(stream_out, ",");
-		}
+		fprintf(stream_out, "%lld,", flid->window.width);
 
 		for ( j = 0; j < flid->time_axis->n_bins-1; j++ ) {
 			fprintf(stream_out, "%u,", flid->counts[i][j]);
