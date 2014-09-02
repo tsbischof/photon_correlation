@@ -57,11 +57,14 @@ int main(int argc, char *argv[]) {
 "photons are presented in temporal order.\n"
 "\n"
 "To mimic the start-stop mode of the original correlators, pass --start-stop.\n"
-"as an argument.\n",
+"as an argument (only valid for channel 0 as start and channel 1 as stop). \n"
+"Alterately, use --waiting-time to produce the waiting times between all\n"
+"successive photons (valid for all numbers of channels).\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_ORDER,
 			OPT_PRINT_EVERY, OPT_POSITIVE_ONLY, OPT_START_STOP,
+			OPT_WAITING_TIME,
 			OPT_QUEUE_SIZE,
 			OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
 			OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE, 

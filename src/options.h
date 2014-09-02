@@ -83,6 +83,7 @@ typedef struct {
 	unsigned long long min_pulse_distance;
 	int positive_only;
 	int start_stop;
+	int waiting_time;
 
 /* Intensity */
 	unsigned long long bin_width;
@@ -157,6 +158,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_MAX_TIME_DISTANCE, OPT_MIN_TIME_DISTANCE,
 		OPT_MAX_PULSE_DISTANCE, OPT_MIN_PULSE_DISTANCE,
 		OPT_POSITIVE_ONLY, OPT_START_STOP,
+		OPT_WAITING_TIME,
 		OPT_BIN_WIDTH, OPT_COUNT_ALL,
 		OPT_TIME, OPT_PULSE, OPT_TIME_SCALE, OPT_PULSE_SCALE,
 		OPT_INTENSITY,

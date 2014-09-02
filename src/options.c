@@ -125,12 +125,15 @@ static pc_option_t pc_options_all[] = {
 			"is primarily useful for calculating correlations\n"
 			"on a logarithmic scale."},
 	{'S', "S", "start-stop",
-			"Gather photons from each channel, and only\n"
-			"emit a result when enough photons have been\n"
-			"collected to produce a correlation. Since\n"
-			"photons arriving on a single channel can\n"
-			"override previous photons, not all pairs\n"
-			"will be counted."},
+			"Correlate photons arriving on channel 0 with\n"
+			"those arriving on channel 1, in that order.\n"
+			"This simulates the behavior of a start-stop\n"
+			"correlator as would be implemented by using\n"
+			"two signal channels on a two-channel PicoHarp."},
+	{'k', "k", "waiting-time",
+			"Correlate each photon with the next photon\n"
+			"to arrive, to produce the waiting-time\n"
+			"distribution for the data."},
 	{'w', "w:", "bin-width",
 			"The width of the time bin for processing \n"
 			"photons. For t2 mode, this is a number of\n"
@@ -257,6 +260,7 @@ static struct option pc_options_long[] = {
 	{"min-pulse-distance", required_argument, 0, 'E'},
 	{"positive-only", no_argument, 0, 'P'},
 	{"start-stop", no_argument, 0, 'S'},
+	{"waiting-time", no_argument, 0, 'k'},
 
 /* Intensity */ 
 	{"bin-width", required_argument, 0, 'w'},
@@ -364,6 +368,7 @@ void pc_options_default(pc_options_t *options) {
 	options->min_pulse_distance = 0;
 	options->positive_only = false;
 	options->start_stop = false;
+	options->waiting_time = false;
 
 	options->bin_width = 0;
 	options->count_all = false;
@@ -590,6 +595,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'S':
 				options->start_stop = true;
+				break;
+			case 'k':
+				options->waiting_time = true;
 				break;
 			case 'f':
 				options->set_start = true;

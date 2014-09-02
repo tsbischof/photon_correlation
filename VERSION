@@ -1,5 +1,9 @@
+v4.1 (2014-09-02)
+
+Added a waiting-time correlator (available in photon_correlate).
+
+--------------------------------------------------------------------------------
 v4.0 (2014-07-25)
-Added manuals for all programs.
 
 Added two new programs, photon_flid and photon_intensity_dependent_gn.
 --------------------------------------------------------------------------------

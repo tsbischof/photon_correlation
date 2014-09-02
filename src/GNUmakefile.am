@@ -19,7 +19,7 @@ libphoton_correlation_a_SOURCES = correlate.c error.c files.c flid.c gn.c \
 		correlation/correlation.c correlation/correlator.c \
 		correlation/intensity.c correlation/multi_tau.c \
 		correlation/photon.c correlation/photon_gn.c \
-		correlation/start_stop.c \
+		correlation/start_stop.c correlation/waiting_time.c \
 		histogram/edges.c histogram/histogram_gn.c \
 		histogram/photon.c histogram/values_vector.c \
 		photon/conversions.c photon/offsets.c \
@@ -53,8 +53,8 @@ nobase_pkginclude_HEADERS = correlate.h error.h files.h gn.h  \
 		combinatorics/permutations.h combinatorics/range.h \
 		correlation/correlation.h correlation/correlator.h \
 		correlation/intensity.h correlation/multi_tau.h \
-		correlation/photon.h correlation/photon_gn.h \ 
-		correlation/start_stop.h \
+		correlation/photon.h correlation/photon_gn.h \
+		correlation/start_stop.h correlation/waiting_time.h \
 		histogram/edges.h histogram/histogram_gn.h \
 		histogram/photon.h histogram/values_vector.h \
 		photon/conversions.h photon/offsets.h photon/photon.h \

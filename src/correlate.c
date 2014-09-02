@@ -32,12 +32,14 @@
 #include "correlate.h"
 #include "correlation/photon.h"
 #include "correlation/start_stop.h"
-#include "limits.h"
+#include "correlation/waiting_time.h"
 
 int correlate_dispatch(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
 	if ( options->start_stop ) {
 		return(correlate_start_stop(stream_in, stream_out, options));
+	} else if ( options->waiting_time ) {
+		return(waiting_time(stream_in, stream_out, options));
 	} else {
 		return(correlate_photon(stream_in, stream_out, options));
 	}
