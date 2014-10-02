@@ -24,12 +24,11 @@ def g2_from_stream(stream):
 
     return(result)
 
-def plot_g2s(g2s):
+def plot_g2s(g2s, corr=(0, 1)):
     channels = max(map(max, g2s.keys()))+1
 
     plt.clf()
 
-    corr = (0, 1)
     g2 = g2s[corr]
 
     pulse_bins = set(map(lambda x: x[0], g2))
@@ -56,11 +55,15 @@ if __name__ == "__main__":
 
     parser.add_argument("files", type=str, nargs="*",
                         help="Filenames containing g2 data to plot.")
+    parser.add_argument("--corr", type=str, default="0,1",
+                        help="Which two channels to correlate.")
 
     args = parser.parse_args()
+
+    corr = tuple(map(int, args.corr.split(",")))
 
     for filename in args.files:
         with open(filename) as stream_in:
             g2s = g2_from_stream(stream_in)
 
-        plot_g2s(g2s)
+        plot_g2s(g2s, corr=corr)

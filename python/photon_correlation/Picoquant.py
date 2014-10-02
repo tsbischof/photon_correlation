@@ -1,151 +1,122 @@
+try:
+    import configparser
+    import io
+except:
+    import StringIO as io
+    import ConfigParser as configparser
+
 import subprocess
-import os
-import re
-import time
 import csv
-import logging
 
-from photon_correlation import modes, files, photon, interactive
-
-class Picoquant(photon.PhotonStream):
-    def __init__(self, filename, channels=None, mode=None, decode=True,
-                 print_every=None):
-        super(Picoquant, self).__init__()
-        if not os.path.isfile(filename):
-            raise(OSError("File does not exist: {0}".format(filename)))
+class FakeIniSection(object):
+    """
+    Wrapper to enable configparser to parse a file without sections.
+    """
+    def __init__(self, fp):
+        self.fp = fp
+        self.sechead = '[header]\n'
+    def readline(self):
+        if self.sechead:
+            try:
+                return(self.sechead)
+            finally:
+                self.sechead = None
         else:
-            self.filename = filename
+            return(self.fp.readline())
 
-        if mode:
-            self.mode = mode
-        else:
-            self.mode = modes.guess_mode(filename)
+class Picoquant(object):
+    """
+    Base class for Picoquant data. This includes:
+    1. Common header
+    2. Hardware header
+    3. Mode header.
+    4. Data
 
-        if channels:
-            self.channels = channels
-        else:
-            self.channels = modes.guess_channels(filename)
-
-        self._resolution = None
+    Additionally, various helper routines are used to decode information
+    about the files, including resolution and mode.
+    """
+    def __init__(self, filename):
+        self._filename = filename
         self._header = None
-
-        self._stream = None
-        self._stdout = None
-        self._stderr = None
-
-        self.decode = decode
-
-        self.print_every = print_every
-        self.index = 0
+        self._resolution = None
+        self._data = None
+        self._mode = None
 
     def header(self):
         if not self._header:
-            stdout, stderr = subprocess.Popen(
-                [files.PICOQUANT,
-                 "--file-in", self.filename,
+            header_raw = subprocess.Popen(
+                ["picoquant",
+                 "--file-in", self._filename,
                  "--header-only"],
-                stdout=subprocess.PIPE).communicate()
-            if stderr:
-                raise(Exception("Call to picoquant failed: {0}".format(stderr)))
+                stdout=subprocess.PIPE).communicate()[0]
 
-            self._header = dict()
-            for line in stdout.decode().split("\n"):
-                try:
-                    parsed = re.search("(?P<name>.+) = (?P<value>.+)", line)
-                    self._header[parsed.group("name")] = parsed.group("value")
-                except AttributeError:
-                    pass
+            self._header = configparser.ConfigParser()
+            self._header.readfp(FakeIniSection(io.StringIO(header_raw)))
 
         return(self._header)
 
+    def repetition_rate(self):
+        """
+        Use the sync channel (or channel 0, if no sync) to determine
+        the repetition rate of the laser.
+        """
+        sync_rate = None
+        if self.header().has_option("header", "syncrate"):
+            return(self.header().getfloat("header", "syncrate"))
+        else:
+            return(self.header().getfloat("header", "inprate[0]"))
+    
+    def channels(self):
+        """
+        Return the number of signal channels present in the device.
+        """
+        return(self.header().getint("header", "inputchannelspresent"))
+
     def resolution(self):
         if not self._resolution:
-            stdout, stderr = subprocess.Popen(
-                [files.PICOQUANT,
-                 "--file-in", self.filename,
+            resolution_raw = subprocess.Popen(
+                ["picoquant",
+                 "--file-in", self._filename,
                  "--resolution-only"],
-                stdout=subprocess.PIPE).communicate()
+                stdout=subprocess.PIPE).communicate()[0]
 
-            if stderr:
-                raise(Exception("Call to picoquant failed: {0}".format(stderr)))
-
-            self._resolution = list()
-            for line in stdout.decode().split("\n"):
-                if self.mode in modes.TTTR:
-                    try:
-                        raw_value = float(line)
-
-                        if raw_value.is_integer():
-                            self._resolution.append(int(raw_value))
-                        else:
-                            self._resolution.append(raw_value)
-                    except ValueError:
-                        pass
-                else:
-                    # Interactive or continuous
-                    try:
-                        raw_values = next(csv.reader(line.split("\n")))
-                        
-                        curve = int(raw_values[0])
-                        resolution = float(raw_values[1])
-                        if resolution.is_integer():
-                            self._resolution.append((curve, int(resolution)))
-                        else:
-                            self._resolution.append((curve, resolution))
-                    except:
-                        pass
-
-            if len(self._resolution) == 1:
-                self._resolution = self._resolution[0]
-            else:
+            if "," in resolution_raw:
+                # curves
+                self._resolution = list()
+                for curve, resolution in csv.reader(\
+                    io.StringIO(resolution_raw)):
+                    self._resolution.append((int(curve),
+                                             float(resolution)))
                 self._resolution = tuple(self._resolution)
+            else:
+                # single result
+                self._resolution = float(resolution_raw)
 
         return(self._resolution)
 
+    def mode(self):
+        if not self._mode:
+            self._mode = subprocess.Popen(
+                ["picoquant",
+                 "--file-in", self._filename,
+                 "--mode-only"],
+                stdout=subprocess.PIPE).communicate()[0].strip()
+
+        return(self._mode)
+
+    def integration_time(self):
+        """
+        Return the integration time, in ms.
+        """
+        return(self.header().getint("header", "stopafter"))
+
     def __iter__(self):
-        return(self)
+        data = subprocess.Popen(
+            ["picoquant", 
+             "--file-in", self._filename],
+            stdout=subprocess.PIPE)
+        return(csv.reader(data.stdout))
 
-    def __next__(self):
-        if not self._stream:
-            self._stdout, self._stderr = subprocess.Popen(
-                [files.PICOQUANT,
-                 "--file-in", self.filename],
-                stdout=subprocess.PIPE,
-                bufsize=4096).communicate()
-            
-            if self.mode in modes.TTTR:
-                self._stream = map(lambda x: photon.Photon(mode=self.mode,
-                                                           string=x.decode(),
-                                                           decode=self.decode),
-                                   self._stdout.splitlines())
-            elif self.mode == modes.INTERACTIVE:
-                self._stream = map(
-                    lambda x: interactive.InteractiveBin(string=x.decode()),
-                    self._stdout.splitlines())
-            else:
-                raise(ValueError("Mode not recognized: {0}".format(self.mode)))
-
-        if self._stderr:
-            raise(IOError("Call to picoquant failed: {0}".format(
-                self._stderr)))
-
-        try:
-            self.index += 1
-            if self.print_every and self.index % self.print_every == 0:
-                logging.info("{0}: (picoquant) Record {1:20d}".format(
-                    time.strftime("%Y.%m.%d %H.%M.%S"),
-                    self.index))
-            return(next(self._stream))
-        except StopIteration:
-            self._stream = None
-            raise(StopIteration)
-                
-
-if __name__ == "__main__":
-    for filename in ["v20.phd", "v20.pt2"]:
-        print(filename)
-        p = Picoquant(filename)
-        print(p.resolution())
-        print(p.header())
-        for index, line in zip(range(10), p):
-            print(line)
+##if __name__ == "__main__":
+##    pq = Picoquant("20130116/qdv1295_633nm_1mhz_dot01.ht3")
+##    print(pq.header().get_section("header"))

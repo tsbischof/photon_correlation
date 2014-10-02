@@ -54,7 +54,7 @@ typedef struct {
 
 	double ***signal;
 	double **accumulated;
-	unsigned int *pushes;
+	unsigned long long *pushes;
 	double **averages;
 
 	double ****g2;
