@@ -58,24 +58,6 @@ def intensity(data_filename, dst_filename=None, bin_width=50000,
 
     subprocess.Popen(intensity_cmd, stdin=photons.stdout).wait()
 
-def apply_t3_time_offsets(photons, time_offsets, repetition_rate):
-    if time_offsets.all_same():
-        t2 = subprocess.Popen(["photons",
-                               "--mode", "t3",
-                               "--convert", "t2",
-                               "--time-origin", str(time_offsets[0]),
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=photons.stdout,
-                              stdout=subprocess.PIPE)
-        t3 = subprocess.Popen(["photons",
-                               "--mode", "t2",
-                               "--convert", "t3",
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=t2.stdout,
-                              stdout=subprocess.PIPE)
-
-    return(t3)
-
 def number_to_channels(photons, correlate=False):
     cmd = ["photon_number_to_channels"]
 
@@ -83,16 +65,6 @@ def number_to_channels(photons, correlate=False):
         cmd.append("--correlate-successive")
 
     return(subprocess.Popen(cmd, stdin=photons.stdout, stdout=subprocess.PIPE))
-
-def convert_mode(photons, src_mode, dst_mode, repetition_rate):
-    cmd = ["photons",
-           "--mode", src_mode,
-           "--convert", dst_mode,
-           "--repetition-rate", str(repetition_rate)]
-
-    return(subprocess.Popen(cmd,
-                            stdin=photons.stdout,
-                            stdout=subprocess.PIPE))
 
 def gn(data_filename, dst_dir=None,
        photon_mode=None, gn_mode=None,
@@ -227,30 +199,6 @@ def gn(data_filename, dst_dir=None,
                     logging.info("Compressing {}".format(dst))
                     subprocess.Popen(["bzip2", dst]).wait()
 
-def intensity_g2(src_filename, dst_filename,
-                 channels=None,
-                 mode=None, bin_width=None):
-    logging.info("Calculating intensity g2 for {} with bin width {}".format(
-        src_filename, bin_width))
-
-    pq = Picoquant(src_filename)
-
-    if mode is None:
-        mode = pq.mode()
-
-    if channels is None:
-        channels = pq.channels()
-
-    photons = picoquant(src_filename)
-    
-    cmd = ["photon_intensity_correlate",
-           "--mode", mode,
-           "--bin-width", str(bin_width),
-           "--channels", str(channels),
-           "--file-out", dst_filename]
-
-    subprocess.Popen(cmd, stdin=photons.stdout).wait()
-
 def flid(src_filename, dst_filename, intensity_bins,
          window_width, time_bins=None, time_offsets=None):
     logging.info("Calculating flid for {} with window width {}".format(
@@ -284,7 +232,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
          channels=None,
          time_bins=None, pulse_bins=None, mode=None,
          time_bin_width=1024):
-    logging.info("Calculating g{} for {}".format(order, src_filename))
+    logging.info("Calculating idg{} for {}".format(order, src_filename))
 
     pq = Picoquant(src_filename)
 
@@ -303,7 +251,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
             # Determine the resolution-limited time bins from the t3 file.
             resolution = int(pq.resolution())
 
-            if data_filename.endswith("ht3"):
+            if src_filename.endswith("ht3"):
                 n_bins = 2**15
             else:
                 raise(ValueError("Unsupported file type for "
@@ -330,6 +278,8 @@ def idgn(src_filename, dst_filename, intensity_bins,
             raise(ValueError("Unsupported mode for automatic time bins"
                              ": {}".format(mode)))
 
+    print(time_bins)
+
     gn_cmd = ["photon_intensity_dependent_gn",
               "--file-out", dst_filename,
               "--mode", mode,
@@ -347,3 +297,48 @@ def idgn(src_filename, dst_filename, intensity_bins,
 
     photons = picoquant(src_filename)
     gn = subprocess.Popen(gn_cmd, stdin=photons.stdout).wait()
+
+def max_counts(data_filename, window_width,
+               dst_filename=None, mode=None, channels=None):
+    logging.info("Calculating maximum counts of {} with bin width of {}".format(
+        data_filename, window_width))
+    pq = Picoquant(data_filename)
+
+    if dst_filename is None:    
+        dst_filename = os.path.join("{}.max_counts.run".format(data_filename),
+                                    "max_counts.{}".format(window_width))
+
+    root_dir =  os.path.split(dst_filename)[0]
+
+    if not os.path.isdir(root_dir):
+        os.makedirs(root_dir)
+
+    if channels is None:
+        channels = pq.channels()
+
+    if mode is None:
+        mode = pq.mode()
+
+    photons = picoquant(data_filename)
+
+    intensity_cmd = ["photon_intensity",
+                     "--bin-width", str(window_width),
+                     "--mode", mode,
+                     "--channels", str(channels)]
+
+    intensity = subprocess.Popen(intensity_cmd,
+                                 stdin=photons.stdout,
+                                 stdout=subprocess.PIPE)
+
+    max_bin = (0, 0)
+    max_counts = 0
+
+    for line in csv.reader(intensity.stdout):
+        counts = sum(map(int, line[2:]))
+        if counts > max_counts:
+            max_bin = line[:2]
+            max_counts = counts
+
+    with open(dst_filename, "w") as stream_out:
+        writer = csv.writer(stream_out)
+        writer.writerow(max_bin + [str(max_counts)])

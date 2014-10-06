@@ -3,57 +3,13 @@ import fractions
 
 import matplotlib.pyplot as plt
 
+from GN import GN
 from util import *
 
 t3_center = (-0.5, 0.5)
 t3_side = (0.5, 1.5)
 
-class G2(object):
-    def __init__(self, filename=None, run_dir=None, stream=None):
-        self._counts = dict()
-
-        self._center_side_ratios = None
-        self._center_side_ratio = None
-        self._autocorrelation = None
-
-        if run_dir is not None:
-            self.run_dir = run_dir
-            self.filename = "g2"
-            
-            self.from_file(os.path.join(self.run_dir, self.filename))
-        elif filename is not None:
-            self.run_dir, self.filename = os.path.split(filename)
-
-            self.from_file(os.path.join(self.run_dir, self.filename))
-        elif stream is not None:
-            self.run_dir = run_dir
-            self.filename = filename
-
-            self.from_stream(stream)
-        else:
-            pass
-
-    def __getitem__(self, correlation):
-        return(self._counts[correlation])
-
-    def __setitem__(self, correlation, gn):
-        self._counts[correlation] = gn
-
-    def __iter__(self):
-        for correlation in sorted(self._counts.keys()):
-            yield(correlation, self._counts[correlation])
-
-    def counts(self):
-        if not self._counts:
-            self.from_file()
-
-        return(self._counts)
-
-class G2_T3(G2):
-    def from_file(self, filename):
-        with open(filename) as stream_in:
-            return(self.from_stream(csv.reader(stream_in)))
-
+class G2_T3(GN):
     def from_stream(self, stream_in):
         self._counts = dict()
 
@@ -69,15 +25,27 @@ class G2_T3(G2):
             else:
                 counts = float(counts)
 
-            if not correlation in self._counts.keys():
+            if not correlation in self._counts:
                 self._counts[correlation] = dict()
                 
-            if not pulse_bin in self._counts[correlation].keys():
+            if not pulse_bin in self._counts[correlation]:
                 self._counts[correlation][pulse_bin] = dict()
 
             self._counts[correlation][pulse_bin][time_bin] = counts
 
         return(self)
+
+    def to_stream(self):
+        for correlation in sorted(self._counts):
+            for pulse_bin in sorted(self[correlation]):
+                for time_bin in sorted(self[correlation][pulse_bin]):
+                    line = itertools.chain(
+                        correlation,
+                        pulse_bin,
+                        time_bin,
+                        [self[correlation][pulse_bin][time_bin]])
+                    
+                    yield(line)
 
     def pulse_bin_counts(self, correlation, pulse_bin):
         return(sum(self.counts()[correlation][pulse_bin].values()))
@@ -200,7 +168,7 @@ class G2_T3(G2):
 
         return(result)
 
-class G2_T2(G2):       
+class G2_T2(GN):       
     def from_file(self, filename, int_counts=True):
         with open(filename) as stream_in:
             return(self.from_stream(csv.reader(stream_in),
@@ -285,4 +253,7 @@ class G2_T2(G2):
         fig.tight_layout()
     
         return(fig)
-    
+
+if __name__ == "__main__":
+    g2 = G2_T3(filename="/home/tsbischof/Documents/data/microscopy/analysis/triexciton/2014-09-04_oc2014-04-08/oc2014-04-08_1e-5_dot_009_250nW_000.ht3.g2.run/g2")
+    g2.to_file("/home/tsbischof/tmp/blargh.g2")

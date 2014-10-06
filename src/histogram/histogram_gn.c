@@ -342,7 +342,7 @@ int histogram_gn_fprintf(FILE *stream_out, histogram_gn_t *hist) {
 
 			for ( i = 0; i < hist->dimensions; i++ ) {
 				if ( hist->edges[i]->print_label ) {
-					fprintf(stream_out, ",%"PRIu32,
+					fprintf(stream_out, ",%u",
 							hist->channels_vector->values[channel_index++]);
 				}
 
@@ -368,6 +368,7 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
  * where we only need the bin information once.
  */
 	int i, j, k;
+	int correlation_index = 0;
 
 /* First row is the channels. */
 	for ( i = 0; i < blanks; i++ ) {
@@ -378,13 +379,18 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 	
 	j = 0;
 	while ( combination_next(hist->channels_vector) == PC_SUCCESS ) {
+		/* Since we do not have a way to check that there is another correlation
+		   after this one, only print a comma at the beginning of a correlation.
+		   This means we need to keep track of _not_ being the first 
+		   correlation, i.e. j != 0.
+		 */
 		if ( j++ != 0 ) {
 			fprintf(stream_out, ",");
 		}
 
 		for ( i = 0; i < hist->n_bins; i++ ) {
 			fprintf(stream_out, "%u",
-					hist->channels_vector->values[0]);
+					hist->channels_vector->values[correlation_index]);
 
 			if ( i + 1 != hist->n_bins ) {
 				fprintf(stream_out, ",");
@@ -393,6 +399,13 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 	}
 
 	fprintf(stream_out, "\n");
+
+/* Only the dimensions with printed labels are counted toward the correlation,
+   since we may have two or more dimensions associated with a given channel.
+   For example, t3 mode data has pulse and time dimensions, but only the pulse
+   dimension gets labeled.
+ */
+	correlation_index++;
 
 /* Now the edges */
 	for ( i = 0; i < hist->dimensions; i++ ) {
@@ -412,7 +425,7 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 	
 				for ( k = 0; k < hist->n_bins; k++ ) {
 					fprintf(stream_out, "%u",
-							hist->channels_vector->values[i+1]);
+							hist->channels_vector->values[correlation_index]);
 		
 					if ( k + 1 != hist->n_bins ) {
 						fprintf(stream_out, ",");
@@ -470,6 +483,10 @@ int histogram_gn_fprintf_bins(FILE *stream_out, histogram_gn_t const *hist,
 			}
 		}
 		fprintf(stream_out, "\n");
+
+		if ( hist->edges[i]->print_label ) {
+			correlation_index++;
+		}
 
 	}
 

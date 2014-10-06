@@ -81,7 +81,8 @@ multi_tau_g2cn_t *multi_tau_g2cn_alloc(unsigned int const binning,
 		mt->bin_width = bin_width;
 	
 		mt->intensity = (double *)malloc(sizeof(double)*mt->channels);
-		mt->pushes = (unsigned int *)malloc(sizeof(unsigned int)*mt->depth);
+		mt->pushes = (unsigned long long *)malloc(sizeof(unsigned long long)
+				*mt->depth);
 
 		if ( mt->intensity == NULL || mt->pushes == NULL ) {
 			error("Could not allocate intensity or pushes.\n");

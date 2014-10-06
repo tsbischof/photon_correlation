@@ -17,10 +17,12 @@ class Lifetime(object):
         self.times = times
         
         if self.times is None:
-            self.times = [i*self.resolution for i in range(len(counts))]
+            self.times = [(i*self.resolution,
+                           (i+1)*self.resolution)
+                          for i in range(len(counts))]
 
         if resolution is None:
-            self.resolution = self.times[1] - self.times[0]
+            self.resolution = self.times[0][1] - self.times[0][0]
         
         self.counts = counts
 
@@ -37,6 +39,9 @@ class Lifetime(object):
             counts.append(mine + theirs)
         
         return(Lifetime(counts, times=self.times))
+
+    def __iter__(self):
+        return(iter(zip(self.times, self.counts)))
 
     def normalized(self, key=max):
         """
@@ -58,7 +63,8 @@ class Lifetime(object):
         Collect every n bins and add them together. Return the result as a new
         lifetime object.
         """
-        times = smooth(self.times, n=n)
+        times = list(zip(smooth(map(lambda x: x[0], self.times, n=n)),
+                         smooth(map(lambda x: x[1], self.times, n=n))))
         counts = rebin(self.counts, n=n)
 
         return(Lifetime(counts, times=times))
@@ -143,9 +149,6 @@ class Lifetime(object):
                 s = math.sqrt((ssyy - ssxy**2/ssxx**2)/(n-2))
                 intercept_error = s*math.sqrt(1.0/n + meanx**2/ssxx)
                 slope_error = s/math.sqrt(ssxx)
-
-##            print(fit[0], -slope_error/fit[0])
-##            print(-1/fit[0], 1/fit[0]*(slope_error/fit[0]))
             
                 return(fit, func, 1/fit[0]*(slope_error/fit[0]))
             except ZeroDivisionError:
@@ -182,7 +185,7 @@ class Lifetime(object):
         if sum(self.counts) == 0:
             return(0)
         else:
-            weighted_sum = sum(map(lambda c, t: c*t, \
+            weighted_sum = sum(map(lambda c, t: c*mean(t), \
                                    self.counts, self.times))            
             pure_sum = float(sum(self.counts))
             

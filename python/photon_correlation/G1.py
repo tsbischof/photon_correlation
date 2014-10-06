@@ -1,5 +1,6 @@
 import csv
 import os
+import itertools
 
 import matplotlib.pyplot as plt
 
@@ -7,7 +8,8 @@ from Lifetime import Lifetime
 from util import *
 
 class G1(object):
-    def __init__(self, filename=None, run_dir=None, stream=None):
+    def __init__(self, filename=None, run_dir=None, stream=None,
+                 bins=None, counts=None):
         self.lifetimes = dict()
 
         if run_dir is not None:
@@ -24,6 +26,10 @@ class G1(object):
             self.filename = filename
 
             self.from_stream(stream)
+        elif bins is not None and counts is not None:
+            stream = map(lambda x, y: list(x) + [y], zip(*bins), counts)
+
+            self.from_stream(stream)
         else:
             raise(ValueError("Must specify a run dir, filename, or data."))
         
@@ -34,29 +40,40 @@ class G1(object):
         """
         curves = dict()
         
-        for line in stream_in:              
+        for line in stream_in:
             curve = int(line[0])
             time_left = float(line[1])
             time_right = float(line[2])
             counts = int(line[3])
 
-            if not curve in curves.keys():
+            if not curve in curves:
                 curves[curve] = list()
 
             curves[curve].append(((time_left, time_right), counts))
 
         for curve, g1 in curves.items():
-            times = list(map(lambda x: x[0][0], g1))
+            times = list(map(lambda x: x[0], g1))
             counts = list(map(lambda x: x[1], g1))
             
             self[curve] = Lifetime(counts, times=times)
 
-        return(self)
-            
+        return(self) 
 
     def from_file(self, filename):
         with open(filename) as stream_in:
             return(self.from_stream(csv.reader(stream_in)))
+
+    def to_stream(self, stream_out):
+        writer = csv.writer(stream_out)
+        
+        for curve in sorted(self.lifetimes):
+            for time_bin, counts in self[curve]:
+                writer.writerow(list(map(str,
+                                         [curve] + list(time_bin) + [counts])))
+    
+    def to_file(self, filename):
+        with open(filename, "w") as stream_out:
+            self.to_stream(stream_out)
         
     def __setitem__(self, index, value):
         self.lifetimes[index] = value
