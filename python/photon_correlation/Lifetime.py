@@ -128,7 +128,7 @@ class Lifetime(object):
                 fit_times.append(fit_time)
                 fit_counts.append(fit_count)
 
-        fit_times = numpy.array(fit_times)
+        fit_times = numpy.array(map(mean, fit_times))
         fit_counts = numpy.log(fit_counts)
 
         fit = numpy.polyfit(fit_times, fit_counts, order)

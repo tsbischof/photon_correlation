@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "photon/stream.h"
 #include "error.h"
 #include "modes.h"
+#include "photon/queue.h"
 
 int intensity_dependent_gn(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
@@ -103,28 +104,26 @@ idgn_t *idgn_alloc(int const mode, int const order, int const channels,
 	}
 
 	if ( idgn != NULL ) {
-		idgn->current_gn = photon_gn_alloc(mode, order, channels,
-					queue_size, time_limits, pulse_limits);
+		idgn->photon_queue = photon_queue_alloc(mode, queue_size);
 
-		if ( idgn->current_gn == NULL ) {
+		if ( idgn->photon_queue == NULL ) {
 			idgn_free(&idgn);
 		}
 	}
 
 	if ( idgn != NULL ) {
-		idgn->histograms = (histogram_gn_t **)malloc(sizeof(histogram_gn_t *)
-				*idgn->intensity_bins);
+		idgn->gns = (photon_gn_t **)malloc(sizeof(photon_gn_t *)*
+				idgn->intensity_bins);
 
-		if ( idgn->histograms == NULL ) {
+		if ( idgn->gns == NULL ) {
 			idgn_free(&idgn);
 		} else {
 			for ( i = 0; idgn != NULL && i < idgn->intensity_bins; i++ ) {
-				idgn->histograms[i] = histogram_gn_alloc(mode, order,
-						channels, 
-						SCALE_LINEAR, time_limits, 
-						SCALE_LINEAR, pulse_limits);
+				idgn->gns[i] = photon_gn_alloc(mode, order,
+						channels, queue_size,
+						time_limits, pulse_limits);
 
-				if ( idgn->histograms[i] == NULL ) {
+				if ( idgn->gns[i] == NULL ) {
 					idgn_free(&idgn);
 				}
 			}
@@ -156,10 +155,10 @@ void idgn_init(idgn_t *idgn, long long const window_width) {
 
 	photon_window_init(&(idgn->window), window_width, false, 0, false, 0);
 
-	photon_gn_init(idgn->current_gn);
+	queue_init(idgn->photon_queue);
 
 	for ( i = 0; i < idgn->intensity_bins; i++ ) {
-		histogram_gn_init(idgn->histograms[i]);
+		photon_gn_init(idgn->gns[i]);
 	}
 
 	counts_init(idgn->windows_seen);
@@ -173,11 +172,10 @@ int idgn_push(idgn_t *idgn, photon_t const *photon) {
 				idgn->window_dim(photon));
 
 		if ( status == PC_RECORD_IN_WINDOW ) {
-			idgn->current_counts++;
-			photon_gn_push(idgn->current_gn, photon);
+			queue_push(idgn->photon_queue, photon);
 			return(PC_SUCCESS);
 		} else if ( status == PC_RECORD_AFTER_WINDOW ) {
-			idgn_flush(idgn);
+			idgn_update(idgn);
 			photon_window_next(&(idgn->window));
 		} else {
 			error("Photon stream does not appear to be time-ordered.\n");
@@ -186,31 +184,48 @@ int idgn_push(idgn_t *idgn, photon_t const *photon) {
 	}
 }
 
-int idgn_flush(idgn_t *idgn) {
+int idgn_update(idgn_t *idgn) {
+	/* Take the current accumulated photons and add them to the appropriate
+	 * queue. We do not flush the gn, so we can use counts from consecutive
+	 * time windows.
+	 */
 	int result = PC_SUCCESS;
-	int index;
+	size_t counts = queue_size(idgn->photon_queue);
+	photon_t *photon;
+	int index = edges_int_index_linear(idgn->intensities, counts);
 
-	if ( idgn->current_counts != 0 ) {
-		index = edges_int_index_linear(idgn->intensities, idgn->current_counts);
+	if ( 0 <= index && index < idgn->intensity_bins ) {
+		debug("Updating index %d (%zu counts)\n", index, counts);
 
-		photon_gn_flush(idgn->current_gn);
+		counts_increment(idgn->windows_seen, index);
 
-		if ( 0 <= index && index < idgn->intensity_bins ) {
-			debug("Updating index %d (%lld counts)\n", 
-					index, idgn->current_counts);
-			histogram_gn_update(idgn->histograms[index],
-					idgn->current_gn->histogram);	
-			counts_increment(idgn->windows_seen, index);
-		} else {
-			error("Invalid intensity: %lld found, limits are (%lld, %lld)\n",
-					idgn->current_counts,
-					idgn->intensities->limits.lower,
-					idgn->intensities->limits.upper);
-			result = PC_ERROR_INDEX;
+		while ( queue_size(idgn->photon_queue) > 0 ) {
+			queue_front(idgn->photon_queue, (void *)&photon);
+			photon_gn_push(idgn->gns[index], photon);
+			queue_pop(idgn->photon_queue, NULL);
 		}
-	
-		photon_gn_init(idgn->current_gn);
-		idgn->current_counts = 0;
+	} else {
+		error("Invalid intensity: %zu found, limits are (%lld, %lld)\n",
+				counts,
+				idgn->intensities->limits.lower,
+				idgn->intensities->limits.upper);
+
+		queue_init(idgn->photon_queue);
+
+		result = PC_ERROR_INDEX;
+	}
+
+	return(result);
+}
+
+int idgn_flush(idgn_t *idgn) {
+	int i;
+	int result = PC_SUCCESS;
+
+	result = idgn_update(idgn);
+
+	for ( i = 0; i < idgn->intensity_bins; i++ ) {
+		photon_gn_flush(idgn->gns[i]);
 	}
 
 	return(result);
@@ -219,7 +234,7 @@ int idgn_flush(idgn_t *idgn) {
 int idgn_fprintf(FILE *stream_out, idgn_t const *idgn) {
 	unsigned int i;
 
-	histogram_gn_fprintf_bins(stream_out, idgn->histograms[0], 4);
+	photon_gn_fprintf_bins(stream_out, idgn->gns[0], 4);
 
 	for ( i = 0; i < idgn->intensity_bins; i++ ) {
 		fprintf(stream_out, "%lld,%lld,",
@@ -228,7 +243,7 @@ int idgn_fprintf(FILE *stream_out, idgn_t const *idgn) {
 		fprintf(stream_out, "%lld,", idgn->window.width);
 		fprintf(stream_out, "%llu,", idgn->windows_seen->counts[i]);
 
-		histogram_gn_fprintf_counts(stream_out, idgn->histograms[i]);
+		photon_gn_fprintf_counts(stream_out, idgn->gns[i]);
 	}
 	
 	return(ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS);
@@ -238,13 +253,15 @@ void idgn_free(idgn_t **idgn) {
 	unsigned int i;
 
 	if ( *idgn != NULL ) {
-		if ( (*idgn)->histograms != NULL ) {
+		if ( (*idgn)->gns != NULL ) {
 			for ( i = 0; i < (*idgn)->intensity_bins; i++ ) {
-				histogram_gn_free(&((*idgn)->histograms[i]));
+				photon_gn_free(&((*idgn)->gns[i]));
 			}
 
-			free((*idgn)->histograms);
+			free((*idgn)->gns);
 		}
+
+		queue_free(&((*idgn)->photon_queue));
 
 		counts_free(&((*idgn)->windows_seen));
 		edges_int_free(&((*idgn)->intensities));

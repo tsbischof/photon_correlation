@@ -1,8 +1,10 @@
 import csv
 
-from GN import GN
+import matplotlib.pyplot as plt
+import numpy
 
-from util import is_cross_correlation
+from GN import GN
+from util import is_cross_correlation, mean
 
 class G3_T3(GN):
     def from_stream(self, stream_in):
@@ -35,7 +37,9 @@ class G3_T3(GN):
             self._counts[correlation][p1][t1][p2][t2] = counts
 
     def to_stream(self):
-        for correlation, gn in self:
+        for correlation in self:
+            gn = self[correlation]
+            
             for p1 in sorted(gn):
                 for t1 in sorted(gn[p1]):
                     for p2 in sorted(gn[p1][t1]):
@@ -56,36 +60,53 @@ class G3_T3(GN):
                  "diagonal": 0,
                  "off-diagonal": 0}
 
-        for correlation, gn in self:
-            print(correlation, is_cross_correlation(correlation))
-            if is_cross_correlation(correlation):
-                for p1, p2, peak in [((-0.5, 0.5), (-0.5, 0.5), "center"),
-                                     ((-0.5, 0.5), (0.5, 1.5), "diagonal"),
-                                     ((0.5, 1.5), (1.5, 2.5), "off-diagonal")]:
-                    for t1 in gn[p1]:
-                        print(correlation)
-                        print(t1)
-                        print(gn[p1][t1][p2].items())
-                        peaks[peak] += sum(gn[p1][t1][p2].values())
+        for correlation in self.cross_correlations():
+            gn = self[correlation]
+            for p1, p2, peak in [((-0.5, 0.5), (-0.5, 0.5), "center"),
+                                 ((-0.5, 0.5), (0.5, 1.5), "diagonal"),
+                                 ((0.5, 1.5), (1.5, 2.5), "off-diagonal")]:
+                for t1 in gn[p1]:
+                    peaks[peak] += sum(gn[p1][t1][p2].values())
             
         return(peaks)
 
+    def make_figure(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        pulses, g3 = self.combine()
+
+        colorbar_ax = ax.imshow(g3,
+                                origin="lower",
+                                interpolation="none",
+                                extent=[pulses[0]-0.5, pulses[-1]+0.5,
+                                        pulses[0]-0.5, pulses[-1]+0.5])
+        ax.set_xlabel(r"$\Delta p_{1}$")
+        ax.set_ylabel(r"$\Delta p_{2}$")
+        
+        fig.colorbar(colorbar_ax)
+
+        return(fig)
+
+    def combine(self):
+        total_g3 = None
+        pulses = None
+        
+        for correlation in self.cross_correlations():
+            g3 = self[correlation]
+
+            if pulses is None:
+                pulses = list(map(mean, sorted(g3.keys())))
+                n_pulses = len(pulses)
+                print(pulses)
+                total_g3 = numpy.zeros((n_pulses, n_pulses))
+
+            for i0, p0 in enumerate(sorted(g3)):
+                for t0 in g3[p0]:
+                    for i1, p1 in enumerate(sorted(g3[p0][t0])):
+                        total_g3[i0,i1] += sum(g3[p0][t0][p1].values())
+
+        return(pulses, total_g3)
+
 class G3_T2(GN):
     pass
-
-if __name__ == "__main__":
-##    g3 = G3_T3(filename="/home/tsbischof/Documents/data/"
-##                "microscopy/analysis/triexciton/"
-##                "2014-09-04_oc2014-04-08/"
-##                "oc2014-04-08_1e-5_dot_009_250nW_000.ht3.idgn.run/"
-##                "g3.5000.threshold.0.70")
-
-    g3 = G3_T3(filename="/home/tsbischof/Documents/data/"
-                "microscopy/analysis/triexciton/"
-                "2014-09-04_oc2014-04-08/"
-                "oc2014-04-08_1e-5_dot_009_250nW_000.ht3.g3.run/"
-                "g3")
-
-    g3.to_file("/home/tsbischof/tmp/blargh.g3")
-
-##    print(g3.unique_peaks())

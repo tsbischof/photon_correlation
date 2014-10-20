@@ -13,13 +13,20 @@ import TD
 
 from util import *
 
-def picoquant(filename, print_every=100000):
-    cmd = ["picoquant", "--file-in", filename]
-
+def picoquant(filename, print_every=1000000):
+    cmd = ["picoquant"]
     if print_every > 0:
         cmd.extend(("--print-every", str(print_every)))
-
-    return(subprocess.Popen(cmd, stdout=subprocess.PIPE))
+        
+    if filename.endswith("bz2"):
+        photons = subprocess.Popen(["bunzip2", filename, "--stdout"],
+                                   stdout=subprocess.PIPE)
+        return(subprocess.Popen(cmd,
+                                stdin=photons.stdout,
+                                stdout=subprocess.PIPE))
+    else:
+        cmd.extend(["--file-in", filename])
+        return(subprocess.Popen(cmd, stdout=subprocess.PIPE))
 
 def intensity(data_filename, dst_filename=None, bin_width=50000,
               mode=None, channels=None, time_offsets=None,
@@ -277,8 +284,6 @@ def idgn(src_filename, dst_filename, intensity_bins,
         else:
             raise(ValueError("Unsupported mode for automatic time bins"
                              ": {}".format(mode)))
-
-    print(time_bins)
 
     gn_cmd = ["photon_intensity_dependent_gn",
               "--file-out", dst_filename,

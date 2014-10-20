@@ -36,7 +36,7 @@ class G2_T3(GN):
         return(self)
 
     def to_stream(self):
-        for correlation in sorted(self._counts):
+        for correlation in sorted(self):
             for pulse_bin in sorted(self[correlation]):
                 for time_bin in sorted(self[correlation][pulse_bin]):
                     line = itertools.chain(
@@ -87,13 +87,17 @@ class G2_T3(GN):
         """
         Add together all of the counts from the cross-correlations to get the
         resulting approximate autocorrelation.
-        """        
+        """
+        try:
+            self._autocorrelation
+        except:
+            self._autocorrelation = None
+            
         if self._autocorrelation is None:
             self._autocorrelation = dict()
             
-            for correlation, g2 in self:
-                if not is_cross_correlation(correlation):
-                    continue
+            for correlation in self.cross_correlations():
+                g2 = self[correlation]
 
                 for pulse_bin in g2.keys():
                     if not pulse_bin in self._autocorrelation.keys():
@@ -168,6 +172,19 @@ class G2_T3(GN):
 
         return(result)
 
+    def unique_peaks(self):
+        peaks = {"center": 0,
+                 "side": 0}
+
+        for correlation in self.cross_correlations():
+            gn = self[correlation]
+
+            for pulse_bin, peak in [((-0.5, 0.5), "center"),
+                                    ((0.5, 1.5), "side")]:
+                peaks[peak] += sum(gn[pulse_bin].values())
+                    
+        return(peaks)                                   
+                                  
 class G2_T2(GN):       
     def from_file(self, filename, int_counts=True):
         with open(filename) as stream_in:

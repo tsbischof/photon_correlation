@@ -39,6 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "histogram/edges.h"
 #include "correlation/photon_gn.h"
 #include "statistics/counts.h"
+#include "queue.h"
 
 typedef struct {
 	unsigned int intensity_bins;
@@ -46,11 +47,10 @@ typedef struct {
 
 	photon_window_t window;
 	photon_window_dimension_t window_dim;
-	
-	photon_gn_t *current_gn;
-	unsigned long long current_counts;
 
-	histogram_gn_t **histograms;
+	queue_t *photon_queue;
+
+	photon_gn_t **gns;
 	counts_t *windows_seen;
 
 	edges_int_t *intensities;
@@ -65,6 +65,7 @@ idgn_t *idgn_alloc(int const mode, int const order, int const channels,
 		limits_int_t const *intensity_limits);
 void idgn_init(idgn_t *idgn, long long const window_width);
 int idgn_push(idgn_t *idgn, photon_t const *photon);
+int idgn_update(idgn_t *idgn);
 int idgn_flush(idgn_t *idgn);
 int idgn_fprintf(FILE *stream_out, idgn_t const *idgn);
 void idgn_free(idgn_t **idgn);

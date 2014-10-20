@@ -5,9 +5,10 @@ import itertools
 import matplotlib.pyplot as plt
 
 from Lifetime import Lifetime
+from GN import GN
 from util import *
 
-class G1(object):
+class G1(GN):
     def __init__(self, filename=None, run_dir=None, stream=None,
                  bins=None, counts=None):
         self.lifetimes = dict()
@@ -81,6 +82,9 @@ class G1(object):
     def __getitem__(self, index):
         return(self.lifetimes[index])
 
+    def __delitem__(self, index):
+        del(self.lifetimes[index])
+
     def __iter__(self):
         for curve, lifetime in sorted(self.lifetimes.items()):
             yield(curve, lifetime)
@@ -100,7 +104,7 @@ class G1(object):
             if resolution is not None:
                 lifetime = lifetime.to_resolution(resolution)
                 
-            times = list(map(lambda x: x*1e-3, lifetime.times))
+            times = list(map(lambda x: x[0]*1e-3, lifetime.times))
             counts = lifetime.counts
                          
             ax.semilogy(times, counts, label=str(curve))
@@ -109,7 +113,7 @@ class G1(object):
 
             if my_max > max_xlim:
                 max_xlim = my_max
-
+                
         ax.set_xlabel("Time/ns")
         ax.set_ylabel("Counts")
         ax.set_xlim((0, max_xlim))
