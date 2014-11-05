@@ -104,6 +104,8 @@ def gn(data_filename, dst_dir=None,
     if photon_mode == "t3":
         if repetition_rate is None:
             repetition_rate = pq.repetition_rate()
+
+        repetition_time = 1e12/repetition_rate    
         
     if channels is None:
         channels = pq.channels()
@@ -113,6 +115,9 @@ def gn(data_filename, dst_dir=None,
         convert = False
     else:
         convert = True
+
+    if isinstance(time_bins, int):
+        time_bins = Limits(-repetition_time, repetition_time, n_bins=time_bins)
     
     if time_bins is None:
         if gn_mode == "t3" and order == 1:
@@ -127,16 +132,12 @@ def gn(data_filename, dst_dir=None,
 
             time_bins = Limits(0, resolution*n_bins, n_bins=n_bins)
         elif gn_mode == "t3" and order >= 2:
-            repetition_time = 1e12/repetition_rate
-
             bins_per_side = int(math.ceil(repetition_time/time_bin_width))
             n_bins = bins_per_side*2 + 1
             time_bound = bins_per_side*time_bin_width + time_bin_width/2
 
             time_bins = Limits(-time_bound, time_bound, n_bins=n_bins)
         elif gn_mode == "t2":
-            repetition_time = 1e12/repetition_rate
-
             bins_per_side = int(math.ceil(repetition_time/time_bin_width*1.5))
             n_bins = bins_per_side*2 + 1
             time_bound = bins_per_side*time_bin_width + time_bin_width/2

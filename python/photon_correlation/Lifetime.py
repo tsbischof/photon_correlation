@@ -2,6 +2,7 @@ import bisect
 import math
 
 import numpy
+import scipy.optimize
 
 from util import *
 
@@ -43,6 +44,9 @@ class Lifetime(object):
     def __iter__(self):
         return(iter(zip(self.times, self.counts)))
 
+    def time_bins(self):
+        return(map(mean, self.times))
+
     def normalized(self, key=max):
         """
         Return the normalized lifetime, based on the given function.
@@ -63,8 +67,8 @@ class Lifetime(object):
         Collect every n bins and add them together. Return the result as a new
         lifetime object.
         """
-        times = list(zip(smooth(map(lambda x: x[0], self.times, n=n)),
-                         smooth(map(lambda x: x[1], self.times, n=n))))
+        times = list(zip(smooth(map(lambda x: x[0], self.times), n=n),
+                         smooth(map(lambda x: x[1], self.times), n=n)))
         counts = rebin(self.counts, n=n)
 
         return(Lifetime(counts, times=times))
@@ -73,11 +77,13 @@ class Lifetime(object):
         """
         Return the counts associated with the given range of times.
         """
-        index_lower = bisect.bisect_left(self.times, lower)
-        index_upper = bisect.bisect_left(self.times, upper)
+        index_lower = bisect.bisect_left(map(lambda x: x[0], self.times),
+                                         lower[0])
+        index_upper = bisect.bisect_left(map(lambda x: x[0], self.times),
+                                         upper[0])
 
-        return(self.times[index_lower:index_upper],
-               self.counts[index_lower:index_upper])
+        return(Lifetime(self.counts[index_lower:index_upper],
+                        times=self.times[index_lower:index_upper]))
 
     def origin(self):
         """
@@ -116,19 +122,17 @@ class Lifetime(object):
         """
         Perform an exponential fit of the counts.
         """
-        origin = self.origin()
-
         fit_times = list()
         fit_counts = list()
 
         fit_data = self.fit_data(min_val, max_val)
 
-        for fit_time, fit_count in zip(*fit_data):
+        for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
             if fit_count != 0:
                 fit_times.append(fit_time)
                 fit_counts.append(fit_count)
 
-        fit_times = numpy.array(map(mean, fit_times))
+        fit_times = numpy.array(fit_times)
         fit_counts = numpy.log(fit_counts)
 
         fit = numpy.polyfit(fit_times, fit_counts, order)
@@ -155,7 +159,42 @@ class Lifetime(object):
                 return(fit, func, 0)
         else:
             
-            return(fit, func)        
+            return(fit, func)
+        
+    def biexponential_fit(self,
+                        min_val=min_val_default,
+                        max_val=max_val_default):
+        fit_times = list()
+        fit_counts = list()
+
+        fit_data = self.fit_data(min_val, max_val)
+
+
+        for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
+            if fit_count != 0:
+                fit_times.append(fit_time)
+                fit_counts.append(fit_count)
+
+        fit_times = numpy.array(fit_times)
+        fit_counts = numpy.array(fit_counts)
+
+        def biexponential(a1, k1, a2, k2):
+            return(lambda x: a1*numpy.exp(-k1*numpy.array(x))\
+                   +a2*numpy.exp(-k2*numpy.array(x)))
+
+        def error(params):
+            if any(map(lambda x: x < 0, params)):
+                return(float("inf"))
+            
+            data = fit_counts
+            model = biexponential(*params)(fit_times)
+##            return(sum(map(lambda x, y: abs((x-y)/x), data, model)))
+            return(sum(map(lambda x, y: (x-y)**2, data, model)))
+
+        fit = scipy.optimize.fmin(error, [1, 1e-3,
+                                          1, 1e-4])
+
+        return(fit, biexponential(*fit))        
 
     def lifetime(self, min_val=min_val_default, max_val=max_val_default,
                  error=False):
@@ -205,7 +244,7 @@ class Lifetime(object):
         the flat background, and remove it from the data.
         """
         max_counts = max(self.counts)
-        max_at = self.counts.index(max_counts)
+        max_at = list(self.counts).index(max_counts)
 
         if max_at == 0:
             return(self)
@@ -224,32 +263,29 @@ class Lifetime(object):
             
         return(Lifetime(list(map(apply_background, self.counts)),
                         times=self.times))
-                            
-        
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    
-    from G1 import G1
 
-    g1 = G1(run_dir="20130117/qdv1295_633nm_1mhz_dot13b.ht3.g1.run")
-    
-    lifetime = g1.combine().subtract_background(threshold=0.01\
-                                                ).to_resolution(1024)
+    def first_second_emission(self):
+        """
+        The lifetime represents counts collected from all types of photon
+        emission events. In number-resolved methods we can distinguish events
+        producing one, two, or more photons, which may contain distinct physics.
+        This method produces the lifetimes of the first and second emission
+        events, under the assumption that the lifetime represents emission
+        from an ensemble of emitters.
+        """
+        before = 0
+        after = sum(self.counts)
 
-    params, f, error = lifetime.exponential_fit(error=True)
-    print(params)
+        first = list()
+        second = list()
 
-    print(error)
-    
-    plt.clf()
-    plt.semilogy(lifetime.times, lifetime.counts)
-    plt.semilogy(lifetime.times, f(lifetime.times))
-    plt.semilogy(lifetime.times, \
-                 numpy.exp(numpy.poly1d((params[0]+7e-8,
-                                         params[1]))(\
-                                             lifetime.times)),
-                 color="r")
-    plt.xlim(0, 1e6)
-    plt.ylim(1, 1e4)
-    plt.show()
+        for point in self.counts:
+            first.append(point*after)
+            second.append(before*point)
 
+            before += point
+            after -= point
+
+        return(Lifetime(first, times=self.times),
+               Lifetime(second, times=self.times))
+ 

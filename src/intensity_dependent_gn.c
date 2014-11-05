@@ -197,7 +197,10 @@ int idgn_update(idgn_t *idgn) {
 	if ( 0 <= index && index < idgn->intensity_bins ) {
 		debug("Updating index %d (%zu counts)\n", index, counts);
 
-		counts_increment(idgn->windows_seen, index);
+		if ( counts != 0 ) {
+			/* Zero-count windows are not useful information. */
+			counts_increment(idgn->windows_seen, index);
+		}
 
 		while ( queue_size(idgn->photon_queue) > 0 ) {
 			queue_front(idgn->photon_queue, (void *)&photon);

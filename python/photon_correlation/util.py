@@ -38,7 +38,7 @@ def normalize(L, key=max):
     if my_key == 0:
         my_key = 1
 
-    return(map(lambda x: float(x)/my_key, L))
+    return(map(lambda x: x/float(my_key), L))
 
 def last_index(L, value):
     """
@@ -148,8 +148,10 @@ def neighbor_normalize(times, counts):
                     break
   
             if left is not None and right is not None:
-                dt = times[right] - times[left]
-                new_times.append(t)
+                dt = mean(times[right]) - mean(times[left])
+                new_left = mean([mean(times[left]), mean(t)])
+                new_right = mean([mean(t), mean(times[right])])
+                new_times.append((new_left, new_right))
                 new_counts.append(c/(dt*2.0))
 
     return(new_times, new_counts)

@@ -8,32 +8,7 @@ from Lifetime import Lifetime
 from GN import GN
 from util import *
 
-class G1(GN):
-    def __init__(self, filename=None, run_dir=None, stream=None,
-                 bins=None, counts=None):
-        self.lifetimes = dict()
-
-        if run_dir is not None:
-            self.run_dir = run_dir
-            self.filename = "g1"
-            
-            self.from_file(os.path.join(self.run_dir, self.filename))
-        elif filename is not None:
-            self.run_dir, self.filename = os.path.split(filename)
-
-            self.from_file(os.path.join(self.run_dir, self.filename))
-        elif stream is not None:
-            self.run_dir = run_dir
-            self.filename = filename
-
-            self.from_stream(stream)
-        elif bins is not None and counts is not None:
-            stream = map(lambda x, y: list(x) + [y], zip(*bins), counts)
-
-            self.from_stream(stream)
-        else:
-            raise(ValueError("Must specify a run dir, filename, or data."))
-        
+class G1(GN):       
     def from_stream(self, stream_in):
         """
         Given a stream which returns lines in curve, bin_left, bin_right, counts
@@ -60,47 +35,31 @@ class G1(GN):
 
         return(self) 
 
-    def from_file(self, filename):
-        with open(filename) as stream_in:
-            return(self.from_stream(csv.reader(stream_in)))
-
-    def to_stream(self, stream_out):
-        writer = csv.writer(stream_out)
-        
-        for curve in sorted(self.lifetimes):
-            for time_bin, counts in self[curve]:
-                writer.writerow(list(map(str,
-                                         [curve] + list(time_bin) + [counts])))
-    
-    def to_file(self, filename):
-        with open(filename, "w") as stream_out:
-            self.to_stream(stream_out)
-        
-    def __setitem__(self, index, value):
-        self.lifetimes[index] = value
-
-    def __getitem__(self, index):
-        return(self.lifetimes[index])
-
-    def __delitem__(self, index):
-        del(self.lifetimes[index])
-
-    def __iter__(self):
-        for curve, lifetime in sorted(self.lifetimes.items()):
-            yield(curve, lifetime)
+    def to_stream(self):
+        for curve in self:
+            lifetime = self[curve]
+            for time_bin, counts in lifetime:
+                yield([curve] + list(time_bin) + [counts])
 
     def combine(self):
         """
         Add together the counts for each channel to produce a single lifetime.
         """
-        vals = list(self.lifetimes.values())
+        counts = None
+
+        for curve in self:
+            if counts is None:
+                counts = numpy.array(self[curve].counts)
+            else:
+                counts += numpy.array(self[curve].counts)
         
-        return(sum(vals[1:], vals[0]))
+        return(Lifetime(counts, times=self[0].times))
 
     def add_to_axes(self, ax, resolution=None):
         max_xlim = 0
 
-        for curve, lifetime in self:
+        for curve in self:
+            lifetime = self[curve]
             if resolution is not None:
                 lifetime = lifetime.to_resolution(resolution)
                 
@@ -124,4 +83,9 @@ class G1(GN):
         self.add_to_axes(fig.add_subplot(111), resolution=resolution)
         return(fig)
 
-    
+if __name__ == "__main__":
+    filename = "/home/tsbischof/Documents/data/microscopy/2014-08-15_oc2014-04-08/oc2014-04-08_1e-5_dot_000_250nW_000.ht3.g1.run/g1"
+    g1 = G1(filename=filename)
+
+    g1.to_file("/home/tsbischof/tmp/blargh.g1")
+
