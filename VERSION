@@ -1,3 +1,12 @@
+v4.2 (2014-11-12)
+
+Cleaned up many of the Python interfaces, unifying the various GN types.
+
+Added functionality to photons to be able to copy all photons to a given
+channel, which is useful for generating the sum autocorrelation of all photons.
+
+--------------------------------------------------------------------------------
+
 v4.1 (2014-09-02)
 
 Added a waiting-time correlator (available in photon_correlate).

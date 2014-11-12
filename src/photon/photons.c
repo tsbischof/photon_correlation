@@ -57,6 +57,28 @@ int photons_echo(FILE *stream_in, FILE *stream_out,
 
 	return(result);
 }
+
+int _copy_to_channel(FILE *stream_out, photon_t *photon, int mode,
+		pc_options_t const *options) {
+	int result = PC_SUCCESS;
+
+	if ( options->copy_to_channel ) {
+		if ( mode == MODE_T2 || mode == MODE_AS_T2 ) {
+			photon->t2.channel = options->copy_to_this_channel;
+
+			t2_fprintf(stream_out, photon);
+		} else if ( mode == MODE_T3 ) {
+			photon->t3.channel = options->copy_to_this_channel;
+
+			t3_fprintf(stream_out, photon);
+		} else {
+			error("Unknown mode: %d\n", options->mode);
+			result = PC_ERROR_MODE;
+		}
+	}
+
+	return(result);
+}
  
 int photons(FILE *stream_in, FILE *stream_out,
 		pc_options_t const *options) {
@@ -88,6 +110,9 @@ int photons(FILE *stream_in, FILE *stream_out,
 			debug("Echo photons.\n");
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
 				photons->photon_print(stream_out, &(photons->photon));
+
+				_copy_to_channel(stream_out, &(photons->photon), 
+						options->mode, options);
 			}
 		} else if ( options->mode == MODE_T2 && options->convert == MODE_T3 ) {
 			debug("t2 to t3\n");
@@ -95,6 +120,9 @@ int photons(FILE *stream_in, FILE *stream_out,
 				t2_to_t3(&photons->photon, &photon, options->repetition_rate, 
 						options->time_origin);
 				t3_fprintf(stream_out, &photon);
+
+				_copy_to_channel(stream_out, &photon, 
+						options->convert, options);
 			}
 		} else if ( options->mode == MODE_T3 && options->convert == MODE_T2 ) {
 			debug("t3 to t2\n");
@@ -102,6 +130,9 @@ int photons(FILE *stream_in, FILE *stream_out,
 				t3_to_t2(&photons->photon, &photon, options->repetition_rate, 
 						options->time_origin);
 				t2_fprintf(stream_out, &photon);
+
+				_copy_to_channel(stream_out, &photon, 
+						options->convert, options);
 			}
 		} else if ( options->mode == MODE_T3 && 
 				options->convert == MODE_AS_T2 ) {
@@ -109,6 +140,9 @@ int photons(FILE *stream_in, FILE *stream_out,
 			while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
 				t3_as_t2(&photons->photon, &photon);
 				t2_fprintf(stream_out, &photon);
+
+				_copy_to_channel(stream_out, &photon, 
+						options->convert, options);
 			}
 		} else {
 			error("Invalid photon conversion: %d to %d\n", 

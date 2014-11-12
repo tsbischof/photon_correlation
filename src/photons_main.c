@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CONVERT, OPT_TIME_ORIGIN,
-			OPT_REPETITION_TIME, OPT_EOF}};
+			OPT_REPETITION_TIME, OPT_COPY_TO_CHANNEL,
+			OPT_EOF}};
 
 	return(run(&program_options, photons, argc, argv));
 }

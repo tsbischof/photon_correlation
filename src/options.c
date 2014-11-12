@@ -42,12 +42,6 @@
 #include "limits.h"
 #include "modes.h"
 
-/* See http://www.daniweb.com/software-development/c/threads/
- *     348802/passing-string-as-d-compiler-option
- */
-//#define XSTR(x) #x
-//#define STR(x) XSTR(x)
-
 /* 
  * Since there are many small programs which comprise this package, and many
  * of these programs have common options, these routines are used to ensure
@@ -58,6 +52,13 @@
  * 3. Parse the specified options, checking against the allowed values.
  * 4. Check that the specified options are consistent and valid. 
  */
+
+/*
+Currently used:
+aAbBcCdDeEfFgGhHiIjJkKmMoOpPRsSqQuUvVwWxXyYzZ
+Remaining:
+lLr
+*/
 
 static pc_option_t pc_options_all[] = {
 	{'h', "h", "help", 
@@ -202,6 +203,10 @@ static pc_option_t pc_options_all[] = {
 			"as-t2: use the pulse number as t2 time\n"
 			"t3: use the t2 time and sync rate to get pulse\n"
 			"    number, time"},
+	{'z', "z:", "copy-to-channel",
+			"Copies all valid photons to the specified channel.\n"
+			"Use this to create a summed autocorrelation across\n"
+			"many channels."},
 	{'B', "B:", "binning",
 			"Number of bins wide to use for the multi-tau\n"
 			"correlation. For more accurate results, lower the\n"
@@ -293,6 +298,7 @@ static struct option pc_options_long[] = {
 	{"repetition-rate", required_argument, 0, 'R'},
 	{"time-origin", required_argument, 0, 'O'},
 	{"convert", required_argument, 0, 'M'},
+	{"copy-to-channel", required_argument, 0, 'z'},
 
 /* correlate intensity */
 	{"binning", required_argument, 0, 'B'},
@@ -409,6 +415,9 @@ void pc_options_default(pc_options_t *options) {
 	options->time_origin = 0;
 	options->convert_string = NULL;
 	options->convert = MODE_UNKNOWN;
+
+	options->copy_to_channel = false;
+	options->copy_to_this_channel = 0;
 
 	options->binning = 2;
 	options->registers = 16;
@@ -631,6 +640,10 @@ int pc_options_parse(pc_options_t *options,
 			case 'M':
 				options->convert_string = strdup(optarg);
 				pc_options_parse_convert(options);
+				break;
+			case 'z':
+				options->copy_to_channel = true;
+				options->copy_to_this_channel = strtoul(optarg, NULL, 10);
 				break;
 			case 'B':
 				options->binning = strtoul(optarg, NULL, 10);

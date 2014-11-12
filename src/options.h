@@ -133,6 +133,8 @@ typedef struct {
 	long long time_origin;
 	char *convert_string;
 	int convert;
+	int copy_to_channel;
+	unsigned int copy_to_this_channel;
 
 /* correlate intensity */
 	unsigned int binning;
@@ -166,7 +168,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_SUPPRESS,
 		OPT_EXACT_NORMALIZATION, 
 		OPT_REPETITION_TIME, OPT_TIME_ORIGIN,
-		OPT_CONVERT,
+		OPT_CONVERT, OPT_COPY_TO_CHANNEL,
 		OPT_BINNING, OPT_REGISTERS, OPT_DEPTH,
 		OPT_CORRELATE_SUCCESSIVE,
 		OPT_FILTER_AFTERPULSING,
