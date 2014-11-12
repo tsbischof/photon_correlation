@@ -229,7 +229,7 @@ class Intensity(object):
 
         return(intensity)
 
-    def time_window(self, start_time, stop_time):
+    def range(self, start_time, stop_time):
         """
         Return the intensity trace between the start and stop times.
         """

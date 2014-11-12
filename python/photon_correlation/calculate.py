@@ -239,7 +239,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
          order=2, window_width=50000, repetition_rate=None,
          channels=None,
          time_bins=None, pulse_bins=None, mode=None,
-         time_bin_width=1024):
+         time_bin_width=1024, photon_number=False, number_correlate=False):
     logging.info("Calculating idg{} for {}".format(order, src_filename))
 
     pq = Picoquant(src_filename)
@@ -250,9 +250,12 @@ def idgn(src_filename, dst_filename, intensity_bins,
     if mode == "t3":
         if repetition_rate is None:
             repetition_rate = pq.repetition_rate()
-        
+
     if channels is None:
         channels = pq.channels()
+
+    if photon_number:
+        channels = sum(range(1, channels+1))
     
     if time_bins is None:
         if mode == "t3" and order == 1:
@@ -302,6 +305,10 @@ def idgn(src_filename, dst_filename, intensity_bins,
         gn_cmd.extend(("--pulse", str(pulse_bins)))
 
     photons = picoquant(src_filename)
+
+    if photon_number:
+        photons = number_to_channels(photons, correlate=number_correlate)
+        
     gn = subprocess.Popen(gn_cmd, stdin=photons.stdout).wait()
 
 def max_counts(data_filename, window_width,

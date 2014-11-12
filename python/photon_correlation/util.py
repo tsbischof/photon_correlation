@@ -3,6 +3,7 @@ import os
 import sys
 import functools
 import itertools
+import collections
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -27,6 +28,9 @@ def dot_number(filename):
     return(int(parsed.group("index")), parsed.group("modifier"))
 
 def mean(L):
+    if not isinstance(L, collections.Iterable):
+        return(L)
+    
     if len(L) == 0:
         return(0)
     else:
@@ -101,6 +105,8 @@ def final_nonzero(L):
     for index, val in reversed(list(enumerate(L))):
         if val:
             return(index)
+
+    return(0)
 
 def transpose(L):
     length = len(L[0])

@@ -9,6 +9,10 @@ class Counts(object):
         self.events = events
         self.counts = counts
 
+    def __add__(self, other):
+        return(Counts(self.events + other.events,
+                      self.counts + other.counts))
+
 class IDGN(object):
     def __init__(self, filename):
         self.bins = list()
@@ -70,7 +74,6 @@ class IDGN(object):
         min_intensity = math.floor(min_val*maximum)
         max_intensity = math.ceil(max_val*maximum)
 
-        events = 0
         counts = None
 
         bins = filter(lambda x: x[0] >= min_intensity and x[1] <= max_intensity,
@@ -79,16 +82,14 @@ class IDGN(object):
         for intensity_bin in bins:
             my_counts = self[intensity_bin]
 
-            events += my_counts.events
-            
             if counts is None:
                 # If you do not explicitly copy, the result is stored as part
                 # of the original counts when doing += 
-                counts = copy.deepcopy(my_counts.counts)
+                counts = copy.deepcopy(my_counts)
             else:
-                counts += my_counts.counts
-        
-        return(Counts(events, counts))
+                counts += my_counts
+
+        return(counts)
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt

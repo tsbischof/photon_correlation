@@ -77,10 +77,8 @@ class Lifetime(object):
         """
         Return the counts associated with the given range of times.
         """
-        index_lower = bisect.bisect_left(map(lambda x: x[0], self.times),
-                                         lower[0])
-        index_upper = bisect.bisect_left(map(lambda x: x[0], self.times),
-                                         upper[0])
+        index_lower = bisect.bisect_left(self.time_bins(), mean(lower))
+        index_upper = bisect.bisect_left(self.time_bins(), mean(upper))
 
         return(Lifetime(self.counts[index_lower:index_upper],
                         times=self.times[index_lower:index_upper]))
@@ -162,13 +160,15 @@ class Lifetime(object):
             return(fit, func)
         
     def biexponential_fit(self,
-                        min_val=min_val_default,
-                        max_val=max_val_default):
+                          min_val=min_val_default,
+                          max_val=max_val_default,
+                          initial_conditions=[1, 1e-3, 1, 1e-4],
+                          error_func="square difference",
+                          **args):
         fit_times = list()
         fit_counts = list()
-
+            
         fit_data = self.fit_data(min_val, max_val)
-
 
         for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
             if fit_count != 0:
@@ -185,14 +185,21 @@ class Lifetime(object):
         def error(params):
             if any(map(lambda x: x < 0, params)):
                 return(float("inf"))
+
+            if not sorted(params[1::2]) == list(params[1::2]):
+                return(float("inf"))
             
             data = fit_counts
             model = biexponential(*params)(fit_times)
-##            return(sum(map(lambda x, y: abs((x-y)/x), data, model)))
-            return(sum(map(lambda x, y: (x-y)**2, data, model)))
 
-        fit = scipy.optimize.fmin(error, [1, 1e-3,
-                                          1, 1e-4])
+            if error_func == "square difference":
+                return(sum(map(lambda x, y: (x-y)**2, data, model)))
+            elif error_func == "percent":
+                return(sum(map(lambda x, y: abs((x-y)/x), data, model)))
+            else:
+                raise(ValueError("Unknown error type: {}".format(error_func)))
+
+        fit = scipy.optimize.fmin(error, initial_conditions, **args)
 
         return(fit, biexponential(*fit))        
 
