@@ -35,9 +35,17 @@
 
 int main(int argc, char *argv[]) {
 	program_options_t program_options = {
-"This program reads and writes photons. It is largely meant as a debugging\n"
-"and profiling tool, since other programs will call the underlying routines\n"
-"themselves to read data as needed.\n",
+"This program reads and writes photons. It also provides tools for conversion\n"
+"between photon types:\n"
+"    1. t3 to t2, or t2 to t3: Use the excitation repetition rate and time\n"
+"       origin to translate absolute time to pulse-clocked time.\n"
+"    2. t3 as t2: Remove the time component of t3 data, to retain only the\n"
+"       pulse information.\n"
+"\n"
+"You can also copy photons from all channels to a single target channel, \n"
+"by passing an argument to --copy-to-channel. Use this to create a channel \n"
+"containing all photons for calculating the intensity autocorrelation of the\n"
+"full signal.\n",
 		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
 			OPT_FILE_IN, OPT_FILE_OUT,
 			OPT_MODE, OPT_CONVERT, OPT_TIME_ORIGIN,
