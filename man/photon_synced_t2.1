@@ -1,0 +1,109 @@
+.TH PHOTON_SYNCED_T2 1 "2014-11-12" "4.2"
+.SH NAME
+photon_synced_t2 - Use an explicit sync source to translate t2 data to t3 data
+.SH SYNOPSIS
+.B photons
+[
+.BI \-\-verbose 
+] [ 
+.BI \-\-help
+] [
+.BI \-\-version
+] [
+.BI \-\-file\-in " FILENAME"
+] [ 
+.BI \-\-file\-out " FILENAME"
+] [ 
+.BI \-\-sync\-channel " CHANNEL"
+] [ 
+.BI \-\-queue\-size " SIZE"
+]
+
+
+.SH DESCRIPTION
+.B photon_synced_t2
+Treats one channel of photon arrival data as a sync source to translate t2
+data to t3 mode data. 
+
+It can be desirable, when using a pulsed excitation source, to have a low
+repetition rate but a fine resolution for timing the arrival of emission. 
+Normally, one uses the t3 mode of PicoQuant hardware (PicoHarp and HydraHarp,
+for example) to collect data which is timed relative to excitation pulses, but
+the hardware trades resolution for the ability to measure a long time span
+between excitation pulses. 
+
+If it is necessary to resolve photon arrivals to arbitrary precision while
+exciting at a low repetition rate, measure the arrivals of each excitation 
+pulse directly. This is an expesive operation since the photon arrival data
+is much less frequent than excitation pulses, but armed with such data we
+can produce t3-mode events which emulate the result which would be achived
+by hardware with t2-like precision. 
+
+The input mode must be t2, and the output mode is t3.
+
+.SH EXAMPLES
+By default, 
+.BI picoquant(1) 
+outputs the sync channel as the channel index which
+is one greater than the maximum signal channel. For a four-channel HydraHarp,
+this is channel 4. 
+
+	$ photon_synced_t2 --file-in data.t2 --sync-channel 4
+.br
+	1,0,4
+.br
+	...
+
+.SH OPTIONS
+.TP 
+.BR \-v ", " \-\-verbose
+Display debug messages during exectution, sent to stderr. 
+
+.TP
+.BR \-h ", " \-\-help
+Display a usage message.
+
+.TP
+.BR \-V ", " \-\-version
+Display the version of the program.
+
+.TP
+.BR \-q ", " \-\-queue\-size
+The size of the queue for processing, in number of photons. By default, this is
+2^20, and if it is too small a warning message will be displayed, but the queue
+size will be doubled if possible.
+
+.TP
+.BR \-j ", " \-\-sync\-channel
+Specifies the t2 channel which should be treated as the sync source for
+conversion to t3 photons.
+
+.TP
+.BR \-i ", " \-\-file-in " FILENAME"
+The name of the ascii file to read from. By default this is stdin.
+
+.TP
+.BR \-o ", " \-\-file-out " FILENAME"
+The name of the ascii file to write to. By default this is stdout.
+
+.SH ERRORS
+Errors and other debug information are output to stderr.
+
+.SH BUGS
+As written, the code is unable to iterpolate between sync pulses, as would be
+necessary when collecting data while using a sync divider. This option 
+(--sync-divider) is neither exposed nor implemented because the external sync 
+source the author uses is not sufficiently reliable to perform this 
+interpolation. If you wish to use this feature, modify src/synced_t2_main.c to 
+uncomment the line containing "OPT_SYNC_DIVIDER", and modify 
+src/photon/synced_t2.c to perform this interpolation. in synced_t2_next. This 
+code does exist in the history, but has been removed due to these issues.
+
+If you find 
+.BI photon_synced_t2(1)
+to be too slow, try removing the queue member of the synced_t2_t object. This
+remains as an artifact from the use of the sync divider, and may lead to 
+excessive memory copying.
+
+.SH AUTHOR
+Thomas Bischof <tbischof@mit.edu>

@@ -89,9 +89,9 @@ static pc_option_t pc_options_all[] = {
 			"Specify the seed for the random number generator."},
 	{'q', "q:", "queue-size", 
 			"The size of the queue for processing, in number of\n"
-			"photons. By default, this is 100000, and if it is\n"
-			"too small an appropriate warning message will be\n"
-			"displayed."},
+			"photons. By default, this is 2^20, and if it is\n"
+			"too small a warning message will be displayed, \n"
+			"but the queue size will be doubled if possible."},
 	{'W', "W:", "window-width",
 			"The width of the time bin for processing photons,\n"
 			"for a time-dependent calculation. This is used to\n"
