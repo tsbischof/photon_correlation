@@ -1,0 +1,100 @@
+.TH PHOTON_NUMBER 1 "2014-11-14" "4.2"
+.SH NAME
+photon_number - Count the number of excitation events yielding n photons
+.SH SYNOPSIS
+.B photon_number
+[
+.BI \-\-verbose 
+] [ 
+.BI \-\-help
+] [
+.BI \-\-version
+] [
+.BI \-\-file\-in= file
+] [ 
+.BI \-\-file\-out= file
+] [ 
+.BI \-\-channels= channels
+] [ 
+.BI \-\-start= pulse
+] [ 
+.BI \-\-stop= pulse
+]
+.SH DESCRIPTION
+.BI photon_number
+Counts the number of events in which 0, 1, 2, ... photons arrive after a single
+excitation pulse. It takes t3 data as input and outputs a histogram of the
+number of times each number of photons was detected, in a csv format:
+
+	number of photons, times seen
+
+It is possible to specify a window of allowed pulse numbers using --start and
+--stop. If a photon arrives on the starting pulse, it is included, but if it
+arrives on the stopping pulse, it is excluded. If no bounds are specified, the
+first and last photons to arrive set the beginning and end of time.
+
+If no events of n photons are found, then that entry is not printed.
+.SH EXAMPLES
+These examples make use of sample_data/t3.txt.
+
+Counting all events:
+
+	$ photon_number --file-in data.t3
+.br
+	0,11
+.br 
+	1,2
+.br 
+	2,2
+
+Counting events which fall within a particular window. No 1-photon events are 
+found in this window.
+
+	$ photon_number --file-in data.t3 --start 3 --stop 13
+.br
+	0,7
+.br
+	2,2
+.SH OPTIONS
+.TP 
+.BR \-v ", " \-\-verbose
+Display debug messages during exectution, sent to stderr. 
+.TP
+.BR \-h ", " \-\-help
+Display a usage message.
+.TP
+.BR \-V ", " \-\-version
+Display the version of the program.
+.TP
+.BI \-i\  file \fR,\ \fB\-\-file-in= file
+The name of the ascii file to read from. By default this is stdin.
+.TP
+.BI \-o\  file \fR,\ \fB\-\-file-out= file
+The name of the ascii file to write to. By default this is stdout.
+.TP
+.BI \-c\  channels \fR,\ \fB\-\-channels= channels
+The number of channels in the data. By default, this is 2.
+Internally, the maximum number of photons
+in an event is set as 64 times the number of channels. Practically speaking,
+this limit should be sufficient, because there should never be more than one
+or two arrivals per pulse per detection channel. When working with numerous
+channels or extremely high count rates, increase the number of channels.
+.TP
+.BI \-f\  pulse \fR,\ \fB\-\-start= pulse
+The lower limit of pulse number for the run. Photons which arrive before
+this number will not be processed.
+.TP
+.BI \-F\  pulse \fR,\ \fB\-\-stop= pulse
+The upper limit of pulse number for the run. Photons which arrive on or after
+this number will not be processed.
+.SH ERRORS
+Errors and other debug information are output to stderr.
+
+If too many photons are seen after a single pulse, you will receive something
+like the following error:
+
+	ERROR: Too many photons: 129
+
+If this occurs, try increasing the number of channels.
+.SH AUTHOR
+Thomas Bischof <tbischof@mit.edu>

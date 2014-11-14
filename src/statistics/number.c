@@ -67,11 +67,6 @@ void photon_number_init(photon_number_t *number,
 	number->start = start;
 	number->set_stop = set_stop;
 	number->stop = stop;
-
-	if ( number->set_start ) {
-		number->first_seen = true;
-		number->last_pulse = start - 1;
-	}
 	
 	counts_init(number->counts);
 }
@@ -87,25 +82,51 @@ void photon_number_free(photon_number_t **number) {
 int photon_number_push(photon_number_t *number, photon_t const *photon) {
 	int result = PC_SUCCESS;
 
+	/* Verify that the photon falls within the valid range of times. */
+	if ( number->set_start && photon->t3.pulse < number->start ) {
+		return(PC_SUCCESS);
+	} else if ( number->set_stop && number->stop <= photon->t3.pulse ) {
+		if ( number->first_seen ) {
+			photon_number_increment(number,
+				0,
+				number->stop - number->last_pulse - 1);
+
+			number->last_pulse = number->stop - 1;
+		}
+
+		return(PC_RECORD_AFTER_WINDOW);
+	}
+
+	/* If we have found the first photon, it sets the starting point of
+	 * time if that has not been set externally. 
+	 */
 	if ( ! number->first_seen ) {
 		number->first_seen = true;
-		number->last_pulse = photon->t3.pulse;
-		number->current_seen++;
+		number->current_seen = 1;
 
-		return(photon_number_check_max(number));
+		if ( number->set_start ) {
+			result = photon_number_increment(number, 
+					0, 
+					photon->t3.pulse - number->start);
+		}
+		
+		number->last_pulse = photon->t3.pulse;
+
+		if ( result == PC_SUCCESS ) {
+			return(photon_number_check_max(number));
+		} else {
+			return(result);
+		}
 	} else {
 		if ( photon->t3.pulse == number->last_pulse ) {
 			number->current_seen++;
 			return(photon_number_check_max(number));
 		} else {
-			if ( number->set_stop && number->stop <= photon->t3.pulse ) {
-				return(PC_RECORD_AFTER_WINDOW);
-			} 
-
-			result = photon_number_increment(number, number->current_seen, 1);
 			photon_number_increment(number, 
 					0, 
 					photon->t3.pulse - number->last_pulse - 1);
+
+			result = photon_number_increment(number, number->current_seen, 1);
 
 			number->current_seen = 1;
 			number->last_pulse = photon->t3.pulse;
@@ -144,17 +165,19 @@ int photon_number_check_max(photon_number_t *number) {
 }
 
 int photon_number_flush(photon_number_t *number) {
-	int result;
+	int result = PC_SUCCESS;
 
-	result = photon_number_increment(number, number->current_seen, 1);
+	if ( number->first_seen ) {
+		result = photon_number_increment(number, number->current_seen, 1);
 
-	if ( number->set_stop ) {
-		return(photon_number_increment(number, 
-				0,
-				number->stop - number->last_pulse - 2));
-	} else {
-		return(result);
+		if ( number->set_stop ) {
+			result = photon_number_increment(number, 
+					0,
+				number->stop - number->last_pulse - 1);
+		} 
 	}
+
+	return(result);
 }
 
 int photon_number_fprintf(FILE *stream_out, photon_number_t const *number) {

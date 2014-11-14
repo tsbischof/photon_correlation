@@ -1,4 +1,4 @@
-.TH PHOTONS 1 "2014-11-12" "4.2"
+.TH PHOTONS 1 "2014-11-14" "4.2"
 .SH NAME
 photons \- Tools for photon mode conversions 
 .SH SYNOPSIS
@@ -10,27 +10,24 @@ photons \- Tools for photon mode conversions
 ] [
 .BI \-\-version
 ] [
-.BI \-\-file\-in " FILENAME"
+.BI \-\-file\-in= file
 ] [ 
-.BI \-\-file\-out " FILENAME"
+.BI \-\-file\-out= file
 ] [ 
-.BI \-\-mode " MODE"
+.BI \-\-mode= mode
 ] [
-.BI \-\-convert " MODE"
+.BI \-\-convert= mode
 ] [ 
-.BI \-\-time\-origin " TIME"
+.BI \-\-time\-origin= time
 ] [ 
-.BI \-\-repetition\-rate " RATE"
+.BI \-\-repetition\-rate= rate
 ] [ 
-.BI \-\-copy\-to\-channel " CHANNEL"
+.BI \-\-copy\-to\-channel= channel
 ]
-
-
 .SH DESCRIPTION
 .B photons
 Translates photons from one mode to another, or copies all photons to a 
 given channel. 
-
 .SS Mode conversions
 \fIt3 to t2\fR and \fIt2 to t3\fR are used to convert between absolute time 
 (t2 mode) and time index by an excitation pulse (t3 mode). This is done by
@@ -38,16 +35,13 @@ assuming a time origin and repetiton rate to convert pulse index to time, and
 vice versa:
 
 	time (ps) = (1/repetition rate)*pulse index + time origin
-
 .SS Copying photons to a channel
 When calculating a total signal autocorrelation, as is done for PCFS and FCS,
 it is simplest to copy all photons to an unused channel and perform analysis
 on that channel. Use this option to create such a channel, but note that all
 photons are copied, even if the source and destination channels are the same.
-
 .SH EXAMPLES
 .SS Mode conversions
-
 If no conversion mode is given, the input photons are echoed exactly as they
 are found:
 
@@ -66,7 +60,6 @@ are found:
 	1,4,2
 .br
 	...
-
 
 Given a target mode for conversion, we can use a repetition rate to convert
 between the pulse index and absolute time.
@@ -104,9 +97,10 @@ photon in this example should be 0,2,0
 	0,1,2
 .br
 	...
-
 .SS Copying all photons to a given channel
-	
+For calculating a full signal autocorrelation, we can copy all photon records
+to an unused channel
+
 	$ photons --mode t3 --file-in data.t3 --copy-to-channel 2
 .br
 	0,1,3
@@ -118,57 +112,43 @@ photon in this example should be 0,2,0
 	2,4,2
 .br
 	...
-	
-
 .SH OPTIONS
 .SS General options
 .TP 
 .BR \-v ", " \-\-verbose
 Display debug messages during exectution, sent to stderr. 
-
 .TP
 .BR \-h ", " \-\-help
 Display a usage message.
-
 .TP
 .BR \-V ", " \-\-version
 Display the version of the program.
-
 .SS Files and formats
 .TP
-.BR \-i ", " \-\-file-in " FILENAME"
+.BI \-i\  file \fR,\ \fB\-\-file-in= file
 The name of the ascii file to read from. By default this is stdin.
-
 .TP
-.BR \-o ", " \-\-file-out " FILENAME"
+.BI \-o\  file \fR,\ \fB\-\-file-out= file
 The name of the ascii file to write to. By default this is stdout.
-
 .SS Conversion methods
 .TP
-.BR \-m ", " \-\-mode " MODE" 
+.BI \-m\  mode \fR,\ \fB\-\-mode= mode
 The mode of the incoming photons.
-
 .TP
-.BR \-M ", " \-\-convert " MODE"
+.BI \-M\  mode \fR,\ \fB\-\-convert= mode
 If converting, the mode of the output photons. This can be t2, t3, or as-t2.
-
 .TP
-.BR \-O ", " \-\-time\-origin " TIME"
+.BI \-O\  time \fR,\ \fB\-\-time\-origin= time
 The origin of absolute time, in picoseconds.
-
 .TP
-.BR \-R ", " \-\-repetition\-rate " RATE"
+.BI \-R\  rate \fR,\ \fB\-\-repetition\-rate= rate
 The repetition rate of the excitation source, in cycles per second.
-
 .TP
-.BR \-z ", " \-\-copy\-to\-channel " CHANNEL" 
+.BI \-z\  channel \fR,\ \fB\-\-copy\-to\-channel= channel
 The channel onto which all photons are to be copied.
-
 .SH ERRORS
 Errors and other debug information are output to stderr.
-
 .SH BUGS
-There are no known bugs. Please email the author if you find any.
-
+There are no known bugs.
 .SH AUTHOR
 Thomas Bischof <tbischof@mit.edu>
