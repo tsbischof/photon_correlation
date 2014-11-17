@@ -13,20 +13,56 @@ import TD
 
 from util import *
 
-def picoquant(filename, print_every=1000000):
+def apply_t3_time_offsets(photons, time_offsets, repetition_rate):
+    if time_offsets.all_same():
+        t2 = subprocess.Popen(["photons",
+                               "--mode", "t3",
+                               "--convert", "t2",
+                               "--time-origin", str(time_offsets[0]),
+                               "--repetition-rate", str(repetition_rate)],
+                              stdin=photons.stdout,
+                              stdout=subprocess.PIPE)
+        t3 = subprocess.Popen(["photons",
+                               "--mode", "t2",
+                               "--convert", "t3",
+                               "--repetition-rate", str(repetition_rate)],
+                              stdin=t2.stdout,
+                              stdout=subprocess.PIPE)
+    else:
+        raise(ValueError("Time offsets must all be the same for the current "
+                         "implementation."))
+
+    return(t3)
+
+def picoquant(filename, print_every=1000000, time_offsets=None, number=None):
     cmd = ["picoquant"]
+
+    if number is not None:
+        cmd.extend(("--number", str(number)))
+        
     if print_every > 0:
         cmd.extend(("--print-every", str(print_every)))
-        
+
     if filename.endswith("bz2"):
         photons = subprocess.Popen(["bunzip2", filename, "--stdout"],
                                    stdout=subprocess.PIPE)
-        return(subprocess.Popen(cmd,
-                                stdin=photons.stdout,
-                                stdout=subprocess.PIPE))
+        photons = subprocess.Popen(cmd,
+                                   stdin=photons.stdout,
+                                   stdout=subprocess.PIPE)
     else:
         cmd.extend(["--file-in", filename])
-        return(subprocess.Popen(cmd, stdout=subprocess.PIPE))
+        photons = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+    if time_offsets is not None:
+        pq = Picoquant(filename)
+        if pq.mode() == "t3":
+            photons = apply_t3_time_offsets(
+                photons, time_offsets, pq.repetition_rate())
+        else:
+            raise(ValueError("Unsupported mode for time offsets: {}".format(
+                pq.mode())))
+                
+    return(photons)
 
 def intensity(data_filename, dst_filename=None, bin_width=50000,
               mode=None, channels=None, time_offsets=None,
@@ -53,7 +89,7 @@ def intensity(data_filename, dst_filename=None, bin_width=50000,
     if repetition_rate is None:
         repetition_rate = pq.repetition_rate()
 
-    photons = picoquant(data_filename)
+    photons = picoquant(data_filename, time_offsets=time_offsets)
     if time_offsets is not None:
         photons = apply_t3_time_offsets(photons, time_offsets, repetition_rate)
 
@@ -175,14 +211,7 @@ def gn(data_filename, dst_dir=None,
     if not window_width is None:
         gn_cmd.extend(("--window-width", str(window_width)))
 
-    photons = picoquant(data_filename)
-    if time_offsets is not None:
-        if photon_mode == "t3":
-            photons = apply_t3_time_offsets(picoquant(data_filename),
-                                            time_offsets, repetition_rate)
-        else:
-            raise(ValueError("Unsupported mode for time offsets"
-                             ": {}".format(photon_mode)))
+    photons = picoquant(data_filename, time_offsets=time_offsets)
 
     if convert:
         # fiddle with time bin defintions
@@ -220,7 +249,7 @@ def flid(src_filename, dst_filename, intensity_bins,
     if time_bins is None:
         time_bins = Limits(0, int(1e12/pq.repetition_rate()), 1000)
         
-    photons = picoquant(src_filename)
+    photons = picoquant(src_filename, time_offsets=time_offsets)
 
     if time_offsets is not None:
         photons = apply_t3_time_offsets(photons,
@@ -304,7 +333,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
 
         gn_cmd.extend(("--pulse", str(pulse_bins)))
 
-    photons = picoquant(src_filename)
+    photons = picoquant(src_filename, time_offsets=time_offsets)
 
     if photon_number:
         photons = number_to_channels(photons, correlate=number_correlate)
@@ -332,7 +361,7 @@ def max_counts(data_filename, window_width,
     if mode is None:
         mode = pq.mode()
 
-    photons = picoquant(data_filename)
+    photons = picoquant(data_filename, time_offsets=time_offsets)
 
     intensity_cmd = ["photon_intensity",
                      "--bin-width", str(window_width),
