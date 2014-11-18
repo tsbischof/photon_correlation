@@ -5,6 +5,7 @@ import numpy
 import scipy.optimize
 
 from util import *
+from Exponential import *
 
 max_val_default = 0.95
 min_val_default = 0.1
@@ -115,56 +116,9 @@ class Lifetime(object):
     def exponential_fit(self,
                         min_val=min_val_default,
                         max_val=max_val_default,
-                        order=1,
-                        error=False):
-        """
-        Perform an exponential fit of the counts.
-        """
-        fit_times = list()
-        fit_counts = list()
-
-        fit_data = self.fit_data(min_val, max_val)
-
-        for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
-            if fit_count != 0:
-                fit_times.append(fit_time)
-                fit_counts.append(fit_count)
-
-        fit_times = numpy.array(fit_times)
-        fit_counts = numpy.log(fit_counts)
-
-        fit = numpy.polyfit(fit_times, fit_counts, order)
-        func = lambda x: numpy.exp(numpy.poly1d(fit)(x))
-        
-        if error:
-            try:
-                b, a = fit
-                n = len(fit_times)
-
-                meanx = mean(fit_times)
-                meany = mean(fit_counts)
-
-                ssxx = sum(fit_times * fit_times) - n*meanx**2
-                ssyy = sum(fit_counts * fit_counts) - n*meany**2
-                ssxy = sum(fit_times*fit_counts) - n*meanx*meany
-
-                s = math.sqrt((ssyy - ssxy**2/ssxx**2)/(n-2))
-                intercept_error = s*math.sqrt(1.0/n + meanx**2/ssxx)
-                slope_error = s/math.sqrt(ssxx)
-            
-                return(fit, func, 1/fit[0]*(slope_error/fit[0]))
-            except ZeroDivisionError:
-                return(fit, func, 0)
-        else:
-            
-            return(fit, func)
-        
-    def biexponential_fit(self,
-                          min_val=min_val_default,
-                          max_val=max_val_default,
-                          initial_conditions=[1, 1e-3, 1, 1e-4],
-                          error_func="square difference",
-                          **args):
+                        initial_conditions=(1, 1e-3, 1, 1e-4),
+                        error_func="square difference",
+                        **args):
         fit_times = list()
         fit_counts = list()
             
@@ -178,10 +132,6 @@ class Lifetime(object):
         fit_times = numpy.array(fit_times)
         fit_counts = numpy.array(fit_counts)
 
-        def biexponential(a1, k1, a2, k2):
-            return(lambda x: a1*numpy.exp(-k1*numpy.array(x))\
-                   +a2*numpy.exp(-k2*numpy.array(x)))
-
         def error(params):
             if any(map(lambda x: x < 0, params)):
                 return(float("inf"))
@@ -190,7 +140,7 @@ class Lifetime(object):
                 return(float("inf"))
             
             data = fit_counts
-            model = biexponential(*params)(fit_times)
+            model = MultiExponential(params)(fit_times)
 
             if error_func == "square difference":
                 return(sum(map(lambda x, y: (x-y)**2, data, model)))
@@ -201,7 +151,7 @@ class Lifetime(object):
 
         fit = scipy.optimize.fmin(error, initial_conditions, **args)
 
-        return(fit, biexponential(*fit))        
+        return(MultiExponential(fit))
 
     def lifetime(self, min_val=min_val_default, max_val=max_val_default,
                  error=False):
