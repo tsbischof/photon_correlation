@@ -14,6 +14,9 @@ class Offsets(object):
     def __len__(self):
         return(len(self.offsets))
 
+    def __iter__(self):
+        return(iter(self.offsets))
+
     def all_same(self):
         return(len(set(self.offsets)) == 1)
 

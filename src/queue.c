@@ -170,13 +170,20 @@ int queue_sort(queue_t *queue) {
 	 * everything into one continous block. If it does not, it is already in 
 	 * a continuous block and is ready for sorting.
 	 */
-	size_t right = queue->right_index % queue->length;
-	size_t left = queue->left_index % queue->length;
+	size_t right;
+	size_t left;
 
 	if ( queue->compare == NULL ) {
 		error("No comparator installed for this queue.\n");
 		return(PC_ERROR_OPTIONS);
 	}
+
+	if ( queue_size(queue) <= 1 ) {
+		return(PC_SUCCESS);
+	}
+
+	right = queue->right_index % queue->length;
+	left = queue->left_index % queue->length;
 
 	if ( queue_full(queue) ) {
 		debug("Vector is full, no action is needed to make it contiguous for "
