@@ -11,6 +11,9 @@ class Offsets(object):
     def __setitem__(self, index, offset):
         self.offsets[index] = offset
 
+    def __len__(self):
+        return(len(self.offsets))
+
     def all_same(self):
         return(len(set(self.offsets)) == 1)
 

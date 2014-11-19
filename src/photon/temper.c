@@ -181,15 +181,15 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 					queue_front(pst->queue, (void *)&(pst->left));
 					queue_back(pst->queue, (void *)&(pst->right));
 
-					diff = pst->window_dim(&(pst->right)) -
-							pst->window_dim(&(pst->left));
+					diff = pst->window_dim(pst->right) -
+							pst->window_dim(pst->left);
 
 					result = (diff >= pst->offset_span);
 
 					if ( pst->filter_afterpulsing &&
 							pst->mode == MODE_T3 && 
-							pst->left.t3.pulse == 
-								pst->right.t3.pulse ) {
+							pst->left->t3.pulse == 
+								pst->right->t3.pulse ) {
 						debug("Filtering afterpulsing but still on a pulse.\n");
 						pst->yielded_all_sorted = 1;
 					} else if ( diff >= pst->offset_span ) {
@@ -236,7 +236,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 						"found. Check channel specifications.\n", channel);
 				return(PC_ERROR_CHANNEL);
 			}
-		}
+		} 
 
 		pst->photon_offset(&(pst->current_photon), pst->offsets);
 
@@ -247,7 +247,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 			if ( pst->current_photon.t3.time < pst->gate_time ) {
 				suppress = true;
 			}
-		}
+		} 
 
 		/* Afterpulsing filter */
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
@@ -259,7 +259,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 					break;
 				}
 			}
-		}
+		} 
 
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
