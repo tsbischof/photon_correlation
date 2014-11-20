@@ -7,7 +7,7 @@ bin_PROGRAMS = photons photon_intensity photon_correlate photon_histogram \
 		photon_bin_intensity photon_temper photon_gn photon_number \
 		photon_number_to_channels intensity_correlate \
 		photon_intensity_correlate photon_synced_t2 \
-		photon_intensity_dependent_gn photon_flid
+		photon_intensity_dependent_gn photon_flid photon_t3_offsets
 
 noinst_LIBRARIES = libphoton_correlation.a
 LDADD = libphoton_correlation.a
@@ -25,7 +25,8 @@ libphoton_correlation_a_SOURCES = correlate.c error.c files.c flid.c gn.c \
 		photon/conversions.c photon/offsets.c \
 		photon/photon.c photon/photons.c photon/queue.c \
 		photon/stream.c photon/synced_t2.c \
-		photon/t2.c photon/t3.c photon/temper.c photon/window.c \
+		photon/t2.c photon/t3.c \
+		photon/t3_offsetter.c photon/temper.c photon/window.c \
 		statistics/bin_intensity.c statistics/counts.c \
 		statistics/intensity.c statistics/number.c \
 		statistics/number_to_channels.c 
@@ -44,6 +45,7 @@ photon_intensity_correlate_SOURCES = photon_intensity_correlate_main.c
 photon_synced_t2_SOURCES =  synced_t2_main.c 
 photon_intensity_dependent_gn_SOURCES = photon_intensity_dependent_gn_main.c
 photon_flid_SOURCES = photon_flid_main.c
+photon_t3_offsets_SOURCES = t3_offsets_main.c
 
 pkgincludedir = $(includedir)/@PACKAGE@
 nobase_pkginclude_HEADERS = correlate.h error.h files.h gn.h  \
@@ -60,7 +62,7 @@ nobase_pkginclude_HEADERS = correlate.h error.h files.h gn.h  \
 		photon/conversions.h photon/offsets.h photon/photon.h \
 		photon/photons.h photon/queue.h photon/stream.h \
 		photon/synced_t2.h photon/t2.h photon/t3.h \
-		photon/temper.h photon/window.h \
+		photon/t3_offsetter.h photon/temper.h photon/window.h \
 		statistics/bin_intensity.h statistics/counts.h statistics/intensity.h \
 		statistics/number.h statistics/number_to_channels.h \
 		intensity_dependent_gn.h flid.h 

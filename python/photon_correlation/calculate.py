@@ -14,41 +14,12 @@ import TD
 from util import *
 
 def apply_t3_time_offsets(photons, time_offsets, repetition_rate):
-    if time_offsets.all_same():
-        t2 = subprocess.Popen(["photons",
-                               "--mode", "t3",
-                               "--convert", "t2",
-                               "--time-origin", str(time_offsets[0]),
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=photons.stdout,
-                              stdout=subprocess.PIPE)
-        t3 = subprocess.Popen(["photons",
-                               "--mode", "t2",
-                               "--convert", "t3",
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=t2.stdout,
-                              stdout=subprocess.PIPE)
-    else:
-        t2 = subprocess.Popen(["photons",
-                               "--mode", "t3",
-                               "--convert", "t2",
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=photons.stdout,
-                              stdout=subprocess.PIPE)
-        shifted_t2 = subprocess.Popen(["photon_temper",
-                               "--mode", "t2",
-                               "--time-offsets", str(time_offsets),
-                               "--channels", str(len(time_offsets))],
-                              stdin=t2.stdout,
-                              stdout=subprocess.PIPE)
-        t3 = subprocess.Popen(["photons",
-                               "--mode", "t2",
-                               "--convert", "t3",
-                               "--repetition-rate", str(repetition_rate)],
-                              stdin=shifted_t2.stdout,
-                              stdout=subprocess.PIPE)
+    cmd = ["photon_t3_offsets", 
+           "--repetition-rate", str(repetition_rate),
+           "--channels", str(len(time_offsets)),
+           "--time-offsets", str(time_offsets)]
 
-    return(t3)
+    return(subprocess.Popen(cmd, stdin=photons.stdout, stdout=subprocess.PIPE))
 
 def picoquant(filename, print_every=1000000, time_offsets=None, number=None):
     cmd = ["picoquant"]

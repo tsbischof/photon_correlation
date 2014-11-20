@@ -44,17 +44,28 @@ def normalize(L, key=max):
 
     return(map(lambda x: x/float(my_key), L))
 
+def first_index(L, value):
+    """
+    Find the first occurrence of value in L.
+    """
+    val = next(iter(filter(lambda x: x[1] == value, enumerate(L))))
+
+    if val:
+        return(val[0])
+    else:
+        raise(ValueError("{} is not in the list.".format(value)))
+
 def last_index(L, value):
     """
-    Find the last occurrence of value in L.
+    Find the final occurrence of value in L.
     """
-    for vals in reversed(list(enumerate(L))):
-        index, val = vals
+    val = next(iter(
+        filter(lambda x: x[1] == value, reversed(list(enumerate(L))))))
 
-        if val == value:
-            return(index)
-
-    raise(ValueError("{} is not in the list.".format(value)))
+    if val:
+        return(val[0])
+    else:
+        raise(ValueError("{} is not in the list.".format(value)))
 
 def is_cross_correlation(correlation):
     return(len(set(correlation)) == len(correlation))

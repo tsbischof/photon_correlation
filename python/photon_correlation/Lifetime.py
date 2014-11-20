@@ -97,6 +97,12 @@ class Lifetime(object):
         to max_val of their maximum value, but before they reach min_val of
         their maximum value.
         """
+        if min_val is None:
+            min_val = 0
+
+        if max_val is None:
+            max_val = 1
+            
         # only look after the maximum
         origin = self.origin()
         
@@ -108,21 +114,27 @@ class Lifetime(object):
                            key=lambda x: abs(x - max_counts*max_val))
 
         index_left = last_index(self.counts, counts_upper)
-        index_right = last_index(self.counts, counts_lower)
+        index_right = first_index(self.counts, counts_lower)
 
         return(self.range(self.times[index_left],
                           self.times[index_right]))
         
     def exponential_fit(self,
-                        min_val=min_val_default,
-                        max_val=max_val_default,
+                        min_val=None,
+                        max_val=None,
+                        time_range=None,
                         initial_conditions=(1, 1e-3, 1, 1e-4),
                         error_func="square difference",
                         **args):
         fit_times = list()
         fit_counts = list()
-            
-        fit_data = self.fit_data(min_val, max_val)
+
+        if min_val is not None or max_val is not None:
+            fit_data = self.fit_data(min_val, max_val)
+        elif time_range is not None:
+            fit_data = self.range(*time_range)
+        else:
+            fit_data = self
 
         for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
             if fit_count != 0:
