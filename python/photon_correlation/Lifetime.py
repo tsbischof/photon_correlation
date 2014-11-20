@@ -88,7 +88,7 @@ class Lifetime(object):
         """
         Return the index at which the curve is maximal.
         """
-        return(self.counts.index(max(self.counts)))
+        return(list(self.counts).index(max(self.counts)))
 
     def fit_data(self, min_val=min_val_default, max_val=max_val_default):
         """
@@ -123,9 +123,21 @@ class Lifetime(object):
                         min_val=None,
                         max_val=None,
                         time_range=None,
-                        initial_conditions=(1, 1e-3, 1, 1e-4),
+                        n_exponentials=1,
+                        initial_conditions=None,
                         error_func="square difference",
                         **args):
+        if initial_conditions is None:
+            initial_conditions = [1, 1]*n_exponentials
+        else:
+            n_exponentials = len(initial_conditions) / 2
+
+        if n_exponentials*2 != len(initial_conditions):
+            raise(ValueError("Dimension mismatch: expected {} parameters for "
+                             "{} exponentials, but got {}".format(
+                                 n_exponentials*2, n_exponentials,
+                                 len(initial_conditions))))
+        
         fit_times = list()
         fit_counts = list()
 
@@ -160,7 +172,7 @@ class Lifetime(object):
                 return(sum(map(lambda x, y: abs((x-y)/x), data, model)))
             else:
                 raise(ValueError("Unknown error type: {}".format(error_func)))
-
+        
         fit = scipy.optimize.fmin(error, initial_conditions, **args)
 
         return(MultiExponential(fit))

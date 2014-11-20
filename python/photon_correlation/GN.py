@@ -27,6 +27,9 @@ class GN(object):
     def __delitem__(self, correlation):
         del(self.counts[correlation])
 
+    def __len__(self):
+        return(len(self._counts))
+
     def __iter__(self):
         return(iter(sorted(self._counts)))
 
