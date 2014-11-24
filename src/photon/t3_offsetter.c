@@ -79,7 +79,7 @@ void t3_offsetter_init(t3_offsetter_t *offsetter,
 
 	}
 
-	offsetter->repetition_time = (unsigned long long)abs(
+	offsetter->repetition_time = (unsigned long long)fabs(
 			floor(1e12/repetition_rate));
 }
 
