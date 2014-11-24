@@ -504,7 +504,7 @@ int pc_options_valid(pc_options_t const *options) {
 	}
 
 	if ( pc_options_has_option(options, OPT_TIME_GATING)
-			&& ! options->mode == MODE_T3 ) {
+			&& options->mode != MODE_T3 ) {
 		error("Time gating only defined for t3 mode.\n");
 		return(false);
 	}
