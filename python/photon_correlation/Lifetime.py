@@ -60,7 +60,7 @@ class Lifetime(object):
         and return a new lifetime object.
         """
         binning = int(resolution / self.resolution)
-        
+
         return(self.rebin(n=binning))
     
     def rebin(self, n=2):

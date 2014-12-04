@@ -98,7 +98,7 @@ class G3_T3(GN):
             if pulses is None:
                 pulses = list(map(mean, sorted(g3.keys())))
                 n_pulses = len(pulses)
-                print(pulses)
+##                print(pulses)
                 total_g3 = numpy.zeros((n_pulses, n_pulses))
 
             for i0, p0 in enumerate(sorted(g3)):

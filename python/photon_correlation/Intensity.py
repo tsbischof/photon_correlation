@@ -250,12 +250,16 @@ class Intensity(object):
         """
         Subtract the first time from all times, such that time starts from zero.
         """
-        start = self.times[0]
-        self.times = list(map(lambda x: (x[0] - start[0],
-                                         x[1] - start[1]),
-                              self.times))
+        intensity = Intensity(mode=self.mode)
+        start = self.times[0][0]
+        intensity.times = list(map(lambda x: (x[0] - start,
+                                              x[1] - start),
+                                   self.times))
 
-        return(self)
+        for channel, counts in self:
+            intensity[channel] = counts
+
+        return(intensity)
 
     def threshold(self, threshold=0.7):
         """
