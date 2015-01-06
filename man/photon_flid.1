@@ -32,7 +32,7 @@ measures the number of photons arriving in that window and their mean arrival
 time. The resulting values are used to increment a two-dimensional histogram,
 and at the end of the run the results are output in a comma-delimited 
 format as follows:
-.br 
+
 	   ,    ,    ,     0, 10000, 20000, ...
 .br
 	   ,    ,    , 10000, 20000, 30000, ...
@@ -102,9 +102,9 @@ correlation (see \fBphoton_gn\fR), such that all arrival events lead to the
 incrementation of a particular
 histogram bin. From this measured lifetime, we determine the mean arrival time
 by taking the sum:
-.br
+
 	sum(map(lambda g1: mean(g1_bin.limits)*g1_bin.counts, g1))
-.br
+
 This method has the advantage of reusing infrastructure, since we already have
 good tools for measuring the overall lifetime for large numbers of photons. 
 However, it is computationally expensive to determine the lifetime this way
@@ -158,7 +158,7 @@ enable resolution of rapid fluctuations, at the expense of precision.
 .TP
 .BR \-x\ limits\fR,\ \fB\-\-time= limits
 Time limits as used in photon_histogram, specified as (no spaces):
-.br
+
 	lower (picoseconds), number of bins, upper (picoseconds)
 
 This produces the specified number of bins, evenly spaced between the lower
@@ -167,8 +167,8 @@ and upper limits.
 .TP
 .BR \-Q\ intensity\fR,\ \fB\-\-intensity= limits
 Intensity limits are specified in the same manner as time limits:
-.br
-	lower (photons per window), number of bins, \\
+
+	lower (photons per window), number of bins,
 .br 
 		upper (photons per window)
 
@@ -183,8 +183,10 @@ Errors and other debug information are output to stderr.
 Intensity is measured as a whole number of photons per window, and the limits
 must be evenly divisible by the number of bins. For example, the following
 limits are invalid:
+
+	$ photon_flid --time 0,10,100 --intensity 0,10,11 
 .br
-	$ photon_flid --time 0,10,100 --intensity 0,10,11 --window-width 10
+	              --window-width 10
 .br
 	ERROR: Number of bins must be an integer divisor of the span
 .br
@@ -194,31 +196,35 @@ limits are invalid:
 For some windows, it is possible that the measured intensity or lifetime will 
 be too long to fit into the given bounds. This leads to errors of the following
 form:
+
+	$ echo "0,0,10\n0,0,10" | 
 .br
-	$ echo "0,0,10\n0,0,10" | \\
+	  photon_flid --time 0,10,100 --intensity 0,1,1 
 .br
-	  photon_flid --time 0,10,100 --intensity 0,1,1 --window-width 10
+	              --window-width 10
 .br
-	ERROR: Found an intensity out of bounds: got 1, but expected a value
+	ERROR: Found an intensity out of bounds: got 1, but expected a 
 .br
-	between 0 and 1.
-.br
-.br
-	$ echo "0,0,1000" | \\
+	value between 0 and 1.
+
+	$ echo "0,0,1000" | 
 .br
 	  photon_flid --time 0,10,100 --intensity 0,1,10 --window-width 10
 .br
-	ERROR: Found a lifetime out of bounds: got 1000, but expected a value
+	ERROR: Found a lifetime out of bounds: got 1000, but 
 .br
-	bretween 0 and 100
-.br
+	expected a value between 0 and 100
+
 Note that this error only excludes the current window from the histogram. All
 valid windows will still be included in the calculation, so if you want to 
 ensure that every window is included in the result either monitor STDERR or
 check that the total number of events equals the number of time windows seen.
 
 .SH BUGS
-There are no known bugs. Please email the author if you find any.
+There are no known bugs. If you should find any, please contact the author or
+file a bug report on github.
 
 .SH AUTHOR
 Thomas Bischof <tbischof@mit.edu>
+.br
+https://github.com/tsbischof/photon_correlation

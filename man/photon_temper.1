@@ -1,0 +1,81 @@
+.TH PHOTON_TEMPER 1 "2014-12-31" "4.2"
+.SH NAME
+photons \- Tools for adjusting the photon stream
+.SH SYNOPSIS
+.B photon_temper
+[
+.BI \-\-verbose 
+] [ 
+.BI \-\-help
+] [
+.BI \-\-version
+] [
+.BI \-\-file\-in= file
+] [ 
+.BI \-\-file\-out= file
+] [ 
+.BI \-\-mode= mode
+] [
+.BI \-\-channels= channels
+] [ 
+.BI \-\-time\-offsets= offsets
+] [ 
+.BI \-\-pulse\-offsets= offsets
+] [ 
+.BI \-\-suppress= channels
+] [
+.BI \-\-queue\-size= size
+] [
+.BI \-\-filter\-afterpulsing
+] [ 
+.BI \-\-time\-gating= time
+]
+.SH DESCRIPTION
+.B photon_temper
+provides a collection of tools for adjusting the photons found in the stream.
+These adjustments fall into a few categories: removing an excitation channel, 
+adjusting the relative timing on a channel, removing afterpulsing events, and 
+time-gating the signal to suppress early arrivals.
+
+.SH EXAMPLES
+.SS Removing channels
+.SS Adjusting timing
+.SS Removing afterpulsing
+.SS Imposing time gating
+
+.SH OPTIONS
+.SS General options
+.TP 
+.BR \-v\fR,\ \fB\-\-verbose
+Display debug messages during execution, sent to stderr. 
+.TP
+.BR \-h\fR,\ \fB\-\-help
+Display a usage message.
+.TP
+.BR \-V\fR,\ \fB\-\-version
+Display the version of the program.
+.SS Files and formats
+.TP
+.BI \-i\  file\fR,\ \fB\-\-file-in= file
+The name of the ascii file to read from. By default this is stdin.
+.TP
+.BI \-o\  file\fR,\ \fB\-\-file-out= file
+The name of the ascii file to write to. By default this is stdout.
+.TP
+.BI \-q\ size\fR,\ \fB\-\-queue-size= size
+
+.SS Offsets
+.SS Removing channels
+.SS 
+
+.SH ERRORS
+Errors and other debug information are output to stderr.
+
+.SH BUGS
+There are no known bugs. If you should find any, please contact the author or
+file a bug report on github.
+
+.SH AUTHOR
+Thomas Bischof <tbischof@mit.edu>
+.br
+https://github.com/tsbischof/photon_correlation
