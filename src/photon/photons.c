@@ -153,5 +153,5 @@ int photons(FILE *stream_in, FILE *stream_out,
 		
 	photon_stream_free(&photons);
 
-	return(PC_SUCCESS);
+	return(result);
 }

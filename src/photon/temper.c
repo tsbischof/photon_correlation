@@ -184,7 +184,7 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 					diff = pst->window_dim(pst->right) -
 							pst->window_dim(pst->left);
 
-					result = (diff >= pst->offset_span);
+//					result = (diff >= pst->offset_span);
 
 					if ( pst->filter_afterpulsing &&
 							pst->mode == MODE_T3 && 
