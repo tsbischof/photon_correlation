@@ -1,0 +1,230 @@
+.TH PHOTON_FLID 1 "2014-12-29" "4.2"
+.SH NAME
+photon_flid \- Relates instantaneous intensity and lifetime
+.SH SYNOPSIS
+.B photon_flid
+[
+.BI \-\-verbose 
+] [ 
+.BI \-\-help
+] [
+.BI \-\-version
+] [
+.BI \-\-file\-in= file
+] [ 
+.BI \-\-file\-out= file
+] [ 
+.BI \-\-window\-width= width
+] [
+.BI \-\-time= limits
+] [
+.BI \-\-intensity= limits
+]
+
+.SH DESCRIPTION
+.B photon_flid
+uses photon arrival data to measure the relationship between emission intensity
+and lifetime over the course of an experiment. 
+
+For each window of time for a sorted stream of t3 photons, 
+.B photon_flid
+measures the number of photons arriving in that window and their mean arrival
+time. The resulting values are used to increment a two-dimensional histogram,
+and at the end of the run the results are output in a comma-delimited 
+format as follows:
+
+	   ,    ,    ,     0, 10000, 20000, ...
+.br
+	   ,    ,    , 10000, 20000, 30000, ...
+.br
+	  0,  10, 100,   xxx,   xxx,   xxx, ...
+.br
+	 10,  20, 100,   xxx,   xxx,   xxx, ...
+
+This is the result one would expect for --time=0,10,100000 and 
+--intensity 0,10,100. Reading along the first two rows, we find each column
+represents a mean arrival time of 0-10ns, 10-20ns, and so on, starting with 
+column 3. Columns 0 and 1 represent intensity bins, such that each row contains
+the result for 0-10 photons, 10-20 photons, and so on, starting with row 2. 
+Column 2 gives the maximum number of photons per window, such that division of 
+columns 0 and 1 by column 2 gives the intensity in photons per pulse. The xxx
+each represent a number of counts, that is, the number of windows found for
+which the intensity and lifetime fell into the given range (includes the lower
+limit but excludes the upper limit).
+
+.SH EXAMPLES
+An example call to photon_flid might look something like this:
+.br
+	$ photon_flid --file-in data.t3 --window-width 25000 
+.br
+	              --time 0,1000,400000 --intensity 0,2500,25000
+.br
+	,,,0.00,400.00, ...
+.br
+	,,,400.00,800.00, ...
+.br
+	0,10,25000,1,0, ...
+.br
+This gives the flid with lifetime bins of 400ps width, and resolution of 
+intensity from 0 to 1 counts per pulse, with resolution of 0.0004 counts per
+pulse. 
+	
+
+.SH OVERVIEW
+.B photon_flid
+must implement three distinct ideas: finding all photons in a given window,
+measuring the intensity in a window, and measuring the lifetime of emission
+for those photons. To simplify the process, we assume that the incoming stream
+of photons is sorted. This is a natural assumption for experimental data, but 
+for simulation work it can require some effort to ensure time-ordering. 
+
+.SS Parceling into windows
+For a sorted stream, we keep track of the current lower limit for the pulse 
+window, which is guaranteed to be a multiple of the window width. As 
+implemented, the counter starts at 0 and is incremented for each window until 
+the window associated for each photon, such that all leading zero-intensity 
+windows are included. If your data begin with a large period of zero arrivals, 
+consider reworking this logic to start the counter at the appropriate value 
+for the first photon.
+
+.SS Measuring intensity
+With the ability to parcel photons into windows, we measure the intensity by 
+counting the number of photons whose arrival pulse falls after (start) and 
+bofore (start + window width). 
+
+.SS Measuring lifetime
+For measuring the lifetime, there are two distinct approaches: bin then 
+calculate, or calculate then bin. 
+.TP 
+Bin, then calculate (simple, but expensive)
+In binning first, we would use a structure equivalent to first-order 
+correlation (see \fBphoton_gn\fR), such that all arrival events lead to the 
+incrementation of a particular
+histogram bin. From this measured lifetime, we determine the mean arrival time
+by taking the sum:
+
+	sum(map(lambda g1: mean(g1_bin.limits)*g1_bin.counts, g1))
+
+This method has the advantage of reusing infrastructure, since we already have
+good tools for measuring the overall lifetime for large numbers of photons. 
+However, it is computationally expensive to determine the lifetime this way
+because we must iterate over all histogram bins, such that the cost increases 
+with finer time resolution. Since we are performing this calculation many 
+thousands of times, this method can be quite slow.
+.TP 
+Calculate, then bin (efficient; we use this one)
+This is the method used in \fBphoton_flid\fR.
+The idea here is to keep a running total of the arrival times and the total
+number of photons in a given window, then divide the two at the end of the 
+window. This retains the base resolution of the photon data at minimal
+computational cost, and thus is sufficiently rapid for our purposes. The only
+real concern is that the total arrival time for all photons in a window must
+fit into a long long integer, i.e. 64 bits of time. For photons arriving
+an average of 1 microsecond (1e6 ps) after a pulse, this is about 1e12 
+photons. Presumably you will not run into this limit, but if you do you can
+implement big integers for the total arrival time.
+
+.SH OPTIONS
+.SS General options
+.TP 
+.BR \-v\fR,\ \fB\-\-verbose
+Display debug messages during execution, sent to stderr. 
+
+.TP
+.BR \-h\fR,\ \fB\-\-help
+Display a usage message.
+
+.TP
+.BR \-V\fR,\ \fB\-\-version
+Display the version of the program.
+
+.SS Files and formats
+.TP
+.BR \-i\ file \fR,\ \fB\-\-file-in= file
+The name of the ascii file to read from. By default this is stdin.
+
+.TP
+.BR \-o\ file \fR,\ \fB\-\-file-out= file
+The name of the ascii file to write to. By default this is stdout.
+
+.SS Histogram definition
+.TP
+.BR \-W\ width\fR,\ \fB\-\-window\-width= width 
+The duration, in number of pulses (t3 mode), of a time window for measuring
+the intensity and lifetime. A larger window yields a more precise measurement
+of intensity and lifetime, at the expense of time resolution. Smaller windows
+enable resolution of rapid fluctuations, at the expense of precision.
+
+.TP
+.BR \-x\ limits\fR,\ \fB\-\-time= limits
+Time limits as used in photon_histogram, specified as (no spaces):
+
+	lower (picoseconds), number of bins, upper (picoseconds)
+
+This produces the specified number of bins, evenly spaced between the lower
+and upper limits.
+
+.TP
+.BR \-Q\ intensity\fR,\ \fB\-\-intensity= limits
+Intensity limits are specified in the same manner as time limits:
+
+	lower (photons per window), number of bins,
+.br 
+		upper (photons per window)
+
+For intensity limits the span (upper - lower) must be evenly divisible by
+the number of bins. This is to ensure that all bins have even size, since
+the intensity unit (number of photons in the window) is strictly integral. 
+
+.SH ERRORS
+Errors and other debug information are output to stderr.
+
+.SS Non-integral intensity limits
+Intensity is measured as a whole number of photons per window, and the limits
+must be evenly divisible by the number of bins. For example, the following
+limits are invalid:
+
+	$ photon_flid --time 0,10,100 --intensity 0,10,11 
+.br
+	              --window-width 10
+.br
+	ERROR: Number of bins must be an integer divisor of the span
+.br
+	of possible values:  11 % 10 = 1.
+
+.SS Value outside bounds
+For some windows, it is possible that the measured intensity or lifetime will 
+be too long to fit into the given bounds. This leads to errors of the following
+form:
+
+	$ echo "0,0,10\n0,0,10" | 
+.br
+	  photon_flid --time 0,10,100 --intensity 0,1,1 
+.br
+	              --window-width 10
+.br
+	ERROR: Found an intensity out of bounds: got 1, but expected a 
+.br
+	value between 0 and 1.
+
+	$ echo "0,0,1000" | 
+.br
+	  photon_flid --time 0,10,100 --intensity 0,1,10 --window-width 10
+.br
+	ERROR: Found a lifetime out of bounds: got 1000, but 
+.br
+	expected a value between 0 and 100
+
+Note that this error only excludes the current window from the histogram. All
+valid windows will still be included in the calculation, so if you want to 
+ensure that every window is included in the result either monitor STDERR or
+check that the total number of events equals the number of time windows seen.
+
+.SH BUGS
+There are no known bugs. If you should find any, please contact the author or
+file a bug report on github.
+
+.SH AUTHOR
+Thomas Bischof <tbischof@mit.edu>
+.br
+https://github.com/tsbischof/photon_correlation

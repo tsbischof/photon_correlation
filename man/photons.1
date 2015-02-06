@@ -1,4 +1,4 @@
-.TH PHOTONS 1 "2014-11-14" "4.2"
+.TH PHOTONS 1 "2014-12-29" "4.2"
 .SH NAME
 photons \- Tools for photon mode conversions 
 .SH SYNOPSIS
@@ -115,40 +115,46 @@ to an unused channel
 .SH OPTIONS
 .SS General options
 .TP 
-.BR \-v ", " \-\-verbose
-Display debug messages during exectution, sent to stderr. 
+.BR \-v\fR,\ \fB\-\-verbose
+Display debug messages during execution, sent to stderr. 
 .TP
-.BR \-h ", " \-\-help
+.BR \-h\fR,\ \fB\-\-help
 Display a usage message.
 .TP
-.BR \-V ", " \-\-version
+.BR \-V\fR,\ \fB\-\-version
 Display the version of the program.
 .SS Files and formats
 .TP
-.BI \-i\  file \fR,\ \fB\-\-file-in= file
+.BI \-i\  file\fR,\ \fB\-\-file-in= file
 The name of the ascii file to read from. By default this is stdin.
 .TP
-.BI \-o\  file \fR,\ \fB\-\-file-out= file
+.BI \-o\  file\fR,\ \fB\-\-file-out= file
 The name of the ascii file to write to. By default this is stdout.
 .SS Conversion methods
 .TP
-.BI \-m\  mode \fR,\ \fB\-\-mode= mode
+.BI \-m\  mode\fR,\ \fB\-\-mode= mode
 The mode of the incoming photons.
 .TP
-.BI \-M\  mode \fR,\ \fB\-\-convert= mode
+.BI \-M\  mode\fR,\ \fB\-\-convert= mode
 If converting, the mode of the output photons. This can be t2, t3, or as-t2.
 .TP
-.BI \-O\  time \fR,\ \fB\-\-time\-origin= time
+.BI \-O\  time\fR,\ \fB\-\-time\-origin= time
 The origin of absolute time, in picoseconds.
 .TP
-.BI \-R\  rate \fR,\ \fB\-\-repetition\-rate= rate
+.BI \-R\  rate\fR,\ \fB\-\-repetition\-rate= rate
 The repetition rate of the excitation source, in cycles per second.
 .TP
-.BI \-z\  channel \fR,\ \fB\-\-copy\-to\-channel= channel
+.BI \-z\  channel\fR,\ \fB\-\-copy\-to\-channel= channel
 The channel onto which all photons are to be copied.
+
 .SH ERRORS
 Errors and other debug information are output to stderr.
+
 .SH BUGS
-There are no known bugs.
+There are no known bugs. If you should find any, please contact the author or
+file a bug report on github.
+
 .SH AUTHOR
 Thomas Bischof <tbischof@mit.edu>
+.br
+https://github.com/tsbischof/photon_correlation

@@ -1,6 +1,7 @@
 .TH PHOTON_NUMBER 1 "2014-11-14" "4.2"
 .SH NAME
 photon_number - Count the number of excitation events yielding n photons
+
 .SH SYNOPSIS
 .B photon_number
 [
@@ -20,6 +21,7 @@ photon_number - Count the number of excitation events yielding n photons
 ] [ 
 .BI \-\-stop= pulse
 ]
+
 .SH DESCRIPTION
 .BI photon_number
 Counts the number of events in which 0, 1, 2, ... photons arrive after a single
@@ -34,6 +36,7 @@ arrives on the stopping pulse, it is excluded. If no bounds are specified, the
 first and last photons to arrive set the beginning and end of time.
 
 If no events of n photons are found, then that entry is not printed.
+
 .SH EXAMPLES
 These examples make use of sample_data/t3.txt.
 
@@ -55,6 +58,7 @@ found in this window.
 	0,7
 .br
 	2,2
+
 .SH OPTIONS
 .TP 
 .BR \-v ", " \-\-verbose
@@ -87,6 +91,7 @@ this number will not be processed.
 .BI \-F\  pulse \fR,\ \fB\-\-stop= pulse
 The upper limit of pulse number for the run. Photons which arrive on or after
 this number will not be processed.
+
 .SH ERRORS
 Errors and other debug information are output to stderr.
 
@@ -96,5 +101,12 @@ like the following error:
 	ERROR: Too many photons: 129
 
 If this occurs, try increasing the number of channels.
+
+.SH
+There are not known bugs. If you should find any, please contact the author or
+file a bug report on github.
+
 .SH AUTHOR
 Thomas Bischof <tbischof@mit.edu>
+.br
+https://github.com/tsbischof/photon_correlation

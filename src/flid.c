@@ -108,7 +108,7 @@ flid_t *flid_alloc(limits_t const *time_limits,
 				sizeof(unsigned int *)*flid->intensity_axis->n_bins);
 	}
 
-	if ( flid->counts == NULL ) {
+	if ( flid != NULL && flid->counts == NULL ) {
 		flid_free(&flid);
 	} else {
 		for ( i = 0; flid != NULL && i < flid->intensity_axis->n_bins; i++ ) {

@@ -1,1 +1,2 @@
-dist_man_MANS = photon_number.1 photon_synced_t2.1 photons.1 
+dist_man_MANS = photon_flid.1 photon_number.1 photon_number_to_channels.1 \
+		photon_synced_t2.1 photons.1 

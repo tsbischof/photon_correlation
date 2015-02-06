@@ -128,7 +128,7 @@ multi_tau_g2cn_t *multi_tau_g2cn_alloc(unsigned int const binning,
 	}
 
 	if ( result == PC_SUCCESS ) {
-		mt->averages = (double **)malloc(sizeof(double)*mt->depth);
+		mt->averages = (double **)malloc(sizeof(double *)*mt->depth);
 		if ( mt->averages == NULL ) {
 			result = PC_ERROR_MEM;
 		} else {

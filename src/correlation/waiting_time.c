@@ -87,6 +87,9 @@ waiting_time_t *waiting_time_alloc(int const mode) {
 			waiting_time_free(&wt);
 		}
 
+	}
+
+	if ( wt != NULL ) {
 		if ( mode == MODE_T2 ) {
 			wt->correlate = t2_correlate;
 			wt->print = t2_correlation_fprintf;
