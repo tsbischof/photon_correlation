@@ -3,8 +3,8 @@ import fractions
 
 import matplotlib.pyplot as plt
 
-from GN import GN
-from util import *
+from .GN import GN
+from .util import *
 
 t3_center = (-0.5, 0.5)
 t3_side = (0.5, 1.5)
@@ -112,46 +112,32 @@ class G2_T3(GN):
         return(self._autocorrelation)            
 
     def make_figure(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        self.add_to_axes(ax)
+        return(fig)
+
+    def add_to_axes(self, ax):
         g2 = self.autocorrelation()
 
-        fig = plt.figure()
-            
-        ax_center = fig.add_subplot(121)
-        ax_side = fig.add_subplot(122)
+        max_time = round(max(map(lambda x: x[0], g2[(-0.5, 0.5)]))*1e-3)
 
-        max_counts = 0
-
-        for title, pulse_bin, ax in [("center", t3_center, ax_center),
-                                     ("side", t3_side, ax_side)]:
+        for pulse_bin, color in [((-1.5, -0.5), "black"),
+                                 ((0.5, 1.5), "black"),
+                                 ((-0.5, 0.5), "red")]:
             my_g2 = g2[pulse_bin]
 
-            times = list(map(lambda x: mean(x[0])*1e-3,
+            times = list(map(lambda x: mean(x[0])*1e-3+mean(pulse_bin)*max_time,
                              sorted(my_g2.items())))
             counts = list(map(lambda x: x[1],
                               sorted(my_g2.items())))
-
-##            n = 16
-##            times = smooth(times, n=n)
-##            counts = rebin(counts, n=n)
-
-            my_max = max(counts)
-            if my_max > max_counts:
-                max_counts = my_max
-
-            max_time = abs(max(times, key=abs))
             
-            ax.plot(times, counts)
-            ax.set_title("{}: {} counts".format(title, sum(counts)))
-            ax.set_xlabel("Time/ns")
-            ax.set_xlim((-max_time, max_time))
+            ax.plot(times, counts, color=color)
 
-        for ax in fig.axes:
-            ax.set_ylim((0, my_max))
-
-        ax_center.set_ylabel("Counts")
-        fig.tight_layout()
-        
-        return(fig)
+        ax.set_xlim((-max_time*1.5, max_time*1.5))
+        ax.set_xticks((-max_time, 0, max_time))
+        ax.set_xlabel("Time/ns")
+        ax.set_ylabel(r"$g^{(2)}(\rho,\tau)$")
 
     def total_counts(self, pulse_bin):
         """

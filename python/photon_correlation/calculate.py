@@ -6,12 +6,11 @@ import re
 import math
 import logging
 
-from Picoquant import Picoquant
-from Limits import Limits
-from Lifetime import Lifetime
-import TD
+from .Picoquant import Picoquant
+from .Limits import Limits
+from .Lifetime import Lifetime
 
-from util import *
+from .util import *
 
 def apply_t3_time_offsets(photons, time_offsets, repetition_rate):
     cmd = ["photon_t3_offsets", 

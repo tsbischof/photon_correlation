@@ -4,9 +4,9 @@ import itertools
 
 import matplotlib.pyplot as plt
 
-from Lifetime import Lifetime
-from GN import GN
-from util import *
+from .Lifetime import Lifetime
+from .GN import GN
+from .util import *
 
 class G1(GN):       
     def from_stream(self, stream_in):

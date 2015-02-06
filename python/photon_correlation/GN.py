@@ -1,6 +1,6 @@
 import csv
 
-from util import is_cross_correlation
+from .util import is_cross_correlation
 
 class GN(object):
     def __init__(self, filename=None, stream=None,

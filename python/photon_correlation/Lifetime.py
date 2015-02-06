@@ -4,8 +4,8 @@ import math
 import numpy
 import scipy.optimize
 
-from util import *
-from Exponential import *
+from .util import *
+from .Exponential import *
 
 max_val_default = 0.95
 min_val_default = 0.1
@@ -52,7 +52,8 @@ class Lifetime(object):
         """
         Return the normalized lifetime, based on the given function.
         """
-        return(Lifetime(normalize(self.counts, key=key), times=self.times))
+        return(Lifetime(list(normalize(self.counts, key=key)),
+                        times=self.times))
 
     def to_resolution(self, resolution=1024):
         """

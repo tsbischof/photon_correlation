@@ -6,8 +6,8 @@ import bisect
 import numpy
 import matplotlib.pyplot as plt
 
-from Blinking import *
-from util import *
+from .Blinking import *
+from .util import *
 
 def mode_error(mode):
     raise(KeyError("Unknown mode: {}".format(mode)))

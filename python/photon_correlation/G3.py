@@ -3,8 +3,8 @@ import csv
 import matplotlib.pyplot as plt
 import numpy
 
-from GN import GN
-from util import is_cross_correlation, mean
+from .GN import GN
+from .util import is_cross_correlation, mean
 
 class G3_T3(GN):
     def from_stream(self, stream_in):

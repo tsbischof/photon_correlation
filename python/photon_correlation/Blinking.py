@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy
 
-from util import *
+from .util import *
 
 class Blinking(object):
     def __init__(self, intensity):
