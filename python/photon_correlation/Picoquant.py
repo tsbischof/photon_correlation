@@ -15,6 +15,7 @@ class FakeIniSection(object):
     def __init__(self, fp):
         self.fp = fp
         self.sechead = '[header]\n'
+        
     def readline(self):
         if self.sechead:
             try:
@@ -23,6 +24,12 @@ class FakeIniSection(object):
                 self.sechead = None
         else:
             return(self.fp.readline())
+
+def fake_ini_section(text, section="header"):
+    """
+    Add the fake section "{}" to an ini-like file.
+    """.format(section)
+    return("[{}]".format(section) + text)
 
 class Picoquant(object):
     """
@@ -48,10 +55,10 @@ class Picoquant(object):
                 ["picoquant",
                  "--file-in", self._filename,
                  "--header-only"],
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE).stdout.read().decode()
 
             self._header = configparser.ConfigParser()
-            self._header.readfp(FakeIniSection(io.StringIO(header_raw)))
+            self._header.readfp(io.StringIO(fake_ini_section(header_raw)))
 
         return(self._header)
 

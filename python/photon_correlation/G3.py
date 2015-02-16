@@ -1,10 +1,11 @@
 import csv
+import statistics
 
 import matplotlib.pyplot as plt
 import numpy
 
 from .GN import GN
-from .util import is_cross_correlation, mean
+from .util import is_cross_correlation
 
 class G3_T3(GN):
     def from_stream(self, stream_in):
@@ -96,7 +97,7 @@ class G3_T3(GN):
             g3 = self[correlation]
 
             if pulses is None:
-                pulses = list(map(mean, sorted(g3.keys())))
+                pulses = list(map(statistics.mean, sorted(g3.keys())))
                 n_pulses = len(pulses)
 ##                print(pulses)
                 total_g3 = numpy.zeros((n_pulses, n_pulses))

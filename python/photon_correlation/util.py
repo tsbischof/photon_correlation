@@ -27,22 +27,13 @@ def dot_number(filename):
 
     return(int(parsed.group("index")), parsed.group("modifier"))
 
-def mean(L):
-    if not isinstance(L, collections.Iterable):
-        return(L)
-    
-    if len(L) == 0:
-        return(0)
-    else:
-        return(float(sum(L))/len(L))
-
 def normalize(L, key=max):
     my_key = key(L)
 
     if my_key == 0:
         my_key = 1
 
-    return(map(lambda x: x/float(my_key), L))
+    return(list(map(lambda x: x/float(my_key), L)))
 
 def first_index(L, value):
     """
@@ -107,7 +98,7 @@ def smooth(L, n=2):
     Perform a boxcar average with width n. Return the result as a new
     lifetime object.
     """
-    return(map(lambda x: float(x)/n, rebin(L, n=n)))
+    return(list(map(lambda x: float(x)/n, rebin(list(L), n=n))))
 
 def final_nonzero(L):
     """
@@ -123,10 +114,10 @@ def transpose(L):
     length = len(L[0])
 
     for i in range(length):
-        yield(map(lambda x: x[i], L))
+        yield(list(map(lambda x: x[i], L)))
 
 def ps_to_ns(L):
-    return(map(lambda x: x*1e-3, L))
+    return(list(map(lambda x: x*1e-3, L)))
 
 def make_gn_stream(bins, counts):
     """

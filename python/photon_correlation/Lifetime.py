@@ -1,5 +1,6 @@
 import bisect
 import math
+import statistics
 
 import numpy
 import scipy.optimize
@@ -45,8 +46,9 @@ class Lifetime(object):
     def __iter__(self):
         return(iter(zip(self.times, self.counts)))
 
+    @property
     def time_bins(self):
-        return(map(mean, self.times))
+        return(list(map(statistics.mean, self.times)))
 
     def normalized(self, key=max):
         """
@@ -79,8 +81,8 @@ class Lifetime(object):
         """
         Return the counts associated with the given range of times.
         """
-        index_lower = bisect.bisect_left(self.time_bins(), mean(lower))
-        index_upper = bisect.bisect_left(self.time_bins(), mean(upper))
+        index_lower = bisect.bisect_left(self.time_bins, lower)
+        index_upper = bisect.bisect_left(self.time_bins, upper)
 
         return(Lifetime(self.counts[index_lower:index_upper],
                         times=self.times[index_lower:index_upper]))
@@ -149,7 +151,7 @@ class Lifetime(object):
         else:
             fit_data = self
 
-        for fit_time, fit_count in zip(fit_data.time_bins(), fit_data.counts):
+        for fit_time, fit_count in zip(fit_data.time_bins, fit_data.counts):
             if fit_count != 0:
                 fit_times.append(fit_time)
                 fit_counts.append(fit_count)
