@@ -62,6 +62,9 @@ class Lifetime(object):
         Perform the rebinning necessary to achieve the desired resolution,
         and return a new lifetime object.
         """
+        if not resolution:
+            return(self)
+        
         binning = int(resolution / self.resolution)
 
         return(self.rebin(n=binning))

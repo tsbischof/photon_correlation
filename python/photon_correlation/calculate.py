@@ -363,7 +363,7 @@ def max_counts(data_filename, window_width,
     max_bin = (0, 0)
     max_counts = 0
 
-    for line in csv.reader(intensity.stdout):
+    for line in csv.reader(map(lambda x: x.decode(), intensity.stdout)):
         counts = sum(map(int, line[2:]))
         if counts > max_counts:
             max_bin = line[:2]

@@ -85,7 +85,7 @@ class Picoquant(object):
                 ["picoquant",
                  "--file-in", self._filename,
                  "--resolution-only"],
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE).stdout.read().decode()
 
             if "," in resolution_raw:
                 # curves
@@ -107,7 +107,7 @@ class Picoquant(object):
                 ["picoquant",
                  "--file-in", self._filename,
                  "--mode-only"],
-                stdout=subprocess.PIPE).communicate()[0].strip()
+                stdout=subprocess.PIPE).communicate()[0].decode().strip()
 
         return(self._mode)
 

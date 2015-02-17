@@ -53,7 +53,7 @@ class IDGN(object):
                     self.window_width = int(line[2])
 
                 events = int(line[3])
-                counts = numpy.array(map(int, line[4:]))
+                counts = numpy.array(list(map(int, line[4:])))
 
                 self[intensity_bin] = Counts(events, counts)
 
@@ -90,18 +90,3 @@ class IDGN(object):
                 counts += my_counts
 
         return(counts)
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    
-    idgn = IDGN("/home/tsbischof/Documents/data/"
-                "microscopy/analysis/triexciton/"
-                "2014-09-04_oc2014-04-08/"
-                "oc2014-04-08_1e-5_dot_009_250nW_000.ht3.idgn.run/g3.5000")
-
-    events, counts = idgn.max_intensity()
-
-    print(events)
-    plt.figure()
-    plt.plot(counts)
-    plt.show()

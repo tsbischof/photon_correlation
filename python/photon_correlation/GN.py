@@ -42,7 +42,7 @@ class GN(object):
             writer = csv.writer(stream_out)
 
             for line in self.to_stream():
-                writer.writerow(map(str, line))
+                writer.writerow(list(map(str, line)))
 
     def cross_correlations(self):
         return(iter(filter(is_cross_correlation, self)))
