@@ -1,3 +1,4 @@
+from .Exponential import *
 from .FLID import FLID
 from .G1 import G1
 from .G2 import G2_T2, G2_T3
@@ -9,6 +10,7 @@ from .Intensity import Intensity
 from .Offsets import Offsets
 from .Picoquant import Picoquant
 
-__all__ = ["FLID", "G1", "G2_T2", "G2_T3", "G3_T2", "G3_T3",
+__all__ = ["Exponential", "MultiExponential",
+           "FLID", "G1", "G2_T2", "G2_T3", "G3_T2", "G3_T3",
            "IDGN", "Lifetime", "Limits", "Intensity", "Offsets",
            "Picoquant", "calculate", "util"]
