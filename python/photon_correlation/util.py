@@ -4,6 +4,7 @@ import sys
 import functools
 import itertools
 import collections
+import statistics
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -156,9 +157,12 @@ def neighbor_normalize(times, counts):
                     break
   
             if left is not None and right is not None:
-                dt = mean(times[right]) - mean(times[left])
-                new_left = mean([mean(times[left]), mean(t)])
-                new_right = mean([mean(t), mean(times[right])])
+                dt = statistics.mean(times[right]) - \
+                     statistics.mean(times[left])
+                new_left = statistics.mean([statistics.mean(times[left]),
+                                            statistics.mean(t)])
+                new_right = statistics.mean([statistics.mean(t),
+                                             statistics.mean(times[right])])
                 new_times.append((new_left, new_right))
                 new_counts.append(c/(dt*2.0))
 

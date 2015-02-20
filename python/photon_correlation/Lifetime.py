@@ -175,7 +175,8 @@ class Lifetime(object):
             if error_func == "square difference":
                 return(sum(map(lambda x, y: (x-y)**2, data, model)))
             elif error_func == "percent":
-                return(sum(map(lambda x, y: abs((x-y)/x), data, model)))
+                return(sum(map(lambda x, y: abs((x-y)/x) if x > 0 else 0,
+                               data, model)))
             else:
                 raise(ValueError("Unknown error type: {}".format(error_func)))
         
