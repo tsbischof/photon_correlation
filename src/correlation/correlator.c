@@ -40,7 +40,6 @@
 #include "../modes.h"
 #include "../photon/t2.h"
 #include "../photon/t3.h"
-#include "../photon/queue.h"
 
 correlator_t *correlator_alloc(int const mode, unsigned int const order,
 		size_t const queue_size, int const positive_only,
@@ -98,7 +97,7 @@ correlator_t *correlator_alloc(int const mode, unsigned int const order,
 }
 
 int correlator_init(correlator_t *correlator) {
-	queue_init(correlator->queue);
+	photon_queue_init(correlator->queue);
 	index_offsets_init(correlator->index_offsets, 0);
 	permutation_init(correlator->permutation);
 	correlation_init(correlator->correlation);
@@ -119,7 +118,7 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 	int status = PC_SUCCESS;
 
 	if ( correlator->order == 1 ) {
-		status = queue_push(correlator->queue, photon);
+		status = photon_queue_push(correlator->queue, photon);
 
 		if ( status != PC_SUCCESS) {
 			return(status);
@@ -128,19 +127,19 @@ int correlator_push(correlator_t *correlator, photon_t const *photon) {
 		if ( correlator_valid_distance(correlator) ) {
 			return(PC_SUCCESS);
 		} else {
-			queue_init(correlator->queue);
+			photon_queue_init(correlator->queue);
 			return(PC_SUCCESS);
 		}
 		
 	}
 	
-	return(queue_push(correlator->queue, photon));
+	return(photon_queue_push(correlator->queue, photon));
 }
 
 int correlator_next(correlator_t *correlator) {
 	if ( correlator->order == 1 ) {
-		while ( ! queue_empty(correlator->queue) ) {
-			queue_pop(correlator->queue, correlator->left);
+		while ( ! photon_queue_empty(correlator->queue) ) {
+			photon_queue_pop(correlator->queue, correlator->left);
 			correlation_set_index(correlator->correlation,
 					0,
 					correlator->left);
@@ -179,18 +178,18 @@ int correlator_next_block(correlator_t *correlator) {
  * to be considered a block (flusihng means they always are)
  * */
 	if ( correlator->yielded ) {
-		queue_pop(correlator->queue, NULL);
+		photon_queue_pop(correlator->queue, NULL);
 		correlator->yielded = false;
 	}
 
 	correlator->in_block = false;
-	queue_front(correlator->queue, (void *)&correlator->left);
-	queue_back(correlator->queue, (void *)&correlator->right);
+	photon_queue_front(correlator->queue, &(correlator->left));
+	photon_queue_back(correlator->queue, &(correlator->right));
 
-	if ( queue_size(correlator->queue) < correlator->order ) {
+	if ( photon_queue_size(correlator->queue) < correlator->order ) {
 		debug("Queue underfilled.\n");
 		if ( correlator->flushing ) {
-			queue_init(correlator->queue);
+			photon_queue_init(correlator->queue);
 		}
 
 		return(EOF);
@@ -199,7 +198,7 @@ int correlator_next_block(correlator_t *correlator) {
 		return(EOF);
 	} else {
 		index_offsets_init(correlator->index_offsets, 
-				queue_size(correlator->queue)-1);
+				photon_queue_size(correlator->queue)-1);
 		correlator->in_permutations = false;
 		correlator->yielded = true;
 		correlator->in_block = true;
@@ -234,7 +233,7 @@ int correlator_next_from_block(correlator_t *correlator) {
 
 void correlator_free(correlator_t **correlator) {
 	if ( *correlator != NULL ) {
-		queue_free(&((*correlator)->queue));
+		photon_queue_free(&((*correlator)->queue));
 		index_offsets_free(&((*correlator)->index_offsets));
 		permutation_free(&((*correlator)->permutation));
 		correlation_free(&((*correlator)->correlation));
@@ -244,11 +243,11 @@ void correlator_free(correlator_t **correlator) {
 }
 
 int correlator_valid_distance(correlator_t *correlator) {
-	queue_index(correlator->queue,
-			(void *)&correlator->left,
+	photon_queue_index(correlator->queue,
+			&correlator->left,
 			correlator->index_offsets->current_index_offsets->values[0]);
-	queue_index(correlator->queue, 
-			(void *)&correlator->right,
+	photon_queue_index(correlator->queue, 
+			&correlator->right,
 			correlator->index_offsets->current_index_offsets->values[
 				correlator->order-1]);
 		
@@ -265,7 +264,7 @@ int correlator_build_correlation(correlator_t *correlator) {
 
 	debug("Populating correlation.\n");
 	for ( i = 0; i < correlator->order; i++ ) {
-		result = queue_index_copy(correlator->queue,
+		result = photon_queue_index_copy(correlator->queue,
 				&(cc->photons[i]),
 				io->values[p->values[i]]);
 

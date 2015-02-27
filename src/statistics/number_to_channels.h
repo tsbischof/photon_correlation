@@ -33,7 +33,7 @@
 #define NUMBER_TO_CHANNELS_H_
 
 #include <stdio.h>
-#include "../queue.h"
+#include "../photon/queue.h"
 #include "../photon/photon.h"
 #include "../options.h"
 
@@ -41,7 +41,7 @@ typedef struct {
 	int flushing;
 
 	long long current_pulse;
-	queue_t *queue;
+	photon_queue_t *queue;
 	photon_t photon;
 
 	photon_t previous_photon;

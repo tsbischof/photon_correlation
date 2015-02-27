@@ -117,7 +117,7 @@ synced_t2_t *synced_t2_alloc(size_t const queue_size) {
 	synced_t2 = (synced_t2_t *)malloc(sizeof(synced_t2_t));
 
 	if ( synced_t2 != NULL ) {
-		synced_t2->queue = queue_alloc(sizeof(t2_t), queue_size);
+		synced_t2->queue = photon_queue_alloc(MODE_T2, queue_size);
 
 		if ( synced_t2->queue == NULL ) {
 			synced_t2_free(&synced_t2);
@@ -129,7 +129,7 @@ synced_t2_t *synced_t2_alloc(size_t const queue_size) {
 
 void synced_t2_free(synced_t2_t **synced_t2) {
 	if ( *synced_t2 != NULL ) {
-		queue_free(&(*synced_t2)->queue);
+		photon_queue_free(&(*synced_t2)->queue);
 		free(*synced_t2);
 		*synced_t2 = NULL;
 	}
@@ -153,7 +153,7 @@ int synced_t2_push(synced_t2_t *synced_t2, photon_t const *photon) {
 	if ( photon->t2.channel == synced_t2->sync_channel ) {
 		if ( synced_t2->first_sync_seen ) {
 			debug("New sync pulse\n");
-			if ( queue_empty(synced_t2->queue) ) {
+			if ( photon_queue_empty(synced_t2->queue) ) {
 				memcpy(&(synced_t2->last_sync), photon, sizeof(photon_t));
 				synced_t2->sync_index++;
 			} else {
@@ -170,7 +170,7 @@ int synced_t2_push(synced_t2_t *synced_t2, photon_t const *photon) {
 		}
 	} else {
 		if ( synced_t2->first_sync_seen ) { 
-			queue_push(synced_t2->queue, photon);
+			photon_queue_push(synced_t2->queue, photon);
 		}
 	}
 
@@ -185,11 +185,11 @@ int synced_t2_next(synced_t2_t *synced_t2) {
 	photon_t photon;
 
 	if ( synced_t2->flushing ) {
-		if ( queue_empty(synced_t2->queue) ) {
+		if ( photon_queue_empty(synced_t2->queue) ) {
 			synced_t2->flushing = false;
 			return(PC_ERROR_NO_RECORD_AVAILABLE);
 		} else {
-			queue_pop(synced_t2->queue, &photon);
+			photon_queue_pop(synced_t2->queue, &photon);
 
 			synced_t2->photon.t3.channel = photon.t2.channel;
 
@@ -197,7 +197,7 @@ int synced_t2_next(synced_t2_t *synced_t2) {
 			synced_t2->photon.t3.time = photon.t2.time - 
 				synced_t2->last_sync.t2.time;
 
-			if ( queue_empty(synced_t2->queue) ) {
+			if ( photon_queue_empty(synced_t2->queue) ) {
 				synced_t2->flushing = false;
 				memcpy(&(synced_t2->last_sync), &(synced_t2->next_sync), 
 						sizeof(t2_t));

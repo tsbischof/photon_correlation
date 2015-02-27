@@ -184,6 +184,32 @@ class Lifetime(object):
 
         return(MultiExponential(fit))
 
+    def fit(self, fit_f, p0, error="least squares", params_check=None,
+            force_calculation=False, **fmin_args):
+        if error == "least squares":
+            err_f = lambda x, y: (x-y)**2
+        elif error == "percent":
+            err_f = lambda x, y: abs((x-y)/x) if x > 0 else 0
+        else:
+            raise(ValueError("Unknown error: {}".format(error)))
+                
+        t = self.time_bins
+        data = self.counts
+
+        def error(p):
+            if params_check is not None and not params_check(p):
+                return(float("inf"))
+            else:
+                return(sum(map(err_f, fit_f(p)(t), data)))
+            
+        if force_calculation:
+            params = scipy.optimize.fmin(error, p0,
+                                         **fmin_args)
+        else:
+            params = p0
+
+        return(params, fit_f(params))
+
     def lifetime(self, min_val=min_val_default, max_val=max_val_default,
                  error=False):
         """

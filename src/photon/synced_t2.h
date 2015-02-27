@@ -36,7 +36,7 @@
 #include "../options.h"
 #include "t2.h"
 #include "t3.h"
-#include "../queue.h"
+#include "../photon/queue.h"
 
 typedef struct {
 	unsigned long long sync_index;
@@ -52,7 +52,7 @@ typedef struct {
 	int flushing;
 	int first_sync_seen;
 
-	queue_t *queue;
+	photon_queue_t *queue;
 } synced_t2_t;
 
 int synced_t2_dispatch(FILE *stream_in, FILE *stream_out, 

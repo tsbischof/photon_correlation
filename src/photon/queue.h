@@ -29,12 +29,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QUEUE_H_
-#define QUEUE_H_
+#ifndef PHOTON_QUEUE_H_
+#define PHOTON_QUEUE_H_
 
 #include "photon.h"
 #include "../queue.h"
 
-queue_t *photon_queue_alloc(int const mode, size_t const length);
+typedef queue_t photon_queue_t;
+
+photon_queue_t *photon_queue_alloc(int const mode, size_t const length);
+void photon_queue_init(photon_queue_t *queue);
+void photon_queue_free(photon_queue_t **queue);
+
+int photon_queue_full(photon_queue_t const *queue);
+int photon_queue_empty(photon_queue_t const *queue);
+size_t photon_queue_size(photon_queue_t const *queue);
+size_t photon_queue_capacity(photon_queue_t const *queue);
+int photon_queue_resize(photon_queue_t *queue, size_t const length);
+
+int photon_queue_sort(photon_queue_t *queue);
+
+int photon_queue_index_copy(photon_queue_t const *queue, 
+		photon_t *photon, size_t const index);
+int photon_queue_index(photon_queue_t const *queue, 
+		photon_t **photon, size_t const index);
+int photon_queue_pop(photon_queue_t *queue, photon_t *photon);
+int photon_queue_push(photon_queue_t *queue, photon_t const *photon);
+int photon_queue_front(photon_queue_t const *queue, photon_t **photon);
+int photon_queue_front_copy(photon_queue_t const *queue, photon_t *photon);
+int photon_queue_back(photon_queue_t const *queue, photon_t **photon);
+int photon_queue_back_copy(photon_queue_t const *queue, photon_t *photon);
 
 #endif

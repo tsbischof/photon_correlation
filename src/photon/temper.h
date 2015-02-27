@@ -38,7 +38,7 @@
 #include "offsets.h"
 
 #include "../options.h"
-#include "../queue.h"
+#include "../photon/queue.h"
 
 typedef struct {
 	FILE *stream_in;
@@ -55,7 +55,7 @@ typedef struct {
 	long long offset_span;
 	offsets_t *offsets;
 
-	queue_t *queue;
+	photon_queue_t *queue;
 	int yielded_all_sorted;
 
 	int filter_afterpulsing;

@@ -35,11 +35,86 @@
 #include "../modes.h"
 
 queue_t *photon_queue_alloc(int const mode, size_t const length) {
-	if ( mode == MODE_T2 ) {
-		return(queue_alloc(sizeof(t2_t), length));
-	} else if ( mode == MODE_T3 ) {
-		return(queue_alloc(sizeof(t3_t), length));
-	} else {
-		return(NULL);
+	photon_queue_t *queue = NULL;
+
+	queue = queue_alloc(sizeof(photon_t), length);
+
+	if ( queue == NULL ) {
+		return(queue);
 	}
+
+	if ( mode == MODE_T2 ) {
+		queue_set_comparator(queue, t2_compare);
+	} else if ( mode == MODE_T3 ) {
+		queue_set_comparator(queue, t3_compare);
+	} else {
+		photon_queue_free(&queue);
+	} 
+
+	return(queue);
+}
+
+void photon_queue_init(photon_queue_t *queue) {
+	queue_init(queue);
+}
+
+void photon_queue_free(photon_queue_t **queue) {
+	queue_free(queue);
+}
+
+int photon_queue_full(photon_queue_t const *queue) {
+	return(queue_full(queue));
+}
+
+int photon_queue_empty(photon_queue_t const *queue) {
+	return(queue_empty(queue));
+}
+
+size_t photon_queue_size(photon_queue_t const *queue) {
+	return(queue_size(queue));
+}
+
+size_t photon_queue_capacity(photon_queue_t const *queue) {
+	return(queue_capacity(queue));
+}
+
+int photon_queue_resize(photon_queue_t *queue, size_t const length) {
+	return(queue_resize(queue, length));
+}
+
+int photon_queue_sort(photon_queue_t *queue) {
+	return(queue_sort(queue));
+}
+
+int photon_queue_index_copy(photon_queue_t const *queue, 
+		photon_t *photon, size_t const index) {
+	return(queue_index_copy(queue, (void *)photon, index));	
+}
+int photon_queue_index(photon_queue_t const *queue, 
+		photon_t **photon, size_t const index) {
+	return(queue_index(queue, (void **)photon, index));
+}
+
+int photon_queue_pop(photon_queue_t *queue, photon_t *photon) {
+	return(queue_pop(queue, (void *)photon));
+}
+
+int photon_queue_push(photon_queue_t *queue, photon_t const *photon) {
+	return(queue_push(queue, (void *)photon));
+}
+
+int photon_queue_front(photon_queue_t const *queue, photon_t **photon) {
+	return(queue_front(queue, (void **)photon));
+}
+
+int photon_queue_front_copy(photon_queue_t const *queue, photon_t *photon) {
+	return(queue_front_copy(queue, (void *)photon));
+}
+
+int photon_queue_back(photon_queue_t const *queue, photon_t **photon) {
+	return(queue_back(queue, (void **)photon));
+}
+
+int photon_queue_back_copy(photon_queue_t const *queue, photon_t *photon) {
+	return(queue_back_copy(queue, (void *)photon));
 }

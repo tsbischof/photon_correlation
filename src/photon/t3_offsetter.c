@@ -32,7 +32,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "t3_offsetter.h"
 #include "stream.h"
 #include "offsets.h"
-#include "queue.h"
 #include "../error.h"
 #include <math.h>
 
@@ -64,8 +63,7 @@ void t3_offsetter_init(t3_offsetter_t *offsetter,
 
 	offsetter->flushing = false;
 
-	queue_init(offsetter->queue);
-	queue_set_comparator(offsetter->queue, t3_compare);
+	photon_queue_init(offsetter->queue);
 
 	offsetter->offset_time = offset_time;
 
@@ -88,10 +86,10 @@ int t3_offsetter_push(t3_offsetter_t *offsetter, photon_t const *photon) {
 	photon_t *current_photon;
 	long long new_time;
 
-	result = queue_push(offsetter->queue, photon);
+	result = photon_queue_push(offsetter->queue, photon);
 
 	if ( result == PC_SUCCESS && offsetter->offset_time ) {
-		queue_back(offsetter->queue, (void *)&current_photon);
+		photon_queue_back(offsetter->queue, &current_photon);
 
 		if ( current_photon->t3.channel < offsetter->channels ) {
 			new_time = (offsetter->repetition_time * current_photon->t3.pulse +
@@ -111,7 +109,7 @@ int t3_offsetter_push(t3_offsetter_t *offsetter, photon_t const *photon) {
 			result = PC_ERROR_CHANNEL;
 		}
 
-		queue_sort(offsetter->queue);
+		photon_queue_sort(offsetter->queue);
 	}
 
 	return(result);
@@ -122,7 +120,7 @@ int t3_offsetter_next(t3_offsetter_t *offsetter) {
 	long long right_time;
 
 	if ( offsetter->flushing || ! offsetter->offset_time ) {
-		if ( queue_pop(offsetter->queue, (void *)&(offsetter->photon))
+		if ( photon_queue_pop(offsetter->queue, &(offsetter->photon))
 				 == PC_SUCCESS ) {
 			return(PC_RECORD_AVAILABLE);
 		} else {
@@ -132,12 +130,12 @@ int t3_offsetter_next(t3_offsetter_t *offsetter) {
 		/* Time offsets used, make sure that there is enough time between
 		 * photons to ensure that they are certainly sorted.
 		 */
-		if ( queue_size(offsetter->queue) == 1 ) {
+		if ( photon_queue_size(offsetter->queue) == 1 ) {
 			return(EOF);
 		}
 
-		queue_front(offsetter->queue, (void *)&offsetter->left);
-		queue_back(offsetter->queue, (void *)&offsetter->right);
+		photon_queue_front(offsetter->queue, &offsetter->left);
+		photon_queue_back(offsetter->queue, &offsetter->right);
 
 		left_time = offsetter->left->t3.pulse*offsetter->repetition_time +
 				offsetter->left->t3.time;
@@ -145,7 +143,7 @@ int t3_offsetter_next(t3_offsetter_t *offsetter) {
 				offsetter->right->t3.time;
 
 		if ( (right_time - left_time) > offsetter->offset_span ) {
-			queue_pop(offsetter->queue, (void *)&(offsetter->photon));
+			photon_queue_pop(offsetter->queue, &(offsetter->photon));
 			return(PC_RECORD_AVAILABLE);
 		} else {
 			return(EOF);
@@ -159,7 +157,7 @@ void t3_offsetter_flush(t3_offsetter_t *offsetter) {
 
 void t3_offsetter_free(t3_offsetter_t **offsetter) {
 	if ( *offsetter != NULL ) {
-		queue_free(&((*offsetter)->queue));
+		photon_queue_free(&((*offsetter)->queue));
 		free((*offsetter)->time_offsets);
 		free(*offsetter);
 		*offsetter = NULL;

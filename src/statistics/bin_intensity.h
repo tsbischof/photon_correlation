@@ -34,7 +34,7 @@
 
 #include <stdio.h>
 #include "../options.h"
-#include "../queue.h"
+#include "../photon/queue.h"
 #include "../photon/photon.h"
 #include "../photon/window.h"
 #include "../limits.h"
@@ -61,7 +61,7 @@ typedef struct {
 	photon_channel_dimension_t channel_dim;
 	photon_window_dimension_t window_dim;
 
-	queue_t *queue;
+	photon_queue_t *queue;
 
 	photon_t photon;
 

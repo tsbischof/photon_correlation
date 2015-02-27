@@ -46,7 +46,7 @@ number_to_channels_t *number_to_channels_alloc(size_t const queue_size) {
 		return(number);
 	}
 
-	number->queue = queue_alloc(sizeof(photon_t), queue_size);
+	number->queue = photon_queue_alloc(MODE_T3, queue_size);
 
 	if ( number->queue == NULL ) {
 		number_to_channels_free(&number);
@@ -65,29 +65,30 @@ void number_to_channels_init(number_to_channels_t *number,
 
 	number->correlate_successive = correlate_successive;
 
-	queue_init(number->queue);
+	photon_queue_init(number->queue);
 }
 
 int number_to_channels_push(number_to_channels_t *number,
 		photon_t const *photon) {
 	int result = PC_SUCCESS;
-	photon_t *old;
+	photon_t *old = NULL;
 	int i;
 
 	/* Check that no photon on this channel has been seen in 
 	 * the current pulse 
 	 */
-	for ( i = 0; i < queue_size(number->queue); i++ ) {
-		queue_index(number->queue, (void *)&old, i);
+	for ( i = 0; i < photon_queue_size(number->queue); i++ ) {
+		photon_queue_index(number->queue, &old, i);
 
 		if ( photon->t3.pulse == old->t3.pulse 
 				&& photon->t3.channel == old->t3.channel ) {
 			break;
+	
 		}
 	} 
 
-	if ( i == queue_size(number->queue) ) {
-		result = queue_push(number->queue, photon);
+	if ( i == photon_queue_size(number->queue) ) {
+		result = photon_queue_push(number->queue, photon);
 
 		if ( result != PC_SUCCESS ) {
 			return(result);
@@ -99,7 +100,7 @@ int number_to_channels_push(number_to_channels_t *number,
 	}
 
 	number->current_pulse = photon->t3.pulse;
-		
+
 	return(result);
 }
 
@@ -107,11 +108,11 @@ int number_to_channels_next(number_to_channels_t *number) {
 	photon_t *front = NULL;
 	photon_t *back = NULL;
 
-	queue_front(number->queue, (void *)&front);
-	queue_back(number->queue, (void *)&back);
+	photon_queue_front(number->queue, &front);
+	photon_queue_back(number->queue, &back);
 
-	if ( ( number->flushing && ! queue_empty(number->queue)) ||
-			( queue_size(number->queue) > 1 && 
+	if ( ( number->flushing && ! photon_queue_empty(number->queue)) ||
+			( photon_queue_size(number->queue) > 1 && 
 				front->t3.pulse != back->t3.pulse ) ) {
 		number->photon.t3.channel = number->current_channel;
 		number->photon.t3.pulse = front->t3.pulse;
@@ -125,7 +126,7 @@ int number_to_channels_next(number_to_channels_t *number) {
 		}
 
 		number->current_channel++;
-		queue_pop(number->queue, &(number->previous_photon));
+		photon_queue_pop(number->queue, &(number->previous_photon));
 
 		return(PC_SUCCESS);
 	} else {
@@ -134,17 +135,17 @@ int number_to_channels_next(number_to_channels_t *number) {
 }
 
 void number_to_channels_pulse_over(number_to_channels_t *number) {
-	t3_t *front = NULL;
-	t3_t *back = NULL;
+	photon_t *front = NULL;
+	photon_t *back = NULL;
 	int i;
 
 	if ( number->flushing ) {
-		number->seen_this_pulse = queue_size(number->queue);
+		number->seen_this_pulse = photon_queue_size(number->queue);
 	} else {
-		queue_front(number->queue, (void *)&front);
-		for ( i = queue_size(number->queue) - 1; i >= 0; i-- ) {
-			queue_index(number->queue, (void *)&back, i);
-			if ( front->pulse == back->pulse ) {
+		photon_queue_front(number->queue, &front);
+		for ( i = photon_queue_size(number->queue) - 1; i >= 0; i-- ) {
+			photon_queue_index(number->queue, &back, i);
+			if ( front->t3.pulse == back->t3.pulse ) {
 				break;
 			}
 		}
@@ -163,7 +164,7 @@ void number_to_channels_flush(number_to_channels_t *number) {
 
 void number_to_channels_free(number_to_channels_t **number) {
 	if ( *number != NULL ) {
-		queue_free(&((*number)->queue));
+		photon_queue_free(&((*number)->queue));
 		free(*number);
 		*number = NULL;
 	}

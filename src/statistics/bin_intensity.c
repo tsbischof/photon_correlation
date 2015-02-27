@@ -193,7 +193,7 @@ bin_intensity_t *bin_intensity_alloc(int const mode, unsigned int const order,
 		}
 	}
 
-	bin_intensity->queue = queue_alloc(sizeof(photon_t), queue_size);
+	bin_intensity->queue = photon_queue_alloc(mode, queue_size);
 
 	if ( bin_intensity->queue == NULL ) {
 		bin_intensity_free(&bin_intensity);
@@ -226,7 +226,7 @@ void bin_intensity_init(bin_intensity_t *bin_intensity,
 				sizeof(unsigned long long)*bin_intensity->window_limits.bins);
 	}
 
-	queue_init(bin_intensity->queue);
+	photon_queue_init(bin_intensity->queue);
 
 	bin_intensity->maximum_delay = (long long)floor(
 			bin_intensity->window_limits.upper - 
@@ -245,7 +245,7 @@ void bin_intensity_free(bin_intensity_t **bin_intensity) {
 			}
 		}
 
-		queue_free(&((*bin_intensity)->queue));
+		photon_queue_free(&((*bin_intensity)->queue));
 		free(*bin_intensity);
 		*bin_intensity = NULL;
 	}
@@ -263,7 +263,7 @@ void bin_intensity_increment(bin_intensity_t *bin_intensity) {
 	double current_window;
 	double right_window;
 
-	queue_pop(bin_intensity->queue, &(bin_intensity->photon));
+	photon_queue_pop(bin_intensity->queue, &(bin_intensity->photon));
 
 	left_window = (double)bin_intensity->start;
 	current_window = (double)bin_intensity->window_dim(
@@ -285,7 +285,7 @@ void bin_intensity_increment(bin_intensity_t *bin_intensity) {
 void bin_intensity_flush(bin_intensity_t *bin_intensity) {
 	bin_intensity->flushing = true;
 
-	while ( ! queue_empty(bin_intensity->queue) ) {
+	while ( ! photon_queue_empty(bin_intensity->queue) ) {
 		debug("Incrementing.\n");
 		bin_intensity_increment(bin_intensity);
 	}
@@ -294,13 +294,14 @@ void bin_intensity_flush(bin_intensity_t *bin_intensity) {
 int bin_intensity_valid_distance(bin_intensity_t *bin_intensity) {
 	long long left;
 	long long right;
+	photon_t *front = NULL;
 
-	if ( queue_empty(bin_intensity->queue) ) {
+	if ( photon_queue_empty(bin_intensity->queue) ) {
 		return(false);
 	}
 
-	queue_front(bin_intensity->queue, (void *)&(bin_intensity->photon));
-	left = bin_intensity->window_dim(&(bin_intensity->photon));
+	photon_queue_front(bin_intensity->queue, &front);
+	left = bin_intensity->window_dim(front);
 	right = bin_intensity->stop;
 
 	return( right - left > bin_intensity->maximum_delay );
@@ -334,7 +335,7 @@ int bin_intensity_push(bin_intensity_t *bin_intensity, photon_t const *photon) {
 			bin_intensity->stop = window;
 		}
 	
-		result = queue_push(bin_intensity->queue, photon);
+		result = photon_queue_push(bin_intensity->queue, photon);
 
 		if ( result != PC_SUCCESS ) {
 			return(result);

@@ -34,14 +34,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include "../options.h"
-#include "../queue.h"
+#include "../photon/queue.h"
 #include "t3.h"
 #include "../modes.h"
 
 typedef struct {
 	int flushing;
 
-	queue_t *queue;
+	photon_queue_t *queue;
 
 	int channels;
 

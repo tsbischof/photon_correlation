@@ -35,7 +35,7 @@
 #include "correlation.h"
 #include "../photon/stream.h"
 #include "../photon/photon.h"
-#include "../queue.h"
+#include "../photon/queue.h"
 #include "../combinatorics/permutations.h"
 #include "../combinatorics/index_offsets.h"
 
@@ -56,7 +56,7 @@ typedef struct _correlator_t {
 	long long min_time_distance;
 	long long max_time_distance;
 
-	queue_t *queue;
+	photon_queue_t *queue;
 
 	index_offsets_t *index_offsets;
 	permutation_t *permutation;

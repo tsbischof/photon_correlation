@@ -34,7 +34,6 @@
 #include "temper.h"
 #include "../modes.h"
 #include "../error.h"
-#include "../queue.h"
 
 #include "t2.h"
 #include "t3.h"
@@ -86,7 +85,7 @@ photon_stream_temper_t *photon_stream_temper_alloc(int const mode,
 	debug("Allocating offsets.\n");
 	pst->offsets = offsets_alloc(pst->channels);
 	debug("Allocating queue.\n");
-	pst->queue = queue_alloc(sizeof(photon_t), queue_length);
+	pst->queue = photon_queue_alloc(mode, queue_length);
 
 	if ( pst->offsets == NULL || pst->queue == NULL ) {
 		error("Could not allocate offsets or queue.\n");
@@ -126,11 +125,9 @@ void photon_stream_temper_init(photon_stream_temper_t *pst,
 	if ( pst->mode == MODE_T2 ) {
 		pst->offset_span = offset_span(pst->offsets->time_offsets,
 				pst->channels);
-		queue_set_comparator(pst->queue, t2_compare);
 	} else {
 		pst->offset_span = offset_span(pst->offsets->pulse_offsets,
 				pst->channels);
-		queue_set_comparator(pst->queue, t3_compare);
 	}
 
 	pst->time_gating = time_gating;
@@ -147,17 +144,17 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 
 	while ( 1 ) {
 		debug("Photons in the queue: %zu (of %zu)\n", 
-				queue_size(pst->queue),
+				photon_queue_size(pst->queue),
 				queue_capacity(pst->queue));
 
 		if ( feof(pst->stream_in) ) {
 			debug("EOF for stream_in.\n");
-			if ( queue_empty(pst->queue) ) {
+			if ( photon_queue_empty(pst->queue) ) {
 				debug("Queue empty.\n");
 				return(EOF);
 			} else {
 				debug("Popping a photon from queue.\n");
-				queue_pop(pst->queue, &(pst->current_photon));
+				photon_queue_pop(pst->queue, &(pst->current_photon));
 				return(PC_SUCCESS);
 			}
 		} else {
@@ -170,16 +167,16 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 				}
 
 				debug("Sorting the queue.\n");
-				queue_sort(pst->queue);
+				photon_queue_sort(pst->queue);
 				pst->yielded_all_sorted = 0;
 			} else {
 				debug("Trying to pop a photon.\n");
 
-				if ( queue_empty(pst->queue) ) {
+				if ( photon_queue_empty(pst->queue) ) {
 					pst->yielded_all_sorted = 1;
 				} else {
-					queue_front(pst->queue, (void *)&(pst->left));
-					queue_back(pst->queue, (void *)&(pst->right));
+					photon_queue_front(pst->queue, &(pst->left));
+					photon_queue_back(pst->queue, &(pst->right));
 
 					diff = pst->window_dim(pst->right) -
 							pst->window_dim(pst->left);
@@ -194,7 +191,7 @@ int photon_stream_temper_next(photon_stream_temper_t *pst) {
 						pst->yielded_all_sorted = 1;
 					} else if ( diff >= pst->offset_span ) {
 						debug("Found a photon outside the offset bounds\n");
-						queue_pop(pst->queue, &(pst->current_photon));
+						photon_queue_pop(pst->queue, &(pst->current_photon));
 						return(PC_SUCCESS);
 					} else {
 						debug("Within the offset bounds, get more photons\n");
@@ -252,8 +249,8 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 		/* Afterpulsing filter */
 		if ( ! suppress && pst->mode == MODE_T3 && pst->filter_afterpulsing ) {
 			debug("Checking for afterpulsing.\n");
-			for ( i = 0; i < queue_size(pst->queue); i++ ) {
-				queue_index(pst->queue, (void *)&photon, i);
+			for ( i = 0; i < photon_queue_size(pst->queue); i++ ) {
+				photon_queue_index(pst->queue, &photon, i);
 				if ( photon->t3.pulse == pst->current_photon.t3.pulse &&
 					photon->t3.channel == pst->current_photon.t3.channel ) {
 					suppress = true;
@@ -264,7 +261,7 @@ int photon_stream_temper_populate(photon_stream_temper_t *pst) {
 
 		if ( ! suppress ) {
 			debug("Adding a photon on channel %d.\n", channel);
-			return(queue_push(pst->queue, &(pst->current_photon)));
+			return(photon_queue_push(pst->queue, &(pst->current_photon)));
 		} else {
 			debug("Suppressed a photon on channel %d\n", channel);
 		}
@@ -277,7 +274,7 @@ void photon_stream_temper_free(photon_stream_temper_t **pst) {
 	if ( *pst != NULL ) {
 		free((*pst)->suppressed_channels);
 		offsets_free(&(*pst)->offsets);
-		queue_free(&(*pst)->queue);
+		photon_queue_free(&(*pst)->queue);
 		free(*pst);
 		*pst = NULL;
 	}
