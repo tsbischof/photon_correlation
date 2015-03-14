@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, Thomas Bischof
+ * Copyright (c) 2011-2015, Thomas Bischof
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without 
