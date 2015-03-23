@@ -11,9 +11,12 @@ from .Limits import Limits
 from .Intensity import Intensity
 from .Offsets import Offsets
 from .Picoquant import Picoquant
+from .T2 import T2
+from .T3 import T3
 
 __all__ = ["Exponential", "MultiExponential",
            "FLID", "G1", "G2_T2", "G2_T3", "G3_T2", "G3_T3",
            "Gaussian", "GaussianExponential",
            "IDGN", "Lifetime", "Limits", "Intensity", "Offsets",
-           "Picoquant", "calculate", "util"]
+           "Picoquant", "T2", "T3",
+           "calculate", "util"]

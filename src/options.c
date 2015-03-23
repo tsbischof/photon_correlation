@@ -55,9 +55,9 @@
 
 /*
 Currently used:
-aAbBcCdDeEfFgGhHiIjJkKmMoOpPRsSqQuUvVwWxXyYzZ
+aAbBcCdDeEfFgGhHiIjJkKmMnoOpPRsSqQuUvVwWxXyYzZ
 Remaining:
-lLr
+lLNqQrtT
 */
 
 static pc_option_t pc_options_all[] = {
@@ -236,6 +236,9 @@ static pc_option_t pc_options_all[] = {
 			"Specifies the sync divider, which effectively tells\n"
 			"how many sync events are skipped between recorded\n"
 			"events."},
+	{'n', "n:", "threshold",
+			"The minimum number of photons in a window to be\n"
+			"considered for calculation."},
 	};
 
 
@@ -311,6 +314,9 @@ static struct option pc_options_long[] = {
 /* synced t2 */
 	{"sync-channel", required_argument, 0, 'j'},
 	{"sync-divider", required_argument, 0, 'J'},
+
+/* threshold */
+	{"threshold", required_argument, 0, 'n'},
 
 	{0, 0, 0, 0}};
 
@@ -427,6 +433,8 @@ void pc_options_default(pc_options_t *options) {
 
 	options->sync_channel = 0;
 	options->sync_divider = 0;
+
+	options->threshold = 0;
 }
 
 int pc_options_valid(pc_options_t const *options) {
@@ -669,6 +677,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'J':
 				options->sync_divider = strtoul(optarg, NULL, 10);
+				break;
+			case 'n':
+				options->threshold = strtoul(optarg, NULL, 10);
 				break;
 			case '?':
 			default:
@@ -981,6 +992,8 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 
 	fprintf(stream_out, "sync_channel = %u\n", options->sync_channel);
 	fprintf(stream_out, "sync_divider = %u\n", options->sync_divider);
+
+	fprintf(stream_out, "threshold = %u\n", options->threshold);
 
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }

@@ -147,6 +147,9 @@ typedef struct {
 /* synced t2 */
 	unsigned int sync_channel;
 	unsigned int sync_divider;
+
+/* threshold */
+	unsigned int threshold;
 } pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
@@ -174,6 +177,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_FILTER_AFTERPULSING,
 		OPT_TIME_GATING,
 		OPT_SYNC_CHANNEL, OPT_SYNC_DIVIDER,
+		OPT_THRESHOLD,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);

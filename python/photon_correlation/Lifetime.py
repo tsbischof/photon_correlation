@@ -122,8 +122,8 @@ class Lifetime(object):
         index_left = last_index(self.counts, counts_upper)
         index_right = first_index(self.counts, counts_lower)
 
-        return(self.range(self.times[index_left],
-                          self.times[index_right]))
+        return(self.range(self.time_bins[index_left],
+                          self.time_bins[index_right]))
         
     def exponential_fit(self,
                         min_val=None,
@@ -227,9 +227,9 @@ class Lifetime(object):
                                                     error=True)
             return(-1/fit[0], error)
         else:
-            fit, func = self.exponential_fit(min_val=min_val,
+            func = self.exponential_fit(min_val=min_val,
                                              max_val=max_val)
-            return(-1/fit[0])
+            return(-1/func[0].rate)
 
     def mean_arrival_time(self):
         """
@@ -238,7 +238,7 @@ class Lifetime(object):
         if sum(self.counts) == 0:
             return(0)
         else:
-            weighted_sum = sum(map(lambda c, t: c*mean(t), \
+            weighted_sum = sum(map(lambda c, t: c*statistics.mean(t), \
                                    self.counts, self.times))            
             pure_sum = float(sum(self.counts))
             
@@ -267,7 +267,7 @@ class Lifetime(object):
             if self.counts[index] < threshold*max_counts:
                 break
 
-        background = mean(self.counts[:index])
+        background = statistics.mean(self.counts[:index])
 
         def apply_background(count):
             if count - background < 0:
