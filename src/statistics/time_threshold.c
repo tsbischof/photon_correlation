@@ -105,7 +105,7 @@ int photon_time_threshold_next(photon_time_threshold_t *ptt, photon_t *photon) {
 							sizeof(photon_t));
 					ptt->photon_held = true;
 					ptt->second_photon.t3.channel = ptt->first_photon.t3.channel
-							+ 2;
+							+ 1;
 
 					memcpy(photon, &(ptt->first_photon), sizeof(photon_t));
 					return(PC_SUCCESS);

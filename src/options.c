@@ -1004,6 +1004,8 @@ int pc_options_fprintf(FILE *stream_out, pc_options_t const *options) {
 
 	fprintf(stream_out, "threshold = %u\n", options->threshold);
 
+	fprintf(stream_out, "time_threshold = %llu\n", options->time_threshold);
+
 	return( ferror(stream_out) ? PC_ERROR_IO : PC_SUCCESS );
 }
 
