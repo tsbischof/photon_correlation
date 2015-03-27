@@ -150,6 +150,9 @@ typedef struct {
 
 /* threshold */
 	unsigned int threshold;
+
+/* time threshold */
+	unsigned long long time_threshold;
 } pc_options_t;
 
 enum { OPT_HELP, OPT_VERSION,
@@ -178,6 +181,7 @@ enum { OPT_HELP, OPT_VERSION,
 		OPT_TIME_GATING,
 		OPT_SYNC_CHANNEL, OPT_SYNC_DIVIDER,
 		OPT_THRESHOLD,
+		OPT_TIME_THRESHOLD,
 		OPT_EOF };
 
 pc_options_t *pc_options_alloc(void);

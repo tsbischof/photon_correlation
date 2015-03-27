@@ -30,7 +30,7 @@
  */
 
 #include "threshold.h"
-#include "stream.h"
+#include "../photon/stream.h"
 #include "../error.h"
 #include "../modes.h"
 
@@ -282,12 +282,12 @@ int photon_threshold(FILE *stream_in, FILE *stream_out,
 	if ( photons == NULL || pt == NULL ) {
 		error("Could not allocate memory.\n");
 		result = PC_ERROR_MEM;
+	} else {
+		photon_stream_init(photons, stream_in);
+		photon_threshold_init(pt, options->window_width, options->threshold,
+					options->set_start, options->start,
+					options->set_stop, options->stop);
 	}
-
-	photon_stream_init(photons, stream_in);
-	photon_threshold_init(pt, options->window_width, options->threshold,
-			options->set_start, options->start,
-			options->set_stop, options->stop);
 
 	if ( result == PC_SUCCESS ) {
 		debug("Starting stream\n");

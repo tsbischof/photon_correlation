@@ -1,5 +1,6 @@
 import csv
 import fractions
+import statistics
 
 import matplotlib.pyplot as plt
 
@@ -127,7 +128,8 @@ class G2_T3(GN):
                                  ((-0.5, 0.5), "red")]:
             my_g2 = g2[pulse_bin]
 
-            times = list(map(lambda x: mean(x[0])*1e-3+mean(pulse_bin)*max_time,
+            times = list(map(lambda x: statistics.mean(x[0])*1e-3
+                             +statistics.mean(pulse_bin)*max_time,
                              sorted(my_g2.items())))
             counts = list(map(lambda x: x[1],
                               sorted(my_g2.items())))

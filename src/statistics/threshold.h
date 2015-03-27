@@ -33,10 +33,10 @@
 #define THRESHOLD_H_
 
 #include <stdio.h>
-#include "window.h"
+#include "../photon/window.h"
 #include "../options.h"
-#include "photon.h"
-#include "queue.h"
+#include "../photon/photon.h"
+#include "../photon/queue.h"
 
 typedef struct {
 	unsigned int threshold;

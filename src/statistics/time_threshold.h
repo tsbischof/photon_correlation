@@ -29,18 +29,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "statistics/threshold.h"
-#include "run.h"
-#include "options.h"
+#ifndef TIME_THRESHOLD_H_
+#define TIME_THRESHOLD_H_
 
-int main(int argc, char *argv[]) {
-	program_options_t program_options = {
-"For a given threshold, only yield photons from time windows with at least\n"
-"that many photons.\n",
-		{OPT_VERBOSE, OPT_HELP, OPT_VERSION,
-			OPT_FILE_IN, OPT_FILE_OUT,
-			OPT_MODE, OPT_THRESHOLD, OPT_WINDOW_WIDTH,
-			OPT_EOF}};
+#include <stdio.h>
+#include "../options.h"
+#include "../photon/photon.h"
+#include "../photon/stream.h"
+#include "number_to_channels.h"
 
-	return(run(&program_options, photon_threshold, argc, argv));
-}
+typedef struct {
+	int photon_held;
+	photon_t first_photon;
+	photon_t second_photon;
+	unsigned long long time_threshold;
+	int correlate_successive;
+	photon_stream_t *photons;
+	number_to_channels_t *numbers;
+} photon_time_threshold_t;
+
+photon_time_threshold_t *photon_time_threshold_alloc(size_t const queue_size);
+void photon_time_threshold_init(photon_time_threshold_t *ptt, FILE *stream_in,
+		unsigned long long const threshold, int const correlate_successive);
+int photon_time_threshold_next(photon_time_threshold_t *ptt, photon_t *photon);
+void photon_time_threshold_free(photon_time_threshold_t **ptt);
+
+int photon_time_threshold(FILE *stream_in, FILE *stream_out, 
+		pc_options_t const *options);
+
+#endif

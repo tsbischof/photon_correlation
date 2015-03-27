@@ -34,6 +34,9 @@ class MultiExponential:
     def __str__(self):
         return(" + ".join(map(str, self)))
 
+    def __len__(self):
+        return(len(self.exponentials))
+
     def __getitem__(self, index):
         return(self.exponentials[index])
 

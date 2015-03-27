@@ -67,7 +67,10 @@ class Lifetime(object):
         
         binning = int(resolution / self.resolution)
 
-        return(self.rebin(n=binning))
+        if binning < 2:
+            return(self)
+        else:
+            return(self.rebin(n=binning))
     
     def rebin(self, n=2):
         """

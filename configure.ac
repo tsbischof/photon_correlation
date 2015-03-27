@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([photon_correlation], [4.3], [tbischof@mit.edu])
+AC_INIT([photon_correlation], [4.4], [tbischof@mit.edu])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 

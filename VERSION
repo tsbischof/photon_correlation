@@ -1,3 +1,9 @@
+v4.4 (2015-03-27)
+
+Added photon_time_threshold, which divides the photon stream (t3 only) of 
+two-photon events, based on whether the first photon arrived early or late.
+
+--------------------------------------------------------------------------------
 v4.3 (2015-03-20)
 
 Added photon_threshold, a tool for only yielding photons above a certain 

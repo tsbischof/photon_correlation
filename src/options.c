@@ -55,9 +55,9 @@
 
 /*
 Currently used:
-aAbBcCdDeEfFgGhHiIjJkKmMnoOpPRsSqQuUvVwWxXyYzZ
+aAbBcCdDeEfFgGhHiIjJkKmMnNoOpPRsSqQuUvVwWxXyYzZ
 Remaining:
-lLNqQrtT
+lLqQrtT
 */
 
 static pc_option_t pc_options_all[] = {
@@ -239,6 +239,8 @@ static pc_option_t pc_options_all[] = {
 	{'n', "n:", "threshold",
 			"The minimum number of photons in a window to be\n"
 			"considered for calculation."},
+	{'N', "N:", "time-threshold",
+			"The time dividing early and late arrivals, in ps."},
 	};
 
 
@@ -317,6 +319,9 @@ static struct option pc_options_long[] = {
 
 /* threshold */
 	{"threshold", required_argument, 0, 'n'},
+
+/* time threshold */
+	{"time-threshold", required_argument, 0, 'N'},
 
 	{0, 0, 0, 0}};
 
@@ -435,6 +440,7 @@ void pc_options_default(pc_options_t *options) {
 	options->sync_divider = 0;
 
 	options->threshold = 0;
+	options->time_threshold = 0;
 }
 
 int pc_options_valid(pc_options_t const *options) {
@@ -680,6 +686,9 @@ int pc_options_parse(pc_options_t *options,
 				break;
 			case 'n':
 				options->threshold = strtoul(optarg, NULL, 10);
+				break;
+			case 'N':
+				options->time_threshold = strtoull(optarg, NULL, 10);
 				break;
 			case '?':
 			default:
