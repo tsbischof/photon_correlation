@@ -2,6 +2,7 @@ import os
 import csv
 import collections
 import bisect
+import statistics
 
 import numpy
 import matplotlib.pyplot as plt
@@ -40,6 +41,10 @@ class Intensity(object):
 
     def __len__(self):
         return(len(self.counts.keys()))
+
+    @property
+    def time_bins(self):
+        return(list(map(statistics.mean, self.times)))
 
     def max(self):
         my_max = 0

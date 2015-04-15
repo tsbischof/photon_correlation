@@ -95,21 +95,40 @@ def number_to_channels(photons, correlate=False):
 
     return(subprocess.Popen(cmd, stdin=photons.stdout, stdout=subprocess.PIPE))
 
-def gn(data_filename, dst_dir=None,
+def photon_time_threshold(photons, correlate=False, time_threshold=10000):
+    cmd = ["photon_time_threshold",
+           "--time-threshold", str(int(time_threshold))]
+
+    if correlate:
+        cmd.append("--correlate-successive")
+
+    return(subprocess.Popen(cmd, stdin=photons.stdout, stdout=subprocess.PIPE))
+
+def photon_threshold(photons, window_width=None, mode=None, threshold=None):
+    cmd = ["photon_threshold",
+           "--mode", mode,
+           "--window-width", str(int(window_width)),
+           "--threshold", str(int(threshold))]
+
+    return(subprocess.Popen(cmd, stdin=photons.stdout, stdout=subprocess.PIPE))
+
+def gn(data_filename, dst_dir=None, dst_filename=None,
        photon_mode=None, gn_mode=None,
        order=2, channels=None,
        time_bins=None, pulse_bins=None,
        repetition_rate=None, time_offsets=None,
        window_width=None, bin_width=None,
-       photon_number=False, 
-       time_bin_width=1024):
+       photon_number=False, number_correlate=False,
+       time_bin_width=1024, time_threshold=None, threshold=None):
     logging.info("Calculating g{} for {}".format(order, data_filename))
 
     if not bin_width is None:
         logging.info("This is a time-dependent calculation with a bin "
                      "width of {}".format(bin_width))
-    
-    if dst_dir is None:
+
+    if dst_filename:
+        pass
+    elif dst_dir is None:
         dst_filename = data_filename
     else:
         dst_filename = os.path.join(dst_dir,
@@ -137,6 +156,9 @@ def gn(data_filename, dst_dir=None,
         convert = False
     else:
         convert = True
+
+    if time_threshold:
+        channels = 4            
 
     if isinstance(time_bins, int):
         time_bins = Limits(-repetition_time, repetition_time, n_bins=time_bins)
@@ -194,7 +216,7 @@ def gn(data_filename, dst_dir=None,
         if window_width is None:
             gn_cmd.extend(("--window-width", str(bin_width)))
 
-    if not window_width is None:
+    if window_width and not time_threshold:
         gn_cmd.extend(("--window-width", str(window_width)))
 
     photons = picoquant(data_filename, time_offsets=time_offsets)
@@ -205,6 +227,11 @@ def gn(data_filename, dst_dir=None,
         
     if photon_number:
         photons = number_to_channels(photons)
+    elif time_threshold:
+        photons = photon_threshold(photons, window_width=window_width,
+                                   mode=gn_mode, threshold=threshold)
+        photons = photon_time_threshold(photons, correlate=number_correlate,
+                                        time_threshold=time_threshold)
 
     gn_cmd.extend(("--channels", str(channels)))
     
@@ -272,7 +299,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
 
     if photon_number:
         channels = sum(range(1, channels+1))
-    
+
     if time_bins is None:
         if mode == "t3" and order == 1:
             # Determine the resolution-limited time bins from the t3 file.
@@ -324,7 +351,7 @@ def idgn(src_filename, dst_filename, intensity_bins,
 
     if photon_number:
         photons = number_to_channels(photons, correlate=number_correlate)
-        
+
     gn = subprocess.Popen(gn_cmd, stdin=photons.stdout).wait()
 
 def max_counts(data_filename, window_width,
