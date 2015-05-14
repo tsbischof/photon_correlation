@@ -197,14 +197,19 @@ class G2_T2(GN):
         return(self)
 
     def autocorrelation(self):
+        try:
+            self._autocorrelation
+        except:
+            self._autocorrelation = None
+            
         if self._autocorrelation is None:
             result = dict()
             
-            for correlation, g2 in self:
+            for correlation in self:
                 if not is_cross_correlation(correlation):
                     continue
 
-                for time_bin, counts in g2.items():
+                for time_bin, counts in self[correlation].items():
                     if time_bin not in result.keys():
                         result[time_bin] = 0
 

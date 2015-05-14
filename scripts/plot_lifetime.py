@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import csv
 import sys
 
 import matplotlib.pyplot as plt
+
+import photon_correlation as pc
 
 def plot_lifetime(lifetimes):
     plt.clf()
@@ -40,8 +42,14 @@ def lifetimes_from_file(stream):
 
 if __name__ == "__main__":
     for filename in sys.argv[1:]:
-        with open(filename) as stream:
-            lifetimes = lifetimes_from_file(stream)
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        g1 = pc.G1(filename=filename)
+        g1.add_to_axes(ax)
+        plt.show(fig)
 
-            plot_lifetime(lifetimes)
+#        with open(filename) as stream:
+#            lifetimes = lifetimes_from_file(stream)
+#
+#            plot_lifetime(lifetimes)
 

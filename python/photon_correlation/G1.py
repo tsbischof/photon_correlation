@@ -82,10 +82,3 @@ class G1(GN):
         fig = plt.figure()
         self.add_to_axes(fig.add_subplot(111), resolution=resolution)
         return(fig)
-
-if __name__ == "__main__":
-    filename = "/home/tsbischof/Documents/data/microscopy/2014-08-15_oc2014-04-08/oc2014-04-08_1e-5_dot_000_250nW_000.ht3.g1.run/g1"
-    g1 = G1(filename=filename)
-
-    g1.to_file("/home/tsbischof/tmp/blargh.g1")
-

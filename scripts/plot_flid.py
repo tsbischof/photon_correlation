@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import csv
@@ -47,7 +47,7 @@ class FLID(object):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
 
-        ax.imshow(self.counts,
+        ax.imshow(numpy.log(self.counts),
                   interpolation="none",
                   origin="lower",
                   extent=[self.arrival_time[0][0],

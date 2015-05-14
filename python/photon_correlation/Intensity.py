@@ -69,8 +69,17 @@ class Intensity(object):
         self.filename = filename
         
         raw_counts = list()
-        
-        with open(filename) as stream_in:
+
+        if not os.path.exists(filename):
+            bz2_name = "{}.bz2".format(filename)
+            if os.path.exists(bz2_name):
+                filename = bz2_name
+                
+        if filename.endswith("bz2"): 
+            open_f = bz2.open
+        else:
+            open_f = open
+        with open_f(filename) as stream_in:
             for line in csv.reader(stream_in):
                 bin_left = int(line[0])
                 bin_right = int(line[1])
@@ -200,7 +209,7 @@ class Intensity(object):
 
         counts, bins = self.histogram(bins=bins)
 
-        ax.bar(bins[:-1], counts, width=mean(numpy.diff(bins)))
+        ax.bar(bins[:-1], counts, width=statistics.mean(numpy.diff(bins)))
 
         ax.set_xlabel("Intensity/(counts/{})".format(self.time_unit()))
         ax.set_ylabel("Occurences")

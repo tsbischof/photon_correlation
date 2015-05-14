@@ -1,4 +1,6 @@
 import csv
+import bz2
+import os
 
 from .util import is_cross_correlation
 
@@ -34,7 +36,17 @@ class GN(object):
         return(iter(sorted(self._counts)))
 
     def from_file(self, filename):
-        with open(filename) as stream_in:
+        if not os.path.exists(filename):
+            bz2_name = "{}.bz2".format(filename)
+            if os.path.exists(bz2_name):
+                filename = bz2_name
+                
+        if filename.endswith("bz2"):
+            open_f = lambda x: bz2.open(x, "rt")
+        else: 
+            open_f = open
+            
+        with open_f(filename) as stream_in:
             return(self.from_stream(csv.reader(stream_in)))
 
     def to_file(self, filename):
