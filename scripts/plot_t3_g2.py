@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     for filename in args.files:
         if filename.endswith("bz2"): 
-            open_f = bz2.open
+            open_f = lambda x: bz2.open(x, "rt")
         else:
             open_f = open
         with open_f(filename) as stream_in:
