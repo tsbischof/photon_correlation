@@ -4,6 +4,7 @@ import csv
 import sys
 import math
 import argparse
+import bz2
 
 import matplotlib.pyplot as plt
 
@@ -63,7 +64,11 @@ if __name__ == "__main__":
     corr = tuple(map(int, args.corr.split(",")))
 
     for filename in args.files:
-        with open(filename) as stream_in:
+        if filename.endswith("bz2"): 
+            open_f = bz2.open
+        else:
+            open_f = open
+        with open_f(filename) as stream_in:
             g2s = g2_from_stream(stream_in)
 
         plot_g2s(g2s, corr=corr)
