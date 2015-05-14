@@ -1,4 +1,5 @@
 import os
+import bz2
 import csv
 import collections
 import bisect
@@ -76,7 +77,7 @@ class Intensity(object):
                 filename = bz2_name
                 
         if filename.endswith("bz2"): 
-            open_f = bz2.open
+            open_f = lambda x: bz2.open(x, "rt")
         else:
             open_f = open
         with open_f(filename) as stream_in:

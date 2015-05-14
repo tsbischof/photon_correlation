@@ -6,6 +6,8 @@ import argparse
 
 import matplotlib.pyplot as plt
 
+import photon_correlation as pc
+
 def intensity_from_stream(stream):
     for line in csv.reader(stream):
         time_left = int(line[0])
@@ -64,7 +66,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for filename in args.files:
-        with open(filename) as stream_in:
-            intensity = list(intensity_from_stream(stream_in))
+        intensity = pc.Intensity(filename=filename)
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        intensity.normalized().add_to_axes(ax)
+        plt.show(fig)
 
-        plot_intensity(intensity, mode=args.mode)
+#        with open(filename) as stream_in:
+#            intensity = list(intensity_from_stream(stream_in))
+#
+#        plot_intensity(intensity, mode=args.mode)
