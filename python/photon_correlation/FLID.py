@@ -2,6 +2,7 @@
 
 import sys
 import csv
+import bz2
 
 import matplotlib.pyplot as plt
 import numpy
@@ -23,7 +24,17 @@ class FLID(object):
             self.from_filename(filename)
 
     def from_filename(self, filename):
-        with open(filename) as stream_in:
+        if not os.path.exists(filename):
+            bz2_name = "{}.bz2".format(filename)
+            if os.path.exists(bz2_name):
+                filename = bz2_name
+                
+        if filename.endswith("bz2"):
+            open_f = lambda x: bz2.open(x, "rt")
+        else: 
+            open_f = open
+            
+        with open_f(filename) as stream_in:
             return(self.from_stream(stream_in))
 
     def from_stream(self, stream_in):

@@ -8,7 +8,23 @@ from .Lifetime import Lifetime
 from .GN import GN
 from .util import *
 
-class G1(GN):       
+class G1(GN):
+    def __sub__(self, other):
+        dst = G1()
+
+        for channel in self:
+            dst[channel] = self[channel] - other[channel]
+
+        return(dst)
+
+    def to_resolution(self, resolution):
+        dst = G1()
+
+        for channel in self:
+            dst[channel] = self[channel].to_resolution(resolution)
+
+        return(dst)
+    
     def from_stream(self, stream_in):
         """
         Given a stream which returns lines in curve, bin_left, bin_right, counts
@@ -20,7 +36,7 @@ class G1(GN):
             curve = int(line[0])
             time_left = float(line[1])
             time_right = float(line[2])
-            counts = int(line[3])
+            counts = float(line[3])
 
             if not curve in curves:
                 curves[curve] = list()

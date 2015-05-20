@@ -199,3 +199,33 @@ def dot_index(dot, dots_dict):
 
 def flatten(LoL):
     return(list(itertools.chain.from_iterable(LoL)))
+
+def pnrl_2_from_signals(*signals, times=None):
+    """
+    Determine the form of the PNRL signal which results from the combination
+    of intependent signals. This includes all time orderings.
+
+    If times are specified, the output signals for the first and second
+    photons are given as lifetime objects.
+    """
+    first = numpy.zeros(len(signals[0]))
+    second = numpy.zeros(len(signals[0]))
+    
+    for src, dst in itertools.permutations(signals, r=2):
+        before = 0
+        after = sum(dst)
+
+        for index, (left, right) in enumerate(zip(src, dst)):
+            first[index] += left*after
+            second[index] += before*right
+
+            before += left
+            after -= right
+
+    norm = sum(first)*sum(second)
+
+    if times is None:
+        return(first, second)
+    else:
+        return(Lifetime(first, times=times),
+               Lifetime(second, times=times))

@@ -43,6 +43,10 @@ class Lifetime(object):
         
         return(Lifetime(counts, times=self.times))
 
+    def __sub__(self, other):
+        return(self + Lifetime(list(map(lambda x: -x, other.counts)),
+                               times=other.times))
+
     def __iter__(self):
         return(iter(zip(self.times, self.counts)))
 
@@ -290,19 +294,22 @@ class Lifetime(object):
         events, under the assumption that the lifetime represents emission
         from an ensemble of emitters.
         """
-        before = 0
-        after = sum(self.counts)
-
-        first = list()
-        second = list()
-
-        for point in self.counts:
-            first.append(point*after)
-            second.append(before*point)
-
-            before += point
-            after -= point
-
-        return(Lifetime(first, times=self.times),
-               Lifetime(second, times=self.times))
- 
+        return(util.pnrl_2_from_signals(self.counts, self.counts,
+                                        times=self.times))
+    
+##        before = 0
+##        after = sum(self.counts)
+##
+##        first = list()
+##        second = list()
+##
+##        for point in self.counts:
+##            first.append(point*after)
+##            second.append(before*point)
+##
+##            before += point
+##            after -= point
+##
+##        return(Lifetime(first, times=self.times),
+##               Lifetime(second, times=self.times))
+## 

@@ -8,6 +8,8 @@ import bz2
 
 import matplotlib.pyplot as plt
 
+import photon_correlation as pc
+
 def mean(L):
     return(float(sum(L))/len(L))
 
@@ -64,11 +66,18 @@ if __name__ == "__main__":
     corr = tuple(map(int, args.corr.split(",")))
 
     for filename in args.files:
-        if filename.endswith("bz2"): 
-            open_f = lambda x: bz2.open(x, "rt")
-        else:
-            open_f = open
-        with open_f(filename) as stream_in:
-            g2s = g2_from_stream(stream_in)
-
-        plot_g2s(g2s, corr=corr)
+        g2 = pc.G2_T3(filename)
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        g2.add_to_axes(ax)
+        peaks = g2.unique_peaks()
+        ax.set_title("{}/{}".format(peaks["center"], peaks["side"]))
+        plt.show(fig)
+##        if filename.endswith("bz2"): 
+##            open_f = lambda x: bz2.open(x, "rt")
+##        else:
+##            open_f = open
+##        with open_f(filename) as stream_in:
+##            g2s = g2_from_stream(stream_in)
+##
+##        plot_g2s(g2s, corr=corr)

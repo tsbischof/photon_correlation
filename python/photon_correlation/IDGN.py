@@ -13,6 +13,9 @@ class Counts(object):
         return(Counts(self.events + other.events,
                       self.counts + other.counts))
 
+    def normalized(self):
+        return(self.counts.astype(float) / self.events)
+
 class IDGN(object):
     def __init__(self, filename):
         self.bins = list()
@@ -57,17 +60,19 @@ class IDGN(object):
 
                 self[intensity_bin] = Counts(events, counts)
 
-    def max_intensity(self, threshold=0.7):
+    def max_intensity(self, threshold=0.7, cast_to_gn=None):
         """
         Add together the bins for intensities above the given threshold,
         which is expressed relative to the highest number of photons seen.
         """
-        return(self.intensity_range(threshold, 1))
+        return(self.intensity_range(threshold, 1, cast_to_gn=cast_to_gn))
 
-    def intensity_range(self, min_val, max_val):
+    def intensity_range(self, min_val, max_val, cast_to_gn=None):
         """
         Add together the bins for intensities between the given limits,
         expressed as a fraction of the maximum intensity.
+
+        Optionally, yield a GN object formed from the counts.
         """
         maximum = max(map(lambda intensity: intensity[1], self))
 
@@ -89,4 +94,10 @@ class IDGN(object):
             else:
                 counts += my_counts
 
-        return(counts)
+        if counts is None:
+            counts = [0 for _ in self.bins]
+            
+        if cast_to_gn is None:
+            return(counts)
+        else:
+            return(cast_to_gn(counts=counts.counts, bins=self.bins))
