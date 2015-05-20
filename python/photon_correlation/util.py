@@ -202,8 +202,8 @@ def flatten(LoL):
 
 def pnrl_2_from_signals(*signals, times=None):
     """
-    Determine the form of the PNRL signal which results from the combination
-    of intependent signals. This includes all time orderings.
+    Determine the form of the PNRL(2) signal which results from the combination
+    of independent signals. This includes all time orderings.
 
     If times are specified, the output signals for the first and second
     photons are given as lifetime objects.
@@ -222,10 +222,40 @@ def pnrl_2_from_signals(*signals, times=None):
             before += left
             after -= right
 
-    norm = sum(first)*sum(second)
-
     if times is None:
         return(first, second)
     else:
         return(Lifetime(first, times=times),
                Lifetime(second, times=times))
+
+def pnrl_3_from_signals(*signals, times=None):
+    """
+    Determine the form of the PNRL(3) signal which results from the combination
+    of independent signals. This includes all time orderings.
+
+    If times are specified, the output signals for the first and second
+    photons are given as lifetime objects.
+    """
+    first = numpy.zeros(len(signals[0]))
+    second = numpy.zeros(len(signals[0]))
+    third = numpy.zeros(len(signals[0]))
+    
+    for s0, s1, s2 in itertools.permutations(signals, r=3):
+        before = 0
+        after = [sum(s1), sum(s2)]
+
+        for index, (left, middle, right) in enumerate(zip(s0, s1, s2)):
+            first[index] += left * after[0] * after[1]
+            second[index] += before * middle * after[1]
+            third[index] += before * before * right
+
+            before += left
+            after[0] -= middle
+            after[1] -= right
+
+    if times is None:
+        return(first, second, third)
+    else:
+        return(Lifetime(first, times=times),
+               Lifetime(second, times=times),
+               Lifetime(third, times=times))
