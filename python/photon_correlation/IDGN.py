@@ -1,6 +1,8 @@
+import bz2
+import copy
 import csv
 import math
-import copy
+import os
 
 import numpy
 
@@ -34,7 +36,17 @@ class IDGN(object):
         return(iter(self.counts))
 
     def from_file(self, filename):
-        with open(filename) as stream_in:
+        if not os.path.exists(filename):
+            bz2_name = "{}.bz2".format(filename)
+            if os.path.exists(bz2_name):
+                filename = bz2_name
+     
+        if filename.endswith("bz2"):
+            open_f = lambda x: bz2.open(x, "rt")
+        else: 
+            open_f = open
+                
+        with open_f(filename) as stream_in:
             self.from_stream(stream_in)
 
     def from_stream(self, stream_in):
@@ -79,6 +91,8 @@ class IDGN(object):
         min_intensity = math.floor(min_val*maximum)
         max_intensity = math.ceil(max_val*maximum)
 
+##        print(self.counts.keys(), min_intensity, max_intensity)
+
         counts = None
 
         bins = filter(lambda x: x[0] >= min_intensity and x[1] <= max_intensity,
@@ -95,7 +109,7 @@ class IDGN(object):
                 counts += my_counts
 
         if counts is None:
-            counts = [0 for _ in self.bins]
+            counts = Counts(0, numpy.array([0 for _ in self.bins[0]]))
             
         if cast_to_gn is None:
             return(counts)

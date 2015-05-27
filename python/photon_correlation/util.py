@@ -245,9 +245,9 @@ def pnrl_3_from_signals(*signals, times=None):
         after = [sum(s1), sum(s2)]
 
         for index, (left, middle, right) in enumerate(zip(s0, s1, s2)):
-            first[index] += left * after[0] * after[1]
-            second[index] += before * middle * after[1]
-            third[index] += before * before * right
+            first[index] += left * after[0] * after[1] 
+            second[index] += before * middle * after[1] *2
+            third[index] += before * before * right 
 
             before += left
             after[0] -= middle

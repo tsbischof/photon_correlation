@@ -52,7 +52,9 @@ class G2_T3(GN):
         return(sum(self.counts()[correlation][pulse_bin].values()))
     
     def center_side_ratios(self, center=t3_center, side=t3_side):
-        if self._center_side_ratios is None:
+        try:
+            self._center_side_ratios
+        except:
             self._center_side_ratios = dict()
                 
             for correlation, g2 in self:
