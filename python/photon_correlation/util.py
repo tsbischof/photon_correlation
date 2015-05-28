@@ -10,6 +10,53 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy
 
+si_prefixes = {-9: r"\nano",
+               -6: r"\micro",
+               -3: r"\milli",
+               0: "",
+               3: r"\kilo",
+               6: r"\mega",
+               9: r"\giga",
+               "n": r"\nano",
+               "u": r"\micro"}
+si_magnitude = {"n": 1e-9,
+                "u": 1e-6}
+
+def repetition_rate_pformat(repetition_rate):
+    """
+    For the input count rate, produce the LaTeX version (for siunitx) of the
+    rounded value.
+    """
+    magnitude = math.floor(math.log(repetition_rate)/math.log(10)/3)*3
+    value = repetition_rate/10**magnitude
+    if value < 100:
+        value = "{0:.1f}".format(value)
+    else:
+        value = round(value)
+
+    prefix = si_prefixes[magnitude]
+    suffix = r"\hertz"
+    return(r"\SI" + r"{{{}}}".format(value) +
+           r"{{{0}{1}}}".format(prefix, suffix))
+
+def power_pformat(power):
+    """
+    For the reported power, produce the LaTeX version (for siunitx).
+    """
+    parsed = re.search("(?P<value>[\.0-9]+)(?P<prefix>[A-Za-z])W", power)
+    value = round(float(parsed.group("value")))
+    prefix = si_prefixes[parsed.group("prefix")]
+    suffix = r"\watt"
+    return(r"\SI" + r"{{{}}}".format(value) +
+           r"{{{0}{1}}}".format(prefix, suffix))
+
+def power_float(power):
+    parsed = re.search("(?P<value>[\.0-9]+)(?P<prefix>[A-Za-z])W", power)
+    value = float(parsed.group("value"))
+    magnitude = si_magnitude[parsed.group("prefix")]
+
+    return(value*magnitude)
+
 def factorial(n):
     return(functools.reduce(lambda x, y: x*y, range(1, n+1), 1.0))
 
