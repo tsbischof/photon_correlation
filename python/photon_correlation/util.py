@@ -10,6 +10,8 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy
 
+import photon_correlation as pc
+
 si_prefixes = {-9: r"\nano",
                -6: r"\micro",
                -3: r"\milli",
@@ -272,8 +274,8 @@ def pnrl_2_from_signals(*signals, times=None):
     if times is None:
         return(first, second)
     else:
-        return(Lifetime(first, times=times),
-               Lifetime(second, times=times))
+        return(pc.Lifetime(first, times=times),
+               pc.Lifetime(second, times=times))
 
 def pnrl_3_from_signals(*signals, times=None):
     """
@@ -303,6 +305,6 @@ def pnrl_3_from_signals(*signals, times=None):
     if times is None:
         return(first, second, third)
     else:
-        return(Lifetime(first, times=times),
-               Lifetime(second, times=times),
-               Lifetime(third, times=times))
+        return(pc.Lifetime(first, times=times),
+               pc.Lifetime(second, times=times),
+               pc.Lifetime(third, times=times))

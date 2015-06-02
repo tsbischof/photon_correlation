@@ -190,7 +190,7 @@ static pc_option_t pc_options_all[] = {
 			"bin_intensity to get the exact result for each\n"
 			"histogram bin."},
 	{'R', "R:", "repetition-rate",
-			"Specifies the repetition rate for the sync pulse.\n"},
+			"Specifies the repetition rate for the sync pulse."},
 	{'O', "O:", "time-origin",
 			"Specifies the origin in time for the photons being\n"
 			"converted. This compensates for the fact that t2\n"
