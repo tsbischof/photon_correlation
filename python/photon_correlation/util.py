@@ -308,3 +308,40 @@ def pnrl_3_from_signals(*signals, times=None):
         return(pc.Lifetime(first, times=times),
                pc.Lifetime(second, times=times),
                pc.Lifetime(third, times=times))
+##
+##def pnrl_4_from_signals(*signals, times=None):
+##    """
+##    Determine the form of the PNRL(3) signal which results from the combination
+##    of independent signals. This includes all time orderings.
+##
+##    If times are specified, the output signals for the first and second
+##    photons are given as lifetime objects.
+##    """
+##    first = numpy.zeros(len(signals[0]))
+##    second = numpy.zeros(len(signals[0]))
+##    third = numpy.zeros(len(signals[0]))
+##    fourth = numpy.zeros(len(signals[0]))
+##    
+##    for s0, s1, s2, s3 in itertools.permutations(signals, r=4):
+##        before = 0
+##        after = [sum(s1), sum(s2), sum(s3)]
+##
+##        for index, (one, two, three, four) in enumerate(zip(s0, s1, s2, s3)):
+##            first[index] += one * after[0] * after[1] * after[2] 
+##            second[index] += before * two * after[1] * after[2] * 3
+##            third[index] += before * before * three * after[2] * 3
+##            fourth[index] += before * before * before * four
+##
+##            before += one
+##            after[0] -= two
+##            after[1] -= three
+##            after[2] -= four
+##            
+##
+##    if times is None:
+##        return(first, second, third, fourth)
+##    else:
+##        return(pc.Lifetime(first, times=times),
+##               pc.Lifetime(second, times=times),
+##               pc.Lifetime(third, times=times),
+##               pc.Lifetime(fourth, times=times))
