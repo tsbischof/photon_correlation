@@ -70,7 +70,7 @@ class G3_T3(GN):
                     peaks[peak] += sum(gn[p1][t1][p2].values())
             
         return(peaks)
-
+        
     def make_figure(self):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
