@@ -69,7 +69,7 @@ class G1(GN):
             else:
                 counts += numpy.array(self[curve].counts)
         
-        return(Lifetime(counts, times=self[0].times))
+        return(Lifetime(counts, times=self[curve].times))
 
     def add_to_axes(self, ax, resolution=None):
         max_xlim = 0

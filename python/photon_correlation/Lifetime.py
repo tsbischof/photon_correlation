@@ -191,7 +191,7 @@ class Lifetime(object):
 
         return(MultiExponential(fit))
 
-    def fit(self, fit_f, p0, error="least squares", params_check=None,
+    def fit(self, fit_f, p0=None, error="least squares", params_check=None,
             force_calculation=False, **fmin_args):
         if error == "least squares":
             err_f = lambda x, y: (x-y)**2
@@ -207,7 +207,7 @@ class Lifetime(object):
             if params_check is not None and not params_check(p):
                 return(float("inf"))
             else:
-                return(sum(map(err_f, fit_f(p)(t), data)))
+                return(sum(map(err_f, fit_f(p), data)))
             
         if force_calculation:
             params = scipy.optimize.fmin(error, p0,

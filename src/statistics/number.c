@@ -120,6 +120,11 @@ int photon_number_push(photon_number_t *number, photon_t const *photon) {
 	} else {
 		if ( photon->t3.pulse == number->last_pulse ) {
 			number->current_seen++;
+
+			if ( number->current_seen > number->max_number ) {
+				t3_fprintf(stderr, photon);
+			}
+
 			return(photon_number_check_max(number));
 		} else {
 			photon_number_increment(number, 
@@ -142,7 +147,13 @@ int photon_number_push(photon_number_t *number, photon_t const *photon) {
 
 int photon_number_increment(photon_number_t *number, 
 		unsigned int const n_photons, unsigned long long seen) {
-	int result = counts_increment_number(number->counts, n_photons, seen);
+	int result = PC_SUCCESS;
+
+	if ( n_photons > number->max_number ) {
+		result = PC_ERROR_INDEX;
+	} else {
+		result = counts_increment_number(number->counts, n_photons, seen);
+	}
 
 	if ( result != PC_SUCCESS ) {
 		error("Could not increment for %u photons.\n", n_photons);
@@ -152,16 +163,16 @@ int photon_number_increment(photon_number_t *number,
 }
 	
 int photon_number_check_max(photon_number_t *number) {
+	if ( number->current_seen > number->max_number ) {
+		error("Too many photons: %u\n", number->current_seen);
+		return(PC_ERROR_INDEX);
+	}
+
 	if ( number->current_seen > number->max_seen ) {
 		number->max_seen = number->current_seen;
 	}
 
-	if ( number->max_seen <= number->max_number ) {
-		return(PC_SUCCESS);
-	} else {
-		error("Too many photons: %u\n", number->max_seen);
-		return(PC_ERROR_INDEX);
-	}
+	return(PC_SUCCESS);
 }
 
 int photon_number_flush(photon_number_t *number) {
@@ -183,7 +194,7 @@ int photon_number_flush(photon_number_t *number) {
 int photon_number_fprintf(FILE *stream_out, photon_number_t const *number) {
 	int i;
 
-	for ( i = 0 ; i < number->max_seen+1; i++ ) {
+	for ( i = 0 ; i < number->max_seen+1 && i < number->max_number; i++ ) {
 		if ( number->counts->counts[i] != 0 ) {
 			fprintf(stream_out, "%d,%llu\n", i, number->counts->counts[i]);
 		}
@@ -232,7 +243,7 @@ int photon_number(FILE *stream_in, FILE *stream_out,
 
 	if ( result == PC_SUCCESS) {
 		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
-			photon_number_push(number, &(photons->photon));
+			result = photon_number_push(number, &(photons->photon));
 		}
 
 		photon_number_flush(number);
