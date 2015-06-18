@@ -242,7 +242,8 @@ int photon_number(FILE *stream_in, FILE *stream_out,
 	debug("Max photons per pulse: %u\n", number->max_number);
 
 	if ( result == PC_SUCCESS) {
-		while ( photon_stream_next_photon(photons) == PC_SUCCESS ) {
+		while ( result == PC_SUCCESS && 
+				photon_stream_next_photon(photons) == PC_SUCCESS ) {
 			result = photon_number_push(number, &(photons->photon));
 		}
 
