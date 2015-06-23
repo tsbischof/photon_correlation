@@ -11,6 +11,11 @@ t3_center = (-0.5, 0.5)
 t3_side = (0.5, 1.5)
 
 class G2_T3(GN):
+    @property
+    def time_resolution(self):
+        corr = next(iter(self._counts.keys()))
+        return(numpy.diff(next(iter(self[corr][t3_center].keys())))[0])
+               
     def from_stream(self, stream_in):
         self._counts = dict()
 
@@ -120,7 +125,7 @@ class G2_T3(GN):
         self.add_to_axes(ax)
         return(fig)
 
-    def add_to_axes(self, ax):
+    def add_to_axis(self, ax):
         g2 = self.autocorrelation()
 
         max_time = round(max(map(lambda x: x[0], g2[(-0.5, 0.5)]))*1e-3)
@@ -173,7 +178,37 @@ class G2_T3(GN):
                                     ((0.5, 1.5), "side")]:
                 peaks[peak] += sum(gn[pulse_bin].values())
                     
-        return(peaks)                                   
+        return(peaks)
+
+    def to_time_resolution(self, resolution=None):
+        if not resolution:
+            return(self)
+
+        binning = int(round(resolution / self.time_resolution))
+        if binning < 2:
+            return(self)
+        else:
+            return(self.rebin_time(n=binning))
+
+    def rebin_time(self, n=2):
+        result = G2_T3()
+        
+        for correlation in self:
+            g2 = self[correlation]
+            result[correlation] = dict()
+
+            for pulse_bin in g2:
+                time_bins, counts = zip(*sorted(g2[pulse_bin].items()))
+                start, stop = zip(*time_bins)
+                time_bins = zip(pc.util.smooth(start, n=n),
+                                pc.util.smooth(stop, n=n))
+                counts = pc.util.rebin(counts, n=n)
+                
+                result[correlation][pulse_bin] = {
+                    time_bin: count for time_bin, count in \
+                    zip(time_bins, counts)}
+
+        return(result)
                                   
 class G2_T2(GN):       
     def from_file(self, filename, int_counts=True):

@@ -7,6 +7,7 @@ import collections
 import statistics
 
 import matplotlib as mpl
+import matplotlib.colors
 import matplotlib.cm as cm
 import numpy
 
@@ -23,6 +24,12 @@ si_prefixes = {-9: r"\nano",
                "u": r"\micro"}
 si_magnitude = {"n": 1e-9,
                 "u": 1e-6}
+
+CMRmap = matplotlib.colors.ListedColormap(
+    list(reversed(
+        [(0, 0, 0), (0.15, 0.15, 0.5), (0.3, 0.15, 0.75),
+         (0.6, 0.2, 0.50), (0.1, 0.25, 0.15), (0.9, 0.5, 0),
+         (0.9, 0.75, 0.1), (0.9, 0.9, 0.5), (1, 1, 1)])))
 
 def repetition_rate_pformat(repetition_rate):
     """
