@@ -73,7 +73,7 @@ int intensity_correlate_g2_log(FILE *stream_in, FILE *stream_out,
 
 int intensity_correlate_dispatch(FILE *stream_in, FILE *stream_out, 
 		pc_options_t const *options) {
-	if ( options->order == 2 && options->time_scale == SCALE_LOG ) {
+	if ( options->order == 2 ) { //&& options->time_scale == SCALE_LOG ) {
 		return(intensity_correlate_g2_log(stream_in, stream_out, options));
 	} else {
 		error("Correlation mode not supported: order %u and scale %d\n",

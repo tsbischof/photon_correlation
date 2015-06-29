@@ -256,27 +256,37 @@ def dot_index(dot, dots_dict):
 def flatten(LoL):
     return(list(itertools.chain.from_iterable(LoL)))
 
-def pnrl_2_from_signals(*signals, times=None):
+def pnrl_2_from_signals(*signals, times=None, correlate=False):
     """
     Determine the form of the PNRL(2) signal which results from the combination
     of independent signals. This includes all time orderings.
 
     If times are specified, the output signals for the first and second
     photons are given as lifetime objects.
+
+    If correlate is specified, then the signals are correlated as possible:
+    first is still absolute time, and the second photon is the time relative
+    to the first (convolution)
     """
+    signals = list(map(numpy.array, signals))
     first = numpy.zeros(len(signals[0]))
     second = numpy.zeros(len(signals[0]))
-    
+
     for src, dst in itertools.permutations(signals, r=2):
         before = 0
         after = sum(dst)
 
         for index, (left, right) in enumerate(zip(src, dst)):
             first[index] += left*after
-            second[index] += before*right
+
+            if not correlate:
+                second[index] += before*right
 
             before += left
             after -= right
+
+        if correlate:
+            second += numpy.convolve(src, dst[::-1])[(len(src)-1):]
 
     if times is None:
         return(first, second)
