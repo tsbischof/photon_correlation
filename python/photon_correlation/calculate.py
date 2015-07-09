@@ -195,6 +195,9 @@ def gn(data_filename, dst_dir=None, dst_filename=None,
         channels = sum(range(1, channels+1))
         dst_filename += ".number"
 
+        if number_correlate:
+            dst_filename += ".corr"
+
     if convert:
         dst_filename += ".{}".format(gn_mode)
 
@@ -226,7 +229,7 @@ def gn(data_filename, dst_dir=None, dst_filename=None,
         photons = convert_mode(photons, photon_mode, gn_mode, repetition_rate)
         
     if photon_number:
-        photons = number_to_channels(photons)
+        photons = number_to_channels(photons, correlate=number_correlate)
     elif time_threshold:
         photons = photon_threshold(photons, window_width=window_width,
                                    mode=gn_mode, threshold=threshold)
