@@ -297,19 +297,11 @@ class Lifetime(object):
         return(util.pnrl_2_from_signals(self.counts, self.counts,
                                         times=self.times))
     
-##        before = 0
-##        after = sum(self.counts)
-##
-##        first = list()
-##        second = list()
-##
-##        for point in self.counts:
-##            first.append(point*after)
-##            second.append(before*point)
-##
-##            before += point
-##            after -= point
-##
-##        return(Lifetime(first, times=self.times),
-##               Lifetime(second, times=self.times))
-## 
+    def final_nonzero(self):
+        """
+        Search from the right to find the time point at which we have the last
+        bin with at least one count.
+        """
+        for n in reversed(range(len(self.counts))):
+            if self.counts[n] != 0:
+                return(n)
