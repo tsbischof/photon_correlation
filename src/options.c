@@ -150,7 +150,8 @@ static pc_option_t pc_options_all[] = {
 	{'y', "y:", "pulse",
 			"The pulse limits for an axis, following the format:\n"
 			"        lower, number of bins, upper \n"
-			"with no spaces, and the extrema in picoseconds."},
+			"with no spaces, and the extrema in the number\n"
+			"of pulses."},
 	{'X', "X:", "time-scale",
 			"The scale of the time axis, one of:\n"
 			"   linear: linear interpolation between limits\n"

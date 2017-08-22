@@ -69,7 +69,7 @@ if __name__ == "__main__":
         g2 = pc.G2_T3(filename)
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        g2.add_to_axes(ax)
+        g2.add_to_axis(ax)
         peaks = g2.unique_peaks()
         ax.set_title("{}/{}".format(peaks["center"], peaks["side"]))
         plt.show(fig)
