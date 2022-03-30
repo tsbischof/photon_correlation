@@ -72,7 +72,7 @@ if __name__ == "__main__":
         g2.add_to_axis(ax)
         peaks = g2.unique_peaks()
         ax.set_title("{}/{}".format(peaks["center"], peaks["side"]))
-        plt.show(fig)
+        plt.show()
 ##        if filename.endswith("bz2"): 
 ##            open_f = lambda x: bz2.open(x, "rt")
 ##        else:
