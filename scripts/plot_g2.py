@@ -33,7 +33,7 @@ def plot_g2s(g2s, scale="linear"):
 
     plt.clf()
 
-    for index, val in enumerate(g2s.items()):
+    for index, val in enumerate(g2s.items(), start=1):
         corr, g2 = val
         c0, c1 = corr
 
