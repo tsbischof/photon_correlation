@@ -41,6 +41,7 @@ photon_gn --file-in t3.csv --mode t3 --order 2 --time -524544,1,524544 --pulse -
 
 ## Programs
 Each program gives far more detail with `--help`.
+There is a detailed description for some of the programs in `doc/`, and in [this PhD thesis](https://dspace.mit.edu/handle/1721.1/101453)
 
 ### photon_gn
 This covers most use cases.
@@ -123,22 +124,3 @@ For a g2:
 channel photon 0 (uint32), channel photon 1 (uint32), pulse bin 0 left (uint64), pulse bin 0 right (uint64), time bin 0 left (uint64), time bin 0 right (uint64), counts
 ```
 As with the [t2 data](#t2-histogram) this idea can be extended to higher orders.
-
-## Examples of usage
-PicoQuant PicoHarp and HydraHarp. The tasks covered include:
-- correlation of photons to nth order 
-- calculation of the approximate and exact normalization of the photon 
-  correlation function to nth order 
-- binning of photons to produce intensity traces 
-- correlation of photon intensity traces to 2nd order
-- conversion between photon data types
-- performing any or all of the aforementioned tasks for subintervals of 
-  experiment time (time-dependent lifetimes, etc)
-
-In addition to performing such calculations, a suite of Python tools is 
-provided to read and manipulate the results. 
-
---------------------------------------------------------------------------------
-Quick guide to programs
---------------------------------------------------------------------------------
-
