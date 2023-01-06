@@ -22,6 +22,9 @@ Typical workflows include:
 These programs expect photon arrival time data in the same format as [libpicoquant](https://github.com/tsbischof/libpicoquant). 
 See [below](#data-formats) for more details.
 
+If you are just getting started with photon correlation and are not resource constrained (i.e. comparable amounts of RAM as your dataset size) I would consider something more like [pycorrelate](https://github.com/OpenSMFS/pycorrelate) as this is likely to be a bit simpler to integrate.
+The tools here are quite flexible but really only work on the command line.
+
 ## Quick guide for usage
 ### Lifetimes (t3 data only)
 ```
